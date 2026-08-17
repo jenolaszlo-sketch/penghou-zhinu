@@ -30,10 +30,12 @@ All packages target **.NET 8.0** and **.NET 10.0**.
 ```bash
 dotnet add package Penghou.Zhinu.Sqlite --prerelease
 dotnet add package Penghou.Zhinu.Hosting --prerelease
+dotnet add package Penghou.Zhinu.Agents --prerelease
 ```
 
 Hosting is optional. Direct construction only requires the core and chosen
-store implementation.
+store implementation. Agents (Microsoft Agent Framework integration) is
+optional.
 
 ## Hosted quick start
 
@@ -450,6 +452,56 @@ var thumbnail = await context.StartChildAsync<VideoRef, Thumbnail>(
 - A child that fails or is cancelled propagates to the parent: failure throws
   `WorkflowExecutionFailedException`, cancellation throws
   `OperationCanceledException`.
+
+## Microsoft Agent Framework (MAF)
+
+`Penghou.Zhinu.Agents` turns MAF graph workflows into durable Zhinu steps and
+gives MAF checkpointing a thread-safe, restart-surviving SQLite home.
+
+Durable checkpoint store — MAF's built-in file store is single-process and not
+thread-safe; this one lives in the same SQLite database as your runs:
+
+```csharp
+var store = new SqliteJsonCheckpointStore(new ZhinuSqliteOptions
+{
+    DatabasePath = "zhinu.db"
+});
+// pass to any MAF run you want to survive a crash:
+var checkpoints = CheckpointManager.CreateJson(store);
+await InProcessExecution.RunStreamingAsync(
+    workflow, input, checkpoints, sessionId);
+```
+
+MAF graph as a durable step — run a whole MAF workflow inside one Zhinu step.
+The terminal output commits with the step; a replay reuses it without touching
+MAF. If a previous attempt of the step crashed mid-run, execution resumes from
+the most recent MAF checkpoint instead of starting over:
+
+```csharp
+var result = await context.RunAgentWorkflowAsync<string, string>(
+    "agent-analysis",   // durable step key
+    workflow,           // the MAF Workflow to run
+    input,
+    checkpointStore,    // SqliteJsonCheckpointStore or any ICheckpointStore<JsonElement>
+    cancellationToken);
+```
+
+- MAF checkpoints are written per superstep under a session derived from the
+  run and step; a durable store such as `SqliteJsonCheckpointStore` therefore
+  lets a long graph continue from its last superstep after a crash or a
+  `RestartStepAsync`.
+- `RetrieveIndexAsync` must return the most recent checkpoint first; the
+  SQLite store does, so the first entry is the resume point.
+- The step fails the run when the MAF workflow terminates with an error
+  (`AgentWorkflowExecutionException`). Plain executor-graph workflows run to
+  completion autonomously; turn-based agent teams that require
+  `TrySendMessageAsync` are outside the current helper.
+
+DI registration (optional):
+
+```csharp
+services.AddZhinuSqliteCheckpoints(options => options.DatabasePath = "zhinu.db");
+```
 
 ## What Zhinu is not
 

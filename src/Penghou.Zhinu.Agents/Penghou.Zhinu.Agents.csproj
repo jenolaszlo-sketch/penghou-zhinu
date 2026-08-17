@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Penghou.Zhinu.Agents</PackageId>
+    <Title>Penghou Zhinu Agents</Title>
+    <Authors>Penghou.Zhinu contributors</Authors>
+    <Description>Microsoft Agent Framework (MAF) integration for Penghou.Zhinu: durable SQLite checkpoint storage and MAF graph workflows as durable Zhinu steps.</Description>
+    <PackageTags>workflow;durable;agent;maf;checkpoint;sqlite</PackageTags>
+    <RepositoryUrl>https://github.com/jenolaszlo-sketch/penghou-zhinu</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/jenolaszlo-sketch/penghou-zhinu</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Penghou.Zhinu\Penghou.Zhinu.csproj" />
+    <ProjectReference Include="..\Penghou.Zhinu.Sqlite\Penghou.Zhinu.Sqlite.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.17.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
