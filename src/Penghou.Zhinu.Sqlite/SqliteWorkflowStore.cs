@@ -65,7 +65,13 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 null,
                 "SELECT version FROM zhinu_schema LIMIT 1;",
                 cancellationToken).ConfigureAwait(false);
-            if (version != 1)
+            if (version == 1)
+            {
+                await MigrateV1ToV2Async(connection, cancellationToken)
+                    .ConfigureAwait(false);
+                version = 2;
+            }
+            if (version != 2)
             {
                 throw new InvalidOperationException(
                     $"Unsupported Zhinu SQLite schema version {version}.");
@@ -91,11 +97,11 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             INSERT INTO workflow_runs
             (id, workflow_name, workflow_version, status, input_json,
              input_type, output_json, output_type, error_json, created_at,
-             updated_at, completed_at, lease_owner, lease_expires_at)
+             updated_at, completed_at, deadline, lease_owner, lease_expires_at)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
-             $updatedAt, $completedAt, $leaseOwner, $leaseExpiresAt);
+             $updatedAt, $completedAt, $deadline, $leaseOwner, $leaseExpiresAt);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -188,6 +194,48 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             });
         }
         return results;
+    }
+
+    public async ValueTask<WorkflowEvent> AppendEventAsync(
+        Guid workflowRunId,
+        string eventType,
+        string? dataJson,
+        string? stepKey = null,
+        int? attempt = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var timestamp = DateTimeOffset.UtcNow;
+        await using var command = CreateCommand(connection, null, """
+            INSERT INTO workflow_events
+            (workflow_run_id, step_key, event_type, timestamp, attempt, data_json)
+            VALUES ($runId, $stepKey, $eventType, $timestamp, $attempt, $dataJson);
+            SELECT last_insert_rowid();
+            """);
+        command.Parameters.AddWithValue("$runId", Format(workflowRunId));
+        command.Parameters.AddWithValue("$stepKey", DbValue(stepKey));
+        command.Parameters.AddWithValue("$eventType", eventType);
+        command.Parameters.AddWithValue("$timestamp", FormatTimestamp(timestamp));
+        command.Parameters.AddWithValue("$attempt", attempt is null ? DBNull.Value : attempt.Value);
+        command.Parameters.AddWithValue("$dataJson", DbValue(dataJson));
+        var sequence = Convert.ToInt64(
+            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            CultureInfo.InvariantCulture);
+        return new WorkflowEvent
+        {
+            Sequence = sequence,
+            WorkflowRunId = workflowRunId,
+            StepKey = stepKey,
+            EventType = eventType,
+            Timestamp = timestamp,
+            Attempt = attempt,
+            DataJson = dataJson
+        };
     }
 
     public async ValueTask<IReadOnlyList<Guid>> GetRunnableRunIdsAsync(
@@ -1011,8 +1059,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         CreatedAt = ParseTimestamp(reader.GetString(9)),
         UpdatedAt = ParseTimestamp(reader.GetString(10)),
         CompletedAt = ParseNullableTimestamp(reader, 11),
-        LeaseOwner = GetNullableString(reader, 12),
-        LeaseExpiresAt = ParseNullableTimestamp(reader, 13)
+        Deadline = ParseNullableTimestamp(reader, 12),
+        LeaseOwner = GetNullableString(reader, 13),
+        LeaseExpiresAt = ParseNullableTimestamp(reader, 14)
     };
 
     private static WorkflowStepRun ReadStep(SqliteDataReader reader) => new()
@@ -1107,6 +1156,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         command.Parameters.AddWithValue("$createdAt", FormatTimestamp(run.CreatedAt));
         command.Parameters.AddWithValue("$updatedAt", FormatTimestamp(run.UpdatedAt));
         command.Parameters.AddWithValue("$completedAt", DbValue(FormatNullable(run.CompletedAt)));
+        command.Parameters.AddWithValue("$deadline", DbValue(FormatNullable(run.Deadline)));
         command.Parameters.AddWithValue("$leaseOwner", DbValue(run.LeaseOwner));
         command.Parameters.AddWithValue("$leaseExpiresAt", DbValue(FormatNullable(run.LeaseExpiresAt)));
     }
@@ -1193,7 +1243,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private const string RunColumns = """
         id, workflow_name, workflow_version, status, input_json, input_type,
         output_json, output_type, error_json, created_at, updated_at,
-        completed_at, lease_owner, lease_expires_at
+        completed_at, deadline, lease_owner, lease_expires_at
         """;
 
     private const string StepColumns = """
@@ -1205,7 +1255,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS zhinu_schema(version INTEGER NOT NULL);
         INSERT INTO zhinu_schema(version)
-        SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
+        SELECT 2 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
 
         CREATE TABLE IF NOT EXISTS workflow_runs
         (
@@ -1221,6 +1271,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
             completed_at TEXT NULL,
+            deadline TEXT NULL,
             lease_owner TEXT NULL,
             lease_expires_at TEXT NULL
         );
@@ -1268,4 +1319,22 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         CREATE INDEX IF NOT EXISTS ix_workflow_events_run_sequence
             ON workflow_events(workflow_run_id, sequence);
         """;
+
+    private static async ValueTask MigrateV1ToV2Async(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await ExecuteAsync(
+            connection,
+            null,
+            """
+            ALTER TABLE workflow_runs ADD COLUMN deadline TEXT NULL;
+            """,
+            cancellationToken).ConfigureAwait(false);
+        await ExecuteAsync(
+            connection,
+            null,
+            "UPDATE zhinu_schema SET version = 2;",
+            cancellationToken).ConfigureAwait(false);
+    }
 }

@@ -202,13 +202,13 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
             "1",
             "value",
             requestedId,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
         var second = await engine.StartAsync(
             "idempotent",
             "1",
             "value",
             requestedId,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         second.Should().Be(first);
         var events = await engine.GetEventsAsync(
@@ -320,6 +320,179 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
 
         await action.Should().ThrowAsync<WorkflowStateException>()
             .WithMessage("*incompatible input or result contract*");
+    }
+
+    [Fact]
+    public async Task StartAsync_WithDeadline_PersistsIt()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "deadline-persist");
+        var deadline = DateTimeOffset.UtcNow.AddHours(1);
+
+        var runId = await engine.StartAsync(
+            "deadline-persist",
+            "1",
+            "value",
+            deadline: deadline,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var run = await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        run!.Deadline.Should().Be(deadline);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AfterDeadline_FailsRunWithTimeout()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "deadline-passed");
+        var runId = await engine.StartAsync(
+            "deadline-passed",
+            "1",
+            "value",
+            deadline: DateTimeOffset.UtcNow.AddMinutes(-1),
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var run = await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        run!.Status.Should().Be(WorkflowStatus.Failed);
+        run.Error!.Type.Should().Be(typeof(TimeoutException).FullName);
+        workflow.FirstCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task EmitAsync_PersistsReplayableProgressEvents()
+    {
+        var workflow = new ProgressWorkflow();
+        var engine = CreateEngine(workflow, "progress");
+
+        var result = await engine.RunAsync<string, string>(
+            "progress",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("value-done");
+        var events = await engine.GetEventsAsync(
+            workflow.RunId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        events.Where(item => item.EventType == WorkflowEventTypes.Progress)
+            .Select(item => item.DataJson)
+            .Should().ContainInOrder("25", "50", "75");
+    }
+
+    [Fact]
+    public async Task InitializeAsync_MigratesV1DatabaseWithoutLosingRuns()
+    {
+        var databasePath = Path.Combine(root, "zhinu.db");
+        Directory.CreateDirectory(root);
+        var now = DateTimeOffset.UtcNow;
+        var runId = Guid.NewGuid();
+        var connectionString =
+            new SqliteConnectionStringBuilder { DataSource = databasePath }
+                .ToString();
+        await using (var connection = new SqliteConnection(connectionString))
+        {
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            await using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """
+                    CREATE TABLE zhinu_schema(version INTEGER NOT NULL);
+                    INSERT INTO zhinu_schema(version) VALUES (1);
+                    CREATE TABLE workflow_runs
+                    (
+                        id TEXT PRIMARY KEY,
+                        workflow_name TEXT NOT NULL,
+                        workflow_version TEXT NOT NULL,
+                        status INTEGER NOT NULL,
+                        input_json TEXT NULL,
+                        input_type TEXT NULL,
+                        output_json TEXT NULL,
+                        output_type TEXT NULL,
+                        error_json TEXT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        completed_at TEXT NULL,
+                        lease_owner TEXT NULL,
+                        lease_expires_at TEXT NULL
+                    );
+                    CREATE TABLE workflow_steps
+                    (
+                        id TEXT PRIMARY KEY,
+                        workflow_run_id TEXT NOT NULL,
+                        step_key TEXT NOT NULL,
+                        status INTEGER NOT NULL,
+                        attempt INTEGER NOT NULL,
+                        input_json TEXT NULL,
+                        input_type TEXT NULL,
+                        input_hash TEXT NULL,
+                        output_json TEXT NULL,
+                        output_type TEXT NULL,
+                        error_json TEXT NULL,
+                        created_at TEXT NOT NULL,
+                        started_at TEXT NULL,
+                        completed_at TEXT NULL,
+                        available_at TEXT NULL,
+                        lease_owner TEXT NULL,
+                        lease_expires_at TEXT NULL,
+                        UNIQUE(workflow_run_id, step_key),
+                        FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+                    );
+                    CREATE TABLE workflow_events
+                    (
+                        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                        workflow_run_id TEXT NOT NULL,
+                        step_key TEXT NULL,
+                        event_type TEXT NOT NULL,
+                        timestamp TEXT NOT NULL,
+                        attempt INTEGER NULL,
+                        data_json TEXT NULL,
+                        FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+                    );
+                    INSERT INTO workflow_runs
+                    (id, workflow_name, workflow_version, status, input_json,
+                     input_type, output_json, output_type, error_json, created_at,
+                     updated_at, completed_at, lease_owner, lease_expires_at)
+                    VALUES
+                    ($id, 'manual', '1', $pending, NULL, NULL, NULL, NULL, NULL,
+                     $now, $now, NULL, NULL, NULL);
+                    """;
+                command.Parameters.AddWithValue("$id", runId.ToString("D"));
+                command.Parameters.AddWithValue("$pending", (int)WorkflowStatus.Pending);
+                command.Parameters.AddWithValue("$now", now.ToString("O"));
+                await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+            }
+        }
+
+        SqliteConnection.ClearAllPools();
+        var store = CreateStore();
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        var run = await store.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+
+        run.Should().NotBeNull();
+        run!.Status.Should().Be(WorkflowStatus.Pending);
+        var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
+        version.Should().Be(2L);
+    }
+
+    private static async Task<long> ScalarAsync(
+        string databasePath,
+        CancellationToken cancellationToken)
+    {
+        var connectionString =
+            new SqliteConnectionStringBuilder { DataSource = databasePath }
+                .ToString();
+        await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT version FROM zhinu_schema LIMIT 1;";
+        return (long)(await command.ExecuteScalarAsync(cancellationToken))!;
     }
 
     private WorkflowEngine CreateEngine<TWorkflow>(
@@ -548,5 +721,31 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                     ExecutionTimeout = TimeSpan.FromMilliseconds(25)
                 },
                 cancellationToken);
+    }
+
+    private sealed class ProgressWorkflow : IWorkflow<string, string>
+    {
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            await context.EmitAsync(
+                WorkflowEventTypes.Progress,
+                25,
+                cancellationToken);
+            await context.EmitAsync(
+                WorkflowEventTypes.Progress,
+                50,
+                cancellationToken);
+            await context.EmitAsync(
+                WorkflowEventTypes.Progress,
+                75,
+                cancellationToken);
+            return $"{input}-done";
+        }
     }
 }

@@ -41,6 +41,17 @@ public sealed class HostingIntegrationTests : IDisposable
         await host.StopAsync(TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public void AddZhinu_WithoutStore_ThrowsAtCompositionTime()
+    {
+        var services = new ServiceCollection();
+
+        var action = () => services.AddZhinu();
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*IWorkflowStore*");
+    }
+
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();

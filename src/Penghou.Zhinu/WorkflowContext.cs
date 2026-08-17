@@ -245,6 +245,28 @@ public sealed class WorkflowContext
         }
     }
 
+    /// <summary>
+    /// Persists a caller-visible, replay-safe event with optional serialized data.
+    /// Emitted events are committed atomically with state transitions and survive
+    /// process restarts; subscribers can read them via <c>SubscribeAsync</c> or
+    /// <c>GetEventsAsync</c>. Emitting the same key twice does not deduplicate.
+    /// </summary>
+    public async Task EmitAsync<TData>(
+        string eventType,
+        TData? data = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+        var dataJson = data is null
+            ? null
+            : JsonSerializer.Serialize(data, serializerOptions);
+        await store.AppendEventAsync(
+            WorkflowRunId,
+            eventType,
+            dataJson,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
     private async Task<TOutput> ExecuteClaimedAsync<TInput, TOutput>(
         WorkflowStepRun step,
         TInput input,

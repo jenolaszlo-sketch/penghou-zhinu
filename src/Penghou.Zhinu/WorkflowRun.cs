@@ -17,6 +17,13 @@ public sealed record WorkflowRun
 
     public DateTimeOffset? CompletedAt { get; init; }
 
+    /// <summary>
+    /// The absolute time after which the run is no longer eligible to execute.
+    /// When a run is claimed after its deadline passes, the engine fails it with
+    /// a timeout error instead of executing it. Null means no deadline.
+    /// </summary>
+    public DateTimeOffset? Deadline { get; init; }
+
     public string? InputJson { get; init; }
 
     public string? InputType { get; init; }

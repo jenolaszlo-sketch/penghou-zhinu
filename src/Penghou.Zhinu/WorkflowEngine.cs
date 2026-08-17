@@ -49,6 +49,7 @@ public sealed class WorkflowEngine
         string workflowVersion,
         TInput input,
         Guid? workflowRunId = null,
+        DateTimeOffset? deadline = null,
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
@@ -91,7 +92,8 @@ public sealed class WorkflowEngine
                 UpdatedAt = now,
                 InputJson = inputJson,
                 InputType = SerializationIdentity.TypeId(registration.InputType),
-                OutputType = SerializationIdentity.TypeId(registration.OutputType)
+                OutputType = SerializationIdentity.TypeId(registration.OutputType),
+                Deadline = deadline
             },
             cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
@@ -108,6 +110,7 @@ public sealed class WorkflowEngine
         string workflowVersion,
         TInput input,
         Guid? workflowRunId = null,
+        DateTimeOffset? deadline = null,
         CancellationToken cancellationToken = default)
     {
         var id = await StartAsync(
@@ -115,6 +118,7 @@ public sealed class WorkflowEngine
             workflowVersion,
             input,
             workflowRunId,
+            deadline,
             cancellationToken).ConfigureAwait(false);
         await ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
         return await WaitForCompletionAsync<TOutput>(id, cancellationToken)
@@ -144,6 +148,19 @@ public sealed class WorkflowEngine
                 now + options.LeaseDuration,
                 cancellationToken).ConfigureAwait(false))
         {
+            return;
+        }
+        if (run.Deadline is { } deadline && now > deadline)
+        {
+            await store.FailRunAsync(
+                workflowRunId,
+                ownerId,
+                WorkflowError.FromException(
+                    new TimeoutException(
+                        $"Workflow '{workflowRunId:D}' exceeded its deadline of {deadline:O}."),
+                    now),
+                now,
+                CancellationToken.None).ConfigureAwait(false);
             return;
         }
 

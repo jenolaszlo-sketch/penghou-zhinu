@@ -26,6 +26,14 @@ public interface IWorkflowStore
         int limit,
         CancellationToken cancellationToken = default);
 
+    ValueTask<WorkflowEvent> AppendEventAsync(
+        Guid workflowRunId,
+        string eventType,
+        string? dataJson,
+        string? stepKey = null,
+        int? attempt = null,
+        CancellationToken cancellationToken = default);
+
     ValueTask<IReadOnlyList<Guid>> GetRunnableRunIdsAsync(
         DateTimeOffset now,
         int limit,

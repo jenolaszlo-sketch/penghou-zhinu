@@ -30,6 +30,15 @@ public static class ServiceCollectionExtensions
         });
         services.TryAddSingleton<IWorkflowRegistry>(provider =>
             provider.GetRequiredService<WorkflowRegistry>());
+        if (!services.Any(service =>
+                service.ServiceType == typeof(IWorkflowStore) ||
+                typeof(IWorkflowStore).IsAssignableFrom(service.ServiceType)))
+        {
+            throw new InvalidOperationException(
+                "AddZhinu requires a registered IWorkflowStore. Register the " +
+                "Penghou.Zhinu.Sqlite package with AddZhinuSqlite(...), or register " +
+                "your own IWorkflowStore implementation, before calling AddZhinu.");
+        }
         services.TryAddSingleton(provider => new WorkflowEngine(
             provider.GetRequiredService<IWorkflowStore>(),
             provider.GetRequiredService<IWorkflowRegistry>(),
