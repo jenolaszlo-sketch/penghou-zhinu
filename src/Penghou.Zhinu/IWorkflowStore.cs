@@ -132,4 +132,10 @@ public interface IWorkflowStore
         DateTimeOffset olderThan,
         IReadOnlyList<WorkflowStatus>? statuses = null,
         CancellationToken cancellationToken = default);
+
+    ValueTask<int> RestartStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
 }

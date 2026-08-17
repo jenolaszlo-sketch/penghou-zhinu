@@ -556,6 +556,72 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RestartStepAsync_RerunsStepAndSubtreeWhileReusingPrefix()
+    {
+        var first = new RestartableWorkflow { SecondSuffix = "a" };
+        var engine = CreateEngine(first, "restart");
+        var result = await engine.RunAsync<string, string>(
+            "restart",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("hello-x-a");
+        first.FirstCalls.Should().Be(1);
+        first.SecondCalls.Should().Be(1);
+        var runId = first.RunId;
+
+        var invalidated = await engine.RestartStepAsync(
+            runId,
+            "second",
+            TestContext.Current.CancellationToken);
+        invalidated.Should().Be(1);
+
+        var resumed = new RestartableWorkflow { SecondSuffix = "b" };
+        var resumedEngine = CreateEngine(resumed, "restart");
+        await resumedEngine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var rerun = await resumedEngine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rerun.Should().Be("hello-x-b");
+        first.FirstCalls.Should().Be(1);
+        resumed.FirstCalls.Should().Be(0);
+        resumed.SecondCalls.Should().Be(1);
+        (await resumedEngine.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken)).Should().HaveCount(2)
+            .And.OnlyContain(step => step.Status == StepStatus.Completed);
+        (await resumedEngine.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken)).Should().Contain(item =>
+            item.EventType == WorkflowEventTypes.StepRestarted);
+    }
+
+    [Fact]
+    public async Task RestartStepAsync_UnknownStep_ThrowsKeyNotFound()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "restart-missing");
+        var runId = await engine.StartAsync(
+            "restart-missing",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        await engine.Invoking(engine =>
+            engine.RestartStepAsync(
+                runId,
+                "missing",
+                TestContext.Current.CancellationToken))
+            .Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
     public async Task WaitForCompletionAsync_AfterDeadline_ThrowsTimeout()
     {
         var workflow = new SlowWorkflow();
@@ -910,6 +976,40 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                 {
                     SecondCalls++;
                     return Task.FromResult($"{value}!");
+                },
+                cancellationToken: cancellationToken);
+        }
+    }
+
+    private sealed class RestartableWorkflow : IWorkflow<string, string>
+    {
+        public string SecondSuffix = "a";
+        public int FirstCalls;
+        public int SecondCalls;
+        public Guid RunId;
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var first = await context.StepAsync(
+                "first",
+                input,
+                (value, _) =>
+                {
+                    FirstCalls++;
+                    return Task.FromResult($"hello-{value}");
+                },
+                cancellationToken: cancellationToken);
+            return await context.StepAsync(
+                "second",
+                first,
+                (value, _) =>
+                {
+                    SecondCalls++;
+                    return Task.FromResult($"{value}-{SecondSuffix}");
                 },
                 cancellationToken: cancellationToken);
         }

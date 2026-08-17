@@ -358,6 +358,35 @@ var result = await engine.WaitForCompletionAsync<string>(
     cancellationToken);
 ```
 
+## Restarting a step
+
+`RestartStepAsync` invalidates a step and everything downstream of it without
+touching the steps that came before, then resets the run to `Pending`:
+
+```csharp
+await engine.RestartStepAsync(runId, "encode.video", cancellationToken);
+```
+
+On the next execution the prefix is reconstructed from committed results (its
+delegates are not re-run), while the restarted step and every step created at
+or after it are claimed fresh and re-executed, so their new outputs propagate
+to the run result. Use it to redo a bad generation, correct a failed batch,
+or re-apply a fixed step after a bugfix.
+
+Semantics to be aware of:
+
+- "Everything downstream" is approximated by **creation order**: because Zhinu
+  does not store an explicit dependency graph, the target step and every step
+  created at or after it are invalidated. For linear pipelines and fan-out
+  chains this is exact; for concurrently created fan-out siblings it may
+  re-execute steps that did not actually depend on the target (harmless extra
+  work under Zhinu's idempotent-step assumption, but worth knowing).
+- If the run is currently executing in this process, that execution is
+  cancelled first (best-effort). Restarting a run that another process is
+  executing is not supported — cancel it there first.
+- Run metadata and deadline are preserved; clear the deadline yourself if a
+  restart should extend it.
+
 ## What Zhinu is not
 
 - Not a distributed workflow cluster

@@ -16,4 +16,5 @@ public static class WorkflowEventTypes
     public const string DelayScheduled = "delay-scheduled";
     public const string LeaseRecovered = "lease-recovered";
     public const string Progress = "progress";
+    public const string StepRestarted = "step-restarted";
 }

@@ -931,6 +931,74 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return deleted;
     }
 
+    public async ValueTask<int> RestartStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var runStatus = await ReadRunStatusAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (runStatus is null)
+        {
+            throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        }
+        var target = await ReadStepAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            stepKey,
+            cancellationToken).ConfigureAwait(false) ??
+            throw new KeyNotFoundException(
+                $"Step '{stepKey}' does not exist in workflow '{workflowRunId:D}'.");
+        await using var resetRun = CreateCommand(connection, transaction, """
+            UPDATE workflow_runs
+            SET status = $pending, output_json = NULL,
+                error_json = NULL, completed_at = NULL,
+                lease_owner = NULL, lease_expires_at = NULL, updated_at = $now
+            WHERE id = $id;
+            """);
+        resetRun.Parameters.AddWithValue("$pending", (int)WorkflowStatus.Pending);
+        resetRun.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        resetRun.Parameters.AddWithValue("$id", Format(workflowRunId));
+        await resetRun.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await using var delete = CreateCommand(connection, transaction, """
+            DELETE FROM workflow_steps
+            WHERE workflow_run_id = $runId AND created_at >= $targetCreatedAt;
+            """);
+        delete.Parameters.AddWithValue("$runId", Format(workflowRunId));
+        delete.Parameters.AddWithValue(
+            "$targetCreatedAt",
+            FormatTimestamp(target.CreatedAt));
+        var invalidated = await delete.ExecuteNonQueryAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await InsertEventAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            stepKey,
+            WorkflowEventTypes.StepRestarted,
+            now,
+            null,
+            JsonSerializer.Serialize(
+                new { stepKey, invalidatedSteps = invalidated },
+                SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return invalidated;
+    }
+
     private async ValueTask FinishRunAsync(
         Guid workflowRunId,
         string ownerId,

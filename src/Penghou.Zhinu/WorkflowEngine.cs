@@ -255,7 +255,7 @@ public sealed class WorkflowEngine
             var current = await store.GetRunAsync(
                 workflowRunId,
                 CancellationToken.None).ConfigureAwait(false);
-            if (current?.Status != WorkflowStatus.Cancelled)
+            if (current?.Status == WorkflowStatus.Running)
             {
                 await store.FailRunAsync(
                     workflowRunId,
@@ -375,6 +375,33 @@ public sealed class WorkflowEngine
         return await store.PurgeRunsAsync(
             olderThan,
             statuses,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Invalidates the step <paramref name="stepKey"/> and every step created
+    /// at or after it, then resets the run to <see cref="WorkflowStatus.Pending"/>
+    /// so the next execution re-runs the target step and its sub-tree while
+    /// reusing committed results from the prefix. If this process is currently
+    /// executing the run, its execution is cancelled first (best-effort).
+    /// Returns the number of steps invalidated, including the target.
+    /// </summary>
+    public async Task<int> RestartStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        if (runningCancellations.TryGetValue(
+                workflowRunId,
+                out var runningCancellation))
+        {
+            await runningCancellation.CancelAsync().ConfigureAwait(false);
+        }
+        return await store.RestartStepAsync(
+            workflowRunId,
+            stepKey,
+            timeProvider.GetUtcNow(),
             cancellationToken).ConfigureAwait(false);
     }
 
