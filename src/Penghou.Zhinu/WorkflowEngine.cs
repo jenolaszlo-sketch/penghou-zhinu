@@ -144,6 +144,19 @@ public sealed class WorkflowEngine
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ExecuteCoreAsync(
+            workflowRunId,
+            cancellationToken,
+            0).ConfigureAwait(false);
+    }
+
+    private async Task ExecuteCoreAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken,
+        int depth)
+    {
+        if (depth > options.MaxNestingDepth)
+            return;
         var run = await store.GetRunAsync(workflowRunId, cancellationToken)
             .ConfigureAwait(false) ??
             throw new KeyNotFoundException(
@@ -214,7 +227,12 @@ public sealed class WorkflowEngine
                 serializerOptions,
                 timeProvider,
                 runCancellation.Token,
-                eventPublisher);
+                eventPublisher,
+                executeChildRun: (childId, childCancellation) =>
+                    ExecuteCoreAsync(
+                        childId,
+                        childCancellation,
+                        depth + 1));
             logger.LogInformation(
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",
                 workflowRunId,
@@ -403,6 +421,35 @@ public sealed class WorkflowEngine
             stepKey,
             timeProvider.GetUtcNow(),
             cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Buffers an external signal for <paramref name="workflowRunId"/> under
+    /// <paramref name="signalName"/>. Signals are consumed by a
+    /// <c>WaitForSignalAsync</c> wait in the workflow; signals sent before any
+    /// wait are held until a matching wait appears. A signal is delivered to
+    /// exactly one waiting step.
+    /// </summary>
+    public async Task SendSignalAsync(
+        Guid workflowRunId,
+        string signalName,
+        object? data = null,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
+        var dataJson = data is null
+            ? null
+            : JsonSerializer.Serialize(data, serializerOptions);
+        await store.SendSignalAsync(
+            workflowRunId,
+            signalName,
+            dataJson,
+            cancellationToken).ConfigureAwait(false);
+        logger.LogInformation(
+            "Buffered signal '{SignalName}' for workflow {WorkflowRunId}.",
+            signalName,
+            workflowRunId);
     }
 
     public async Task<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(

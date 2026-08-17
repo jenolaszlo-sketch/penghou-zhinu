@@ -13,6 +13,12 @@ public sealed class ZhinuOptions
 
     public int ScanBatchSize { get; set; } = 100;
 
+    /// <summary>
+    /// Maximum depth of child workflows executed inline by a parent. Deeper
+    /// children are left for the poll loop / background host to drive.
+    /// </summary>
+    public int MaxNestingDepth { get; set; } = 16;
+
     internal void Validate()
     {
         if (MaxConcurrentWorkflows < 1)
@@ -28,5 +34,7 @@ public sealed class ZhinuOptions
             throw new ArgumentOutOfRangeException(nameof(PollInterval));
         if (ScanBatchSize < 1)
             throw new ArgumentOutOfRangeException(nameof(ScanBatchSize));
+        if (MaxNestingDepth < 1)
+            throw new ArgumentOutOfRangeException(nameof(MaxNestingDepth));
     }
 }

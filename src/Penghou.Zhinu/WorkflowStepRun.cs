@@ -33,6 +33,12 @@ public sealed record WorkflowStepRun
 
     public WorkflowError? Error { get; init; }
 
+    /// <summary>
+    /// For a step waiting on an external signal, the signal name it waits for.
+    /// Null for ordinary and delay steps.
+    /// </summary>
+    public string? SignalName { get; init; }
+
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }

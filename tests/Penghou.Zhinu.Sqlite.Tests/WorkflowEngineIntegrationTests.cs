@@ -622,6 +622,240 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task WaitForSignalAsync_SignalDeliveredAfterWait_CompletesWorkflow()
+    {
+        var workflow = new SignalWorkflow();
+        var engine = CreateEngine(workflow, "signal");
+        var runId = await engine.StartAsync(
+            "signal",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var execution = engine.ExecuteAsync(runId, cts.Token);
+        await WaitUntilAsync(
+            () => HasStepStatusAsync(
+                engine,
+                runId,
+                "approval",
+                StepStatus.Waiting,
+                cts.Token),
+            cts.Token);
+        await engine.SendSignalAsync(runId, "approve", "yes", cts.Token);
+        await execution;
+
+        var result = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.Should().Be("yes");
+        (await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status.Should().Be(WorkflowStatus.Completed);
+    }
+
+    [Fact]
+    public async Task WaitForSignalAsync_SignalBufferedBeforeWait_IsDeliveredImmediately()
+    {
+        var workflow = new SignalWorkflow();
+        var engine = CreateEngine(workflow, "signal-buffered");
+        var runId = await engine.StartAsync(
+            "signal-buffered",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.SendSignalAsync(
+            runId,
+            "approve",
+            "yes",
+            TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var result = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.Should().Be("yes");
+        var events = await engine.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        events.Should().Contain(item => item.EventType == WorkflowEventTypes.SignalSent);
+        events.Should().Contain(item => item.EventType == WorkflowEventTypes.SignalDelivered);
+    }
+
+    [Fact]
+    public async Task WaitForSignalAsync_Timeout_FailsRun()
+    {
+        var workflow = new SignalWorkflow
+        {
+            WaitTimeout = TimeSpan.FromMilliseconds(150)
+        };
+        var engine = CreateEngine(workflow, "signal-timeout");
+        var runId = await engine.StartAsync(
+            "signal-timeout",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var action = () => engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        await action.Should().ThrowAsync<WorkflowExecutionFailedException>()
+            .WithMessage("*not delivered before the wait deadline*");
+        (await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status.Should().Be(WorkflowStatus.Failed);
+        (await engine.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken)).Single(item => item.StepKey == "approval")
+            .Status.Should().Be(StepStatus.Waiting);
+    }
+
+    [Fact]
+    public async Task WaitForSignalAsync_SurvivesInterruption_ThenReceivesLateSignal()
+    {
+        var workflow = new SignalWorkflow();
+        var engine = CreateEngine(workflow, "signal-interrupt");
+        var runId = await engine.StartAsync(
+            "signal-interrupt",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var interruption = new CancellationTokenSource();
+        var execution = engine.ExecuteAsync(runId, interruption.Token);
+        await WaitUntilAsync(
+            () => HasStepStatusAsync(
+                engine,
+                runId,
+                "approval",
+                StepStatus.Waiting,
+                cts.Token),
+            cts.Token);
+        await interruption.CancelAsync();
+        await execution;
+        (await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status.Should().Be(WorkflowStatus.Running);
+        (await engine.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken)).Single(item => item.StepKey == "approval")
+            .Status.Should().Be(StepStatus.Waiting);
+
+        await engine.SendSignalAsync(
+            runId,
+            "approve",
+            "yes",
+            TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var result = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.Should().Be("yes");
+    }
+
+    [Fact]
+    public async Task StartChildAsync_ExecutesChildAndWaitsForResult()
+    {
+        var parent = new ParentWorkflow();
+        var child = new ChildWorkflow();
+        var engine = CreateEngine(
+            new WorkflowRegistry()
+                .Register("parent", "1", parent)
+                .Register("child", "1", child));
+        var runId = await engine.StartAsync(
+            "parent",
+            "1",
+            "go",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var result = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("child:parent:go");
+        child.Calls.Should().Be(1);
+        var childRun = (await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "child" },
+            cancellationToken: TestContext.Current.CancellationToken)).Single();
+        childRun.Status.Should().Be(WorkflowStatus.Completed);
+        childRun.ParentRunId.Should().Be(runId);
+        (await engine.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken)).Should().HaveCount(3)
+            .And.OnlyContain(step => step.Status == StepStatus.Completed);
+    }
+
+    [Fact]
+    public async Task StartChildAsync_ChildFailure_PropagatesToParent()
+    {
+        var parent = new FailingParentWorkflow();
+        var child = new FailingChildWorkflow();
+        var engine = CreateEngine(
+            new WorkflowRegistry()
+                .Register("fail-parent", "1", parent)
+                .Register("bad-child", "1", child));
+        var runId = await engine.StartAsync(
+            "fail-parent",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var action = () => engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        await action.Should().ThrowAsync<WorkflowExecutionFailedException>()
+            .WithMessage("*child failed*");
+        (await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "bad-child" },
+            cancellationToken: TestContext.Current.CancellationToken)).Single()
+            .Status.Should().Be(WorkflowStatus.Failed);
+        (await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status.Should().Be(WorkflowStatus.Failed);
+    }
+
+    [Fact]
+    public async Task StartChildAsync_RestartingStartStepReusesExistingChildRun()
+    {
+        var parent = new ParentWorkflow();
+        var child = new ChildWorkflow();
+        var engine = CreateEngine(
+            new WorkflowRegistry()
+                .Register("parent", "1", parent)
+                .Register("child", "1", child));
+        var runId = await engine.StartAsync(
+            "parent",
+            "1",
+            "go",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var original = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        original.Should().Be("child:parent:go");
+
+        await engine.RestartStepAsync(
+            runId,
+            "child:start",
+            TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var rerun = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        rerun.Should().Be("child:parent:go");
+        var runs = await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "child" },
+            cancellationToken: TestContext.Current.CancellationToken);
+        runs.Should().ContainSingle()
+            .Which.ParentRunId.Should().Be(runId);
+    }
+
+    [Fact]
     public async Task WaitForCompletionAsync_AfterDeadline_ThrowsTimeout()
     {
         var workflow = new SlowWorkflow();
@@ -796,7 +1030,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         run.Should().NotBeNull();
         run!.Status.Should().Be(WorkflowStatus.Pending);
         var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
-        version.Should().Be(3L);
+        version.Should().Be(4L);
     }
 
     [Fact]
@@ -897,7 +1131,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         run!.Status.Should().Be(WorkflowStatus.Pending);
         run.Deadline.Should().Be(now.AddMinutes(5));
         var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
-        version.Should().Be(3L);
+        version.Should().Be(4L);
     }
 
     private static async Task<long> ScalarAsync(
@@ -918,10 +1152,15 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         TWorkflow workflow,
         string name,
         TimeSpan? leaseDuration = null)
-        where TWorkflow : class, IWorkflow<string, string>
+        where TWorkflow : class, IWorkflow<string, string> =>
+        CreateEngine(
+            new WorkflowRegistry().Register(name, "1", workflow),
+            leaseDuration);
+
+    private WorkflowEngine CreateEngine(
+        WorkflowRegistry registry,
+        TimeSpan? leaseDuration = null)
     {
-        var registry = new WorkflowRegistry()
-            .Register(name, "1", workflow);
         var duration = leaseDuration ?? TimeSpan.FromSeconds(2);
         return new WorkflowEngine(
             CreateStore(),
@@ -932,6 +1171,27 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                 LeaseRenewalInterval = TimeSpan.FromTicks(duration.Ticks / 3),
                 PollInterval = TimeSpan.FromMilliseconds(10)
             });
+    }
+
+    private static async Task WaitUntilAsync(
+        Func<Task<bool>> condition,
+        CancellationToken cancellationToken)
+    {
+        while (!await condition().ConfigureAwait(false))
+        {
+            await Task.Delay(25, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task<bool> HasStepStatusAsync(
+        WorkflowEngine engine,
+        Guid runId,
+        string stepKey,
+        StepStatus status,
+        CancellationToken cancellationToken)
+    {
+        var steps = await engine.GetStepsAsync(runId, cancellationToken);
+        return steps.Any(item => item.StepKey == stepKey && item.Status == status);
     }
 
     private SqliteWorkflowStore CreateStore() =>
@@ -1013,6 +1273,93 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                 },
                 cancellationToken: cancellationToken);
         }
+    }
+
+    private sealed class SignalWorkflow : IWorkflow<string, string>
+    {
+        public TimeSpan? WaitTimeout { get; set; }
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            await context.StepAsync(
+                "greet",
+                input,
+                (value, _) => Task.FromResult($"hello-{value}"),
+                cancellationToken: cancellationToken);
+            return await context.WaitForSignalAsync<string>(
+                "approval",
+                "approve",
+                WaitTimeout,
+                cancellationToken);
+        }
+    }
+
+    private sealed class ParentWorkflow : IWorkflow<string, string>
+    {
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            var first = await context.StepAsync(
+                "parent-step",
+                input,
+                (value, _) => Task.FromResult($"parent:{value}"),
+                cancellationToken: cancellationToken);
+            return await context.StartChildAsync<string, string>(
+                "child",
+                "child",
+                "1",
+                first,
+                cancellationToken);
+        }
+    }
+
+    private sealed class ChildWorkflow : IWorkflow<string, string>
+    {
+        public int Calls { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            return await context.StepAsync(
+                "child-step",
+                input,
+                (value, _) => Task.FromResult($"child:{value}"),
+                cancellationToken: cancellationToken);
+        }
+    }
+
+    private sealed class FailingChildWorkflow : IWorkflow<string, string>
+    {
+        public Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken) =>
+            Task.FromException<string>(
+                new InvalidOperationException("child failed"));
+    }
+
+    private sealed class FailingParentWorkflow : IWorkflow<string, string>
+    {
+        public Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken) =>
+            context.StartChildAsync<string, string>(
+                "child",
+                "bad-child",
+                "1",
+                input,
+                cancellationToken);
     }
 
     private sealed class RetryWorkflow : IWorkflow<string, string>

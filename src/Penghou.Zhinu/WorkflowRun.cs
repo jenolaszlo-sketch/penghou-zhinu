@@ -35,6 +35,13 @@ public sealed record WorkflowRun
     public WorkflowError? Error { get; init; }
 
     /// <summary>
+    /// The run that started this run as a child workflow, if any. Child runs are
+    /// ordinary runs with their own steps and events; the parent durably waits
+    /// for their completion.
+    /// </summary>
+    public Guid? ParentRunId { get; init; }
+
+    /// <summary>
     /// Optional caller-supplied metadata serialized as JSON (for example
     /// correlation ids, owners, or tags). Metadata does not participate in
     /// idempotency or workflow contract validation.

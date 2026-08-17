@@ -19,6 +19,7 @@ public sealed class WorkflowContext
     private readonly TimeProvider timeProvider;
     private readonly CancellationToken workflowCancellationToken;
     private readonly IWorkflowEventPublisher? eventPublisher;
+    private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> stepLocks =
         new(StringComparer.Ordinal);
 
@@ -30,7 +31,8 @@ public sealed class WorkflowContext
         JsonSerializerOptions serializerOptions,
         TimeProvider timeProvider,
         CancellationToken workflowCancellationToken,
-        IWorkflowEventPublisher? eventPublisher = null)
+        IWorkflowEventPublisher? eventPublisher = null,
+        Func<Guid, CancellationToken, Task>? executeChildRun = null)
     {
         WorkflowRunId = workflowRunId;
         this.store = store;
@@ -40,6 +42,7 @@ public sealed class WorkflowContext
         this.timeProvider = timeProvider;
         this.workflowCancellationToken = workflowCancellationToken;
         this.eventPublisher = eventPublisher;
+        this.executeChildRun = executeChildRun;
     }
 
     public Guid WorkflowRunId { get; }
@@ -249,6 +252,100 @@ public sealed class WorkflowContext
     }
 
     /// <summary>
+    /// Durably waits for an external signal delivered by
+    /// <see cref="WorkflowEngine.SendSignalAsync"/>. Signals are buffered in the
+    /// store: one delivered before this wait begins (or arriving while it
+    /// waits) is consumed exactly once by the first matching wait. The wait
+    /// survives process restarts; when it times out, the step stays recorded as
+    /// waiting so a later re-execution can still consume a late signal.
+    /// </summary>
+    public async Task<T> WaitForSignalAsync<T>(
+        string stepKey,
+        string signalName,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateStepKey(stepKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
+        if (timeout is { } waitTimeout && waitTimeout < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(timeout));
+        var outputType = SerializationIdentity.TypeId(typeof(T));
+        var stepLock = stepLocks.GetOrAdd(stepKey, _ => new SemaphoreSlim(1, 1));
+        using var linkedCancellation = CancellationTokenSource
+            .CreateLinkedTokenSource(
+                workflowCancellationToken,
+                cancellationToken);
+        await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
+        try
+        {
+            var deadline = timeout is null
+                ? (DateTimeOffset?)null
+                : timeProvider.GetUtcNow() + timeout.Value;
+            while (true)
+            {
+                var claim = await ClaimAsync(
+                    stepKey,
+                    signalName,
+                    SerializationIdentity.TypeId(typeof(string)),
+                    SerializationIdentity.Hash(signalName),
+                    outputType,
+                    linkedCancellation.Token).ConfigureAwait(false);
+                switch (claim.Disposition)
+                {
+                    case StepClaimDisposition.Reused:
+                        return Deserialize<T>(claim.Step.OutputJson, outputType);
+                    case StepClaimDisposition.Busy:
+                        await Task.Delay(
+                            options.PollInterval,
+                            timeProvider,
+                            linkedCancellation.Token).ConfigureAwait(false);
+                        continue;
+                    case StepClaimDisposition.Cancelled:
+                        throw new OperationCanceledException(
+                            $"Workflow step '{stepKey}' was cancelled.",
+                            linkedCancellation.Token);
+                    case StepClaimDisposition.Failed:
+                        throw new WorkflowStepFailedException(
+                            stepKey,
+                            claim.Step.Error ?? UnknownFailure(stepKey));
+                    case StepClaimDisposition.Waiting:
+                    case StepClaimDisposition.Acquired:
+                        {
+                            var delivery = await store.TryDeliverSignalAsync(
+                                claim.Step.Id,
+                                ownerId,
+                                signalName,
+                                timeProvider.GetUtcNow(),
+                                linkedCancellation.Token).ConfigureAwait(false);
+                            if (delivery is { } delivered)
+                            {
+                                return Deserialize<T>(delivered.DataJson, outputType);
+                            }
+                            if (deadline is { } waitDeadline &&
+                                timeProvider.GetUtcNow() > waitDeadline)
+                            {
+                                throw new TimeoutException(
+                                    $"Signal '{signalName}' was not delivered before the wait deadline.");
+                            }
+                            await Task.Delay(
+                                options.PollInterval,
+                                timeProvider,
+                                linkedCancellation.Token).ConfigureAwait(false);
+                            continue;
+                        }
+                    default:
+                        throw new WorkflowStateException(
+                            $"Unknown claim result for step '{stepKey}'.");
+                }
+            }
+        }
+        finally
+        {
+            stepLock.Release();
+        }
+    }
+
+    /// <summary>
     /// Persists a caller-visible, replay-safe event with optional serialized data.
     /// Emitted events are committed atomically with state transitions and survive
     /// process restarts; subscribers can read them via <c>SubscribeAsync</c> or
@@ -339,6 +436,127 @@ public sealed class WorkflowContext
         var completed = await Task.WhenAll(tasks).ConfigureAwait(false);
         completed.CopyTo(results, 0);
         return results;
+    }
+
+    /// <summary>
+    /// Starts a child workflow and durably waits for its result. The child is a
+    /// regular run linked via <see cref="WorkflowRun.ParentRunId"/>; its id is
+    /// derived deterministically from the parent and step key so replays reuse
+    /// it. Child failure or cancellation propagates to this step.
+    /// </summary>
+    public async Task<TOutput> StartChildAsync<TInput, TOutput>(
+        string stepKey,
+        string workflowName,
+        string workflowVersion,
+        TInput input,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateStepKey(stepKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workflowName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workflowVersion);
+        var request = new ChildStartRequest(
+            workflowName,
+            workflowVersion,
+            JsonSerializer.Serialize(input, serializerOptions),
+            SerializationIdentity.TypeId(typeof(TInput)),
+            SerializationIdentity.TypeId(typeof(TOutput)));
+        var childId = await StepAsync(
+            $"{stepKey}:start",
+            request,
+            (value, _, ct) => CreateChildRunAsync(stepKey, value, ct),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await WaitForChildAsync<TOutput>(
+            $"{stepKey}:wait",
+            childId,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<Guid> CreateChildRunAsync(
+        string stepKey,
+        ChildStartRequest request,
+        CancellationToken cancellationToken)
+    {
+        var childId = SerializationIdentity.HashId($"{WorkflowRunId:D}:{stepKey}");
+        var existing = await store.GetRunAsync(
+            childId,
+            cancellationToken).ConfigureAwait(false);
+        if (existing is not null)
+            return childId;
+        var now = timeProvider.GetUtcNow();
+        await store.CreateRunAsync(
+            new WorkflowRun
+            {
+                Id = childId,
+                WorkflowName = request.WorkflowName,
+                WorkflowVersion = request.WorkflowVersion,
+                Status = WorkflowStatus.Pending,
+                CreatedAt = now,
+                UpdatedAt = now,
+                InputJson = request.InputJson,
+                InputType = request.InputType,
+                OutputType = request.OutputType,
+                ParentRunId = WorkflowRunId
+            },
+            cancellationToken).ConfigureAwait(false);
+        return childId;
+    }
+
+    private async Task<TOutput> WaitForChildAsync<TOutput>(
+        string stepKey,
+        Guid childId,
+        CancellationToken cancellationToken) =>
+        await StepAsync(
+            stepKey,
+            childId,
+            (value, _, ct) => AwaitChildCoreAsync<TOutput>(value, ct),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+    private async Task<TOutput> AwaitChildCoreAsync<TOutput>(
+        Guid childId,
+        CancellationToken cancellationToken)
+    {
+        var outputType = SerializationIdentity.TypeId(typeof(TOutput));
+        while (true)
+        {
+            var child = await store.GetRunAsync(childId, cancellationToken)
+                .ConfigureAwait(false) ??
+                throw new WorkflowStateException(
+                    $"Child workflow '{childId:D}' does not exist.");
+            switch (child.Status)
+            {
+                case WorkflowStatus.Completed:
+                    if (!string.Equals(
+                            child.OutputType,
+                            outputType,
+                            StringComparison.Ordinal))
+                    {
+                        throw new WorkflowSerializationException(
+                            $"Child workflow result was stored as '{child.OutputType}', not '{outputType}'.");
+                    }
+                    return Deserialize<TOutput>(child.OutputJson, outputType);
+                case WorkflowStatus.Failed:
+                    throw new WorkflowExecutionFailedException(
+                        childId,
+                        child.Error ?? new WorkflowError
+                        {
+                            Type = typeof(WorkflowStateException).FullName!,
+                            Message = $"Child workflow '{childId:D}' failed without persisted details.",
+                            Timestamp = timeProvider.GetUtcNow()
+                        });
+                case WorkflowStatus.Cancelled:
+                    throw new OperationCanceledException(
+                        $"Child workflow '{childId:D}' was cancelled.",
+                        cancellationToken);
+            }
+            if (executeChildRun is not null)
+            {
+                await executeChildRun(childId, cancellationToken).ConfigureAwait(false);
+            }
+            await Task.Delay(
+                options.PollInterval,
+                timeProvider,
+                cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private async Task<TOutput> ExecuteClaimedAsync<TInput, TOutput>(
@@ -551,4 +769,11 @@ public sealed class WorkflowContext
     }
 
     private readonly record struct DurableDelayMarker;
+
+    private sealed record ChildStartRequest(
+        string WorkflowName,
+        string WorkflowVersion,
+        string InputJson,
+        string InputType,
+        string OutputType);
 }

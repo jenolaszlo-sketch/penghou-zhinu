@@ -387,6 +387,70 @@ Semantics to be aware of:
 - Run metadata and deadline are preserved; clear the deadline yourself if a
   restart should extend it.
 
+## External signals
+
+Workflows can durably wait for external input. `WaitForSignalAsync` is a
+replay-safe boundary: the wait is recorded in the run's history, so a workflow
+that is waiting survives restarts and keeps waiting:
+
+```csharp
+var approval = await context.WaitForSignalAsync<string>(
+    "wait.approval",      // durable step key
+    "approve",            // signal name
+    timeout: TimeSpan.FromHours(48),
+    cancellationToken);
+```
+
+The signal is delivered from outside the workflow:
+
+```csharp
+await engine.SendSignalAsync(runId, "approve", new { decision = "ok" });
+```
+
+Semantics to be aware of:
+
+- Signals are **buffered in the store**. A signal sent before any wait for it
+  exists is held until a matching `WaitForSignalAsync` appears; a signal is
+  then consumed by exactly one waiting step (oldest wait first, guarded
+  update), so it cannot be double-delivered.
+- `SignalSent` and `SignalDelivered` events are appended atomically with the
+  signal, so a delivered signal is always observable.
+- When the wait times out, the run fails with a `TimeoutException` while the
+  wait step stays recorded as waiting — a late signal can still be consumed if
+  the step is later restarted.
+- Sending a signal to a finished run buffers it but it is never delivered;
+  the `SignalSent` event still records that it was sent.
+- The wait's payload type must match what the sender serialized; data is
+  deserialized with the run's serializer settings.
+
+## Child workflows
+
+A workflow can start another workflow and durably wait for its result:
+
+```csharp
+var thumbnail = await context.StartChildAsync<VideoRef, Thumbnail>(
+    "thumbnails",          // step key prefix; child id derives from this
+    "video.thumbnail",     // child workflow name
+    "1",                   // child workflow version
+    input,
+    cancellationToken);
+```
+
+- The child is an ordinary run linked via `ParentRunId`, so it shows up in
+  queries and is executed by the same machinery (leases, recovery, deadlines).
+- The child's id is **deterministic** — a hash of the parent id and the step
+  key — so replaying the parent reuses the exact same child run instead of
+  creating duplicates, even across a crash between creating the child and
+  recording the step.
+- Children execute **inline** by default: the parent's `ExecuteAsync` drives
+  the child to completion while the parent holds its own lease, so a child run
+  cannot be double-executed concurrently (the child's own claim arbitration
+  decides). Depth is capped by `ZhinuOptions.MaxNestingDepth` (default 16);
+  deeper children are left for the poll loop / background host.
+- A child that fails or is cancelled propagates to the parent: failure throws
+  `WorkflowExecutionFailedException`, cancellation throws
+  `OperationCanceledException`.
+
 ## What Zhinu is not
 
 - Not a distributed workflow cluster

@@ -80,6 +80,12 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 throw new InvalidOperationException(
                     $"Unsupported Zhinu SQLite schema version {version}.");
             }
+            await ExecuteAsync(
+                connection,
+                null,
+                "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent" +
+                " ON workflow_runs(parent_run_id);",
+                cancellationToken).ConfigureAwait(false);
             initialized = true;
         }
         finally
@@ -101,12 +107,12 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             INSERT INTO workflow_runs
             (id, workflow_name, workflow_version, status, input_json,
              input_type, output_json, output_type, error_json, created_at,
-             updated_at, completed_at, deadline, metadata_json,
+             updated_at, completed_at, deadline, metadata_json, parent_run_id,
              lease_owner, lease_expires_at)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
-             $updatedAt, $completedAt, $deadline, $metadataJson,
+             $updatedAt, $completedAt, $deadline, $metadataJson, $parentRunId,
              $leaseOwner, $leaseExpiresAt);
             """);
         AddRunParameters(command, run);
@@ -640,7 +646,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         if (existing.Status == StepStatus.Cancelled)
             return new StepClaimResult(StepClaimDisposition.Cancelled, existing);
         if (existing.Status == StepStatus.Waiting &&
-            existing.AvailableAt > request.Now)
+            (existing.SignalName is not null ||
+             (existing.AvailableAt is not null &&
+              existing.AvailableAt > request.Now)))
         {
             return new StepClaimResult(StepClaimDisposition.Waiting, existing);
         }
@@ -999,6 +1007,174 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return invalidated;
     }
 
+    public async ValueTask SendSignalAsync(
+        Guid workflowRunId,
+        string signalName,
+        string? dataJson,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var runStatus = await ReadRunStatusAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (runStatus is null)
+        {
+            throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        }
+        var now = DateTimeOffset.UtcNow;
+        await using var command = CreateCommand(connection, transaction, """
+            INSERT INTO workflow_signals
+            (id, workflow_run_id, signal_name, data_json, created_at)
+            VALUES ($id, $runId, $name, $dataJson, $now);
+            """);
+        command.Parameters.AddWithValue("$id", Format(Guid.NewGuid()));
+        command.Parameters.AddWithValue("$runId", Format(workflowRunId));
+        command.Parameters.AddWithValue("$name", signalName);
+        command.Parameters.AddWithValue("$dataJson", DbValue(dataJson));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await InsertEventAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            null,
+            WorkflowEventTypes.SignalSent,
+            now,
+            null,
+            JsonSerializer.Serialize(
+                new { signalName, data = dataJson },
+                SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask<SignalDelivery?> TryDeliverSignalAsync(
+        Guid stepId,
+        string ownerId,
+        string signalName,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var step = await ReadStepByIdAsync(
+            connection,
+            transaction,
+            stepId,
+            cancellationToken).ConfigureAwait(false) ??
+            throw new KeyNotFoundException($"Step '{stepId:D}' does not exist.");
+        if (step.Status == StepStatus.Completed)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return new SignalDelivery(step.OutputJson);
+        }
+        if (step.SignalName is not null &&
+            !string.Equals(step.SignalName, signalName, StringComparison.Ordinal))
+        {
+            throw new WorkflowStateException(
+                $"Step '{step.StepKey}' is waiting on signal '{step.SignalName}', not '{signalName}'.");
+        }
+        if (step.Status is not (StepStatus.Waiting or StepStatus.Running))
+            return null;
+        var effectiveName = step.SignalName ?? signalName;
+        await using var select = CreateCommand(connection, transaction, """
+            SELECT id, data_json
+            FROM workflow_signals
+            WHERE workflow_run_id = $runId
+              AND signal_name = $name
+              AND delivered_step_id IS NULL
+            ORDER BY created_at
+            LIMIT 1;
+            """);
+        select.Parameters.AddWithValue("$runId", Format(step.WorkflowRunId));
+        select.Parameters.AddWithValue("$name", effectiveName);
+        string? signalId = null;
+        string? dataJson = null;
+        await using (var reader = await select.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false))
+        {
+            if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                signalId = reader.GetString(0);
+                dataJson = GetNullableString(reader, 1);
+            }
+        }
+        if (signalId is null)
+        {
+            if (step.Status == StepStatus.Running)
+            {
+                await using var waiting = CreateCommand(connection, transaction, """
+                    UPDATE workflow_steps
+                    SET status = $waiting, signal_name = $name,
+                        available_at = NULL, error_json = NULL,
+                        lease_owner = NULL, lease_expires_at = NULL
+                    WHERE id = $id AND status = $running;
+                    """);
+                waiting.Parameters.AddWithValue("$waiting", (int)StepStatus.Waiting);
+                waiting.Parameters.AddWithValue("$running", (int)StepStatus.Running);
+                waiting.Parameters.AddWithValue("$name", effectiveName);
+                waiting.Parameters.AddWithValue("$id", Format(stepId));
+                await waiting.ExecuteNonQueryAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+
+        await using var claim = CreateCommand(connection, transaction, """
+            UPDATE workflow_signals
+            SET delivered_step_id = $stepId
+            WHERE id = $id AND delivered_step_id IS NULL;
+            """);
+        claim.Parameters.AddWithValue("$stepId", Format(stepId));
+        claim.Parameters.AddWithValue("$id", signalId);
+        if (await claim.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+        await using var complete = CreateCommand(connection, transaction, """
+            UPDATE workflow_steps
+            SET status = $completed, output_json = $outputJson,
+                signal_name = $name, completed_at = $now,
+                available_at = NULL, error_json = NULL,
+                lease_owner = NULL, lease_expires_at = NULL
+            WHERE id = $id;
+            """);
+        complete.Parameters.AddWithValue("$completed", (int)StepStatus.Completed);
+        complete.Parameters.AddWithValue("$outputJson", DbValue(dataJson));
+        complete.Parameters.AddWithValue("$name", effectiveName);
+        complete.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        complete.Parameters.AddWithValue("$id", Format(stepId));
+        await complete.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await InsertEventAsync(
+            connection,
+            transaction,
+            step.WorkflowRunId,
+            step.StepKey,
+            WorkflowEventTypes.SignalDelivered,
+            now,
+            step.Attempt,
+            JsonSerializer.Serialize(
+                new { signalName = effectiveName, data = dataJson },
+                SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return new SignalDelivery(dataJson);
+    }
+
     private async ValueTask FinishRunAsync(
         Guid workflowRunId,
         string ownerId,
@@ -1136,12 +1312,12 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             INSERT INTO workflow_steps
             (id, workflow_run_id, step_key, status, attempt, input_json,
              input_type, input_hash, output_json, output_type, error_json,
-             created_at, started_at, completed_at, available_at,
+             signal_name, created_at, started_at, completed_at, available_at,
              lease_owner, lease_expires_at)
             VALUES
             ($id, $runId, $stepKey, $status, $attempt, $inputJson,
              $inputType, $inputHash, $outputJson, $outputType, $errorJson,
-             $createdAt, $startedAt, $completedAt, $availableAt,
+             $signalName, $createdAt, $startedAt, $completedAt, $availableAt,
              $leaseOwner, $leaseExpiresAt);
             """);
         command.Parameters.AddWithValue("$id", Format(step.Id));
@@ -1155,6 +1331,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         command.Parameters.AddWithValue("$outputJson", DbValue(step.OutputJson));
         command.Parameters.AddWithValue("$outputType", DbValue(step.OutputType));
         command.Parameters.AddWithValue("$errorJson", DbValue(SerializeError(step.Error)));
+        command.Parameters.AddWithValue("$signalName", DbValue(step.SignalName));
         command.Parameters.AddWithValue("$createdAt", FormatTimestamp(step.CreatedAt));
         command.Parameters.AddWithValue("$startedAt", DbValue(FormatNullable(step.StartedAt)));
         command.Parameters.AddWithValue("$completedAt", DbValue(FormatNullable(step.CompletedAt)));
@@ -1272,8 +1449,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         CompletedAt = ParseNullableTimestamp(reader, 11),
         Deadline = ParseNullableTimestamp(reader, 12),
         MetadataJson = GetNullableString(reader, 13),
-        LeaseOwner = GetNullableString(reader, 14),
-        LeaseExpiresAt = ParseNullableTimestamp(reader, 15)
+        ParentRunId = reader.IsDBNull(14) ? null : Guid.Parse(reader.GetString(14)),
+        LeaseOwner = GetNullableString(reader, 15),
+        LeaseExpiresAt = ParseNullableTimestamp(reader, 16)
     };
 
     private static WorkflowStepRun ReadStep(SqliteDataReader reader) => new()
@@ -1289,12 +1467,13 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         OutputJson = GetNullableString(reader, 8),
         OutputType = GetNullableString(reader, 9),
         Error = DeserializeError(GetNullableString(reader, 10)),
-        CreatedAt = ParseTimestamp(reader.GetString(11)),
-        StartedAt = ParseNullableTimestamp(reader, 12),
-        CompletedAt = ParseNullableTimestamp(reader, 13),
-        AvailableAt = ParseNullableTimestamp(reader, 14),
-        LeaseOwner = GetNullableString(reader, 15),
-        LeaseExpiresAt = ParseNullableTimestamp(reader, 16)
+        SignalName = GetNullableString(reader, 11),
+        CreatedAt = ParseTimestamp(reader.GetString(12)),
+        StartedAt = ParseNullableTimestamp(reader, 13),
+        CompletedAt = ParseNullableTimestamp(reader, 14),
+        AvailableAt = ParseNullableTimestamp(reader, 15),
+        LeaseOwner = GetNullableString(reader, 16),
+        LeaseExpiresAt = ParseNullableTimestamp(reader, 17)
     };
 
     private async ValueTask<SqliteConnection> OpenAsync(
@@ -1389,6 +1568,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         command.Parameters.AddWithValue("$completedAt", DbValue(FormatNullable(run.CompletedAt)));
         command.Parameters.AddWithValue("$deadline", DbValue(FormatNullable(run.Deadline)));
         command.Parameters.AddWithValue("$metadataJson", DbValue(run.MetadataJson));
+        command.Parameters.AddWithValue(
+            "$parentRunId",
+            run.ParentRunId is { } parentId ? Format(parentId) : DBNull.Value);
         command.Parameters.AddWithValue("$leaseOwner", DbValue(run.LeaseOwner));
         command.Parameters.AddWithValue("$leaseExpiresAt", DbValue(FormatNullable(run.LeaseExpiresAt)));
     }
@@ -1475,19 +1657,20 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private const string RunColumns = """
         id, workflow_name, workflow_version, status, input_json, input_type,
         output_json, output_type, error_json, created_at, updated_at,
-        completed_at, deadline, metadata_json, lease_owner, lease_expires_at
+        completed_at, deadline, metadata_json, parent_run_id,
+        lease_owner, lease_expires_at
         """;
 
     private const string StepColumns = """
         id, workflow_run_id, step_key, status, attempt, input_json, input_type,
-        input_hash, output_json, output_type, error_json, created_at,
+        input_hash, output_json, output_type, error_json, signal_name, created_at,
         started_at, completed_at, available_at, lease_owner, lease_expires_at
         """;
 
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS zhinu_schema(version INTEGER NOT NULL);
         INSERT INTO zhinu_schema(version)
-        SELECT 3 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
+        SELECT 4 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
 
         CREATE TABLE IF NOT EXISTS workflow_runs
         (
@@ -1505,6 +1688,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             completed_at TEXT NULL,
             deadline TEXT NULL,
             metadata_json TEXT NULL,
+            parent_run_id TEXT NULL,
             lease_owner TEXT NULL,
             lease_expires_at TEXT NULL
         );
@@ -1526,6 +1710,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             output_json TEXT NULL,
             output_type TEXT NULL,
             error_json TEXT NULL,
+            signal_name TEXT NULL,
             created_at TEXT NOT NULL,
             started_at TEXT NULL,
             completed_at TEXT NULL,
@@ -1553,9 +1738,22 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_events_run_sequence
             ON workflow_events(workflow_run_id, sequence);
+
+        CREATE TABLE IF NOT EXISTS workflow_signals
+        (
+            id TEXT PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            signal_name TEXT NOT NULL,
+            data_json TEXT NULL,
+            delivered_step_id TEXT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_signals_run_name
+            ON workflow_signals(workflow_run_id, signal_name, delivered_step_id);
         """;
 
-    private const int CurrentSchemaVersion = 3;
+    private const int CurrentSchemaVersion = 4;
 
     private static async ValueTask MigrateAsync(
         SqliteConnection connection,
@@ -1569,6 +1767,8 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 1 => await MigrateV1ToV2Async(connection, cancellationToken)
                     .ConfigureAwait(false),
                 2 => await MigrateV2ToV3Async(connection, cancellationToken)
+                    .ConfigureAwait(false),
+                3 => await MigrateV3ToV4Async(connection, cancellationToken)
                     .ConfigureAwait(false),
                 _ => throw new InvalidOperationException(
                     $"No migration path from Zhinu SQLite schema version {version}.")
@@ -1612,5 +1812,35 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             "UPDATE zhinu_schema SET version = 3;",
             cancellationToken).ConfigureAwait(false);
         return 3;
+    }
+
+    private static async ValueTask<long> MigrateV3ToV4Async(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await ExecuteAsync(
+            connection,
+            null,
+            """
+            ALTER TABLE workflow_runs ADD COLUMN parent_run_id TEXT NULL;
+            ALTER TABLE workflow_steps ADD COLUMN signal_name TEXT NULL;
+            CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent
+                ON workflow_runs(parent_run_id);
+            CREATE TABLE IF NOT EXISTS workflow_signals
+            (
+                id TEXT PRIMARY KEY,
+                workflow_run_id TEXT NOT NULL,
+                signal_name TEXT NOT NULL,
+                data_json TEXT NULL,
+                delivered_step_id TEXT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS ix_workflow_signals_run_name
+                ON workflow_signals(workflow_run_id, signal_name, delivered_step_id);
+            UPDATE zhinu_schema SET version = 4;
+            """,
+            cancellationToken).ConfigureAwait(false);
+        return 4;
     }
 }
