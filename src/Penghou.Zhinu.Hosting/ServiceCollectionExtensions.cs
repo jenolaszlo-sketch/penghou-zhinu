@@ -45,7 +45,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<ZhinuOptions>(),
             serializerOptions,
             provider.GetRequiredService<TimeProvider>(),
-            provider.GetService<ILogger<WorkflowEngine>>()));
+            provider.GetService<ILogger<WorkflowEngine>>(),
+            provider.GetService<IWorkflowEventPublisher>()));
         services.AddHostedService<ZhinuHostedService>();
         return services;
     }

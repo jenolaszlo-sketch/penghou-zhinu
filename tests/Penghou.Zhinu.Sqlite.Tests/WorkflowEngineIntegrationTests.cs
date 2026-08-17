@@ -74,7 +74,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
 
         var result = await resumedEngine.WaitForCompletionAsync<string>(
             runId,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
         result.Should().Be("first-second");
         firstWorkflow.FirstCalls.Should().Be(1);
         resumedWorkflow.FirstCalls.Should().Be(0);
@@ -125,7 +125,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
 
         var action = () => engine.WaitForCompletionAsync<string>(
             runId,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
         await action.Should().ThrowAsync<WorkflowExecutionFailedException>()
             .WithMessage("*planned failure*");
         var step = (await engine.GetStepsAsync(
@@ -386,6 +386,258 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task StartAsync_WithMetadata_PersistsAndSurvivesRestart()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "metadata");
+        var runId = await engine.StartAsync(
+            "metadata",
+            "1",
+            "value",
+            metadata: new { CorrelationId = "abc", Owner = "tester" },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var run = await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        run!.MetadataJson.Should().Contain("\"correlationId\":\"abc\"");
+
+        var updated = await engine.UpdateRunMetadataAsync(
+            runId,
+            new { CorrelationId = "def", Owner = "tester" },
+            TestContext.Current.CancellationToken);
+        updated!.MetadataJson.Should().Contain("\"correlationId\":\"def\"");
+        (await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.MetadataJson
+            .Should().Contain("\"correlationId\":\"def\"");
+    }
+
+    [Fact]
+    public async Task StartAsync_WithMetadata_DoesNotAffectIdempotency()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "metadata-idempotent");
+        var requestedId = Guid.NewGuid();
+        var first = await engine.StartAsync(
+            "metadata-idempotent",
+            "1",
+            "value",
+            requestedId,
+            metadata: new { Owner = "one" },
+            cancellationToken: TestContext.Current.CancellationToken);
+        var second = await engine.StartAsync(
+            "metadata-idempotent",
+            "1",
+            "value",
+            requestedId,
+            metadata: new { Owner = "two" },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        second.Should().Be(first);
+    }
+
+    [Fact]
+    public async Task GetRunsAsync_FiltersStatusAndWorkflowName()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "query");
+        var pending = await engine.StartAsync(
+            "query",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var other = await engine.StartAsync(
+            "query",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var all = await engine.GetRunsAsync(
+            new RunQuery { Limit = 100 },
+            TestContext.Current.CancellationToken);
+        all.Select(run => run.Id).Should().Contain(new[] { pending, other });
+
+        var onlyPending = await engine.GetRunsAsync(
+            new RunQuery { Statuses = new[] { WorkflowStatus.Pending } },
+            TestContext.Current.CancellationToken);
+        onlyPending.Select(run => run.Id).Should().Contain(new[] { pending, other });
+
+        var byName = await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "missing-name" },
+            TestContext.Current.CancellationToken);
+        byName.Should().BeEmpty();
+
+        var byVersion = await engine.GetRunsAsync(
+            new RunQuery { WorkflowVersion = "1" },
+            TestContext.Current.CancellationToken);
+        byVersion.Select(run => run.Id).Should().Contain(new[] { pending, other });
+
+        var before = await engine.GetRunsAsync(
+            new RunQuery { CreatedBefore = DateTimeOffset.UtcNow.AddMinutes(-1) },
+            TestContext.Current.CancellationToken);
+        before.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetRunsAsync_CursorPaginationIsStable()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "cursor");
+        var ids = new List<Guid>();
+        for (var i = 0; i < 5; i++)
+        {
+            ids.Add(await engine.StartAsync(
+                "cursor",
+                "1",
+                $"value{i}",
+                cancellationToken: TestContext.Current.CancellationToken));
+        }
+
+        var page1 = await engine.GetRunsAsync(
+            new RunQuery { Limit = 2 },
+            TestContext.Current.CancellationToken);
+        var page2 = await engine.GetRunsAsync(
+            new RunQuery { AfterId = page1[^1].Id, Limit = 2 },
+            TestContext.Current.CancellationToken);
+        var page3 = await engine.GetRunsAsync(
+            new RunQuery { AfterId = page2[^1].Id, Limit = 2 },
+            TestContext.Current.CancellationToken);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(2);
+        page3.Should().HaveCount(1);
+        var combined = page1.Concat(page2).Concat(page3)
+            .Select(run => run.Id)
+            .ToList();
+        combined.Should().BeEquivalentTo(ids);
+        combined.Distinct().Should().HaveCount(combined.Count);
+    }
+
+    [Fact]
+    public async Task PurgeRunsAsync_DeletesOldRunsAndCascades()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "purge");
+        var now = DateTimeOffset.UtcNow;
+        var keepId = await engine.StartAsync(
+            "purge",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var store = CreateStore();
+        var oldRunId = Guid.NewGuid();
+        await store.CreateRunAsync(
+            new WorkflowRun
+            {
+                Id = oldRunId,
+                WorkflowName = "purge",
+                WorkflowVersion = "1",
+                Status = WorkflowStatus.Completed,
+                CreatedAt = now.AddDays(-5),
+                UpdatedAt = now.AddDays(-5),
+                CompletedAt = now.AddDays(-5)
+            },
+            TestContext.Current.CancellationToken);
+
+        var deleted = await engine.PurgeRunsAsync(
+            now.AddDays(-1),
+            new[] { WorkflowStatus.Completed },
+            TestContext.Current.CancellationToken);
+
+        deleted.Should().Be(1);
+        (await engine.GetRunAsync(
+            oldRunId,
+            TestContext.Current.CancellationToken)).Should().BeNull();
+        (await engine.GetRunAsync(
+            keepId,
+            TestContext.Current.CancellationToken)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task WaitForCompletionAsync_AfterDeadline_ThrowsTimeout()
+    {
+        var workflow = new SlowWorkflow();
+        var engine = CreateEngine(workflow, "wait-timeout");
+        var runId = await engine.StartAsync(
+            "wait-timeout",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var action = () => engine.WaitForCompletionAsync<string>(
+            runId,
+            DateTimeOffset.UtcNow.AddMilliseconds(20),
+            TestContext.Current.CancellationToken);
+
+        await action.Should().ThrowAsync<TimeoutException>()
+            .WithMessage("*wait deadline*");
+    }
+
+    [Fact]
+    public async Task FanOutAsync_ExecutesEachItemAsADurableStep()
+    {
+        var workflow = new FanOutWorkflow();
+        var engine = CreateEngine(workflow, "fanout");
+
+        var result = await engine.RunAsync<string, string>(
+            "fanout",
+            "1",
+            "a,b,c",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("A:B:C");
+        workflow.Calls.Should().Be(3);
+        var steps = await engine.GetStepsAsync(
+            workflow.RunId,
+            TestContext.Current.CancellationToken);
+        steps.Should().HaveCount(3)
+            .And.OnlyContain(step => step.Status == StepStatus.Completed);
+    }
+
+    [Fact]
+    public async Task EmitAsync_ForwardsCommittedEventToPublisher()
+    {
+        var workflow = new ProgressWorkflow();
+        var publisher = new RecordingPublisher();
+        var registry = new WorkflowRegistry()
+            .Register("progress-pub", "1", workflow);
+        var engine = new WorkflowEngine(
+            CreateStore(),
+            registry,
+            new ZhinuOptions
+            {
+                PollInterval = TimeSpan.FromMilliseconds(10)
+            },
+            eventPublisher: publisher);
+
+        var result = await engine.RunAsync<string, string>(
+            "progress-pub",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("value-done");
+        publisher.Events.Select(@event => @event.EventType)
+            .Should().Contain(WorkflowEventTypes.Progress);
+        publisher.Events.Should().HaveCount(3);
+    }
+
+    private sealed class RecordingPublisher : IWorkflowEventPublisher
+    {
+        public List<WorkflowEvent> Events { get; } = new();
+
+        public Task PublishAsync(
+            WorkflowEvent @event,
+            CancellationToken cancellationToken = default)
+        {
+            Events.Add(@event);
+            return Task.CompletedTask;
+        }
+    }
+
+    [Fact]
     public async Task InitializeAsync_MigratesV1DatabaseWithoutLosingRuns()
     {
         var databasePath = Path.Combine(root, "zhinu.db");
@@ -478,7 +730,108 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         run.Should().NotBeNull();
         run!.Status.Should().Be(WorkflowStatus.Pending);
         var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
-        version.Should().Be(2L);
+        version.Should().Be(3L);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_MigratesV2DatabaseWithoutLosingRunsOrDeadlines()
+    {
+        var databasePath = Path.Combine(root, "zhinu.db");
+        Directory.CreateDirectory(root);
+        var now = DateTimeOffset.UtcNow;
+        var runId = Guid.NewGuid();
+        var connectionString =
+            new SqliteConnectionStringBuilder { DataSource = databasePath }
+                .ToString();
+        await using (var connection = new SqliteConnection(connectionString))
+        {
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            await using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """
+                    CREATE TABLE zhinu_schema(version INTEGER NOT NULL);
+                    INSERT INTO zhinu_schema(version) VALUES (2);
+                    CREATE TABLE workflow_runs
+                    (
+                        id TEXT PRIMARY KEY,
+                        workflow_name TEXT NOT NULL,
+                        workflow_version TEXT NOT NULL,
+                        status INTEGER NOT NULL,
+                        input_json TEXT NULL,
+                        input_type TEXT NULL,
+                        output_json TEXT NULL,
+                        output_type TEXT NULL,
+                        error_json TEXT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        completed_at TEXT NULL,
+                        deadline TEXT NULL,
+                        lease_owner TEXT NULL,
+                        lease_expires_at TEXT NULL
+                    );
+                    CREATE TABLE workflow_steps
+                    (
+                        id TEXT PRIMARY KEY,
+                        workflow_run_id TEXT NOT NULL,
+                        step_key TEXT NOT NULL,
+                        status INTEGER NOT NULL,
+                        attempt INTEGER NOT NULL,
+                        input_json TEXT NULL,
+                        input_type TEXT NULL,
+                        input_hash TEXT NULL,
+                        output_json TEXT NULL,
+                        output_type TEXT NULL,
+                        error_json TEXT NULL,
+                        created_at TEXT NOT NULL,
+                        started_at TEXT NULL,
+                        completed_at TEXT NULL,
+                        available_at TEXT NULL,
+                        lease_owner TEXT NULL,
+                        lease_expires_at TEXT NULL,
+                        UNIQUE(workflow_run_id, step_key),
+                        FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+                    );
+                    CREATE TABLE workflow_events
+                    (
+                        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                        workflow_run_id TEXT NOT NULL,
+                        step_key TEXT NULL,
+                        event_type TEXT NOT NULL,
+                        timestamp TEXT NOT NULL,
+                        attempt INTEGER NULL,
+                        data_json TEXT NULL,
+                        FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+                    );
+                    INSERT INTO workflow_runs
+                    (id, workflow_name, workflow_version, status, input_json,
+                     input_type, output_json, output_type, error_json, created_at,
+                     updated_at, completed_at, deadline, lease_owner, lease_expires_at)
+                    VALUES
+                    ($id, 'manual', '1', $pending, NULL, NULL, NULL, NULL, NULL,
+                     $now, $now, NULL, $deadline, NULL, NULL);
+                    """;
+                command.Parameters.AddWithValue("$id", runId.ToString("D"));
+                command.Parameters.AddWithValue("$pending", (int)WorkflowStatus.Pending);
+                command.Parameters.AddWithValue("$now", now.ToString("O"));
+                command.Parameters.AddWithValue(
+                    "$deadline",
+                    now.AddMinutes(5).ToString("O"));
+                await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+            }
+        }
+
+        SqliteConnection.ClearAllPools();
+        var store = CreateStore();
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        var run = await store.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+
+        run.Should().NotBeNull();
+        run!.Status.Should().Be(WorkflowStatus.Pending);
+        run.Deadline.Should().Be(now.AddMinutes(5));
+        var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
+        version.Should().Be(3L);
     }
 
     private static async Task<long> ScalarAsync(
@@ -746,6 +1099,32 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                 75,
                 cancellationToken);
             return $"{input}-done";
+        }
+    }
+
+    private sealed class FanOutWorkflow : IWorkflow<string, string>
+    {
+        public int Calls;
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var values = input.Split(',');
+            var results = await context.FanOutAsync(
+                "process",
+                values,
+                async (value, _, ct) =>
+                {
+                    Interlocked.Increment(ref Calls);
+                    await Task.Delay(5, ct);
+                    return value.ToUpperInvariant();
+                },
+                cancellationToken: cancellationToken);
+            return string.Join(':', results);
         }
     }
 }

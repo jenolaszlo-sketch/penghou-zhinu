@@ -35,7 +35,7 @@ public sealed class HostingIntegrationTests : IDisposable
             cancellationToken: TestContext.Current.CancellationToken);
         var result = await engine.WaitForCompletionAsync<string>(
             runId,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         result.Should().Be("HELLO");
         await host.StopAsync(TestContext.Current.CancellationToken);

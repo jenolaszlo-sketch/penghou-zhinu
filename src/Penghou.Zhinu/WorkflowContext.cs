@@ -18,6 +18,7 @@ public sealed class WorkflowContext
     private readonly JsonSerializerOptions serializerOptions;
     private readonly TimeProvider timeProvider;
     private readonly CancellationToken workflowCancellationToken;
+    private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> stepLocks =
         new(StringComparer.Ordinal);
 
@@ -28,7 +29,8 @@ public sealed class WorkflowContext
         ZhinuOptions options,
         JsonSerializerOptions serializerOptions,
         TimeProvider timeProvider,
-        CancellationToken workflowCancellationToken)
+        CancellationToken workflowCancellationToken,
+        IWorkflowEventPublisher? eventPublisher = null)
     {
         WorkflowRunId = workflowRunId;
         this.store = store;
@@ -37,6 +39,7 @@ public sealed class WorkflowContext
         this.serializerOptions = serializerOptions;
         this.timeProvider = timeProvider;
         this.workflowCancellationToken = workflowCancellationToken;
+        this.eventPublisher = eventPublisher;
     }
 
     public Guid WorkflowRunId { get; }
@@ -250,6 +253,9 @@ public sealed class WorkflowContext
     /// Emitted events are committed atomically with state transitions and survive
     /// process restarts; subscribers can read them via <c>SubscribeAsync</c> or
     /// <c>GetEventsAsync</c>. Emitting the same key twice does not deduplicate.
+    /// If an <see cref="IWorkflowEventPublisher"/> is registered, the committed
+    /// event is also forwarded after the store write (best-effort; the store
+    /// remains the authoritative source of events).
     /// </summary>
     public async Task EmitAsync<TData>(
         string eventType,
@@ -260,11 +266,79 @@ public sealed class WorkflowContext
         var dataJson = data is null
             ? null
             : JsonSerializer.Serialize(data, serializerOptions);
-        await store.AppendEventAsync(
+        var @event = await store.AppendEventAsync(
             WorkflowRunId,
             eventType,
             dataJson,
             cancellationToken: cancellationToken).ConfigureAwait(false);
+        if (eventPublisher is not null)
+        {
+            try
+            {
+                await eventPublisher.PublishAsync(
+                    @event,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                throw new WorkflowEventPublisherException(
+                    "A registered event publisher failed to forward a committed event.",
+                    exception);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Executes one durable step per input, all in parallel, using step keys
+    /// derived from <paramref name="stepKeyPrefix"/> and the item index
+    /// (<c>"{prefix}.{index}"</c>). Each item is independently durable: after a
+    /// restart, completed items are reused and only unfinished items re-run.
+    /// Results are returned in the order of <paramref name="inputs"/>.
+    /// </summary>
+    public Task<IReadOnlyList<TOutput>> FanOutAsync<TInput, TOutput>(
+        string stepKeyPrefix,
+        IReadOnlyList<TInput> inputs,
+        Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
+        StepOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateStepKey(stepKeyPrefix);
+        ArgumentNullException.ThrowIfNull(inputs);
+        ArgumentNullException.ThrowIfNull(operation);
+        if (inputs.Count == 0)
+            return Task.FromResult<IReadOnlyList<TOutput>>(
+                Array.Empty<TOutput>());
+        return FanOutCoreAsync(
+            stepKeyPrefix,
+            inputs,
+            operation,
+            options,
+            cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<TOutput>> FanOutCoreAsync<TInput, TOutput>(
+        string stepKeyPrefix,
+        IReadOnlyList<TInput> inputs,
+        Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
+        StepOptions? options,
+        CancellationToken cancellationToken)
+    {
+        var results = new TOutput[inputs.Count];
+        var tasks = new Task<TOutput>[inputs.Count];
+        for (var i = 0; i < inputs.Count; i++)
+        {
+            var index = i;
+            var input = inputs[index];
+            tasks[index] = StepAsync(
+                $"{stepKeyPrefix}.{index}",
+                input,
+                (value, step, ct) => operation(value, step, ct),
+                options,
+                cancellationToken);
+        }
+        var completed = await Task.WhenAll(tasks).ConfigureAwait(false);
+        completed.CopyTo(results, 0);
+        return results;
     }
 
     private async Task<TOutput> ExecuteClaimedAsync<TInput, TOutput>(

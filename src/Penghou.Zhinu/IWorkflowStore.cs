@@ -16,6 +16,15 @@ public interface IWorkflowStore
         Guid id,
         CancellationToken cancellationToken = default);
 
+    ValueTask<IReadOnlyList<WorkflowRun>> GetRunsAsync(
+        RunQuery query,
+        CancellationToken cancellationToken = default);
+
+    ValueTask<WorkflowRun?> UpdateRunMetadataAsync(
+        Guid workflowRunId,
+        string? metadataJson,
+        CancellationToken cancellationToken = default);
+
     ValueTask<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default);
@@ -117,5 +126,10 @@ public interface IWorkflowStore
 
     ValueTask<int> RecoverExpiredLeasesAsync(
         DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    ValueTask<int> PurgeRunsAsync(
+        DateTimeOffset olderThan,
+        IReadOnlyList<WorkflowStatus>? statuses = null,
         CancellationToken cancellationToken = default);
 }

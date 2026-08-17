@@ -19,6 +19,7 @@ public sealed class WorkflowEngine
     private readonly JsonSerializerOptions serializerOptions;
     private readonly TimeProvider timeProvider;
     private readonly ILogger<WorkflowEngine> logger;
+    private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly string ownerId =
         $"process-{Environment.ProcessId}-{Guid.NewGuid():N}";
     private readonly SemaphoreSlim initializationLock = new(1, 1);
@@ -32,7 +33,8 @@ public sealed class WorkflowEngine
         ZhinuOptions? options = null,
         JsonSerializerOptions? serializerOptions = null,
         TimeProvider? timeProvider = null,
-        ILogger<WorkflowEngine>? logger = null)
+        ILogger<WorkflowEngine>? logger = null,
+        IWorkflowEventPublisher? eventPublisher = null)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
@@ -41,6 +43,7 @@ public sealed class WorkflowEngine
         this.serializerOptions = serializerOptions ?? CreateSerializerOptions();
         this.timeProvider = timeProvider ?? TimeProvider.System;
         this.logger = logger ?? NullLogger<WorkflowEngine>.Instance;
+        this.eventPublisher = eventPublisher;
     }
 
     /// <summary>Creates a pending durable run without waiting for its execution.</summary>
@@ -50,6 +53,7 @@ public sealed class WorkflowEngine
         TInput input,
         Guid? workflowRunId = null,
         DateTimeOffset? deadline = null,
+        object? metadata = null,
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
@@ -93,7 +97,10 @@ public sealed class WorkflowEngine
                 InputJson = inputJson,
                 InputType = SerializationIdentity.TypeId(registration.InputType),
                 OutputType = SerializationIdentity.TypeId(registration.OutputType),
-                Deadline = deadline
+                Deadline = deadline,
+                MetadataJson = metadata is null
+                    ? null
+                    : JsonSerializer.Serialize(metadata, serializerOptions)
             },
             cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
@@ -111,6 +118,7 @@ public sealed class WorkflowEngine
         TInput input,
         Guid? workflowRunId = null,
         DateTimeOffset? deadline = null,
+        object? metadata = null,
         CancellationToken cancellationToken = default)
     {
         var id = await StartAsync(
@@ -119,10 +127,12 @@ public sealed class WorkflowEngine
             input,
             workflowRunId,
             deadline,
+            metadata,
             cancellationToken).ConfigureAwait(false);
         await ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
-        return await WaitForCompletionAsync<TOutput>(id, cancellationToken)
-            .ConfigureAwait(false);
+        return await WaitForCompletionAsync<TOutput>(
+            id,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -203,7 +213,8 @@ public sealed class WorkflowEngine
                 options,
                 serializerOptions,
                 timeProvider,
-                runCancellation.Token);
+                runCancellation.Token,
+                eventPublisher);
             logger.LogInformation(
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",
                 workflowRunId,
@@ -323,6 +334,50 @@ public sealed class WorkflowEngine
             .ConfigureAwait(false);
     }
 
+    /// <summary>Queries persisted runs with optional filters and cursor pagination.</summary>
+    public async Task<IReadOnlyList<WorkflowRun>> GetRunsAsync(
+        RunQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.GetRunsAsync(query, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Replaces a run's metadata without affecting its identity or contracts.</summary>
+    public async Task<WorkflowRun?> UpdateRunMetadataAsync(
+        Guid workflowRunId,
+        object? metadata,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var metadataJson = metadata is null
+            ? null
+            : JsonSerializer.Serialize(metadata, serializerOptions);
+        return await store.UpdateRunMetadataAsync(
+            workflowRunId,
+            metadataJson,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Deletes runs older than <paramref name="olderThan"/> (optionally limited
+    /// to specific statuses) and returns the number deleted. Steps and events of
+    /// purged runs are removed via cascade. Prefer purging terminal runs;
+    /// deleting an active run abandons its execution record.
+    /// </summary>
+    public async Task<int> PurgeRunsAsync(
+        DateTimeOffset olderThan,
+        IReadOnlyList<WorkflowStatus>? statuses = null,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.PurgeRunsAsync(
+            olderThan,
+            statuses,
+            cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
@@ -353,11 +408,18 @@ public sealed class WorkflowEngine
     /// <summary>Polls durable state without blocking a thread until a run terminates.</summary>
     public async Task<TOutput> WaitForCompletionAsync<TOutput>(
         Guid workflowRunId,
+        DateTimeOffset? deadline = null,
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         while (true)
         {
+            if (deadline is { } waitDeadline &&
+                timeProvider.GetUtcNow() > waitDeadline)
+            {
+                throw new TimeoutException(
+                    $"Workflow '{workflowRunId:D}' did not complete before the wait deadline of {waitDeadline:O}.");
+            }
             var run = await store.GetRunAsync(workflowRunId, cancellationToken)
                 .ConfigureAwait(false) ??
                 throw new KeyNotFoundException(

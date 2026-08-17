@@ -267,7 +267,96 @@ Emitted events carry serialized data and survive restarts, so consumers can
 reconnect after their last sequence without requiring Redis or another
 messaging service.
 
+**Atomicity caveat:** `EmitAsync` appends the event with its own store write,
+not in the same transaction as the step that emitted it. If the process exits
+after the event is committed but before the surrounding step completes, the
+event survives but the step may re-run; conversely, if the step commits but the
+process exits before the append, that event is lost. Treat emitted events as
+durable but best-effort diagnostic output, not as part of the execution
+contract.
+
+If an `IWorkflowEventPublisher` is registered, committed events are also
+forwarded after the store write (best-effort). The store remains the
+authoritative source: subscribers should reconcile by re-reading events after
+their last sequence.
+
 Inputs and outputs are not copied into progress events by default.
+
+## Querying, metadata, and retention
+
+Runs can be queried with filters and stable cursor pagination:
+
+```csharp
+var page = await engine.GetRunsAsync(new RunQuery
+{
+    Statuses = new[] { WorkflowStatus.Running, WorkflowStatus.Pending },
+    WorkflowName = "code-generation",
+    Limit = 50,
+    AfterId = lastPage[^1].Id
+});
+```
+
+Attach caller metadata (correlation ids, owners, tags) when starting, and
+update it later. Metadata never participates in idempotency:
+
+```csharp
+var runId = await engine.StartAsync(
+    "code-generation",
+    "1",
+    request,
+    metadata: new { CorrelationId = "abc-123", Owner = "agent-7" });
+
+await engine.UpdateRunMetadataAsync(runId, new { CorrelationId = "abc-123", Stage = "done" });
+```
+
+Purge old runs to bound database growth. Deleting a run cascades to its steps
+and events:
+
+```csharp
+var deleted = await engine.PurgeRunsAsync(
+    DateTimeOffset.UtcNow.AddDays(-7),
+    new[] { WorkflowStatus.Completed, WorkflowStatus.Failed });
+```
+
+Prefer purging terminal runs; deleting an active run abandons its execution
+record.
+
+## Parallel durable steps
+
+Run one durable step per item in parallel with `FanOutAsync`. Each item is
+independently durable — after a restart, completed items are reused and only
+unfinished items re-run:
+
+```csharp
+var videos = await workflow.FanOutAsync(
+    "encode",
+    requests,
+    async (request, step, ct) =>
+    {
+        var id = await provider.EncodeAsync(
+            request,
+            idempotencyKey: step.IdempotencyKey,
+            ct);
+        return id;
+    },
+    new StepOptions { Retry = new RetryPolicy { MaxAttempts = 3 } },
+    cancellationToken);
+```
+
+Step keys are derived as `"{prefix}.{index}"`, so results stay aligned with the
+input order.
+
+## Waiting with a deadline
+
+`WaitForCompletionAsync` accepts an absolute caller-side deadline and throws
+`TimeoutException` if the run has not terminated by then:
+
+```csharp
+var result = await engine.WaitForCompletionAsync<string>(
+    runId,
+    DateTimeOffset.UtcNow.AddMinutes(5),
+    cancellationToken);
+```
 
 ## What Zhinu is not
 

@@ -34,6 +34,13 @@ public sealed record WorkflowRun
 
     public WorkflowError? Error { get; init; }
 
+    /// <summary>
+    /// Optional caller-supplied metadata serialized as JSON (for example
+    /// correlation ids, owners, or tags). Metadata does not participate in
+    /// idempotency or workflow contract validation.
+    /// </summary>
+    public string? MetadataJson { get; init; }
+
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }

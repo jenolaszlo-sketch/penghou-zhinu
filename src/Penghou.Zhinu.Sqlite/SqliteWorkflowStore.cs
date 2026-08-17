@@ -65,13 +65,17 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 null,
                 "SELECT version FROM zhinu_schema LIMIT 1;",
                 cancellationToken).ConfigureAwait(false);
-            if (version == 1)
+            if (version < CurrentSchemaVersion)
             {
-                await MigrateV1ToV2Async(connection, cancellationToken)
+                await MigrateAsync(connection, version, cancellationToken)
                     .ConfigureAwait(false);
-                version = 2;
             }
-            if (version != 2)
+            version = await ScalarAsync<long>(
+                connection,
+                null,
+                "SELECT version FROM zhinu_schema LIMIT 1;",
+                cancellationToken).ConfigureAwait(false);
+            if (version != CurrentSchemaVersion)
             {
                 throw new InvalidOperationException(
                     $"Unsupported Zhinu SQLite schema version {version}.");
@@ -97,11 +101,13 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             INSERT INTO workflow_runs
             (id, workflow_name, workflow_version, status, input_json,
              input_type, output_json, output_type, error_json, created_at,
-             updated_at, completed_at, deadline, lease_owner, lease_expires_at)
+             updated_at, completed_at, deadline, metadata_json,
+             lease_owner, lease_expires_at)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
-             $updatedAt, $completedAt, $deadline, $leaseOwner, $leaseExpiresAt);
+             $updatedAt, $completedAt, $deadline, $metadataJson,
+             $leaseOwner, $leaseExpiresAt);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -138,6 +144,114 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
             ? ReadRun(reader)
             : null;
+    }
+
+    public async ValueTask<IReadOnlyList<WorkflowRun>> GetRunsAsync(
+        RunQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        query.Validate();
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var where = new List<string>();
+        var command = CreateCommand(connection, null, "");
+        if (query.Statuses is { Count: > 0 })
+        {
+            var statusValues = query.Statuses
+                .Select(status => ((int)status).ToString(CultureInfo.InvariantCulture))
+                .ToArray();
+            where.Add($"status IN ({string.Join(", ", statusValues)})");
+        }
+        if (!string.IsNullOrWhiteSpace(query.WorkflowName))
+        {
+            where.Add("workflow_name = $name");
+            command.Parameters.AddWithValue("$name", query.WorkflowName);
+        }
+        if (!string.IsNullOrWhiteSpace(query.WorkflowVersion))
+        {
+            where.Add("workflow_version = $version");
+            command.Parameters.AddWithValue("$version", query.WorkflowVersion);
+        }
+        if (query.CreatedAfter is not null)
+        {
+            where.Add("created_at >= $createdAfter");
+            command.Parameters.AddWithValue(
+                "$createdAfter",
+                FormatTimestamp(query.CreatedAfter.Value));
+        }
+        if (query.CreatedBefore is not null)
+        {
+            where.Add("created_at <= $createdBefore");
+            command.Parameters.AddWithValue(
+                "$createdBefore",
+                FormatTimestamp(query.CreatedBefore.Value));
+        }
+        if (query.AfterId is { } afterId)
+        {
+            var afterCreated = await GetCreatedAtAsync(
+                connection,
+                afterId,
+                cancellationToken).ConfigureAwait(false);
+            where.Add("(created_at, id) > ($afterCreated, $afterId)");
+            command.Parameters.AddWithValue("$afterCreated", afterCreated);
+            command.Parameters.AddWithValue("$afterId", Format(afterId));
+        }
+        var whereClause = where.Count == 0 ? string.Empty : $"WHERE {string.Join(" AND ", where)}";
+        command.CommandText = $"""
+            SELECT {RunColumns}
+            FROM workflow_runs
+            {whereClause}
+            ORDER BY created_at, id
+            LIMIT $limit;
+            """;
+        command.Parameters.AddWithValue("$limit", query.Limit);
+        var results = new List<WorkflowRun>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadRun(reader));
+        return results;
+    }
+
+    public async ValueTask<WorkflowRun?> UpdateRunMetadataAsync(
+        Guid workflowRunId,
+        string? metadataJson,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, """
+            UPDATE workflow_runs
+            SET metadata_json = $metadataJson, updated_at = $now
+            WHERE id = $id;
+            """);
+        command.Parameters.AddWithValue("$metadataJson", DbValue(metadataJson));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+        await using var readCommand = CreateCommand(connection, transaction, $"""
+            SELECT {RunColumns}
+            FROM workflow_runs
+            WHERE id = $id;
+            """);
+        readCommand.Parameters.AddWithValue("$id", Format(workflowRunId));
+        await using var reader = await readCommand.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var run = await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? ReadRun(reader)
+            : null;
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return run;
     }
 
     public async ValueTask<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
@@ -788,6 +902,35 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return expired.Count;
     }
 
+    public async ValueTask<int> PurgeRunsAsync(
+        DateTimeOffset olderThan,
+        IReadOnlyList<WorkflowStatus>? statuses = null,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var statusClause = string.Empty;
+        if (statuses is { Count: > 0 })
+        {
+            var values = string.Join(
+                ", ",
+                statuses.Select(status =>
+                    ((int)status).ToString(CultureInfo.InvariantCulture)));
+            statusClause = $" AND status IN ({values})";
+        }
+        await using var command = CreateCommand(connection, transaction, $"""
+            DELETE FROM workflow_runs
+            WHERE created_at < $olderThan{statusClause};
+            """);
+        command.Parameters.AddWithValue("$olderThan", FormatTimestamp(olderThan));
+        var deleted = await command.ExecuteNonQueryAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return deleted;
+    }
+
     private async ValueTask FinishRunAsync(
         Guid workflowRunId,
         string ownerId,
@@ -1060,8 +1203,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         UpdatedAt = ParseTimestamp(reader.GetString(10)),
         CompletedAt = ParseNullableTimestamp(reader, 11),
         Deadline = ParseNullableTimestamp(reader, 12),
-        LeaseOwner = GetNullableString(reader, 13),
-        LeaseExpiresAt = ParseNullableTimestamp(reader, 14)
+        MetadataJson = GetNullableString(reader, 13),
+        LeaseOwner = GetNullableString(reader, 14),
+        LeaseExpiresAt = ParseNullableTimestamp(reader, 15)
     };
 
     private static WorkflowStepRun ReadStep(SqliteDataReader reader) => new()
@@ -1142,6 +1286,25 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return (T)Convert.ChangeType(value!, typeof(T), CultureInfo.InvariantCulture);
     }
 
+    private static async ValueTask<string> GetCreatedAtAsync(
+        SqliteConnection connection,
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = CreateCommand(connection, null, """
+            SELECT created_at FROM workflow_runs WHERE id = $id;
+            """);
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        var value = await command.ExecuteScalarAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (value is null)
+        {
+            throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        }
+        return (string)value;
+    }
+
     private static void AddRunParameters(SqliteCommand command, WorkflowRun run)
     {
         command.Parameters.AddWithValue("$id", Format(run.Id));
@@ -1157,6 +1320,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         command.Parameters.AddWithValue("$updatedAt", FormatTimestamp(run.UpdatedAt));
         command.Parameters.AddWithValue("$completedAt", DbValue(FormatNullable(run.CompletedAt)));
         command.Parameters.AddWithValue("$deadline", DbValue(FormatNullable(run.Deadline)));
+        command.Parameters.AddWithValue("$metadataJson", DbValue(run.MetadataJson));
         command.Parameters.AddWithValue("$leaseOwner", DbValue(run.LeaseOwner));
         command.Parameters.AddWithValue("$leaseExpiresAt", DbValue(FormatNullable(run.LeaseExpiresAt)));
     }
@@ -1243,7 +1407,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private const string RunColumns = """
         id, workflow_name, workflow_version, status, input_json, input_type,
         output_json, output_type, error_json, created_at, updated_at,
-        completed_at, deadline, lease_owner, lease_expires_at
+        completed_at, deadline, metadata_json, lease_owner, lease_expires_at
         """;
 
     private const string StepColumns = """
@@ -1255,7 +1419,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS zhinu_schema(version INTEGER NOT NULL);
         INSERT INTO zhinu_schema(version)
-        SELECT 2 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
+        SELECT 3 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
 
         CREATE TABLE IF NOT EXISTS workflow_runs
         (
@@ -1272,11 +1436,14 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             updated_at TEXT NOT NULL,
             completed_at TEXT NULL,
             deadline TEXT NULL,
+            metadata_json TEXT NULL,
             lease_owner TEXT NULL,
             lease_expires_at TEXT NULL
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_runs_runnable
             ON workflow_runs(status, lease_expires_at, created_at);
+        CREATE INDEX IF NOT EXISTS ix_workflow_runs_created
+            ON workflow_runs(created_at, id);
 
         CREATE TABLE IF NOT EXISTS workflow_steps
         (
@@ -1320,7 +1487,28 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             ON workflow_events(workflow_run_id, sequence);
         """;
 
-    private static async ValueTask MigrateV1ToV2Async(
+    private const int CurrentSchemaVersion = 3;
+
+    private static async ValueTask MigrateAsync(
+        SqliteConnection connection,
+        long version,
+        CancellationToken cancellationToken)
+    {
+        while (version < CurrentSchemaVersion)
+        {
+            version = version switch
+            {
+                1 => await MigrateV1ToV2Async(connection, cancellationToken)
+                    .ConfigureAwait(false),
+                2 => await MigrateV2ToV3Async(connection, cancellationToken)
+                    .ConfigureAwait(false),
+                _ => throw new InvalidOperationException(
+                    $"No migration path from Zhinu SQLite schema version {version}.")
+            };
+        }
+    }
+
+    private static async ValueTask<long> MigrateV1ToV2Async(
         SqliteConnection connection,
         CancellationToken cancellationToken)
     {
@@ -1336,5 +1524,25 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             null,
             "UPDATE zhinu_schema SET version = 2;",
             cancellationToken).ConfigureAwait(false);
+        return 2;
+    }
+
+    private static async ValueTask<long> MigrateV2ToV3Async(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await ExecuteAsync(
+            connection,
+            null,
+            """
+            ALTER TABLE workflow_runs ADD COLUMN metadata_json TEXT NULL;
+            """,
+            cancellationToken).ConfigureAwait(false);
+        await ExecuteAsync(
+            connection,
+            null,
+            "UPDATE zhinu_schema SET version = 3;",
+            cancellationToken).ConfigureAwait(false);
+        return 3;
     }
 }
