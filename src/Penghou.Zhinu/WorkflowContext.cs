@@ -24,6 +24,10 @@ public sealed class WorkflowContext
     private readonly ConcurrentDictionary<string, SemaphoreSlim> stepLocks =
         new(StringComparer.Ordinal);
     private readonly List<string> currentDependencies = [];
+    private readonly IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps;
+    private readonly IReadOnlyDictionary<string, WorkflowStepCompensation>?
+        rollbackCompensations;
+    private readonly List<CompensationInvocation> rollbackInvocations = [];
 
     internal WorkflowContext(
         Guid workflowRunId,
@@ -35,7 +39,9 @@ public sealed class WorkflowContext
         long leaseGeneration,
         CancellationToken workflowCancellationToken,
         IWorkflowEventPublisher? eventPublisher = null,
-        Func<Guid, CancellationToken, Task>? executeChildRun = null)
+        Func<Guid, CancellationToken, Task>? executeChildRun = null,
+        IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps = null,
+        IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null)
     {
         WorkflowRunId = workflowRunId;
         this.store = store;
@@ -47,6 +53,8 @@ public sealed class WorkflowContext
         this.workflowCancellationToken = workflowCancellationToken;
         this.eventPublisher = eventPublisher;
         this.executeChildRun = executeChildRun;
+        this.replaySteps = replaySteps;
+        this.rollbackCompensations = rollbackCompensations;
     }
 
     public Guid WorkflowRunId { get; }
@@ -186,6 +194,13 @@ public sealed class WorkflowContext
         await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
         try
         {
+            if (IsRollback)
+            {
+                return ResolveRollbackStep<TOutput>(
+                    stepKey,
+                    outputType,
+                    compensation);
+            }
             while (true)
             {
                 var claim = await ClaimAsync(
@@ -262,6 +277,13 @@ public sealed class WorkflowContext
         await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
         try
         {
+            if (IsRollback)
+            {
+                if (replaySteps!.TryGetValue(stepKey, out var stored))
+                    return;
+                throw new WorkflowStateException(
+                    $"Step '{stepKey}' has no committed delay to replay during rollback.");
+            }
             while (true)
             {
                 var claim = await ClaimAsync(
@@ -354,6 +376,13 @@ public sealed class WorkflowContext
         await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
         try
         {
+            if (IsRollback)
+            {
+                if (replaySteps!.TryGetValue(stepKey, out var stored))
+                    return Deserialize<T>(stored.OutputJson, outputType);
+                throw new WorkflowStateException(
+                    $"Step '{stepKey}' has no committed signal result to replay during rollback.");
+            }
             var deadline = timeout is null
                 ? (DateTimeOffset?)null
                 : timeProvider.GetUtcNow() + timeout.Value;
@@ -438,6 +467,8 @@ public sealed class WorkflowContext
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+        if (IsRollback)
+            return;
         var dataJson = data is null
             ? null
             : JsonSerializer.Serialize(data, serializerOptions);
@@ -628,6 +659,9 @@ public sealed class WorkflowContext
                     throw new OperationCanceledException(
                         $"Child workflow '{childId:D}' was cancelled.",
                         cancellationToken);
+                case WorkflowStatus.Compensated:
+                    throw new WorkflowStateException(
+                        $"Child workflow '{childId:D}' was compensated and has no forward result to return.");
             }
             if (executeChildRun is not null)
             {
@@ -678,7 +712,8 @@ public sealed class WorkflowContext
                         WorkflowRunId,
                         step.Id,
                         step.StepKey,
-                        step.Attempt),
+                        step.Attempt,
+                        step.Revision),
                     executionCancellation.Token).ConfigureAwait(false);
                 var outputJson = JsonSerializer.Serialize(
                     output,
@@ -805,6 +840,57 @@ public sealed class WorkflowContext
                 Compensation = compensation
             },
             cancellationToken);
+    }
+
+    private bool IsRollback => replaySteps is not null;
+
+    /// <summary>
+    /// A compensation registered during a rollback replay, bound to the
+    /// committed forward result the workflow produced and ready to execute.
+    /// </summary>
+    internal sealed record CompensationInvocation(
+        string StepKey,
+        WorkflowStepCompensation Compensation,
+        Func<CancellationToken, Task> Execute);
+
+    /// <summary>Compensations registered while the workflow replayed in rollback mode.</summary>
+    internal IReadOnlyList<CompensationInvocation> RollbackInvocations =>
+        rollbackInvocations;
+
+    private TOutput ResolveRollbackStep<TOutput>(
+        string stepKey,
+        string outputType,
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation)
+    {
+        if (rollbackCompensations is not null &&
+            rollbackCompensations.TryGetValue(stepKey, out var row) &&
+            row.InputJson is not null)
+        {
+            if (compensation is null)
+            {
+                throw new WorkflowStateException(
+                    $"Workflow definition no longer registers a compensation for step '{stepKey}'.");
+            }
+            var result = Deserialize<TOutput>(row.InputJson, outputType);
+            var stepContext = new WorkflowStepContext(
+                WorkflowRunId,
+                row.Id,
+                stepKey,
+                row.Attempt,
+                row.Revision,
+                IsCompensation: true);
+            rollbackInvocations.Add(new CompensationInvocation(
+                stepKey,
+                row,
+                ct => compensation(result, stepContext, ct)));
+            return result;
+        }
+        if (replaySteps!.TryGetValue(stepKey, out var stored))
+        {
+            return Deserialize<TOutput>(stored.OutputJson, outputType);
+        }
+        throw new WorkflowStateException(
+            $"Step '{stepKey}' has no committed result to replay during rollback.");
     }
 
     private async Task WaitUntilAsync(

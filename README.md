@@ -500,6 +500,83 @@ Registration is durable at claim time and never duplicated on replay; a
 restarted step revision registers its own compensation row, so
 `GetCompensationsAsync` shows the compensation history across revisions.
 
+## Rollbacks
+
+Once a run completes (or fails), the **rollback** API undoes its committed
+work by executing registered compensations. Rollback never re-runs forward
+operations: the workflow definition is replayed against the stored committed
+results to re-bind compensation delegates, and only those delegates execute.
+
+Idempotency keys are stable across retries, restarts, and rollback attempts, so
+downstream systems can deduplicate every side effect:
+
+```text
+forward step        <run>:<step>:<revision>
+compensation        <run>:<step>:<revision>:compensation
+```
+
+Both keys are unchanged when an attempt is retried and change only when a
+restart creates a new revision. Compensation execution is **at-least-once**:
+a compensation that already completed is never run again, and a failed
+compensation is retried (with its own `RetryPolicy`) on the next rollback
+attempt.
+
+### Planning a rollback
+
+`PlanRollbackAsync` resolves — without changing any state — what a rollback
+would do to each step and why:
+
+```csharp
+// Full rollback: every step with a committed result and a claimable
+// compensation, in reverse dependency order.
+var plan = await engine.PlanRollbackAsync(runId);
+
+// Roll back to a specific step.
+var toPlan = await engine.PlanRollbackAsync(
+    runId,
+    "deploy",
+    new RollbackOptions(RollbackBoundary.BeforeStep));
+
+foreach (var step in plan.Steps)
+    Console.WriteLine($"{step.StepKey}: {step.Action} ({step.Reason})");
+```
+
+`RollbackBoundary.BeforeStep` includes the target step itself;
+`RollbackBoundary.AfterStep` preserves it. A plan entry states what would
+happen (`Compensate` or `Preserve`) and why (`Boundary`, `Dependent`,
+`Ancestor`, or `IndependentBranch`). For example, rolling back `deploy` before
+it with a chain `plan → payment → deploy → tests` plus an independent
+`frontend` yields:
+
+```text
+tests      Compensate  Dependent
+deploy     Compensate  Boundary
+plan       Preserve    Ancestor
+payment    Preserve    Ancestor
+frontend   Preserve    IndependentBranch
+```
+
+### Executing a rollback
+
+```csharp
+// Compensate every completed, compensatable forward step, in reverse
+// dependency order, then mark the run Compensated.
+await engine.RollbackAsync(runId);
+
+// Roll back to a step. AfterStep leaves the target's committed work intact
+// and compensates only its dependents; BeforeStep compensates the target too.
+await engine.RollbackToStepAsync(runId, "deploy", RollbackBoundary.AfterStep);
+await engine.RollbackToStepAsync(runId, "payment", RollbackBoundary.BeforeStep);
+```
+
+A successful rollback moves the run to the terminal `Compensated` state; the
+run's status itself records that its forward history was undone. Rollback of a
+`Completed` or `Failed` run is serialized by a lease, fenced by the run's
+lease generation, and safe to retry: a rollback that fails mid-way (for
+example a permanently failing compensation) leaves the run `Failed` and
+claimable again, and already-completed compensations are reused rather than
+re-executed.
+
 ## External signals
 
 Workflows can durably wait for external input. `WaitForSignalAsync` is a

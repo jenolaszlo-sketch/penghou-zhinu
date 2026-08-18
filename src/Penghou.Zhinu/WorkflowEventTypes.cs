@@ -19,4 +19,8 @@ public static class WorkflowEventTypes
     public const string StepRestarted = "step-restarted";
     public const string SignalSent = "signal-sent";
     public const string SignalDelivered = "signal-delivered";
+    public const string CompensationStarted = "compensation-started";
+    public const string CompensationCompleted = "compensation-completed";
+    public const string CompensationFailed = "compensation-failed";
+    public const string WorkflowCompensated = "workflow-compensated";
 }

@@ -507,6 +507,454 @@ public sealed class WorkflowEngine
             cancellationToken);
 
     /// <summary>
+    /// Resolves which steps a full rollback of <paramref name="workflowRunId"/>
+    /// would compensate without changing any state: every step with a committed
+    /// forward result and a claimable compensation, in reverse dependency order.
+    /// </summary>
+    public async Task<RollbackPlan> PlanRollbackAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.PlanRollbackAsync(
+            workflowRunId,
+            null,
+            RollbackBoundary.AfterStep,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Resolves which steps rolling back <paramref name="workflowRunId"/> to
+    /// <paramref name="targetStepKey"/> would compensate, without changing any
+    /// state. <see cref="RollbackBoundary.BeforeStep"/> includes the target
+    /// itself; <see cref="RollbackBoundary.AfterStep"/> preserves it. Each plan
+    /// entry states what would happen to the step and why (boundary, dependent,
+    /// ancestor, or independent branch).
+    /// </summary>
+    public async Task<RollbackPlan> PlanRollbackAsync(
+        Guid workflowRunId,
+        string targetStepKey,
+        RollbackOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetStepKey);
+        ArgumentNullException.ThrowIfNull(options);
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.PlanRollbackAsync(
+            workflowRunId,
+            targetStepKey,
+            options.Boundary,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Plans a rollback to a step with <c>AfterStep</c> boundary defaults.</summary>
+    public Task<RollbackPlan> PlanRollbackAsync(
+        Guid workflowRunId,
+        string targetStepKey,
+        CancellationToken cancellationToken = default) =>
+        PlanRollbackAsync(
+            workflowRunId,
+            targetStepKey,
+            new RollbackOptions(RollbackBoundary.AfterStep),
+            cancellationToken);
+
+    /// <summary>
+    /// Rolls back a completed or failed run by compensating every successfully
+    /// completed compensatable forward operation in reverse dependency order.
+    /// On success the run reaches <see cref="WorkflowStatus.Compensated"/>;
+    /// a compensation that exhausts its retries fails the run, which stays
+    /// claimable by a later rollback attempt. Already-completed compensations
+    /// are reused, so rollback is safe to repeat (at-least-once).
+    /// </summary>
+    public Task RollbackAsync(
+        Guid workflowRunId,
+        string? actor = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default) =>
+        RollbackCoreAsync(
+            workflowRunId,
+            null,
+            RollbackBoundary.AfterStep,
+            actor,
+            reason,
+            cancellationToken);
+
+    /// <summary>
+    /// Rolls back to <paramref name="stepKey"/>.
+    /// <see cref="RollbackBoundary.AfterStep"/> leaves the target's committed
+    /// operation intact and compensates only its transitive dependents;
+    /// <see cref="RollbackBoundary.BeforeStep"/> compensates the target too.
+    /// </summary>
+    public Task RollbackToStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        RollbackBoundary boundary,
+        string? actor = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
+        return RollbackCoreAsync(
+            workflowRunId,
+            stepKey,
+            boundary,
+            actor,
+            reason,
+            cancellationToken);
+    }
+
+    private async Task RollbackCoreAsync(
+        Guid workflowRunId,
+        string? targetStepKey,
+        RollbackBoundary boundary,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var run = await store.GetRunAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false) ??
+            throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        if (run.Status == WorkflowStatus.Compensated)
+            return;
+
+        var plan = await store.PlanRollbackAsync(
+            workflowRunId,
+            targetStepKey,
+            boundary,
+            cancellationToken).ConfigureAwait(false);
+        var compensateKeys = plan.Steps
+            .Where(step => step.Action == RollbackAction.Compensate)
+            .Select(step => step.StepKey)
+            .ToList();
+
+        var now = timeProvider.GetUtcNow();
+        var generation = await store.ClaimRollbackAsync(
+            workflowRunId,
+            ownerId,
+            now,
+            now + options.LeaseDuration,
+            cancellationToken).ConfigureAwait(false);
+        if (generation is null)
+            return;
+
+        await using var renewal = new LeaseRenewal(
+            timeProvider,
+            options.LeaseRenewalInterval,
+            token => store.RenewRollbackLeaseAsync(
+                workflowRunId,
+                ownerId,
+                timeProvider.GetUtcNow() + options.LeaseDuration,
+                token));
+        try
+        {
+            if (compensateKeys.Count > 0)
+            {
+                var steps = (await store.GetStepsAsync(
+                    workflowRunId,
+                    cancellationToken).ConfigureAwait(false))
+                    .ToDictionary(
+                        step => step.StepKey,
+                        StringComparer.Ordinal);
+                var rows = await store.GetCompensationsAsync(
+                    workflowRunId,
+                    cancellationToken).ConfigureAwait(false);
+                var byKey = new Dictionary<string, WorkflowStepCompensation>(
+                    StringComparer.Ordinal);
+                foreach (var key in compensateKeys)
+                {
+                    var row = rows
+                        .Where(item =>
+                            string.Equals(item.StepKey, key, StringComparison.Ordinal) &&
+                            item.InputJson is not null &&
+                            item.Status is CompensationStatus.Pending or
+                                CompensationStatus.Failed)
+                        .OrderByDescending(item => item.Revision)
+                        .FirstOrDefault();
+                    if (row is not null)
+                        byKey[key] = row;
+                }
+
+                if (byKey.Count > 0)
+                {
+                    if (!registry.TryGet(
+                            run.WorkflowName,
+                            run.WorkflowVersion,
+                            out var registration))
+                    {
+                        throw new WorkflowDefinitionUnavailableException(
+                            run.WorkflowName,
+                            run.WorkflowVersion);
+                    }
+                    var context = new WorkflowContext(
+                        workflowRunId,
+                        store,
+                        ownerId,
+                        options,
+                        serializerOptions,
+                        timeProvider,
+                        generation.Value,
+                        cancellationToken,
+                        eventPublisher,
+                        executeChildRun: null,
+                        replaySteps: steps,
+                        rollbackCompensations: byKey);
+                    await registration!.ExecuteAsync(
+                        context,
+                        run.InputJson ?? "null",
+                        serializerOptions,
+                        cancellationToken).ConfigureAwait(false);
+                    var invocations = context.RollbackInvocations;
+                    foreach (var key in compensateKeys)
+                    {
+                        var invocation = invocations.FirstOrDefault(item =>
+                            string.Equals(
+                                item.StepKey,
+                                key,
+                                StringComparison.Ordinal));
+                        if (invocation is null)
+                            continue;
+                        await ExecuteCompensationAsync(
+                            invocation,
+                            generation.Value,
+                            actor,
+                            reason,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                }
+            }
+
+            var now2 = timeProvider.GetUtcNow();
+            var completed = await store.CompleteRollbackAsync(
+                workflowRunId,
+                ownerId,
+                generation.Value,
+                now2,
+                CancellationToken.None).ConfigureAwait(false);
+            if (!completed)
+            {
+                throw new WorkflowStateException(
+                    "Rollback lost its run claim before the run could be marked compensated.");
+            }
+            await store.AppendEventAsync(
+                workflowRunId,
+                WorkflowEventTypes.WorkflowCompensated,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        actor,
+                        reason,
+                        compensatedSteps = compensateKeys.Count
+                    },
+                    serializerOptions),
+                cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            logger.LogInformation(
+                "Compensated workflow {WorkflowRunId} ({CompensatedCount} step(s)).",
+                workflowRunId,
+                compensateKeys.Count);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await store.ReleaseRollbackLeaseAsync(
+                workflowRunId,
+                ownerId,
+                timeProvider.GetUtcNow(),
+                CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                await store.FailRollbackAsync(
+                    workflowRunId,
+                    ownerId,
+                    generation.Value,
+                    WorkflowError.FromException(
+                        exception,
+                        timeProvider.GetUtcNow()),
+                    timeProvider.GetUtcNow(),
+                    CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception failureException)
+            {
+                logger.LogWarning(
+                    failureException,
+                    "Could not record rollback failure for workflow {WorkflowRunId}.",
+                    workflowRunId);
+            }
+            logger.LogError(
+                exception,
+                "Rollback of workflow {WorkflowRunId} failed.",
+                workflowRunId);
+            throw;
+        }
+    }
+
+    private async Task ExecuteCompensationAsync(
+        WorkflowContext.CompensationInvocation invocation,
+        long generation,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        var compensation = invocation.Compensation;
+        var retryPolicy = DeserializeRetryPolicy(compensation.RetryPolicyJson);
+        while (true)
+        {
+            var now = timeProvider.GetUtcNow();
+            var claim = await store.ClaimCompensationAsync(
+                compensation.WorkflowRunId,
+                invocation.StepKey,
+                ownerId,
+                generation,
+                now,
+                now + options.LeaseDuration,
+                actor,
+                reason,
+                cancellationToken).ConfigureAwait(false);
+            if (claim is null)
+                return;
+
+            await store.AppendEventAsync(
+                claim.WorkflowRunId,
+                WorkflowEventTypes.CompensationStarted,
+                null,
+                claim.StepKey,
+                claim.Attempt,
+                cancellationToken).ConfigureAwait(false);
+
+            using var timeoutCancellation = compensation.ExecutionTimeout is { } executionTimeout
+                ? new CancellationTokenSource(executionTimeout, timeProvider)
+                : null;
+            using var executionCancellation = timeoutCancellation is null
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+                : CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    timeoutCancellation.Token);
+            try
+            {
+                await invocation.Execute(executionCancellation.Token)
+                    .ConfigureAwait(false);
+                await store.CompleteCompensationAsync(
+                    claim.Id,
+                    ownerId,
+                    null,
+                    timeProvider.GetUtcNow(),
+                    cancellationToken).ConfigureAwait(false);
+                await store.AppendEventAsync(
+                    claim.WorkflowRunId,
+                    WorkflowEventTypes.CompensationCompleted,
+                    null,
+                    claim.StepKey,
+                    claim.Attempt,
+                    cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            catch (OperationCanceledException) when (
+                timeoutCancellation?.IsCancellationRequested == true &&
+                !cancellationToken.IsCancellationRequested)
+            {
+                var timeout = new TimeoutException(
+                    $"Compensation for step '{claim.StepKey}' exceeded its execution timeout.");
+                var retryAt = ScheduleCompensationRetry(claim, retryPolicy);
+                await RecordCompensationFailureAsync(
+                    claim,
+                    timeout,
+                    retryAt).ConfigureAwait(false);
+                if (retryAt is null)
+                {
+                    throw new RollbackFailedException(
+                        $"Compensation for step '{claim.StepKey}' failed permanently after {claim.Attempt} attempt(s).",
+                        timeout);
+                }
+                await WaitUntilAsync(retryAt.Value, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                var retryAt = ScheduleCompensationRetry(claim, retryPolicy);
+                await RecordCompensationFailureAsync(
+                    claim,
+                    exception,
+                    retryAt).ConfigureAwait(false);
+                if (retryAt is null)
+                {
+                    throw new RollbackFailedException(
+                        $"Compensation for step '{claim.StepKey}' failed permanently after {claim.Attempt} attempt(s).",
+                        exception);
+                }
+                await WaitUntilAsync(retryAt.Value, cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private DateTimeOffset? ScheduleCompensationRetry(
+        WorkflowStepCompensation claim,
+        RetryPolicy retryPolicy) =>
+        claim.Attempt < retryPolicy.MaxAttempts
+            ? timeProvider.GetUtcNow() + retryPolicy.DelayAfter(claim.Attempt)
+            : (DateTimeOffset?)null;
+
+    private async Task RecordCompensationFailureAsync(
+        WorkflowStepCompensation claim,
+        Exception exception,
+        DateTimeOffset? retryAt)
+    {
+        var now = timeProvider.GetUtcNow();
+        var error = WorkflowError.FromException(exception, now, claim.Attempt);
+        await store.FailCompensationAsync(
+            claim.Id,
+            ownerId,
+            error,
+            retryAt,
+            now,
+            CancellationToken.None).ConfigureAwait(false);
+        await store.AppendEventAsync(
+            claim.WorkflowRunId,
+            WorkflowEventTypes.CompensationFailed,
+            JsonSerializer.Serialize(error, serializerOptions),
+            claim.StepKey,
+            claim.Attempt,
+            CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private RetryPolicy DeserializeRetryPolicy(string? retryPolicyJson)
+    {
+        if (retryPolicyJson is null)
+            return new RetryPolicy();
+        try
+        {
+            return JsonSerializer.Deserialize<RetryPolicy>(
+                    retryPolicyJson,
+                    serializerOptions) ?? new RetryPolicy();
+        }
+        catch (JsonException)
+        {
+            return new RetryPolicy();
+        }
+    }
+
+    private async Task WaitUntilAsync(
+        DateTimeOffset availableAt,
+        CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            var delay = availableAt - timeProvider.GetUtcNow();
+            if (delay <= TimeSpan.Zero)
+                return;
+            await Task.Delay(delay, timeProvider, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
     /// Buffers an external signal for <paramref name="workflowRunId"/> under
     /// <paramref name="signalName"/>. Signals are consumed by a
     /// <c>WaitForSignalAsync</c> wait in the workflow; signals sent before any
@@ -690,6 +1138,9 @@ public sealed class WorkflowEngine
                 case WorkflowStatus.Cancelled:
                     throw new OperationCanceledException(
                         $"Workflow '{workflowRunId:D}' was cancelled.");
+                case WorkflowStatus.Compensated:
+                    throw new WorkflowStateException(
+                        $"Workflow '{workflowRunId:D}' was compensated and has no forward result to return.");
             }
             await Task.Delay(
                 options.PollInterval,
@@ -769,7 +1220,7 @@ public sealed class WorkflowEngine
 
     private static bool IsTerminal(WorkflowStatus status) =>
         status is WorkflowStatus.Completed or WorkflowStatus.Failed or
-            WorkflowStatus.Cancelled;
+            WorkflowStatus.Cancelled or WorkflowStatus.Compensated;
 
     private static JsonSerializerOptions CreateSerializerOptions()
     {

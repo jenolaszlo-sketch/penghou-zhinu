@@ -212,4 +212,107 @@ public interface IWorkflowStore
         string signalName,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves the steps a rollback would compensate, without changing any
+    /// state. <paramref name="targetStepKey"/> is null for a full rollback;
+    /// <paramref name="boundary"/> then has no effect. Throws
+    /// <see cref="KeyNotFoundException"/> when the run (or a target step) does
+    /// not exist.
+    /// </summary>
+    ValueTask<RollbackPlan> PlanRollbackAsync(
+        Guid workflowRunId,
+        string? targetStepKey,
+        RollbackBoundary boundary,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically leases a completed or failed run for rollback without
+    /// changing its status or fencing generation. Returns the run's current
+    /// generation, or null when it is not eligible (still executing, already
+    /// compensated, or leased by another rollback).
+    /// </summary>
+    ValueTask<long?> ClaimRollbackAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Renews the rollback lease of a completed or failed run.</summary>
+    ValueTask<bool> RenewRollbackLeaseAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Releases a rollback lease, leaving the run's status untouched.</summary>
+    ValueTask ReleaseRollbackLeaseAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Marks a rolled-back run <see cref="WorkflowStatus.Compensated"/>. Returns
+    /// false (and changes nothing) when the run's rollback lease was lost, for
+    /// example to a concurrent restart.
+    /// </summary>
+    ValueTask<bool> CompleteRollbackAsync(
+        Guid workflowRunId,
+        string ownerId,
+        long generation,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fails a run whose rollback could not compensate every planned step. The
+    /// run stays claimable by a later rollback attempt. Best-effort: no-op when
+    /// the rollback lease was already lost.
+    /// </summary>
+    ValueTask FailRollbackAsync(
+        Guid workflowRunId,
+        string ownerId,
+        long generation,
+        WorkflowError error,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Claims one pending (or previously failed) compensation for execution,
+    /// fencing it to the run's current generation and recording the rollback
+    /// actor and reason. Returns the claimed row, or null when it is already
+    /// compensated, being handled elsewhere, or not yet eligible for retry.
+    /// </summary>
+    ValueTask<WorkflowStepCompensation?> ClaimCompensationAsync(
+        Guid workflowRunId,
+        string stepKey,
+        string ownerId,
+        long generation,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Completes an owned, running compensation with its committed result.</summary>
+    ValueTask CompleteCompensationAsync(
+        Guid compensationId,
+        string ownerId,
+        string? outputJson,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fails an owned, running compensation, scheduling a retry at
+    /// <paramref name="retryAt"/> when another attempt may run (or marking it
+    /// permanently failed when null).
+    /// </summary>
+    ValueTask FailCompensationAsync(
+        Guid compensationId,
+        string ownerId,
+        WorkflowError error,
+        DateTimeOffset? retryAt,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
 }

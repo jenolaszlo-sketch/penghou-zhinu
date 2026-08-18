@@ -347,19 +347,11 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await using var command = CreateCommand(connection, null, $"""
-            SELECT {CompensationColumns}
-            FROM workflow_step_compensations
-            WHERE workflow_run_id = $runId
-            ORDER BY created_at, step_key, revision;
-            """);
-        command.Parameters.AddWithValue("$runId", Format(workflowRunId));
-        var results = new List<WorkflowStepCompensation>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
-            .ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            results.Add(ReadCompensation(reader));
-        return results;
+        return await ReadCompensationsAsync(
+            connection,
+            null,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async ValueTask<IReadOnlyList<WorkflowEvent>> GetEventsAsync(
@@ -610,11 +602,12 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             UPDATE workflow_runs
             SET status = $cancelled, updated_at = $now, completed_at = $now,
                 lease_owner = NULL, lease_expires_at = NULL
-            WHERE id = $id AND status NOT IN ($completed, $failed, $cancelled);
+            WHERE id = $id AND status NOT IN ($completed, $failed, $cancelled, $compensated);
             """);
         runCommand.Parameters.AddWithValue("$cancelled", (int)WorkflowStatus.Cancelled);
         runCommand.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
         runCommand.Parameters.AddWithValue("$failed", (int)WorkflowStatus.Failed);
+        runCommand.Parameters.AddWithValue("$compensated", (int)WorkflowStatus.Compensated);
         runCommand.Parameters.AddWithValue("$now", FormatTimestamp(now));
         runCommand.Parameters.AddWithValue("$id", Format(workflowRunId));
         if (await runCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) == 0)
@@ -1054,6 +1047,15 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         runs.Parameters.AddWithValue("$running", (int)WorkflowStatus.Running);
         runs.Parameters.AddWithValue("$now", FormatTimestamp(now));
         await runs.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await using var compensations = CreateCommand(connection, transaction, """
+            UPDATE workflow_step_compensations
+            SET status = $pending, lease_owner = NULL, lease_expires_at = NULL
+            WHERE status = $running AND lease_expires_at <= $now;
+            """);
+        compensations.Parameters.AddWithValue("$pending", (int)CompensationStatus.Pending);
+        compensations.Parameters.AddWithValue("$running", (int)CompensationStatus.Running);
+        compensations.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        await compensations.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         foreach (var step in expired)
         {
             await InsertEventAsync(
@@ -1248,6 +1250,361 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return plan;
     }
 
+    public async ValueTask<RollbackPlan> PlanRollbackAsync(
+        Guid workflowRunId,
+        string? targetStepKey,
+        RollbackBoundary boundary,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        if (targetStepKey is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(targetStepKey);
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var steps = await ReadCurrentStepsAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        var dependencies = await ReadStepDependenciesAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        var compensations = await ReadCompensationsAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        var plan = ResolveRollbackPlan(
+            workflowRunId,
+            targetStepKey,
+            boundary,
+            steps,
+            dependencies,
+            compensations);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return plan;
+    }
+
+    /// <summary>
+    /// Atomically claims a completed or failed run for rollback, without
+    /// changing its status or fencing generation. Returns the current run
+    /// generation, or null when the run is not eligible (still executing,
+    /// already compensated, or leased by another rollback).
+    /// </summary>
+    public async ValueTask<long?> ClaimRollbackAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, """
+            UPDATE workflow_runs
+            SET lease_owner = $owner, lease_expires_at = $expires,
+                updated_at = $now
+            WHERE id = $id AND status IN ($completed, $failed)
+              AND (lease_expires_at IS NULL OR lease_expires_at <= $now)
+            RETURNING lease_generation;
+            """);
+        command.Parameters.AddWithValue("$owner", ownerId);
+        command.Parameters.AddWithValue("$expires", FormatTimestamp(leaseExpiresAt));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        command.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
+        command.Parameters.AddWithValue("$failed", (int)WorkflowStatus.Failed);
+        var generation = await command.ExecuteScalarAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (generation is null)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return (long)generation;
+    }
+
+    /// <summary>Renews the rollback lease of a completed or failed run.</summary>
+    public async ValueTask<bool> RenewRollbackLeaseAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = CreateCommand(connection, null, """
+            UPDATE workflow_runs
+            SET lease_expires_at = $expires
+            WHERE id = $id AND lease_owner = $owner
+              AND status IN ($completed, $failed);
+            """);
+        command.Parameters.AddWithValue("$expires", FormatTimestamp(leaseExpiresAt));
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        command.Parameters.AddWithValue("$owner", ownerId);
+        command.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
+        command.Parameters.AddWithValue("$failed", (int)WorkflowStatus.Failed);
+        return await command.ExecuteNonQueryAsync(cancellationToken)
+            .ConfigureAwait(false) == 1;
+    }
+
+    /// <summary>Releases a rollback lease, leaving the run's status untouched.</summary>
+    public async ValueTask ReleaseRollbackLeaseAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = CreateCommand(connection, null, """
+            UPDATE workflow_runs
+            SET lease_owner = NULL, lease_expires_at = NULL, updated_at = $now
+            WHERE id = $id AND lease_owner = $owner
+              AND status IN ($completed, $failed);
+            """);
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        command.Parameters.AddWithValue("$owner", ownerId);
+        command.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
+        command.Parameters.AddWithValue("$failed", (int)WorkflowStatus.Failed);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Marks a rolled-back run <see cref="WorkflowStatus.Compensated"/>. The
+    /// update requires the run to still be owned by <paramref name="ownerId"/>
+    /// at the generation it was claimed with, so a concurrent restart aborts
+    /// the terminal transition. Returns false when the claim was lost.
+    /// </summary>
+    public async ValueTask<bool> CompleteRollbackAsync(
+        Guid workflowRunId,
+        string ownerId,
+        long generation,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, """
+            UPDATE workflow_runs
+            SET status = $compensated, completed_at = $now,
+                lease_owner = NULL, lease_expires_at = NULL, updated_at = $now
+            WHERE id = $id AND lease_owner = $owner
+              AND status IN ($completed, $failed)
+              AND lease_generation = $generation;
+            """);
+        command.Parameters.AddWithValue("$compensated", (int)WorkflowStatus.Compensated);
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        command.Parameters.AddWithValue("$owner", ownerId);
+        command.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
+        command.Parameters.AddWithValue("$failed", (int)WorkflowStatus.Failed);
+        command.Parameters.AddWithValue("$generation", generation);
+        var updated = await command.ExecuteNonQueryAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (updated != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return false;
+        }
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    /// <summary>
+    /// Fails a run whose rollback failed, keeping it claimable for a later
+    /// rollback attempt. Best-effort: no-op when the claim was already lost.
+    /// </summary>
+    public async ValueTask FailRollbackAsync(
+        Guid workflowRunId,
+        string ownerId,
+        long generation,
+        WorkflowError error,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, """
+            UPDATE workflow_runs
+            SET status = $failed, error_json = $errorJson,
+                completed_at = $now, lease_owner = NULL,
+                lease_expires_at = NULL, updated_at = $now
+            WHERE id = $id AND lease_owner = $owner
+              AND status IN ($completed, $failed)
+              AND lease_generation = $generation;
+            """);
+        command.Parameters.AddWithValue("$failed", (int)WorkflowStatus.Failed);
+        command.Parameters.AddWithValue("$errorJson", DbValue(SerializeError(error)));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        command.Parameters.AddWithValue("$id", Format(workflowRunId));
+        command.Parameters.AddWithValue("$owner", ownerId);
+        command.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
+        command.Parameters.AddWithValue("$generation", generation);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+        await InsertEventAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            null,
+            WorkflowEventTypes.WorkflowFailed,
+            now,
+            null,
+            JsonSerializer.Serialize(error, SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Claims one pending (or previously failed) compensation for execution,
+    /// fencing it to the run's current generation and recording the rollback
+    /// actor and reason. Returns the claimed row, or null when it is already
+    /// compensated, being handled, or not yet eligible for retry.
+    /// </summary>
+    public async ValueTask<WorkflowStepCompensation?> ClaimCompensationAsync(
+        Guid workflowRunId,
+        string stepKey,
+        string ownerId,
+        long generation,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, $"""
+            UPDATE workflow_step_compensations
+            SET status = $running, attempt = attempt + 1,
+                started_at = $now, lease_owner = $owner,
+                lease_expires_at = $expires, lease_generation = $generation,
+                actor = $actor, reason = $reason,
+                available_at = NULL, error_json = NULL
+            WHERE workflow_run_id = $runId AND step_key = $stepKey
+              AND status IN ($pending, $failed)
+              AND (available_at IS NULL OR available_at <= $now)
+              AND lease_generation <= $generation
+            RETURNING {CompensationColumns};
+            """);
+        command.Parameters.AddWithValue("$running", (int)CompensationStatus.Running);
+        command.Parameters.AddWithValue("$pending", (int)CompensationStatus.Pending);
+        command.Parameters.AddWithValue("$failed", (int)CompensationStatus.Failed);
+        command.Parameters.AddWithValue("$runId", Format(workflowRunId));
+        command.Parameters.AddWithValue("$stepKey", stepKey);
+        command.Parameters.AddWithValue("$owner", ownerId);
+        command.Parameters.AddWithValue("$expires", FormatTimestamp(leaseExpiresAt));
+        command.Parameters.AddWithValue("$generation", generation);
+        command.Parameters.AddWithValue("$actor", DbValue(actor));
+        command.Parameters.AddWithValue("$reason", DbValue(reason));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        WorkflowStepCompensation claimed;
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false))
+        {
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                return null;
+            }
+            claimed = ReadCompensation(reader);
+        }
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return claimed;
+    }
+
+    /// <summary>Completes an owned, running compensation with its committed result.</summary>
+    public async ValueTask CompleteCompensationAsync(
+        Guid compensationId,
+        string ownerId,
+        string? outputJson,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, """
+            UPDATE workflow_step_compensations
+            SET status = $completed, output_json = $outputJson,
+                completed_at = $now, lease_owner = NULL, lease_expires_at = NULL
+            WHERE id = $id AND status = $running AND lease_owner = $owner;
+            """);
+        command.Parameters.AddWithValue("$completed", (int)CompensationStatus.Completed);
+        command.Parameters.AddWithValue("$outputJson", DbValue(outputJson));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        command.Parameters.AddWithValue("$id", Format(compensationId));
+        command.Parameters.AddWithValue("$running", (int)CompensationStatus.Running);
+        command.Parameters.AddWithValue("$owner", ownerId);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            throw new WorkflowStateException(
+                "Compensation completion requires an owned running lease.");
+        }
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Fails an owned, running compensation, scheduling a retry at
+    /// <paramref name="retryAt"/> when another attempt may run (or marking it
+    /// permanently failed when null).
+    /// </summary>
+    public async ValueTask FailCompensationAsync(
+        Guid compensationId,
+        string ownerId,
+        WorkflowError error,
+        DateTimeOffset? retryAt,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        await using var command = CreateCommand(connection, transaction, """
+            UPDATE workflow_step_compensations
+            SET status = $failed, error_json = $errorJson,
+                completed_at = $now, available_at = $retryAt,
+                lease_owner = NULL, lease_expires_at = NULL
+            WHERE id = $id AND status = $running AND lease_owner = $owner;
+            """);
+        command.Parameters.AddWithValue("$failed", (int)CompensationStatus.Failed);
+        command.Parameters.AddWithValue("$errorJson", DbValue(SerializeError(error)));
+        command.Parameters.AddWithValue("$now", FormatTimestamp(now));
+        command.Parameters.AddWithValue("$retryAt", DbValue(FormatNullable(retryAt)));
+        command.Parameters.AddWithValue("$id", Format(compensationId));
+        command.Parameters.AddWithValue("$running", (int)CompensationStatus.Running);
+        command.Parameters.AddWithValue("$owner", ownerId);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            throw new WorkflowStateException(
+                "Compensation failure requires an owned running lease.");
+        }
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     private static async ValueTask<RestartPlan> ResolveRestartPlanAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
@@ -1368,6 +1725,235 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             .ToList();
         invalidated.Insert(0, new RestartPlanStep(target.StepKey, RestartReason.Requested));
         return invalidated;
+    }
+
+    private static RollbackPlan ResolveRollbackPlan(
+        Guid workflowRunId,
+        string? targetStepKey,
+        RollbackBoundary boundary,
+        IReadOnlyList<WorkflowStepRun> steps,
+        IReadOnlyList<StepDependency> dependencies,
+        IReadOnlyList<WorkflowStepCompensation> compensations)
+    {
+        var stepKeys = steps
+            .Select(step => step.StepKey)
+            .ToHashSet(StringComparer.Ordinal);
+        var claimableByKey = new Dictionary<string, WorkflowStepCompensation>(
+            StringComparer.Ordinal);
+        foreach (var row in compensations.OrderBy(item => item.Revision))
+        {
+            if (stepKeys.Contains(row.StepKey) &&
+                row.InputJson is not null &&
+                row.Status is CompensationStatus.Pending or CompensationStatus.Failed)
+            {
+                claimableByKey[row.StepKey] = row;
+            }
+        }
+
+        bool Compensable(string stepKey) =>
+            claimableByKey.ContainsKey(stepKey);
+
+        var topoOrder = TopologicalOrder(steps, dependencies);
+        var topoIndex = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var index = 0; index < topoOrder.Count; index++)
+            topoIndex[topoOrder[index].StepKey] = index;
+
+        var compensated = new List<RollbackPlanStep>();
+        var preserved = new List<RollbackPlanStep>();
+
+        if (targetStepKey is null)
+        {
+            foreach (var step in topoOrder)
+            {
+                if (Compensable(step.StepKey))
+                {
+                    compensated.Add(new RollbackPlanStep(
+                        step.StepKey,
+                        RollbackAction.Compensate,
+                        RollbackReason.Dependent));
+                }
+            }
+            foreach (var step in steps
+                .OrderBy(item => item.CreatedAt)
+                .ThenBy(item => item.StepKey, StringComparer.Ordinal))
+            {
+                if (!Compensable(step.StepKey))
+                {
+                    preserved.Add(new RollbackPlanStep(
+                        step.StepKey,
+                        RollbackAction.Preserve,
+                        RollbackReason.IndependentBranch));
+                }
+            }
+            compensated.Sort((a, b) =>
+                topoIndex[b.StepKey].CompareTo(topoIndex[a.StepKey]));
+            return new RollbackPlan(
+                workflowRunId,
+                null,
+                boundary,
+                compensated.Concat(preserved).ToArray());
+        }
+
+        var dependents = new HashSet<string>(StringComparer.Ordinal);
+        var ancestors = new HashSet<string>(StringComparer.Ordinal);
+        if (Compensable(targetStepKey) ||
+            steps.Any(step => step.StepKey == targetStepKey))
+        {
+            var dependentsOf = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            var dependsOn = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (var dependency in dependencies)
+            {
+                if (!stepKeys.Contains(dependency.StepKey) ||
+                    !stepKeys.Contains(dependency.DependsOnStepKey))
+                {
+                    continue;
+                }
+                if (!dependentsOf.TryGetValue(
+                        dependency.DependsOnStepKey,
+                        out var dependentsList))
+                {
+                    dependentsList = dependentsOf[dependency.DependsOnStepKey] = [];
+                }
+                dependentsList.Add(dependency.StepKey);
+                if (!dependsOn.TryGetValue(dependency.StepKey, out var ancestorsList))
+                {
+                    ancestorsList = dependsOn[dependency.StepKey] = [];
+                }
+                ancestorsList.Add(dependency.DependsOnStepKey);
+            }
+            dependents = TransitiveClosure(dependentsOf, targetStepKey);
+            ancestors = TransitiveClosure(dependsOn, targetStepKey);
+        }
+
+        foreach (var step in steps
+            .OrderBy(item => item.CreatedAt)
+            .ThenBy(item => item.StepKey, StringComparer.Ordinal))
+        {
+            if (string.Equals(step.StepKey, targetStepKey, StringComparison.Ordinal))
+            {
+                if (boundary == RollbackBoundary.BeforeStep)
+                {
+                    compensated.Add(new RollbackPlanStep(
+                        step.StepKey,
+                        RollbackAction.Compensate,
+                        RollbackReason.Boundary));
+                }
+                else
+                {
+                    preserved.Add(new RollbackPlanStep(
+                        step.StepKey,
+                        RollbackAction.Preserve,
+                        RollbackReason.Boundary));
+                }
+            }
+            else if (dependents.Contains(step.StepKey))
+            {
+                if (Compensable(step.StepKey))
+                {
+                    compensated.Add(new RollbackPlanStep(
+                        step.StepKey,
+                        RollbackAction.Compensate,
+                        RollbackReason.Dependent));
+                }
+                else
+                {
+                    preserved.Add(new RollbackPlanStep(
+                        step.StepKey,
+                        RollbackAction.Preserve,
+                        RollbackReason.Dependent));
+                }
+            }
+            else if (ancestors.Contains(step.StepKey))
+            {
+                preserved.Add(new RollbackPlanStep(
+                    step.StepKey,
+                    RollbackAction.Preserve,
+                    RollbackReason.Ancestor));
+            }
+            else
+            {
+                preserved.Add(new RollbackPlanStep(
+                    step.StepKey,
+                    RollbackAction.Preserve,
+                    RollbackReason.IndependentBranch));
+            }
+        }
+
+        compensated.Sort((a, b) =>
+            topoIndex[b.StepKey].CompareTo(topoIndex[a.StepKey]));
+        return new RollbackPlan(
+            workflowRunId,
+            targetStepKey,
+            boundary,
+            compensated.Concat(preserved).ToArray());
+    }
+
+    private static HashSet<string> TransitiveClosure(
+        Dictionary<string, List<string>> adjacency,
+        string start)
+    {
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        var queue = new Queue<string>();
+        queue.Enqueue(start);
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            if (!adjacency.TryGetValue(current, out var neighbors))
+                continue;
+            foreach (var neighbor in neighbors)
+            {
+                if (visited.Add(neighbor))
+                    queue.Enqueue(neighbor);
+            }
+        }
+        visited.Remove(start);
+        return visited;
+    }
+
+    private static List<WorkflowStepRun> TopologicalOrder(
+        IReadOnlyList<WorkflowStepRun> steps,
+        IReadOnlyList<StepDependency> dependencies)
+    {
+        var byKey = steps.ToDictionary(
+            step => step.StepKey,
+            StringComparer.Ordinal);
+        var dependsOn = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var dependency in dependencies)
+        {
+            if (!byKey.ContainsKey(dependency.StepKey) ||
+                !byKey.ContainsKey(dependency.DependsOnStepKey))
+            {
+                continue;
+            }
+            if (!dependsOn.TryGetValue(dependency.StepKey, out var list))
+            {
+                list = dependsOn[dependency.StepKey] = [];
+            }
+            list.Add(dependency.DependsOnStepKey);
+        }
+        var ordered = new List<WorkflowStepRun>(steps.Count);
+        var resolved = new HashSet<string>(StringComparer.Ordinal);
+        var remaining = steps
+            .OrderBy(step => step.CreatedAt)
+            .ThenBy(step => step.StepKey, StringComparer.Ordinal)
+            .ToList();
+        while (remaining.Count > 0)
+        {
+            var next = remaining.FirstOrDefault(step =>
+                !dependsOn.TryGetValue(step.StepKey, out var deps) ||
+                deps.All(dependency =>
+                    !byKey.ContainsKey(dependency) ||
+                    resolved.Contains(dependency)));
+            if (next is null)
+            {
+                ordered.AddRange(remaining);
+                break;
+            }
+            ordered.Add(next);
+            resolved.Add(next.StepKey);
+            remaining.Remove(next);
+        }
+        return ordered;
     }
 
     public async ValueTask SendSignalAsync(
@@ -1823,7 +2409,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 : DBNull.Value);
         command.Parameters.AddWithValue(
             "$idempotencyKey",
-            $"workflow:{request.WorkflowRunId:D}:step:{request.StepKey}:compensate");
+            $"{request.WorkflowRunId:D}:{request.StepKey}:{revision}:compensation");
         command.Parameters.AddWithValue("$generation", leaseGeneration);
         command.Parameters.AddWithValue("$createdAt", FormatTimestamp(request.Now));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -1851,6 +2437,27 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 reader.GetString(0),
                 reader.GetString(1)));
         }
+        return results;
+    }
+
+    private static async ValueTask<IReadOnlyList<WorkflowStepCompensation>> ReadCompensationsAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = CreateCommand(connection, transaction, $"""
+            SELECT {CompensationColumns}
+            FROM workflow_step_compensations
+            WHERE workflow_run_id = $runId
+            ORDER BY created_at, step_key, revision;
+            """);
+        command.Parameters.AddWithValue("$runId", Format(workflowRunId));
+        var results = new List<WorkflowStepCompensation>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadCompensation(reader));
         return results;
     }
 

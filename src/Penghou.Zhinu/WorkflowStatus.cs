@@ -7,5 +7,12 @@ public enum WorkflowStatus
     Running,
     Completed,
     Failed,
-    Cancelled
+    Cancelled,
+
+    /// <summary>
+    /// The run's forward operations were undone after it completed or failed.
+    /// The external history still happened; <c>Compensated</c> records that the
+    /// compensating work finished.
+    /// </summary>
+    Compensated
 }

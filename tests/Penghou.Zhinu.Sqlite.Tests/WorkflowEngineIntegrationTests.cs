@@ -1095,7 +1095,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         compensation.InputJson.Should().Be("\"vm-x\"");
         compensation.InputType.Should().NotBeNullOrEmpty();
         compensation.IdempotencyKey.Should().Be(
-            $"workflow:{workflow.RunId:D}:step:reserve:compensate");
+            $"{workflow.RunId:D}:reserve:1:compensation");
         compensation.RetryPolicyJson.Should().NotBeNullOrEmpty();
         compensation.LeaseGeneration.Should().BeGreaterThanOrEqualTo(1);
     }
@@ -1179,6 +1179,277 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         compensations.Should().OnlyContain(item =>
             item.Status == CompensationStatus.Pending &&
             item.InputJson == "\"vm-x\"");
+    }
+
+    [Fact]
+    public async Task PlanRollbackAsync_FullRollback_ListsClaimableStepsInReverseDependencyOrder()
+    {
+        var workflow = new RollbackWorkflow();
+        var engine = CreateEngine(workflow, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var plan = await engine.PlanRollbackAsync(
+            workflow.RunId,
+            TestContext.Current.CancellationToken);
+
+        plan.TargetStepKey.Should().BeNull();
+        plan.Steps.Where(item => item.Action == RollbackAction.Compensate)
+            .Select(item => item.StepKey)
+            .Should().Equal("tests", "deploy", "frontend", "payment");
+        plan.Steps.Where(item => item.Action == RollbackAction.Compensate)
+            .Should().OnlyContain(item =>
+                item.Reason == RollbackReason.Dependent);
+        plan.Steps.Where(item => item.Action == RollbackAction.Preserve)
+            .Select(item => item.StepKey)
+            .Should().Equal("plan");
+    }
+
+    [Fact]
+    public async Task PlanRollbackAsync_BeforeStep_IncludesTargetAsBoundary()
+    {
+        var workflow = new RollbackWorkflow();
+        var engine = CreateEngine(workflow, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var plan = await engine.PlanRollbackAsync(
+            workflow.RunId,
+            "deploy",
+            new RollbackOptions(RollbackBoundary.BeforeStep),
+            TestContext.Current.CancellationToken);
+
+        plan.TargetStepKey.Should().Be("deploy");
+        plan.Steps.Should().Equal(
+            new RollbackPlanStep("tests", RollbackAction.Compensate, RollbackReason.Dependent),
+            new RollbackPlanStep("deploy", RollbackAction.Compensate, RollbackReason.Boundary),
+            new RollbackPlanStep("plan", RollbackAction.Preserve, RollbackReason.Ancestor),
+            new RollbackPlanStep("payment", RollbackAction.Preserve, RollbackReason.Ancestor),
+            new RollbackPlanStep("frontend", RollbackAction.Preserve, RollbackReason.IndependentBranch));
+    }
+
+    [Fact]
+    public async Task PlanRollbackAsync_AfterStep_PreservesTarget()
+    {
+        var workflow = new RollbackWorkflow();
+        var engine = CreateEngine(workflow, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var plan = await engine.PlanRollbackAsync(
+            workflow.RunId,
+            "deploy",
+            new RollbackOptions(RollbackBoundary.AfterStep),
+            TestContext.Current.CancellationToken);
+
+        plan.Steps.Where(item => item.Action == RollbackAction.Compensate)
+            .Select(item => item.StepKey)
+            .Should().Equal("tests");
+        plan.Steps.Should().Contain(item =>
+            item.StepKey == "deploy" &&
+            item.Action == RollbackAction.Preserve &&
+            item.Reason == RollbackReason.Boundary);
+    }
+
+    [Fact]
+    public async Task RollbackAsync_CompensatesCompletedStepsInReverseDependencyOrder()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var rollbackWorkflow = new RollbackWorkflow();
+        var rollbackEngine = CreateEngine(rollbackWorkflow, "rollback");
+        await rollbackEngine.RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+
+        rollbackWorkflow.CompensatedOrder
+            .Should().Equal("tests", "deploy", "frontend", "payment");
+        forward.CompensatedOrder.Should().BeEmpty();
+        (await rollbackEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Compensated);
+        (await rollbackEngine.GetCompensationsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Should().OnlyContain(item =>
+                item.Status == CompensationStatus.Completed);
+        (await rollbackEngine.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Should().Contain(item =>
+                item.EventType == WorkflowEventTypes.WorkflowCompensated);
+    }
+
+    [Fact]
+    public async Task RollbackAsync_SecondAttemptReusesCompletedCompensations()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var first = new RollbackWorkflow();
+        await CreateEngine(first, "rollback").RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+        first.CompensatedOrder.Should().HaveCount(4);
+
+        var second = new RollbackWorkflow();
+        await CreateEngine(second, "rollback").RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+
+        first.CompensatedOrder.Should().HaveCount(4);
+        second.CompensatedOrder.Should().BeEmpty();
+        (await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Compensated);
+    }
+
+    [Fact]
+    public async Task RollbackAsync_FailedCompensation_FailsRunAndReusesCompletedOnRetry()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var failing = new RollbackWorkflow(failCompensations: "payment");
+        var failingEngine = CreateEngine(failing, "rollback");
+        var act = async () => await failingEngine.RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+        await act.Should().ThrowAsync<RollbackFailedException>();
+        failing.CompensatedOrder.Should().Equal(
+            "tests", "deploy", "frontend", "payment");
+        (await failingEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Failed);
+
+        var retry = new RollbackWorkflow();
+        var retryEngine = CreateEngine(retry, "rollback");
+        await retryEngine.RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+
+        retry.CompensatedOrder.Should().Equal("payment");
+        failing.CompensatedOrder.Should().Equal(
+            "tests", "deploy", "frontend", "payment");
+        (await retryEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Compensated);
+        (await retryEngine.GetCompensationsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Should().OnlyContain(item => item.Status == CompensationStatus.Completed);
+    }
+
+    [Fact]
+    public async Task RollbackToStepAsync_AfterStep_CompensatesOnlyDependents()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var rollbackWorkflow = new RollbackWorkflow();
+        var rollbackEngine = CreateEngine(rollbackWorkflow, "rollback");
+        await rollbackEngine.RollbackToStepAsync(
+            runId,
+            "deploy",
+            RollbackBoundary.AfterStep,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rollbackWorkflow.CompensatedOrder.Should().Equal("tests");
+        (await rollbackEngine.GetCompensationsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Should().Contain(item =>
+                item.StepKey == "tests" && item.Status == CompensationStatus.Completed)
+            .And.Contain(item =>
+                item.StepKey == "deploy" && item.Status == CompensationStatus.Pending)
+            .And.Contain(item =>
+                item.StepKey == "payment" && item.Status == CompensationStatus.Pending)
+            .And.Contain(item =>
+                item.StepKey == "frontend" && item.Status == CompensationStatus.Pending);
+        (await rollbackEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Compensated);
+    }
+
+    [Fact]
+    public async Task RollbackToStepAsync_BeforeStep_CompensatesTargetToo()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var rollbackWorkflow = new RollbackWorkflow();
+        var rollbackEngine = CreateEngine(rollbackWorkflow, "rollback");
+        await rollbackEngine.RollbackToStepAsync(
+            runId,
+            "deploy",
+            RollbackBoundary.BeforeStep,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rollbackWorkflow.CompensatedOrder
+            .Should().Equal("tests", "deploy");
+        (await rollbackEngine.GetCompensationsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Should().Contain(item =>
+                item.StepKey == "deploy" && item.Status == CompensationStatus.Completed)
+            .And.Contain(item =>
+                item.StepKey == "payment" && item.Status == CompensationStatus.Pending);
+    }
+
+    [Fact]
+    public async Task RollbackAsync_StepWithCommittedResult_SendsItToTheCompensation()
+    {
+        var forward = new CapturingCompensationWorkflow();
+        var engine = CreateEngine(forward, "rollback-result");
+        await engine.RunAsync<string, string>(
+            "rollback-result",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var rollbackWorkflow = new CapturingCompensationWorkflow();
+        var rollbackEngine = CreateEngine(rollbackWorkflow, "rollback-result");
+        await rollbackEngine.RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+
+        rollbackWorkflow.CompensatedResults.Single().Should().Be("vm-x");
+        rollbackWorkflow.CompensationKeys.Single().Should().Be(
+            $"{runId:D}:reserve:1:compensation");
     }
 
     [Fact]
@@ -2057,6 +2328,119 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                     new InvalidOperationException("quota exceeded")),
                 compensation: (result, step, ct) => Task.CompletedTask,
                 cancellationToken: cancellationToken);
+    }
+
+    private sealed class RollbackWorkflow : IWorkflow<string, string>
+    {
+        private readonly IReadOnlySet<string> failCompensations;
+
+        public RollbackWorkflow(params string[] failCompensations)
+        {
+            this.failCompensations = new HashSet<string>(failCompensations);
+        }
+
+        public List<string> CompensatedOrder { get; } = [];
+
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var plan = await context.StepAsync(
+                "plan",
+                input,
+                (value, _) => Task.FromResult($"plan-{value}"),
+                cancellationToken: cancellationToken);
+            string payment;
+            using (context.DependsOn("plan"))
+            {
+                payment = await context.StepAsync(
+                    "payment",
+                    plan,
+                    (value, _) => Task.FromResult($"paid:{value}"),
+                    compensation: (result, step, ct) =>
+                        Compensate("payment", cancellationToken),
+                    cancellationToken: cancellationToken);
+                await context.StepAsync(
+                    "frontend",
+                    plan,
+                    (value, _) => Task.FromResult($"ui:{value}"),
+                    compensation: (result, step, ct) =>
+                        Compensate("frontend", cancellationToken),
+                    cancellationToken: cancellationToken);
+            }
+            string deploy;
+            using (context.DependsOn("payment"))
+            {
+                deploy = await context.StepAsync(
+                    "deploy",
+                    payment,
+                    (value, _) => Task.FromResult($"deployed:{value}"),
+                    compensation: (result, step, ct) =>
+                        Compensate("deploy", cancellationToken),
+                    cancellationToken: cancellationToken);
+            }
+            using (context.DependsOn("deploy"))
+            {
+                await context.StepAsync(
+                    "tests",
+                    deploy,
+                    (value, _) => Task.FromResult($"tested:{value}"),
+                    compensation: (result, step, ct) =>
+                        Compensate("tests", cancellationToken),
+                    cancellationToken: cancellationToken);
+            }
+            return "done";
+        }
+
+        private Task Compensate(
+            string stepKey,
+            CancellationToken cancellationToken)
+        {
+            CompensatedOrder.Add(stepKey);
+            if (failCompensations.Contains(stepKey))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot undo '{stepKey}'.");
+            }
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class CapturingCompensationWorkflow : IWorkflow<string, string>
+    {
+        public List<string> CompensatedResults { get; } = [];
+
+        public List<string> CompensationKeys { get; } = [];
+
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var reservation = await context.StepAsync(
+                "reserve",
+                input,
+                (value, _) => Task.FromResult($"vm-{value}"),
+                compensation: (result, step, ct) =>
+                {
+                    CompensatedResults.Add(result);
+                    CompensationKeys.Add(step.IdempotencyKey);
+                    return Task.CompletedTask;
+                },
+                cancellationToken: cancellationToken);
+            return await context.StepAsync(
+                "confirm",
+                reservation,
+                (value, _) => Task.FromResult($"confirmed:{value}"),
+                cancellationToken: cancellationToken);
+        }
     }
 
     private sealed class SignalWorkflow : IWorkflow<string, string>
