@@ -35,6 +35,17 @@ public interface IWorkflowStore
         int limit,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Returns <paramref name="workflowRunId"/> and every descendant run
+    /// reachable through <see cref="WorkflowRun.ParentRunId"/>, up to
+    /// <paramref name="maxDepth"/> levels (the run itself is depth 0), in
+    /// creation order. Empty when the run does not exist.
+    /// </summary>
+    ValueTask<IReadOnlyList<WorkflowRun>> GetRunSubtreeAsync(
+        Guid workflowRunId,
+        int maxDepth,
+        CancellationToken cancellationToken = default);
+
     ValueTask<WorkflowEvent> AppendEventAsync(
         Guid workflowRunId,
         string eventType,

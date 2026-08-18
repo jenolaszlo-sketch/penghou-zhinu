@@ -515,6 +515,105 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task GetRunSubtreeAsync_ReturnsRootAndDescendantsInCreationOrder()
+    {
+        var store = CreateStore();
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var root = await CreateRunAsync(
+            store,
+            "root",
+            now.AddSeconds(1),
+            parentRunId: null,
+            TestContext.Current.CancellationToken);
+        var child1 = await CreateRunAsync(
+            store,
+            "child-1",
+            now.AddSeconds(2),
+            root,
+            TestContext.Current.CancellationToken);
+        var grandchild = await CreateRunAsync(
+            store,
+            "grandchild",
+            now.AddSeconds(3),
+            child1,
+            TestContext.Current.CancellationToken);
+        var child2 = await CreateRunAsync(
+            store,
+            "child-2",
+            now.AddSeconds(4),
+            root,
+            TestContext.Current.CancellationToken);
+        await CreateRunAsync(
+            store,
+            "other",
+            now.AddSeconds(5),
+            parentRunId: null,
+            TestContext.Current.CancellationToken);
+
+        var subtree = await store.GetRunSubtreeAsync(
+            root,
+            maxDepth: 8,
+            TestContext.Current.CancellationToken);
+
+        subtree.Select(run => run.Id).Should().Equal(root, child1, grandchild, child2);
+    }
+
+    [Fact]
+    public async Task GetRunSubtreeAsync_MaxDepth_LimitsDescendants()
+    {
+        var store = CreateStore();
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var root = await CreateRunAsync(
+            store,
+            "root",
+            now.AddSeconds(1),
+            parentRunId: null,
+            TestContext.Current.CancellationToken);
+        var child = await CreateRunAsync(
+            store,
+            "child",
+            now.AddSeconds(2),
+            root,
+            TestContext.Current.CancellationToken);
+        await CreateRunAsync(
+            store,
+            "grandchild",
+            now.AddSeconds(3),
+            child,
+            TestContext.Current.CancellationToken);
+
+        var subtree = await store.GetRunSubtreeAsync(
+            root,
+            maxDepth: 1,
+            TestContext.Current.CancellationToken);
+
+        subtree.Select(run => run.Id).Should().Equal(root, child);
+    }
+
+    [Fact]
+    public async Task GetRunSubtreeAsync_UnknownRoot_ReturnsEmpty()
+    {
+        var store = CreateStore();
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        await CreateRunAsync(
+            store,
+            "root",
+            now,
+            parentRunId: null,
+            TestContext.Current.CancellationToken);
+
+        var subtree = await store.GetRunSubtreeAsync(
+            Guid.NewGuid(),
+            maxDepth: 8,
+            TestContext.Current.CancellationToken);
+
+        subtree.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task PurgeRunsAsync_DeletesOldRunsAndCascades()
     {
         var workflow = new TwoStepWorkflow();
@@ -853,6 +952,86 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
             cancellationToken: TestContext.Current.CancellationToken);
         runs.Should().ContainSingle()
             .Which.ParentRunId.Should().Be(runId);
+    }
+
+    [Fact]
+    public async Task GetRunProgressAsync_ReturnsSnapshotOfParentAndChildRuns()
+    {
+        var parent = new ParentWorkflow();
+        var child = new ChildWorkflow();
+        var engine = CreateEngine(
+            new WorkflowRegistry()
+                .Register("parent", "1", parent)
+                .Register("child", "1", child));
+        var runId = await engine.StartAsync(
+            "parent",
+            "1",
+            "go",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var progress = await engine.GetRunProgressAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        progress.Should().NotBeNull();
+        progress!.Run.Id.Should().Be(runId);
+        progress.Run.Status.Should().Be(WorkflowStatus.Completed);
+        progress.Steps.Should().HaveCount(3);
+        progress.CompletedSteps.Should().Be(3);
+        progress.RunningSteps.Should().Be(0);
+        progress.WaitingSteps.Should().Be(0);
+        progress.FailedSteps.Should().Be(0);
+        progress.ExecutedStepKeys.Should().Equal(
+            "parent-step", "child:start", "child:wait");
+        progress.Events.Should().NotBeEmpty();
+        progress.Children.Should().ContainSingle();
+        var childProgress = progress.Children[0];
+        childProgress.Run.ParentRunId.Should().Be(runId);
+        childProgress.Run.Status.Should().Be(WorkflowStatus.Completed);
+        childProgress.Steps.Should().ContainSingle()
+            .Which.StepKey.Should().Be("child-step");
+        childProgress.CompletedSteps.Should().Be(1);
+        childProgress.ExecutedStepKeys.Should().Equal("child-step");
+        childProgress.Events.Should().NotBeEmpty();
+        childProgress.Children.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetRunProgressAsync_UnknownRun_ReturnsNull()
+    {
+        var engine = CreateEngine(new TwoStepWorkflow(), "progress-unknown");
+        var progress = await engine.GetRunProgressAsync(
+            Guid.NewGuid(),
+            cancellationToken: TestContext.Current.CancellationToken);
+        progress.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetRunProgressAsync_IncludeEventsFalse_OmitsEvents()
+    {
+        var engine = CreateEngine(new TwoStepWorkflow(), "progress-no-events");
+        var runId = await engine.StartAsync(
+            "progress-no-events",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var progress = await engine.GetRunProgressAsync(
+            runId,
+            new RunProgressOptions { IncludeEvents = false },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        progress!.Events.Should().BeEmpty();
+        progress.Steps.Should().HaveCount(2);
+        progress.CompletedSteps.Should().Be(2);
     }
 
     [Fact]
@@ -1200,6 +1379,29 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
             DatabasePath = Path.Combine(root, "zhinu.db"),
             BusyTimeout = TimeSpan.FromSeconds(2)
         });
+
+    private static async Task<Guid> CreateRunAsync(
+        SqliteWorkflowStore store,
+        string workflowName,
+        DateTimeOffset createdAt,
+        Guid? parentRunId,
+        CancellationToken cancellationToken)
+    {
+        var id = Guid.NewGuid();
+        await store.CreateRunAsync(
+            new WorkflowRun
+            {
+                Id = id,
+                WorkflowName = workflowName,
+                WorkflowVersion = "1",
+                Status = WorkflowStatus.Pending,
+                CreatedAt = createdAt,
+                UpdatedAt = createdAt,
+                ParentRunId = parentRunId
+            },
+            cancellationToken);
+        return id;
+    }
 
     public void Dispose()
     {

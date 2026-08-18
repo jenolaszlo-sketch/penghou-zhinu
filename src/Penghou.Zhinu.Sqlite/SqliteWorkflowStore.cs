@@ -221,6 +221,42 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return results;
     }
 
+    public async ValueTask<IReadOnlyList<WorkflowRun>> GetRunSubtreeAsync(
+        Guid workflowRunId,
+        int maxDepth,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        if (maxDepth < 0)
+            throw new ArgumentOutOfRangeException(nameof(maxDepth));
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = CreateCommand(connection, null, $"""
+            WITH RECURSIVE subtree(id, depth) AS (
+                SELECT id, 0 FROM workflow_runs WHERE id = $rootId
+                UNION ALL
+                SELECT run.id, subtree.depth + 1
+                FROM workflow_runs run
+                JOIN subtree ON run.parent_run_id = subtree.id
+                WHERE subtree.depth < $maxDepth
+            )
+            SELECT {RunColumns}
+            FROM workflow_runs
+            WHERE id IN (SELECT id FROM subtree)
+            ORDER BY created_at, id;
+            """);
+        command.Parameters.AddWithValue("$rootId", Format(workflowRunId));
+        command.Parameters.AddWithValue("$maxDepth", maxDepth);
+        var results = new List<WorkflowRun>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadRun(reader));
+        return results;
+    }
+
     public async ValueTask<WorkflowRun?> UpdateRunMetadataAsync(
         Guid workflowRunId,
         string? metadataJson,

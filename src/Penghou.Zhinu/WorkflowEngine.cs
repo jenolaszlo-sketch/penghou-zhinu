@@ -479,6 +479,73 @@ public sealed class WorkflowEngine
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Returns a point-in-time progress snapshot of a run and its child-run
+    /// subtree: the run itself, its durable steps, its recent events, and
+    /// (recursively) the same shape for each child run. Returns null when the
+    /// run does not exist.
+    /// </summary>
+    public async Task<WorkflowRunProgress?> GetRunProgressAsync(
+        Guid workflowRunId,
+        RunProgressOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var progressOptions = options ?? new RunProgressOptions();
+        progressOptions.Validate();
+        var runs = await store.GetRunSubtreeAsync(
+            workflowRunId,
+            progressOptions.MaxDepth,
+            cancellationToken).ConfigureAwait(false);
+        if (runs.Count == 0)
+            return null;
+        var byId = runs.ToDictionary(run => run.Id);
+        var childrenByParent = new Dictionary<Guid, List<WorkflowRunProgress>>();
+        for (var index = runs.Count - 1; index >= 0; index--)
+        {
+            var run = runs[index];
+            var node = await CreateProgressSnapshotAsync(
+                run,
+                progressOptions,
+                cancellationToken).ConfigureAwait(false);
+            var children = childrenByParent.GetValueOrDefault(run.Id);
+            if (children is not null)
+                node = node with { Children = children.ToArray() };
+            if (run.Id == workflowRunId)
+                return node;
+            if (run.ParentRunId is { } parentId && byId.ContainsKey(parentId))
+            {
+                if (!childrenByParent.TryGetValue(parentId, out var parentChildren))
+                {
+                    parentChildren = childrenByParent[parentId] = [];
+                }
+                parentChildren.Insert(0, node);
+            }
+        }
+        return null;
+    }
+
+    private async Task<WorkflowRunProgress> CreateProgressSnapshotAsync(
+        WorkflowRun run,
+        RunProgressOptions options,
+        CancellationToken cancellationToken)
+    {
+        var steps = await store.GetStepsAsync(run.Id, cancellationToken).ConfigureAwait(false);
+        var events = options.IncludeEvents
+            ? await store.GetEventsAsync(
+                run.Id,
+                afterSequence: 0,
+                limit: options.EventsLimit,
+                cancellationToken).ConfigureAwait(false)
+            : [];
+        return new WorkflowRunProgress
+        {
+            Run = run,
+            Steps = steps,
+            Events = events
+        };
+    }
+
     /// <summary>Polls durable state without blocking a thread until a run terminates.</summary>
     public async Task<TOutput> WaitForCompletionAsync<TOutput>(
         Guid workflowRunId,

@@ -284,6 +284,23 @@ their last sequence.
 
 Inputs and outputs are not copied into progress events by default.
 
+A single call returns a point-in-time progress snapshot of a run and its whole
+child-run subtree: the run, its durable steps, its recent events, and the same
+shape recursively for every child started with `StartChildAsync`:
+
+```csharp
+var progress = await engine.GetRunProgressAsync(runId);
+progress.Run.Status;               // WorkflowStatus.Completed
+progress.CompletedSteps;           // 3
+progress.ExecutedStepKeys;         // ["parent-step", "child:start", "child:wait"]
+foreach (var child in progress.Children)
+    Console.WriteLine($"{child.Run.WorkflowName}: {child.Run.Status}");
+```
+
+The subtree is fetched with a recursive CTE over `parent_run_id` and capped at
+`RunProgressOptions.MaxDepth` (default 8); events per run can be disabled or
+capped via `IncludeEvents` / `EventsLimit`. Returns null for an unknown run.
+
 ## Querying, metadata, and retention
 
 Runs can be queried with filters and stable cursor pagination:
