@@ -51,4 +51,12 @@ public sealed record WorkflowRun
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }
+
+    /// <summary>
+    /// Monotonic fencing token for the current run lease. Every claim and every
+    /// step restart increments it; step writes are only accepted while a step
+    /// row's generation matches the run's current generation, which rejects
+    /// commits from workers that held a lease before an administrative restart.
+    /// </summary>
+    public long LeaseGeneration { get; init; } = 1;
 }

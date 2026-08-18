@@ -377,34 +377,77 @@ var result = await engine.WaitForCompletionAsync<string>(
     cancellationToken);
 ```
 
-## Restarting a step
+## Dependencies and restarting a step
 
-`RestartStepAsync` invalidates a step and everything downstream of it without
-touching the steps that came before, then resets the run to `Pending`:
+Zhinu persists an explicit **dependency graph** for each run. Every step claim
+transactionally records its edges (`workflow_step_dependencies`), so restarting
+a step can invalidate exactly the steps that transitively depend on it instead
+of approximating by creation order.
+
+Dependencies are declared either per step or per scope:
 
 ```csharp
-await engine.RestartStepAsync(runId, "encode.video", cancellationToken);
+// Per step: this step depends on "upload" (and whatever the enclosing
+// DependsOn scope declares).
+await workflow.StepAsync("encode.video", input, operation,
+    new StepOptions { DependsOn = ["upload"] }, ct);
+
+// Per scope: every step created inside the scope depends on "prepare".
+using (workflow.DependsOn("prepare"))
+{
+    await workflow.StepAsync("encode.video", input, operation, ct);
+    await workflow.StepAsync("publish", output, operation, ct);
+}
 ```
 
-On the next execution the prefix is reconstructed from committed results (its
-delegates are not re-run), while the restarted step and every step created at
-or after it are claimed fresh and re-executed, so their new outputs propagate
-to the run result. Use it to redo a bad generation, correct a failed batch,
-or re-apply a fixed step after a bugfix.
+Nested scopes combine their dependencies. `FanOutAsync` items are independent
+siblings (they never depend on each other), and child workflows get an automatic
+edge from `"{step}:wait"` to `"{step}:start"`.
 
-Semantics to be aware of:
+Inspect the recorded graph or preview a restart before applying it:
 
-- "Everything downstream" is approximated by **creation order**: because Zhinu
-  does not store an explicit dependency graph, the target step and every step
-  created at or after it are invalidated. For linear pipelines and fan-out
-  chains this is exact; for concurrently created fan-out siblings it may
-  re-execute steps that did not actually depend on the target (harmless extra
-  work under Zhinu's idempotent-step assumption, but worth knowing).
-- If the run is currently executing in this process, that execution is
-  cancelled first (best-effort). Restarting a run that another process is
-  executing is not supported — cancel it there first.
-- Run metadata and deadline are preserved; clear the deadline yourself if a
-  restart should extend it.
+```csharp
+var edges = await engine.GetDependencyGraphAsync(runId);
+// edges like { StepKey = "encode.video", DependsOnStepKey = "upload" }
+
+var plan = await engine.PlanRestartAsync(runId, "encode.video");
+// plan.StepsToInvalidate: target first, then dependents with reasons
+
+await engine.RestartStepAsync(runId, "encode.video",
+    new RestartStepOptions
+    {
+        Mode = StepRestartMode.Dependents,
+        Actor = "ops",
+        Reason = "bad transcode"
+    },
+    cancellationToken);
+```
+
+`RestartStepAsync` resets the run to `Pending` and re-executes the invalidated
+steps on the next execution. The prefix is reconstructed from committed results
+(its delegates are not re-run). Restart modes:
+
+- `StepRestartMode.Dependents` (default) — invalidates the target step and its
+  **transitive durable dependents**, reusing unrelated branches.
+- `StepRestartMode.StepOnly` — invalidates just the target, explicitly opting
+  out of dependent invalidation.
+- `StepRestartMode.CreationOrder` — the legacy behavior: the target plus every
+  step created at or after it, useful for graphs built before dependencies
+  existed or for a coarse invalidation.
+
+Each restart is one atomic transaction: the run's **fencing generation** is
+bumped, the run resets, and every invalidated step gets a fresh **execution
+revision** (a new `Pending` row; the previous revision is preserved, never
+deleted, so history and audit remain intact). If the run is currently executing
+in this process, that execution is cancelled first (best-effort). Restarting a
+run that another process is executing is not supported — cancel it there first.
+
+Because step rows carry the generation in effect when they were claimed, any
+worker that held a lease before the restart is **fenced out**: its subsequent
+claims throw `LeaseLostException` and its lease renewals or step completions
+are rejected, so a stale worker can never commit output to a restarted run.
+Run metadata and deadline are preserved; clear the deadline yourself if a
+restart should extend it.
 
 ## External signals
 

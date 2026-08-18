@@ -7,6 +7,14 @@ public sealed record StepOptions
 
     public TimeSpan? ExecutionTimeout { get; init; }
 
+    /// <summary>
+    /// Step keys this step depends on. Restarting a step invalidates it and the
+    /// transitive set of steps that depend on it, without touching unrelated
+    /// branches. Use <see cref="WorkflowContext.DependsOn"/> to declare
+    /// dependencies for many steps at once.
+    /// </summary>
+    public IReadOnlyCollection<string>? DependsOn { get; init; }
+
     internal void Validate()
     {
         Retry.Validate();

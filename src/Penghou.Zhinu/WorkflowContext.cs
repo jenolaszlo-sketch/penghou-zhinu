@@ -17,11 +17,13 @@ public sealed class WorkflowContext
     private readonly ZhinuOptions options;
     private readonly JsonSerializerOptions serializerOptions;
     private readonly TimeProvider timeProvider;
+    private readonly long leaseGeneration;
     private readonly CancellationToken workflowCancellationToken;
     private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> stepLocks =
         new(StringComparer.Ordinal);
+    private readonly List<string> currentDependencies = [];
 
     internal WorkflowContext(
         Guid workflowRunId,
@@ -30,6 +32,7 @@ public sealed class WorkflowContext
         ZhinuOptions options,
         JsonSerializerOptions serializerOptions,
         TimeProvider timeProvider,
+        long leaseGeneration,
         CancellationToken workflowCancellationToken,
         IWorkflowEventPublisher? eventPublisher = null,
         Func<Guid, CancellationToken, Task>? executeChildRun = null)
@@ -40,12 +43,65 @@ public sealed class WorkflowContext
         this.options = options;
         this.serializerOptions = serializerOptions;
         this.timeProvider = timeProvider;
+        this.leaseGeneration = leaseGeneration;
         this.workflowCancellationToken = workflowCancellationToken;
         this.eventPublisher = eventPublisher;
         this.executeChildRun = executeChildRun;
     }
 
     public Guid WorkflowRunId { get; }
+
+    /// <summary>
+    /// Declares durable dependencies for every step created until the returned
+    /// scope is disposed. Nested scopes combine their dependencies. The scope
+    /// is a runtime helper only: it adds no storage writes of its own, and the
+    /// recorded edges are committed transactionally with each step claim.
+    /// </summary>
+    public IDisposable DependsOn(params string[] stepKeys)
+    {
+        foreach (var stepKey in stepKeys)
+            ValidateStepKey(stepKey);
+        var added = stepKeys
+            .Where(stepKey => !currentDependencies.Contains(stepKey))
+            .ToList();
+        currentDependencies.AddRange(added);
+        return new DependencyScope(this, added);
+    }
+
+    private sealed class DependencyScope : IDisposable
+    {
+        private readonly WorkflowContext owner;
+        private readonly IReadOnlyList<string> added;
+        private bool disposed;
+
+        public DependencyScope(WorkflowContext owner, IReadOnlyList<string> added)
+        {
+            this.owner = owner;
+            this.added = added;
+        }
+
+        public void Dispose()
+        {
+            if (disposed)
+                return;
+            disposed = true;
+            foreach (var stepKey in added)
+                owner.currentDependencies.Remove(stepKey);
+        }
+    }
+
+    private IReadOnlyCollection<string>? ResolveDependencies(StepOptions? options)
+    {
+        var explicitKeys = options?.DependsOn;
+        if (currentDependencies.Count == 0)
+            return explicitKeys is { Count: > 0 } ? explicitKeys : null;
+        if (explicitKeys is null or { Count: 0 })
+            return currentDependencies.ToArray();
+        return explicitKeys
+            .Concat(currentDependencies)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
 
     /// <summary>Executes or reuses a durable step without an explicit input value.</summary>
     public Task<TOutput> StepAsync<TOutput>(
@@ -105,6 +161,7 @@ public sealed class WorkflowContext
         ArgumentNullException.ThrowIfNull(operation);
         var configured = stepOptions ?? new StepOptions();
         configured.Validate();
+        var dependencies = ResolveDependencies(configured);
         var inputJson = JsonSerializer.Serialize(input, serializerOptions);
         var inputType = SerializationIdentity.TypeId(typeof(TInput));
         var outputType = SerializationIdentity.TypeId(typeof(TOutput));
@@ -124,6 +181,7 @@ public sealed class WorkflowContext
                     inputType,
                     SerializationIdentity.Hash(inputJson),
                     outputType,
+                    dependencies,
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
@@ -155,6 +213,7 @@ public sealed class WorkflowContext
                             operation,
                             configured,
                             outputType,
+                            dependencies,
                             linkedCancellation.Token).ConfigureAwait(false);
                     default:
                         throw new WorkflowStateException(
@@ -196,6 +255,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.TypeId(typeof(long)),
                     SerializationIdentity.Hash(inputJson),
                     DelayOutputType,
+                    ResolveDependencies(null),
                     linkedCancellation.Token).ConfigureAwait(false);
                 if (claim.Disposition == StepClaimDisposition.Reused)
                     return;
@@ -289,6 +349,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.TypeId(typeof(string)),
                     SerializationIdentity.Hash(signalName),
                     outputType,
+                    ResolveDependencies(null),
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
@@ -467,6 +528,7 @@ public sealed class WorkflowContext
             cancellationToken: cancellationToken).ConfigureAwait(false);
         return await WaitForChildAsync<TOutput>(
             $"{stepKey}:wait",
+            $"{stepKey}:start",
             childId,
             cancellationToken).ConfigureAwait(false);
     }
@@ -503,13 +565,15 @@ public sealed class WorkflowContext
 
     private async Task<TOutput> WaitForChildAsync<TOutput>(
         string stepKey,
+        string dependsOnStepKey,
         Guid childId,
         CancellationToken cancellationToken) =>
         await StepAsync(
             stepKey,
             childId,
             (value, _, ct) => AwaitChildCoreAsync<TOutput>(value, ct),
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+            new StepOptions { DependsOn = [dependsOnStepKey] },
+            cancellationToken).ConfigureAwait(false);
 
     private async Task<TOutput> AwaitChildCoreAsync<TOutput>(
         Guid childId,
@@ -565,6 +629,7 @@ public sealed class WorkflowContext
         Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
         StepOptions configured,
         string outputType,
+        IReadOnlyCollection<string>? dependencies,
         CancellationToken cancellationToken)
     {
         while (true)
@@ -650,6 +715,7 @@ public sealed class WorkflowContext
                 step.InputType,
                 step.InputHash,
                 outputType,
+                dependencies,
                 cancellationToken).ConfigureAwait(false);
             if (claim.Disposition != StepClaimDisposition.Acquired)
             {
@@ -698,6 +764,7 @@ public sealed class WorkflowContext
         string? inputType,
         string? inputHash,
         string outputType,
+        IReadOnlyCollection<string>? dependencies,
         CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
@@ -712,7 +779,9 @@ public sealed class WorkflowContext
                 OutputType = outputType,
                 OwnerId = ownerId,
                 Now = now,
-                LeaseExpiresAt = now + options.LeaseDuration
+                LeaseExpiresAt = now + options.LeaseDuration,
+                LeaseGeneration = leaseGeneration,
+                DependsOn = dependencies
             },
             cancellationToken);
     }

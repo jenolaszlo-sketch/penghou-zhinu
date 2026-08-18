@@ -1,3 +1,3 @@
 namespace Penghou.Zhinu;
 
-public sealed class WorkflowStateException(string message) : Exception(message);
+public class WorkflowStateException(string message) : Exception(message);

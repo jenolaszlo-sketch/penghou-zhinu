@@ -278,12 +278,13 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                 UpdatedAt = now
             },
             TestContext.Current.CancellationToken);
-        await store.TryClaimRunAsync(
+        var generation = await store.TryClaimRunAsync(
             runId,
             "owner",
             now,
             now.AddMinutes(1),
             TestContext.Current.CancellationToken);
+        generation.Should().NotBeNull();
         var first = await store.ClaimStepAsync(
             new StepClaimRequest
             {
@@ -295,7 +296,8 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                 OutputType = "string",
                 OwnerId = "owner",
                 Now = now,
-                LeaseExpiresAt = now.AddMinutes(1)
+                LeaseExpiresAt = now.AddMinutes(1),
+                LeaseGeneration = generation!.Value
             },
             TestContext.Current.CancellationToken);
         await store.CompleteStepAsync(
@@ -315,7 +317,8 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
             OutputType = "string",
             OwnerId = "owner",
             Now = now,
-            LeaseExpiresAt = now.AddMinutes(1)
+            LeaseExpiresAt = now.AddMinutes(1),
+            LeaseGeneration = generation!.Value
         }, TestContext.Current.CancellationToken).AsTask();
 
         await action.Should().ThrowAsync<WorkflowStateException>()
@@ -670,11 +673,13 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         first.SecondCalls.Should().Be(1);
         var runId = first.RunId;
 
-        var invalidated = await engine.RestartStepAsync(
+        var plan = await engine.RestartStepAsync(
             runId,
             "second",
             TestContext.Current.CancellationToken);
-        invalidated.Should().Be(1);
+        plan.StepsToInvalidate.Should().ContainSingle();
+        plan.StepsToInvalidate.Single().StepKey.Should().Be("second");
+        plan.StepsToInvalidate.Single().Reason.Should().Be(RestartReason.Requested);
 
         var resumed = new RestartableWorkflow { SecondSuffix = "b" };
         var resumedEngine = CreateEngine(resumed, "restart");
@@ -955,6 +960,300 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RestartStepAsync_DependentsMode_InvalidatesOnlyTransitiveDependents()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var engine = CreateEngine(workflow, "deps");
+        var result = await engine.RunAsync<string, string>(
+            "deps",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("D[B[A(x)]]|E[C(x)]");
+        workflow.ACalls.Should().Be(1);
+        workflow.BCalls.Should().Be(1);
+        workflow.CCalls.Should().Be(1);
+        workflow.DCalls.Should().Be(1);
+        workflow.ECalls.Should().Be(1);
+        var runId = workflow.RunId;
+
+        var graph = await engine.GetDependencyGraphAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        graph.Select(item => $"{item.StepKey}->{item.DependsOnStepKey}")
+            .Should().BeEquivalentTo("b->a", "d->b", "e->c");
+
+        var plan = await engine.PlanRestartAsync(
+            runId,
+            "b",
+            cancellationToken: TestContext.Current.CancellationToken);
+        plan.StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("b", "d");
+        plan.StepsToInvalidate.Should().Contain(item =>
+            item.StepKey == "b" && item.Reason == RestartReason.Requested);
+        plan.StepsToInvalidate.Should().Contain(item =>
+            item.StepKey == "d" && item.Reason == RestartReason.Dependent);
+
+        var applied = await engine.RestartStepAsync(
+            runId,
+            "b",
+            cancellationToken: TestContext.Current.CancellationToken);
+        applied.StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("b", "d");
+
+        var resumed = new DependentStepsWorkflow();
+        var resumedEngine = CreateEngine(resumed, "deps");
+        await resumedEngine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var rerun = await resumedEngine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rerun.Should().Be("D[B[A(x)]]|E[C(x)]");
+        resumed.ACalls.Should().Be(0);
+        resumed.CCalls.Should().Be(0);
+        resumed.ECalls.Should().Be(0);
+        resumed.BCalls.Should().Be(1);
+        resumed.DCalls.Should().Be(1);
+        (await resumedEngine.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken)).Should().Contain(item =>
+            item.StepKey == "b" && item.Revision == 2);
+    }
+
+    [Fact]
+    public async Task RestartStepAsync_StepOnlyMode_InvalidatesJustTheTarget()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var engine = CreateEngine(workflow, "deps-step-only");
+        await engine.RunAsync<string, string>(
+            "deps-step-only",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var plan = await engine.RestartStepAsync(
+            workflow.RunId,
+            "b",
+            new RestartStepOptions { Mode = StepRestartMode.StepOnly },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        plan.StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("b");
+    }
+
+    [Fact]
+    public async Task RestartStepAsync_CreationOrderMode_FallsBackToLegacyBehavior()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var engine = CreateEngine(workflow, "deps-creation-order");
+        await engine.RunAsync<string, string>(
+            "deps-creation-order",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var plan = await engine.RestartStepAsync(
+            workflow.RunId,
+            "b",
+            new RestartStepOptions { Mode = StepRestartMode.CreationOrder },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        plan.StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("b", "d", "e");
+        plan.StepsToInvalidate.Should().Contain(item =>
+            item.StepKey == "d" && item.Reason == RestartReason.CreationOrderFallback);
+    }
+
+    [Fact]
+    public async Task RestartStepAsync_FanOut_ReusesSiblingItems()
+    {
+        var workflow = new FanOutWorkflow();
+        var engine = CreateEngine(workflow, "fanout-restart");
+        var result = await engine.RunAsync<string, string>(
+            "fanout-restart",
+            "1",
+            "a,b,c",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("A:B:C");
+        workflow.Calls.Should().Be(3);
+        var runId = workflow.RunId;
+
+        var plan = await engine.RestartStepAsync(
+            runId,
+            "process.1",
+            cancellationToken: TestContext.Current.CancellationToken);
+        plan.StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("process.1");
+
+        var resumed = new FanOutWorkflow();
+        var resumedEngine = CreateEngine(resumed, "fanout-restart");
+        await resumedEngine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var rerun = await resumedEngine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rerun.Should().Be("A:B:C");
+        resumed.Calls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task StartChildAsync_RecordsWaitToStartDependencyEdge()
+    {
+        var parent = new ParentWorkflow();
+        var child = new ChildWorkflow();
+        var engine = CreateEngine(
+            new WorkflowRegistry()
+                .Register("parent-edge", "1", parent)
+                .Register("child", "1", child));
+        var runId = await engine.StartAsync(
+            "parent-edge",
+            "1",
+            "go",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var graph = await engine.GetDependencyGraphAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        graph.Should().Contain(item =>
+            item.StepKey == "child:wait" && item.DependsOnStepKey == "child:start");
+
+        var plan = await engine.RestartStepAsync(
+            runId,
+            "child:start",
+            cancellationToken: TestContext.Current.CancellationToken);
+        plan.StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("child:start", "child:wait");
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var rerun = await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        rerun.Should().Be("child:parent:go");
+        (await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "child" },
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Store_RestartStepAsync_FencesOutStaleWorkerWrites()
+    {
+        var store = CreateStore();
+        await store.InitializeAsync(TestContext.Current.CancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var runId = Guid.NewGuid();
+        await store.CreateRunAsync(
+            new WorkflowRun
+            {
+                Id = runId,
+                WorkflowName = "fence",
+                WorkflowVersion = "1",
+                Status = WorkflowStatus.Pending,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            TestContext.Current.CancellationToken);
+        var generation = await store.TryClaimRunAsync(
+            runId,
+            "worker",
+            now,
+            now.AddMinutes(1),
+            TestContext.Current.CancellationToken);
+        generation.Should().NotBeNull();
+        var claim = await store.ClaimStepAsync(
+            new StepClaimRequest
+            {
+                WorkflowRunId = runId,
+                StepKey = "first",
+                InputJson = "1",
+                InputType = "int",
+                InputHash = "one",
+                OutputType = "string",
+                OwnerId = "worker",
+                Now = now,
+                LeaseExpiresAt = now.AddMinutes(1),
+                LeaseGeneration = generation!.Value
+            },
+            TestContext.Current.CancellationToken);
+        claim.Disposition.Should().Be(StepClaimDisposition.Acquired);
+        var staleStepId = claim.Step.Id;
+
+        var plan = await store.RestartStepAsync(
+            runId,
+            "first",
+            StepRestartMode.Dependents,
+            null,
+            null,
+            now.AddSeconds(1),
+            TestContext.Current.CancellationToken);
+        plan.StepsToInvalidate.Should().ContainSingle();
+
+        (await store.RenewStepLeaseAsync(
+            staleStepId,
+            "worker",
+            now.AddMinutes(2),
+            TestContext.Current.CancellationToken)).Should().BeFalse();
+        var complete = () => store.CompleteStepAsync(
+            staleStepId,
+            "worker",
+            "\"done\"",
+            now.AddSeconds(2),
+            TestContext.Current.CancellationToken).AsTask();
+        await complete.Should().ThrowAsync<WorkflowStateException>();
+        var staleClaim = () => store.ClaimStepAsync(
+            new StepClaimRequest
+            {
+                WorkflowRunId = runId,
+                StepKey = "other",
+                InputJson = "1",
+                InputType = "int",
+                InputHash = "one",
+                OutputType = "string",
+                OwnerId = "worker",
+                Now = now.AddSeconds(2),
+                LeaseExpiresAt = now.AddMinutes(1),
+                LeaseGeneration = generation.Value
+            },
+            TestContext.Current.CancellationToken).AsTask();
+        await staleClaim.Should().ThrowAsync<LeaseLostException>();
+
+        var fresh = await store.TryClaimRunAsync(
+            runId,
+            "fresh",
+            now.AddSeconds(3),
+            now.AddMinutes(2),
+            TestContext.Current.CancellationToken);
+        fresh.Should().NotBeNull();
+        var freshClaim = await store.ClaimStepAsync(
+            new StepClaimRequest
+            {
+                WorkflowRunId = runId,
+                StepKey = "first",
+                InputJson = "1",
+                InputType = "int",
+                InputHash = "one",
+                OutputType = "string",
+                OwnerId = "fresh",
+                Now = now.AddSeconds(3),
+                LeaseExpiresAt = now.AddMinutes(2),
+                LeaseGeneration = fresh!.Value
+            },
+            TestContext.Current.CancellationToken);
+        freshClaim.Disposition.Should().Be(StepClaimDisposition.Acquired);
+        freshClaim.Step.Revision.Should().Be(2);
+    }
+
+    [Fact]
     public async Task GetRunProgressAsync_ReturnsSnapshotOfParentAndChildRuns()
     {
         var parent = new ParentWorkflow();
@@ -1209,7 +1508,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         run.Should().NotBeNull();
         run!.Status.Should().Be(WorkflowStatus.Pending);
         var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
-        version.Should().Be(4L);
+        version.Should().Be(5L);
     }
 
     [Fact]
@@ -1310,7 +1609,7 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
         run!.Status.Should().Be(WorkflowStatus.Pending);
         run.Deadline.Should().Be(now.AddMinutes(5));
         var version = await ScalarAsync(databasePath, TestContext.Current.CancellationToken);
-        version.Should().Be(4L);
+        version.Should().Be(5L);
     }
 
     private static async Task<long> ScalarAsync(
@@ -1474,6 +1773,82 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
                     return Task.FromResult($"{value}-{SecondSuffix}");
                 },
                 cancellationToken: cancellationToken);
+        }
+    }
+
+    private sealed class DependentStepsWorkflow : IWorkflow<string, string>
+    {
+        public int ACalls;
+        public int BCalls;
+        public int CCalls;
+        public int DCalls;
+        public int ECalls;
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var a = await context.StepAsync(
+                "a",
+                input,
+                (value, _) =>
+                {
+                    ACalls++;
+                    return Task.FromResult($"A({value})");
+                },
+                cancellationToken: cancellationToken);
+            var c = await context.StepAsync(
+                "c",
+                input,
+                (value, _) =>
+                {
+                    CCalls++;
+                    return Task.FromResult($"C({value})");
+                },
+                cancellationToken: cancellationToken);
+            string b;
+            using (context.DependsOn("a"))
+            {
+                b = await context.StepAsync(
+                    "b",
+                    a,
+                    (value, _) =>
+                    {
+                        BCalls++;
+                        return Task.FromResult($"B[{value}]");
+                    },
+                    cancellationToken: cancellationToken);
+            }
+            string d;
+            using (context.DependsOn("b"))
+            {
+                d = await context.StepAsync(
+                    "d",
+                    b,
+                    (value, _) =>
+                    {
+                        DCalls++;
+                        return Task.FromResult($"D[{value}]");
+                    },
+                    cancellationToken: cancellationToken);
+            }
+            string e;
+            using (context.DependsOn("c"))
+            {
+                e = await context.StepAsync(
+                    "e",
+                    c,
+                    (value, _) =>
+                    {
+                        ECalls++;
+                        return Task.FromResult($"E[{value}]");
+                    },
+                    cancellationToken: cancellationToken);
+            }
+            return $"{d}|{e}";
         }
     }
 

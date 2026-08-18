@@ -59,7 +59,13 @@ public interface IWorkflowStore
         int limit,
         CancellationToken cancellationToken = default);
 
-    ValueTask<bool> TryClaimRunAsync(
+    /// <summary>
+    /// Atomically claims the run for <paramref name="ownerId"/>, bumping its
+    /// fencing generation. Returns the new
+    /// <see cref="WorkflowRun.LeaseGeneration"/> on success, or null when the
+    /// run cannot be claimed right now.
+    /// </summary>
+    ValueTask<long?> TryClaimRunAsync(
         Guid workflowRunId,
         string ownerId,
         DateTimeOffset now,
@@ -144,9 +150,37 @@ public interface IWorkflowStore
         IReadOnlyList<WorkflowStatus>? statuses = null,
         CancellationToken cancellationToken = default);
 
-    ValueTask<int> RestartStepAsync(
+    ValueTask<IReadOnlyList<StepDependency>> GetStepDependenciesAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves the set of steps a restart of <paramref name="stepKey"/> would
+    /// invalidate under <paramref name="mode"/>, without changing any state.
+    /// Throws <see cref="KeyNotFoundException"/> when the run or step does not
+    /// exist.
+    /// </summary>
+    ValueTask<RestartPlan> PlanRestartAsync(
         Guid workflowRunId,
         string stepKey,
+        StepRestartMode mode,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Transactionally restarts <paramref name="stepKey"/> under
+    /// <paramref name="mode"/>: verifies the run and step, resolves the
+    /// invalidation set, bumps the run's fencing generation, inserts a fresh
+    /// pending revision for every invalidated step (history is preserved),
+    /// resets the run to <see cref="WorkflowStatus.Pending"/>, and emits a
+    /// durable restart event. A crash mid-transaction leaves the previous state
+    /// fully intact. Returns the plan that was applied.
+    /// </summary>
+    ValueTask<RestartPlan> RestartStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        StepRestartMode mode,
+        string? actor,
+        string? reason,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
 

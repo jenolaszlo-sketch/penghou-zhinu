@@ -42,4 +42,18 @@ public sealed record WorkflowStepRun
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }
+
+    /// <summary>
+    /// Execution revision of this step. Restarting a step keeps its previous
+    /// revisions untouched and inserts a fresh revision as the new current
+    /// state, so history is never deleted.
+    /// </summary>
+    public int Revision { get; init; } = 1;
+
+    /// <summary>
+    /// The run's <see cref="WorkflowRun.LeaseGeneration"/> at the time this
+    /// revision row was created or last claimed. A row is writable only while
+    /// this matches the run's current generation.
+    /// </summary>
+    public long LeaseGeneration { get; init; } = 1;
 }

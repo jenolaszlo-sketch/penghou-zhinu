@@ -164,12 +164,13 @@ public sealed class WorkflowEngine
         if (IsTerminal(run.Status))
             return;
         var now = timeProvider.GetUtcNow();
-        if (!await store.TryClaimRunAsync(
+        var leaseGeneration = await store.TryClaimRunAsync(
                 workflowRunId,
                 ownerId,
                 now,
                 now + options.LeaseDuration,
-                cancellationToken).ConfigureAwait(false))
+                cancellationToken).ConfigureAwait(false);
+        if (leaseGeneration is null)
         {
             return;
         }
@@ -226,6 +227,7 @@ public sealed class WorkflowEngine
                 options,
                 serializerOptions,
                 timeProvider,
+                leaseGeneration.Value,
                 runCancellation.Token,
                 eventPublisher,
                 executeChildRun: (childId, childCancellation) =>
@@ -397,16 +399,58 @@ public sealed class WorkflowEngine
     }
 
     /// <summary>
-    /// Invalidates the step <paramref name="stepKey"/> and every step created
-    /// at or after it, then resets the run to <see cref="WorkflowStatus.Pending"/>
-    /// so the next execution re-runs the target step and its sub-tree while
-    /// reusing committed results from the prefix. If this process is currently
-    /// executing the run, its execution is cancelled first (best-effort).
-    /// Returns the number of steps invalidated, including the target.
+    /// Resolves which steps a restart of <paramref name="stepKey"/> would
+    /// invalidate under <paramref name="mode"/> without changing any state, so
+    /// callers can inspect and confirm the effect before applying it. Returns
+    /// the requested step followed by its invalidated dependents.
     /// </summary>
-    public async Task<int> RestartStepAsync(
+    public async Task<RestartPlan> PlanRestartAsync(
         Guid workflowRunId,
         string stepKey,
+        StepRestartMode mode = StepRestartMode.Dependents,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.PlanRestartAsync(
+            workflowRunId,
+            stepKey,
+            mode,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Returns the durable dependency edges recorded for a run, where each edge
+    /// states that <see cref="StepDependency.StepKey"/> depends on
+    /// <see cref="StepDependency.DependsOnStepKey"/>. The dependency graph is
+    /// the basis for dependency-aware restarts.
+    /// </summary>
+    public async Task<IReadOnlyList<StepDependency>> GetDependencyGraphAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.GetStepDependenciesAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Transactionally restarts <paramref name="stepKey"/> under
+    /// <paramref name="options"/>. Mode decides which steps are invalidated:
+    /// <see cref="StepRestartMode.Dependents"/> (default) invalidates the step
+    /// and its transitive durable dependents while reusing unrelated branches;
+    /// <see cref="StepRestartMode.StepOnly"/> invalidates just the step;
+    /// <see cref="StepRestartMode.CreationOrder"/> preserves the legacy
+    /// creation-order behavior. Previous step revisions are preserved, the run
+    /// is reset to <see cref="WorkflowStatus.Pending"/>, and the run's fencing
+    /// generation is bumped so stale workers can no longer commit. If this
+    /// process is currently executing the run, its execution is cancelled
+    /// first (best-effort). Returns the plan that was applied.
+    /// </summary>
+    public async Task<RestartPlan> RestartStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        RestartStepOptions options,
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
@@ -416,12 +460,34 @@ public sealed class WorkflowEngine
         {
             await runningCancellation.CancelAsync().ConfigureAwait(false);
         }
-        return await store.RestartStepAsync(
+        var plan = await store.RestartStepAsync(
             workflowRunId,
             stepKey,
+            options.Mode,
+            options.Actor,
+            options.Reason,
             timeProvider.GetUtcNow(),
             cancellationToken).ConfigureAwait(false);
+        logger.LogInformation(
+            "Restarted step '{StepKey}' of workflow {WorkflowRunId} ({Mode}); " +
+            "invalidated {InvalidatedCount} step(s).",
+            stepKey,
+            workflowRunId,
+            options.Mode,
+            plan.StepsToInvalidate.Count);
+        return plan;
     }
+
+    /// <summary>Restarts <paramref name="stepKey"/> with dependency-aware defaults.</summary>
+    public Task<RestartPlan> RestartStepAsync(
+        Guid workflowRunId,
+        string stepKey,
+        CancellationToken cancellationToken = default) =>
+        RestartStepAsync(
+            workflowRunId,
+            stepKey,
+            new RestartStepOptions(),
+            cancellationToken);
 
     /// <summary>
     /// Buffers an external signal for <paramref name="workflowRunId"/> under
