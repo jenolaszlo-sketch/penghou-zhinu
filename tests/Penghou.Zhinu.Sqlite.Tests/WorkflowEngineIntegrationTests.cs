@@ -1024,6 +1024,51 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RestartStepAsync_ConcurrentAndRepeatedRestartsSettleConsistently()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var engine = CreateEngine(workflow, "deps-repeat");
+        await engine.RunAsync<string, string>(
+            "deps-repeat",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = workflow.RunId;
+
+        var first = engine.RestartStepAsync(
+            runId,
+            "b",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var second = engine.RestartStepAsync(
+            runId,
+            "b",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await Task.WhenAll(first, second);
+        (await first).StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("b", "d");
+        (await second).StepsToInvalidate.Select(item => item.StepKey)
+            .Should().Equal("b", "d");
+
+        await engine.RestartStepAsync(
+            runId,
+            "b",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var resumed = new DependentStepsWorkflow();
+        var resumedEngine = CreateEngine(resumed, "deps-repeat");
+        await resumedEngine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var rerun = await resumedEngine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rerun.Should().Be("D[B[A(x)]]|E[C(x)]");
+        resumed.BCalls.Should().Be(1);
+        resumed.DCalls.Should().Be(1);
+    }
+
+    [Fact]
     public async Task RestartStepAsync_StepOnlyMode_InvalidatesJustTheTarget()
     {
         var workflow = new DependentStepsWorkflow();
