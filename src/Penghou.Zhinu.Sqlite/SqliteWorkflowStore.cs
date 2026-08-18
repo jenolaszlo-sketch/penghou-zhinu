@@ -340,6 +340,28 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         return await ReadStepsAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
+    public async ValueTask<IReadOnlyList<WorkflowStepCompensation>> GetCompensationsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = CreateCommand(connection, null, $"""
+            SELECT {CompensationColumns}
+            FROM workflow_step_compensations
+            WHERE workflow_run_id = $runId
+            ORDER BY created_at, step_key, revision;
+            """);
+        command.Parameters.AddWithValue("$runId", Format(workflowRunId));
+        var results = new List<WorkflowStepCompensation>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadCompensation(reader));
+        return results;
+    }
+
     public async ValueTask<IReadOnlyList<WorkflowEvent>> GetEventsAsync(
         Guid workflowRunId,
         long afterSequence,
@@ -700,6 +722,13 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 request.DependsOn,
                 request.Now,
                 cancellationToken).ConfigureAwait(false);
+            await InsertCompensationAsync(
+                connection,
+                transaction,
+                request,
+                created.Revision,
+                request.LeaseGeneration,
+                cancellationToken).ConfigureAwait(false);
             await InsertEventAsync(
                 connection,
                 transaction,
@@ -771,6 +800,13 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             request.StepKey,
             request.DependsOn,
             request.Now,
+            cancellationToken).ConfigureAwait(false);
+        await InsertCompensationAsync(
+            connection,
+            transaction,
+            request,
+            existing.Revision,
+            request.LeaseGeneration,
             cancellationToken).ConfigureAwait(false);
         await InsertEventAsync(
             connection,
@@ -869,6 +905,25 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         command.Parameters.AddWithValue("$owner", ownerId);
         if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
             throw new WorkflowStateException("Step failure requires an owned running lease.");
+        if (retryAt is null)
+        {
+            await using var compensationCommand = CreateCommand(
+                connection,
+                transaction,
+                """
+                UPDATE workflow_step_compensations
+                SET status = $skipped
+                WHERE workflow_run_id = $runId AND step_key = $stepKey
+                  AND revision = $revision AND status = $pending;
+                """);
+            compensationCommand.Parameters.AddWithValue("$skipped", (int)CompensationStatus.Skipped);
+            compensationCommand.Parameters.AddWithValue("$pending", (int)CompensationStatus.Pending);
+            compensationCommand.Parameters.AddWithValue("$runId", Format(step.WorkflowRunId));
+            compensationCommand.Parameters.AddWithValue("$stepKey", step.StepKey);
+            compensationCommand.Parameters.AddWithValue("$revision", step.Revision);
+            await compensationCommand.ExecuteNonQueryAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
         await InsertEventAsync(
             connection,
             transaction,
@@ -1574,6 +1629,25 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         command.Parameters.AddWithValue("$owner", ownerId);
         if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
             throw new WorkflowStateException("Step transition requires an owned running lease.");
+        if (status == StepStatus.Completed)
+        {
+            await using var compensationCommand = CreateCommand(
+                connection,
+                transaction,
+                """
+                UPDATE workflow_step_compensations
+                SET input_json = $inputJson, input_type = $inputType
+                WHERE workflow_run_id = $runId AND step_key = $stepKey
+                  AND revision = $revision;
+                """);
+            compensationCommand.Parameters.AddWithValue("$inputJson", DbValue(outputJson));
+            compensationCommand.Parameters.AddWithValue("$inputType", DbValue(step.OutputType));
+            compensationCommand.Parameters.AddWithValue("$runId", Format(step.WorkflowRunId));
+            compensationCommand.Parameters.AddWithValue("$stepKey", step.StepKey);
+            compensationCommand.Parameters.AddWithValue("$revision", step.Revision);
+            await compensationCommand.ExecuteNonQueryAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
         await InsertEventAsync(
             connection,
             transaction,
@@ -1708,6 +1782,51 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             command.Parameters.AddWithValue("$now", FormatTimestamp(now));
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private static async ValueTask InsertCompensationAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        StepClaimRequest request,
+        int revision,
+        long leaseGeneration,
+        CancellationToken cancellationToken)
+    {
+        if (request.Compensation is null)
+            return;
+        await using var command = CreateCommand(connection, transaction, """
+            INSERT INTO workflow_step_compensations
+            (id, workflow_run_id, step_key, revision, compensation_name, status,
+             attempt, retry_policy_json, timeout_ticks, idempotency_key,
+             lease_generation, created_at)
+            VALUES
+            ($id, $runId, $stepKey, $revision, $name, $pending, 0,
+             $retryJson, $timeoutTicks, $idempotencyKey, $generation, $createdAt)
+            ON CONFLICT(workflow_run_id, step_key, revision) DO UPDATE
+            SET status = $pending, compensation_name = $name,
+                retry_policy_json = $retryJson, timeout_ticks = $timeoutTicks,
+                lease_generation = $generation;
+            """);
+        command.Parameters.AddWithValue("$id", Format(Guid.NewGuid()));
+        command.Parameters.AddWithValue("$runId", Format(request.WorkflowRunId));
+        command.Parameters.AddWithValue("$stepKey", request.StepKey);
+        command.Parameters.AddWithValue("$revision", revision);
+        command.Parameters.AddWithValue("$name", request.Compensation.Name);
+        command.Parameters.AddWithValue("$pending", (int)CompensationStatus.Pending);
+        command.Parameters.AddWithValue(
+            "$retryJson",
+            DbValue(request.Compensation.RetryPolicyJson));
+        command.Parameters.AddWithValue(
+            "$timeoutTicks",
+            request.Compensation.ExecutionTimeout is { } timeout
+                ? timeout.Ticks
+                : DBNull.Value);
+        command.Parameters.AddWithValue(
+            "$idempotencyKey",
+            $"workflow:{request.WorkflowRunId:D}:step:{request.StepKey}:compensate");
+        command.Parameters.AddWithValue("$generation", leaseGeneration);
+        command.Parameters.AddWithValue("$createdAt", FormatTimestamp(request.Now));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static async ValueTask<IReadOnlyList<StepDependency>> ReadStepDependenciesAsync(
@@ -1888,6 +2007,36 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         LeaseGeneration = reader.GetInt64(19)
     };
 
+    private static WorkflowStepCompensation ReadCompensation(SqliteDataReader reader) => new()
+    {
+        Id = Guid.Parse(reader.GetString(0)),
+        WorkflowRunId = Guid.Parse(reader.GetString(1)),
+        StepKey = reader.GetString(2),
+        Revision = reader.GetInt32(3),
+        CompensationName = reader.GetString(4),
+        Status = (CompensationStatus)reader.GetInt32(5),
+        Attempt = reader.GetInt32(6),
+        InputJson = GetNullableString(reader, 7),
+        InputType = GetNullableString(reader, 8),
+        OutputJson = GetNullableString(reader, 9),
+        Error = DeserializeError(GetNullableString(reader, 10)),
+        RetryPolicyJson = GetNullableString(reader, 11),
+        ExecutionTimeout = reader.IsDBNull(12)
+            ? null
+            : TimeSpan.FromTicks(reader.GetInt64(12)),
+        AvailableAt = ParseNullableTimestamp(reader, 13),
+        TimeoutAt = ParseNullableTimestamp(reader, 14),
+        LeaseOwner = GetNullableString(reader, 15),
+        LeaseExpiresAt = ParseNullableTimestamp(reader, 16),
+        LeaseGeneration = reader.GetInt64(17),
+        StartedAt = ParseNullableTimestamp(reader, 18),
+        CompletedAt = ParseNullableTimestamp(reader, 19),
+        CreatedAt = ParseTimestamp(reader.GetString(20)),
+        Actor = GetNullableString(reader, 21),
+        Reason = GetNullableString(reader, 22),
+        IdempotencyKey = GetNullableString(reader, 23)
+    };
+
     private async ValueTask<SqliteConnection> OpenAsync(
         CancellationToken cancellationToken)
     {
@@ -2004,6 +2153,13 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 "Dependency step keys must not be blank.",
                 nameof(request));
         }
+        if (request.Compensation is not null &&
+            string.IsNullOrWhiteSpace(request.Compensation.Name))
+        {
+            throw new ArgumentException(
+                "Compensation name must not be blank.",
+                nameof(request));
+        }
     }
 
     private static void ValidateStepContract(
@@ -2087,10 +2243,18 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         revision, lease_generation
         """;
 
+    private const string CompensationColumns = """
+        id, workflow_run_id, step_key, revision, compensation_name, status,
+        attempt, input_json, input_type, output_json, error_json,
+        retry_policy_json, timeout_ticks, available_at, timeout_at,
+        lease_owner, lease_expires_at, lease_generation, started_at,
+        completed_at, created_at, actor, reason, idempotency_key
+        """;
+
     private const string Schema = """
         CREATE TABLE IF NOT EXISTS zhinu_schema(version INTEGER NOT NULL);
         INSERT INTO zhinu_schema(version)
-        SELECT 5 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
+        SELECT 6 WHERE NOT EXISTS (SELECT 1 FROM zhinu_schema);
 
         CREATE TABLE IF NOT EXISTS workflow_runs
         (
@@ -2190,9 +2354,41 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_signals_run_name
             ON workflow_signals(workflow_run_id, signal_name, delivered_step_id);
+
+        CREATE TABLE IF NOT EXISTS workflow_step_compensations
+        (
+            id TEXT PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            step_key TEXT NOT NULL,
+            revision INTEGER NOT NULL,
+            compensation_name TEXT NOT NULL,
+            status INTEGER NOT NULL,
+            attempt INTEGER NOT NULL,
+            input_json TEXT NULL,
+            input_type TEXT NULL,
+            output_json TEXT NULL,
+            error_json TEXT NULL,
+            retry_policy_json TEXT NULL,
+            timeout_ticks INTEGER NULL,
+            available_at TEXT NULL,
+            timeout_at TEXT NULL,
+            lease_owner TEXT NULL,
+            lease_expires_at TEXT NULL,
+            lease_generation INTEGER NOT NULL DEFAULT 1,
+            started_at TEXT NULL,
+            completed_at TEXT NULL,
+            created_at TEXT NOT NULL,
+            actor TEXT NULL,
+            reason TEXT NULL,
+            idempotency_key TEXT NULL,
+            UNIQUE(workflow_run_id, step_key, revision),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_step_compensations_run
+            ON workflow_step_compensations(workflow_run_id, step_key);
         """;
 
-    private const int CurrentSchemaVersion = 5;
+    private const int CurrentSchemaVersion = 6;
 
     private static async ValueTask MigrateAsync(
         SqliteConnection connection,
@@ -2210,6 +2406,8 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
                 3 => await MigrateV3ToV4Async(connection, cancellationToken)
                     .ConfigureAwait(false),
                 4 => await MigrateV4ToV5Async(connection, cancellationToken)
+                    .ConfigureAwait(false),
+                5 => await MigrateV5ToV6Async(connection, cancellationToken)
                     .ConfigureAwait(false),
                 _ => throw new InvalidOperationException(
                     $"No migration path from Zhinu SQLite schema version {version}.")
@@ -2357,5 +2555,50 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             """,
             cancellationToken).ConfigureAwait(false);
         return 5;
+    }
+
+    private static async ValueTask<long> MigrateV5ToV6Async(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await ExecuteAsync(
+            connection,
+            null,
+            """
+            CREATE TABLE IF NOT EXISTS workflow_step_compensations
+            (
+                id TEXT PRIMARY KEY,
+                workflow_run_id TEXT NOT NULL,
+                step_key TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                compensation_name TEXT NOT NULL,
+                status INTEGER NOT NULL,
+                attempt INTEGER NOT NULL,
+                input_json TEXT NULL,
+                input_type TEXT NULL,
+                output_json TEXT NULL,
+                error_json TEXT NULL,
+                retry_policy_json TEXT NULL,
+                timeout_ticks INTEGER NULL,
+                available_at TEXT NULL,
+                timeout_at TEXT NULL,
+                lease_owner TEXT NULL,
+                lease_expires_at TEXT NULL,
+                lease_generation INTEGER NOT NULL DEFAULT 1,
+                started_at TEXT NULL,
+                completed_at TEXT NULL,
+                created_at TEXT NOT NULL,
+                actor TEXT NULL,
+                reason TEXT NULL,
+                idempotency_key TEXT NULL,
+                UNIQUE(workflow_run_id, step_key, revision),
+                FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS ix_workflow_step_compensations_run
+                ON workflow_step_compensations(workflow_run_id, step_key);
+            UPDATE zhinu_schema SET version = 6;
+            """,
+            cancellationToken).ConfigureAwait(false);
+        return 6;
     }
 }

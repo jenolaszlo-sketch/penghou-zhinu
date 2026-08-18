@@ -108,26 +108,30 @@ public sealed class WorkflowContext
         string stepKey,
         Func<CancellationToken, Task<TOutput>> operation,
         RetryPolicy? retry = null,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken = default,
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation = null) =>
         StepAsync(
             stepKey,
             Unit.Value,
             (_, ct) => operation(ct),
             new StepOptions { Retry = retry ?? new RetryPolicy() },
-            cancellationToken);
+            cancellationToken,
+            compensation);
 
     /// <summary>Executes or reuses a durable step with retry and timeout options.</summary>
     public Task<TOutput> StepAsync<TOutput>(
         string stepKey,
         Func<WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
         StepOptions? options = null,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken = default,
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation = null) =>
         StepAsync(
             stepKey,
             Unit.Value,
             (_, step, ct) => operation(step, ct),
             options,
-            cancellationToken);
+            cancellationToken,
+            compensation);
 
     /// <summary>
     /// Executes or reuses a durable step and verifies that repeated use of the
@@ -138,13 +142,15 @@ public sealed class WorkflowContext
         TInput input,
         Func<TInput, CancellationToken, Task<TOutput>> operation,
         StepOptions? options = null,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken = default,
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation = null) =>
         StepAsync(
             stepKey,
             input,
             (value, _, ct) => operation(value, ct),
             options,
-            cancellationToken);
+            cancellationToken,
+            compensation);
 
     /// <summary>
     /// Executes or reuses a typed durable step while exposing a stable
@@ -155,13 +161,20 @@ public sealed class WorkflowContext
         TInput input,
         Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
         StepOptions? stepOptions = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation = null)
     {
         ValidateStepKey(stepKey);
         ArgumentNullException.ThrowIfNull(operation);
         var configured = stepOptions ?? new StepOptions();
         configured.Validate();
         var dependencies = ResolveDependencies(configured);
+        var compensationMetadata = compensation is null
+            ? null
+            : new CompensationMetadata(
+                stepKey,
+                JsonSerializer.Serialize(new RetryPolicy(), serializerOptions),
+                null);
         var inputJson = JsonSerializer.Serialize(input, serializerOptions);
         var inputType = SerializationIdentity.TypeId(typeof(TInput));
         var outputType = SerializationIdentity.TypeId(typeof(TOutput));
@@ -182,6 +195,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.Hash(inputJson),
                     outputType,
                     dependencies,
+                    compensationMetadata,
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
@@ -214,6 +228,7 @@ public sealed class WorkflowContext
                             configured,
                             outputType,
                             dependencies,
+                            compensationMetadata,
                             linkedCancellation.Token).ConfigureAwait(false);
                     default:
                         throw new WorkflowStateException(
@@ -256,6 +271,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.Hash(inputJson),
                     DelayOutputType,
                     ResolveDependencies(null),
+                    null,
                     linkedCancellation.Token).ConfigureAwait(false);
                 if (claim.Disposition == StepClaimDisposition.Reused)
                     return;
@@ -350,6 +366,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.Hash(signalName),
                     outputType,
                     ResolveDependencies(null),
+                    null,
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
@@ -630,6 +647,7 @@ public sealed class WorkflowContext
         StepOptions configured,
         string outputType,
         IReadOnlyCollection<string>? dependencies,
+        CompensationMetadata? compensation,
         CancellationToken cancellationToken)
     {
         while (true)
@@ -716,6 +734,7 @@ public sealed class WorkflowContext
                 step.InputHash,
                 outputType,
                 dependencies,
+                compensation,
                 cancellationToken).ConfigureAwait(false);
             if (claim.Disposition != StepClaimDisposition.Acquired)
             {
@@ -765,6 +784,7 @@ public sealed class WorkflowContext
         string? inputHash,
         string outputType,
         IReadOnlyCollection<string>? dependencies,
+        CompensationMetadata? compensation,
         CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
@@ -781,7 +801,8 @@ public sealed class WorkflowContext
                 Now = now,
                 LeaseExpiresAt = now + options.LeaseDuration,
                 LeaseGeneration = leaseGeneration,
-                DependsOn = dependencies
+                DependsOn = dependencies,
+                Compensation = compensation
             },
             cancellationToken);
     }

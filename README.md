@@ -449,6 +449,57 @@ are rejected, so a stale worker can never commit output to a restarted run.
 Run metadata and deadline are preserved; clear the deadline yourself if a
 restart should extend it.
 
+## Compensations
+
+Steps that mutate the outside world can register a **compensation** — a
+delegate that undoes the committed forward result. Registration is a
+first-class parameter of `StepAsync`, kept out of `StepOptions` (which is
+execution policy) and carried internally as part of the step definition:
+
+```csharp
+var reservation = await context.StepAsync(
+    "reserve",
+    request,
+    ReserveAsync,
+    compensation: async (result, step, ct) =>
+        await ReleaseAsync(result, step.IdempotencyKey, ct));
+```
+
+The compensation receives the **committed forward result** — often the exact
+resource id needed to undo the operation:
+
+```text
+Create VM ──► VM id = vm-8127 ──► compensation receives vm-8127 ──► Delete VM
+```
+
+Compensation metadata is persisted **separately** from step revisions, in its
+own table (`workflow_step_compensations`), so forward history and rollback
+history stay independently understandable. Each compensation row carries its
+own lifecycle — status, attempts, retry policy, execution timeout, idempotency
+key, started/completed timestamps, failure, fencing generation, and the
+actor/reason of the rollback it belongs to:
+
+```csharp
+var compensations = await engine.GetCompensationsAsync(runId);
+foreach (var c in compensations)
+{
+    Console.WriteLine($"{c.StepKey} rev {c.Revision}: {c.Status}");
+    // c.InputJson is the committed forward result the compensation would undo.
+}
+```
+
+Lifecycle:
+
+- **Pending** — registered when the compensated step is claimed; the committed
+  result is filled in when the forward step completes.
+- **Skipped** — the forward step failed terminally, so there is no committed
+  result to undo (a scheduled retry re-arms the registration).
+- **Running / Completed / Failed** — reserved for compensation execution.
+
+Registration is durable at claim time and never duplicated on replay; a
+restarted step revision registers its own compensation row, so
+`GetCompensationsAsync` shows the compensation history across revisions.
+
 ## External signals
 
 Workflows can durably wait for external input. `WaitForSignalAsync` is a

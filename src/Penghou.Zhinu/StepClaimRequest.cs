@@ -30,4 +30,12 @@ public sealed record StepClaimRequest
 
     /// <summary>Step keys this step durably depends on.</summary>
     public IReadOnlyCollection<string>? DependsOn { get; init; }
+
+    /// <summary>
+    /// Durable registration of the compensation that undoes this step's
+    /// committed forward result. When set, the store records a compensation row
+    /// (pending) as part of the claim, fills it with the committed result on
+    /// completion, and marks it skipped on terminal forward failure.
+    /// </summary>
+    public CompensationMetadata? Compensation { get; init; }
 }

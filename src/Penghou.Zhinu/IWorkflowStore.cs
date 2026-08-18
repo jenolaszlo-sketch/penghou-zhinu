@@ -155,6 +155,15 @@ public interface IWorkflowStore
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Returns every registered compensation for the run, one row per step
+    /// revision, in creation order. Compensations are recorded separately from
+    /// step revisions so rollback history stays understandable.
+    /// </summary>
+    ValueTask<IReadOnlyList<WorkflowStepCompensation>> GetCompensationsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Resolves the set of steps a restart of <paramref name="stepKey"/> would
     /// invalidate under <paramref name="mode"/>, without changing any state.
     /// Throws <see cref="KeyNotFoundException"/> when the run or step does not

@@ -419,6 +419,23 @@ public sealed class WorkflowEngine
     }
 
     /// <summary>
+    /// Returns the durable compensations registered for a run, one per step
+    /// revision, in creation order. Each row records the committed forward
+    /// result it would undo and its own lifecycle status; compensations are
+    /// persisted separately from step revisions so rollback history stays
+    /// understandable.
+    /// </summary>
+    public async Task<IReadOnlyList<WorkflowStepCompensation>> GetCompensationsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.GetCompensationsAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Returns the durable dependency edges recorded for a run, where each edge
     /// states that <see cref="StepDependency.StepKey"/> depends on
     /// <see cref="StepDependency.DependsOnStepKey"/>. The dependency graph is
