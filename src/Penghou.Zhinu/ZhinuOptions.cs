@@ -11,6 +11,13 @@ public sealed class ZhinuOptions
 
     public TimeSpan PollInterval { get; set; } = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>
+    /// Minimum interval between expired-lease recovery sweeps. Recovery is also
+    /// always performed once on initialization, so this only throttles the
+    /// repeated sweeps issued by background scan loops.
+    /// </summary>
+    public TimeSpan LeaseRecoveryInterval { get; set; } = TimeSpan.FromSeconds(30);
+
     public int ScanBatchSize { get; set; } = 100;
 
     /// <summary>
@@ -32,6 +39,8 @@ public sealed class ZhinuOptions
         }
         if (PollInterval <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(PollInterval));
+        if (LeaseRecoveryInterval <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(LeaseRecoveryInterval));
         if (ScanBatchSize < 1)
             throw new ArgumentOutOfRangeException(nameof(ScanBatchSize));
         if (MaxNestingDepth < 1)

@@ -21,8 +21,9 @@ public sealed class WorkflowContext
     private readonly CancellationToken workflowCancellationToken;
     private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> stepLocks =
-        new(StringComparer.Ordinal);
+    private readonly Action<Guid>? onEventAppended;
+    private readonly object stepLocksLock = new();
+    private readonly Dictionary<string, RefCountedSemaphore> stepLocks = new(StringComparer.Ordinal);
     private readonly List<string> currentDependencies = [];
     private readonly IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps;
     private readonly IReadOnlyDictionary<string, WorkflowStepCompensation>?
@@ -41,7 +42,8 @@ public sealed class WorkflowContext
         IWorkflowEventPublisher? eventPublisher = null,
         Func<Guid, CancellationToken, Task>? executeChildRun = null,
         IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps = null,
-        IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null)
+        IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null,
+        Action<Guid>? onEventAppended = null)
     {
         WorkflowRunId = workflowRunId;
         this.store = store;
@@ -55,6 +57,7 @@ public sealed class WorkflowContext
         this.executeChildRun = executeChildRun;
         this.replaySteps = replaySteps;
         this.rollbackCompensations = rollbackCompensations;
+        this.onEventAppended = onEventAppended;
     }
 
     public Guid WorkflowRunId { get; }
@@ -186,12 +189,11 @@ public sealed class WorkflowContext
         var inputJson = JsonSerializer.Serialize(input, serializerOptions);
         var inputType = SerializationIdentity.TypeId(typeof(TInput));
         var outputType = SerializationIdentity.TypeId(typeof(TOutput));
-        var stepLock = stepLocks.GetOrAdd(stepKey, _ => new SemaphoreSlim(1, 1));
         using var linkedCancellation = CancellationTokenSource
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
                 cancellationToken);
-        await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
+        var stepLock = await AcquireStepLockAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
         try
         {
             if (IsRollback)
@@ -253,7 +255,7 @@ public sealed class WorkflowContext
         }
         finally
         {
-            stepLock.Release();
+            ReleaseStepLock(stepKey, stepLock);
         }
     }
 
@@ -269,12 +271,11 @@ public sealed class WorkflowContext
         if (delay < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(delay));
         var inputJson = JsonSerializer.Serialize(delay.Ticks, serializerOptions);
-        var stepLock = stepLocks.GetOrAdd(stepKey, _ => new SemaphoreSlim(1, 1));
         using var linkedCancellation = CancellationTokenSource
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
                 cancellationToken);
-        await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
+        var stepLock = await AcquireStepLockAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
         try
         {
             if (IsRollback)
@@ -345,7 +346,7 @@ public sealed class WorkflowContext
         }
         finally
         {
-            stepLock.Release();
+            ReleaseStepLock(stepKey, stepLock);
         }
     }
 
@@ -368,12 +369,11 @@ public sealed class WorkflowContext
         if (timeout is { } waitTimeout && waitTimeout < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(timeout));
         var outputType = SerializationIdentity.TypeId(typeof(T));
-        var stepLock = stepLocks.GetOrAdd(stepKey, _ => new SemaphoreSlim(1, 1));
         using var linkedCancellation = CancellationTokenSource
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
                 cancellationToken);
-        await stepLock.WaitAsync(linkedCancellation.Token).ConfigureAwait(false);
+        var stepLock = await AcquireStepLockAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
         try
         {
             if (IsRollback)
@@ -448,7 +448,7 @@ public sealed class WorkflowContext
         }
         finally
         {
-            stepLock.Release();
+            ReleaseStepLock(stepKey, stepLock);
         }
     }
 
@@ -477,6 +477,7 @@ public sealed class WorkflowContext
             eventType,
             dataJson,
             cancellationToken: cancellationToken).ConfigureAwait(false);
+        onEventAppended?.Invoke(WorkflowRunId);
         if (eventPublisher is not null)
         {
             try
@@ -952,4 +953,60 @@ public sealed class WorkflowContext
         string InputJson,
         string InputType,
         string OutputType);
+
+    private sealed class RefCountedSemaphore
+    {
+        public readonly SemaphoreSlim Semaphore = new(1, 1);
+        public int RefCount = 1;
+    }
+
+    private async Task<RefCountedSemaphore> AcquireStepLockAsync(string stepKey, CancellationToken cancellationToken)
+    {
+        RefCountedSemaphore refSem;
+        lock (stepLocksLock)
+        {
+            if (stepLocks.TryGetValue(stepKey, out var existing))
+            {
+                existing.RefCount++;
+                refSem = existing;
+            }
+            else
+            {
+                refSem = new RefCountedSemaphore();
+                stepLocks[stepKey] = refSem;
+            }
+        }
+        try
+        {
+            await refSem.Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return refSem;
+        }
+        catch
+        {
+            lock (stepLocksLock)
+            {
+                refSem.RefCount--;
+                if (refSem.RefCount == 0)
+                {
+                    stepLocks.Remove(stepKey);
+                    refSem.Semaphore.Dispose();
+                }
+            }
+            throw;
+        }
+    }
+
+    private void ReleaseStepLock(string stepKey, RefCountedSemaphore refSem)
+    {
+        refSem.Semaphore.Release();
+        lock (stepLocksLock)
+        {
+            refSem.RefCount--;
+            if (refSem.RefCount == 0)
+            {
+                stepLocks.Remove(stepKey);
+                refSem.Semaphore.Dispose();
+            }
+        }
+    }
 }

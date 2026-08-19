@@ -197,6 +197,10 @@ await workflow.StepAsync(
 - `StartAsync`/`RunAsync` accept an optional run-level `deadline`. A run claimed
   after its deadline is failed with a timeout error instead of executing,
   which bounds how long a stuck or orphaned run can hold resources.
+- Expired leases are swept automatically. Recovery runs once at engine
+  initialization and then at most every `ZhinuOptions.LeaseRecoveryInterval`
+  (default 30 seconds), so a background scan loop does not issue a recovery
+  write on every poll tick.
 
 ## Polling and long-running loops
 
@@ -267,7 +271,10 @@ await workflow.EmitAsync(
 
 Emitted events carry serialized data and survive restarts, so consumers can
 reconnect after their last sequence without requiring Redis or another
-messaging service.
+messaging service. `SubscribeAsync` is notified in-process when events are
+committed by this engine, so subscribers wake immediately instead of polling
+the store on every `PollInterval`; the poll interval remains a fallback for
+events appended by other processes or before the subscription started.
 
 **Atomicity caveat:** `EmitAsync` appends the event with its own store write,
 not in the same transaction as the step that emitted it. If the process exits

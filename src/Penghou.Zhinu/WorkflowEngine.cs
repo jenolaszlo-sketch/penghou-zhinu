@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 
 namespace Penghou.Zhinu;
 
@@ -25,6 +26,8 @@ public sealed class WorkflowEngine
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource>
         runningCancellations = new();
+    private readonly ConcurrentDictionary<Guid, Channel<byte>> eventChannels = new();
+    private DateTimeOffset lastLeaseRecovery;
     private volatile bool initialized;
 
     public WorkflowEngine(
@@ -185,6 +188,7 @@ public sealed class WorkflowEngine
                     now),
                 now,
                 CancellationToken.None).ConfigureAwait(false);
+            NotifyEventAppended(workflowRunId);
             return;
         }
 
@@ -234,7 +238,8 @@ public sealed class WorkflowEngine
                     ExecuteCoreAsync(
                         childId,
                         childCancellation,
-                        depth + 1));
+                        depth + 1),
+                onEventAppended: NotifyEventAppended);
             logger.LogInformation(
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",
                 workflowRunId,
@@ -252,6 +257,7 @@ public sealed class WorkflowEngine
                 SerializationIdentity.TypeId(registration.OutputType),
                 timeProvider.GetUtcNow(),
                 CancellationToken.None).ConfigureAwait(false);
+            NotifyEventAppended(workflowRunId);
             logger.LogInformation(
                 "Completed workflow {WorkflowRunId}.",
                 workflowRunId);
@@ -285,6 +291,7 @@ public sealed class WorkflowEngine
                         timeProvider.GetUtcNow()),
                     timeProvider.GetUtcNow(),
                     CancellationToken.None).ConfigureAwait(false);
+                NotifyEventAppended(workflowRunId);
             }
             logger.LogError(
                 exception,
@@ -302,9 +309,7 @@ public sealed class WorkflowEngine
         CancellationToken cancellationToken = default)
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
-        await store.RecoverExpiredLeasesAsync(
-            timeProvider.GetUtcNow(),
-            cancellationToken).ConfigureAwait(false);
+        await RecoverExpiredLeasesIfDueAsync(cancellationToken).ConfigureAwait(false);
         var ids = await store.GetRunnableRunIdsAsync(
             timeProvider.GetUtcNow(),
             options.ScanBatchSize,
@@ -337,6 +342,7 @@ public sealed class WorkflowEngine
             workflowRunId,
             timeProvider.GetUtcNow(),
             cancellationToken).ConfigureAwait(false);
+        NotifyEventAppended(workflowRunId);
         if (runningCancellations.TryGetValue(
                 workflowRunId,
                 out var runningCancellation))
@@ -700,7 +706,8 @@ public sealed class WorkflowEngine
                         eventPublisher,
                         executeChildRun: null,
                         replaySteps: steps,
-                        rollbackCompensations: byKey);
+                        rollbackCompensations: byKey,
+                        onEventAppended: NotifyEventAppended);
                     await registration!.ExecuteAsync(
                         context,
                         run.InputJson ?? "null",
@@ -750,6 +757,7 @@ public sealed class WorkflowEngine
                     },
                     serializerOptions),
                 cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            NotifyEventAppended(workflowRunId);
             logger.LogInformation(
                 "Compensated workflow {WorkflowRunId} ({CompensatedCount} step(s)).",
                 workflowRunId,
@@ -825,6 +833,7 @@ public sealed class WorkflowEngine
                 claim.StepKey,
                 claim.Attempt,
                 cancellationToken).ConfigureAwait(false);
+            NotifyEventAppended(claim.WorkflowRunId);
 
             using var timeoutCancellation = compensation.ExecutionTimeout is { } executionTimeout
                 ? new CancellationTokenSource(executionTimeout, timeProvider)
@@ -851,6 +860,7 @@ public sealed class WorkflowEngine
                     claim.StepKey,
                     claim.Attempt,
                     cancellationToken).ConfigureAwait(false);
+                NotifyEventAppended(claim.WorkflowRunId);
                 return;
             }
             catch (OperationCanceledException) when (
@@ -916,12 +926,13 @@ public sealed class WorkflowEngine
             now,
             CancellationToken.None).ConfigureAwait(false);
         await store.AppendEventAsync(
-            claim.WorkflowRunId,
-            WorkflowEventTypes.CompensationFailed,
-            JsonSerializer.Serialize(error, serializerOptions),
-            claim.StepKey,
-            claim.Attempt,
-            CancellationToken.None).ConfigureAwait(false);
+                claim.WorkflowRunId,
+                WorkflowEventTypes.CompensationFailed,
+                JsonSerializer.Serialize(error, serializerOptions),
+                claim.StepKey,
+                claim.Attempt,
+                CancellationToken.None).ConfigureAwait(false);
+        NotifyEventAppended(claim.WorkflowRunId);
     }
 
     private RetryPolicy DeserializeRetryPolicy(string? retryPolicyJson)
@@ -1171,15 +1182,53 @@ public sealed class WorkflowEngine
             var run = await GetRunAsync(workflowRunId, cancellationToken)
                 .ConfigureAwait(false);
             if (run is null || IsTerminal(run.Status) && events.Count == 0)
+            {
+                eventChannels.TryRemove(workflowRunId, out _);
                 yield break;
+            }
             if (events.Count == 0)
             {
-                await Task.Delay(
+                // Wait briefly for an in-process notification instead of
+                // hammering the store every poll interval. Fall back to the
+                // poll interval so events appended by other processes (or
+                // before this subscriber existed) are still observed.
+                var channel = eventChannels.GetOrAdd(
+                    workflowRunId,
+                    _ => Channel.CreateBounded<byte>(
+                        new BoundedChannelOptions(1)
+                        {
+                            FullMode = BoundedChannelFullMode.DropWrite
+                        }));
+                var notify = channel.Reader.WaitToReadAsync(cancellationToken)
+                    .AsTask();
+                var poll = Task.Delay(
                     options.PollInterval,
                     timeProvider,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken);
+                await Task.WhenAny(notify, poll).ConfigureAwait(false);
             }
         }
+    }
+
+    private void NotifyEventAppended(Guid workflowRunId)
+    {
+        if (eventChannels.TryGetValue(workflowRunId, out var channel))
+        {
+            channel.Writer.TryWrite(0);
+        }
+    }
+
+    private async ValueTask RecoverExpiredLeasesIfDueAsync(
+        CancellationToken cancellationToken)
+    {
+        var now = timeProvider.GetUtcNow();
+        var nextRecovery = lastLeaseRecovery + options.LeaseRecoveryInterval;
+        if (now < nextRecovery)
+            return;
+        lastLeaseRecovery = now;
+        await store.RecoverExpiredLeasesAsync(
+            now,
+            cancellationToken).ConfigureAwait(false);
     }
 
     private async ValueTask EnsureInitializedAsync(
@@ -1196,6 +1245,7 @@ public sealed class WorkflowEngine
             await store.RecoverExpiredLeasesAsync(
                 timeProvider.GetUtcNow(),
                 cancellationToken).ConfigureAwait(false);
+            lastLeaseRecovery = timeProvider.GetUtcNow();
             initialized = true;
         }
         finally
