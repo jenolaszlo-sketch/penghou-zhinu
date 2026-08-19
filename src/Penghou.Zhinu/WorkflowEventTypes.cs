@@ -23,4 +23,5 @@ public static class WorkflowEventTypes
     public const string CompensationCompleted = "compensation-completed";
     public const string CompensationFailed = "compensation-failed";
     public const string WorkflowCompensated = "workflow-compensated";
+    public const string WorkflowRestarted = "workflow-restarted";
 }

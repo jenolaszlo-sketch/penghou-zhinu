@@ -166,6 +166,13 @@ public sealed class WorkflowEngine
                 $"Workflow '{workflowRunId:D}' does not exist.");
         if (IsTerminal(run.Status))
             return;
+        if (run.Status == WorkflowStatus.RollingBack)
+        {
+            await ResumeRollbackRestartAsync(
+                workflowRunId,
+                cancellationToken).ConfigureAwait(false);
+            return;
+        }
         var now = timeProvider.GetUtcNow();
         var leaseGeneration = await store.TryClaimRunAsync(
                 workflowRunId,
@@ -609,6 +616,287 @@ public sealed class WorkflowEngine
             cancellationToken);
     }
 
+    /// <summary>
+    /// Rolls a run all the way back (compensating every step that has a
+    /// claimable compensation), then rewinds it to a re-executable state and
+    /// lets it run forward again. The rollback-and-restart work is durable:
+    /// should the process die mid-operation, a later
+    /// <see cref="ExecuteAsync"/> call resumes it.
+    /// </summary>
+    public async Task RollbackAndRestartAsync(
+        Guid workflowRunId,
+        string? actor = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var run = await store.GetRunAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false) ??
+            throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        if (run.Status == WorkflowStatus.Compensated)
+            return;
+        if (run.Status == WorkflowStatus.RollingBack)
+            return;
+
+        var operationId = Guid.NewGuid();
+        var now = timeProvider.GetUtcNow();
+        await store.CreateOperationAsync(
+            new WorkflowRunOperation
+            {
+                OperationId = operationId,
+                WorkflowRunId = workflowRunId,
+                OperationType = "rollback-and-restart",
+                Status = WorkflowOperationStatus.Requested,
+                PayloadJson = JsonSerializer.Serialize(
+                    new { actor, reason },
+                    serializerOptions),
+                CreatedAt = now,
+                UpdatedAt = now,
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        var generation = await store.ClaimRollbackAndRestartAsync(
+            workflowRunId,
+            ownerId,
+            now,
+            now + options.LeaseDuration,
+            cancellationToken).ConfigureAwait(false);
+        if (generation is null)
+            return;
+
+        await using var renewal = new LeaseRenewal(
+            timeProvider,
+            options.LeaseRenewalInterval,
+            token => store.RenewRollbackAndRestartLeaseAsync(
+                workflowRunId,
+                ownerId,
+                timeProvider.GetUtcNow() + options.LeaseDuration,
+                token));
+        try
+        {
+            await ContinueRollbackRestartAsync(
+                workflowRunId,
+                operationId,
+                generation.Value,
+                actor,
+                reason,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await store.ReleaseRollbackAndRestartLeaseAsync(
+                workflowRunId,
+                ownerId,
+                timeProvider.GetUtcNow(),
+                CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                await store.FailRollbackAndRestartAsync(
+                    workflowRunId,
+                    ownerId,
+                    generation.Value,
+                    operationId,
+                    WorkflowError.FromException(
+                        exception,
+                        timeProvider.GetUtcNow()),
+                    timeProvider.GetUtcNow(),
+                    CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception failureException)
+            {
+                logger.LogWarning(
+                    failureException,
+                    "Could not record rollback-and-restart failure for workflow {WorkflowRunId}.",
+                    workflowRunId);
+            }
+            logger.LogError(
+                exception,
+                "Rollback-and-restart of workflow {WorkflowRunId} failed.",
+                workflowRunId);
+            throw;
+        }
+    }
+
+    private async Task ContinueRollbackRestartAsync(
+        Guid workflowRunId,
+        Guid operationId,
+        long generation,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        var run = await store.GetRunAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false) ??
+            throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        var operation = await store.GetActiveOperationAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (operation is null || operation.OperationId != operationId)
+            return;
+
+        if (operation.Status == WorkflowOperationStatus.Requested ||
+            operation.Status == WorkflowOperationStatus.Compensating)
+        {
+            var now = timeProvider.GetUtcNow();
+            await store.UpdateOperationStatusAsync(
+                operationId,
+                WorkflowOperationStatus.Compensating,
+                now,
+                cancellationToken).ConfigureAwait(false);
+            var plan = await store.PlanRollbackAsync(
+                workflowRunId,
+                null,
+                RollbackBoundary.AfterStep,
+                cancellationToken).ConfigureAwait(false);
+            var compensateKeys = plan.Steps
+                .Where(step => step.Action == RollbackAction.Compensate)
+                .Select(step => step.StepKey)
+                .ToList();
+            await ExecuteRollbackCompensationsAsync(
+                run,
+                compensateKeys,
+                generation,
+                actor,
+                reason,
+                cancellationToken).ConfigureAwait(false);
+            await store.UpdateOperationStatusAsync(
+                operationId,
+                WorkflowOperationStatus.Rewinding,
+                timeProvider.GetUtcNow(),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        var steps = await store.GetStepsAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        var invalidateStepKeys = steps
+            .Select(step => step.StepKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var now2 = timeProvider.GetUtcNow();
+        await store.UpdateOperationStatusAsync(
+            operationId,
+            WorkflowOperationStatus.Restarting,
+            now2,
+            cancellationToken).ConfigureAwait(false);
+        var completed = await store.CompleteRollbackAndRestartAsync(
+            workflowRunId,
+            ownerId,
+            generation,
+            operationId,
+            invalidateStepKeys,
+            now2,
+            CancellationToken.None).ConfigureAwait(false);
+        if (!completed)
+        {
+            throw new WorkflowStateException(
+                "Rollback-and-restart lost its run claim before the run could be restarted.");
+        }
+        NotifyEventAppended(workflowRunId);
+        logger.LogInformation(
+            "Rolled back and restarted workflow {WorkflowRunId} ({InvalidatedCount} step(s) rewound).",
+            workflowRunId,
+            invalidateStepKeys.Count);
+    }
+
+    private async Task ResumeRollbackRestartAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
+        var operation = await store.GetActiveOperationAsync(
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (operation is null)
+            return;
+
+        var now = timeProvider.GetUtcNow();
+        var generation = await store.ClaimRollbackAndRestartAsync(
+            workflowRunId,
+            ownerId,
+            now,
+            now + options.LeaseDuration,
+            cancellationToken).ConfigureAwait(false);
+        if (generation is null)
+            return;
+
+        await using var renewal = new LeaseRenewal(
+            timeProvider,
+            options.LeaseRenewalInterval,
+            token => store.RenewRollbackAndRestartLeaseAsync(
+                workflowRunId,
+                ownerId,
+                timeProvider.GetUtcNow() + options.LeaseDuration,
+                token));
+        try
+        {
+            var payload = DeserializeRollbackRestartPayload(operation.PayloadJson);
+            await ContinueRollbackRestartAsync(
+                workflowRunId,
+                operation.OperationId,
+                generation.Value,
+                payload?.Actor,
+                payload?.Reason,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await store.ReleaseRollbackAndRestartLeaseAsync(
+                workflowRunId,
+                ownerId,
+                timeProvider.GetUtcNow(),
+                CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            try
+            {
+                await store.FailRollbackAndRestartAsync(
+                    workflowRunId,
+                    ownerId,
+                    generation.Value,
+                    operation.OperationId,
+                    WorkflowError.FromException(
+                        exception,
+                        timeProvider.GetUtcNow()),
+                    timeProvider.GetUtcNow(),
+                    CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception failureException)
+            {
+                logger.LogWarning(
+                    failureException,
+                    "Could not record rollback-and-restart failure for workflow {WorkflowRunId}.",
+                    workflowRunId);
+            }
+            logger.LogError(
+                exception,
+                "Resuming rollback-and-restart of workflow {WorkflowRunId} failed.",
+                workflowRunId);
+            throw;
+        }
+    }
+
+    private RollbackRestartPayload? DeserializeRollbackRestartPayload(
+        string? payloadJson)
+    {
+        if (string.IsNullOrWhiteSpace(payloadJson))
+            return null;
+        return JsonSerializer.Deserialize<RollbackRestartPayload>(
+            payloadJson,
+            serializerOptions);
+    }
+
+    private sealed record RollbackRestartPayload(string? Actor, string? Reason);
+
     private async Task RollbackCoreAsync(
         Guid workflowRunId,
         string? targetStepKey,
@@ -656,82 +944,13 @@ public sealed class WorkflowEngine
                 token));
         try
         {
-            if (compensateKeys.Count > 0)
-            {
-                var steps = (await store.GetStepsAsync(
-                    workflowRunId,
-                    cancellationToken).ConfigureAwait(false))
-                    .ToDictionary(
-                        step => step.StepKey,
-                        StringComparer.Ordinal);
-                var rows = await store.GetCompensationsAsync(
-                    workflowRunId,
-                    cancellationToken).ConfigureAwait(false);
-                var byKey = new Dictionary<string, WorkflowStepCompensation>(
-                    StringComparer.Ordinal);
-                foreach (var key in compensateKeys)
-                {
-                    var row = rows
-                        .Where(item =>
-                            string.Equals(item.StepKey, key, StringComparison.Ordinal) &&
-                            item.InputJson is not null &&
-                            item.Status is CompensationStatus.Pending or
-                                CompensationStatus.Failed)
-                        .OrderByDescending(item => item.Revision)
-                        .FirstOrDefault();
-                    if (row is not null)
-                        byKey[key] = row;
-                }
-
-                if (byKey.Count > 0)
-                {
-                    if (!registry.TryGet(
-                            run.WorkflowName,
-                            run.WorkflowVersion,
-                            out var registration))
-                    {
-                        throw new WorkflowDefinitionUnavailableException(
-                            run.WorkflowName,
-                            run.WorkflowVersion);
-                    }
-                    var context = new WorkflowContext(
-                        workflowRunId,
-                        store,
-                        ownerId,
-                        options,
-                        serializerOptions,
-                        timeProvider,
-                        generation.Value,
-                        cancellationToken,
-                        eventPublisher,
-                        executeChildRun: null,
-                        replaySteps: steps,
-                        rollbackCompensations: byKey,
-                        onEventAppended: NotifyEventAppended);
-                    await registration!.ExecuteAsync(
-                        context,
-                        run.InputJson ?? "null",
-                        serializerOptions,
-                        cancellationToken).ConfigureAwait(false);
-                    var invocations = context.RollbackInvocations;
-                    foreach (var key in compensateKeys)
-                    {
-                        var invocation = invocations.FirstOrDefault(item =>
-                            string.Equals(
-                                item.StepKey,
-                                key,
-                                StringComparison.Ordinal));
-                        if (invocation is null)
-                            continue;
-                        await ExecuteCompensationAsync(
-                            invocation,
-                            generation.Value,
-                            actor,
-                            reason,
-                            cancellationToken).ConfigureAwait(false);
-                    }
-                }
-            }
+            await ExecuteRollbackCompensationsAsync(
+                run,
+                compensateKeys,
+                generation.Value,
+                actor,
+                reason,
+                cancellationToken).ConfigureAwait(false);
 
             var now2 = timeProvider.GetUtcNow();
             var completed = await store.CompleteRollbackAsync(
@@ -798,6 +1017,89 @@ public sealed class WorkflowEngine
                 "Rollback of workflow {WorkflowRunId} failed.",
                 workflowRunId);
             throw;
+        }
+    }
+
+    private async Task ExecuteRollbackCompensationsAsync(
+        WorkflowRun run,
+        IReadOnlyList<string> compensateKeys,
+        long generation,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        if (compensateKeys.Count == 0)
+            return;
+        var steps = (await store.GetStepsAsync(
+            run.Id,
+            cancellationToken).ConfigureAwait(false))
+            .ToDictionary(
+                step => step.StepKey,
+                StringComparer.Ordinal);
+        var rows = await store.GetCompensationsAsync(
+            run.Id,
+            cancellationToken).ConfigureAwait(false);
+        var byKey = new Dictionary<string, WorkflowStepCompensation>(
+            StringComparer.Ordinal);
+        foreach (var key in compensateKeys)
+        {
+            var row = rows
+                .Where(item =>
+                    string.Equals(item.StepKey, key, StringComparison.Ordinal) &&
+                    item.InputJson is not null &&
+                    item.Status is CompensationStatus.Pending or
+                        CompensationStatus.Failed)
+                .OrderByDescending(item => item.Revision)
+                .FirstOrDefault();
+            if (row is not null)
+                byKey[key] = row;
+        }
+        if (byKey.Count == 0)
+            return;
+        if (!registry.TryGet(
+                run.WorkflowName,
+                run.WorkflowVersion,
+                out var registration))
+        {
+            throw new WorkflowDefinitionUnavailableException(
+                run.WorkflowName,
+                run.WorkflowVersion);
+        }
+        var context = new WorkflowContext(
+            run.Id,
+            store,
+            ownerId,
+            options,
+            serializerOptions,
+            timeProvider,
+            generation,
+            cancellationToken,
+            eventPublisher,
+            executeChildRun: null,
+            replaySteps: steps,
+            rollbackCompensations: byKey,
+            onEventAppended: NotifyEventAppended);
+        await registration!.ExecuteAsync(
+            context,
+            run.InputJson ?? "null",
+            serializerOptions,
+            cancellationToken).ConfigureAwait(false);
+        var invocations = context.RollbackInvocations;
+        foreach (var key in compensateKeys)
+        {
+            var invocation = invocations.FirstOrDefault(item =>
+                string.Equals(
+                    item.StepKey,
+                    key,
+                    StringComparison.Ordinal));
+            if (invocation is null)
+                continue;
+            await ExecuteCompensationAsync(
+                invocation,
+                generation,
+                actor,
+                reason,
+                cancellationToken).ConfigureAwait(false);
         }
     }
 

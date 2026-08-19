@@ -1453,6 +1453,167 @@ public sealed class WorkflowEngineIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task RollbackAndRestartAsync_CompensatesThenRestartsForward()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var rollbackWorkflow = new RollbackWorkflow();
+        var rollbackEngine = CreateEngine(rollbackWorkflow, "rollback");
+        await rollbackEngine.RollbackAndRestartAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rollbackWorkflow.CompensatedOrder.Should().Equal(
+            "tests", "deploy", "frontend", "payment");
+        (await rollbackEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Pending);
+        (await rollbackEngine.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Should().OnlyContain(item => item.Status == StepStatus.Pending)
+            .And.OnlyContain(item => item.Revision == 2);
+        (await rollbackEngine.GetCompensationsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Should().OnlyContain(item => item.Status == CompensationStatus.Completed);
+        (await rollbackEngine.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Should().Contain(item =>
+                item.EventType == WorkflowEventTypes.WorkflowRestarted);
+
+        var rerunWorkflow = new RollbackWorkflow();
+        var rerunEngine = CreateEngine(rerunWorkflow, "rollback");
+        var result = await rerunEngine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            workflowRunId: runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.Should().Be("done");
+        (await rerunEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Completed);
+    }
+
+    [Fact]
+    public async Task RollbackAndRestartAsync_ResumesInterruptedOperationOnExecute()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var store = CreateStore();
+        var now = DateTimeOffset.UtcNow;
+        await store.CreateOperationAsync(
+            new WorkflowRunOperation
+            {
+                OperationId = Guid.NewGuid(),
+                WorkflowRunId = runId,
+                OperationType = "rollback-and-restart",
+                Status = WorkflowOperationStatus.Requested,
+                PayloadJson = null,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            TestContext.Current.CancellationToken);
+        await store.ClaimRollbackAndRestartAsync(
+            runId,
+            "crashed-worker",
+            now,
+            now.AddSeconds(-1),
+            TestContext.Current.CancellationToken);
+
+        var resumedWorkflow = new RollbackWorkflow();
+        var resumedEngine = CreateEngine(resumedWorkflow, "rollback");
+        await resumedEngine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+
+        resumedWorkflow.CompensatedOrder.Should().Equal(
+            "tests", "deploy", "frontend", "payment");
+        (await resumedEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Pending);
+        (await resumedEngine.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Should().Contain(item =>
+                item.EventType == WorkflowEventTypes.WorkflowRestarted);
+
+        await resumedEngine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        (await resumedEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Completed);
+    }
+
+    [Fact]
+    public async Task RollbackAndRestartAsync_RunAvailablePicksUpCrashedOperation()
+    {
+        var forward = new RollbackWorkflow();
+        var engine = CreateEngine(forward, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = forward.RunId;
+
+        var store = CreateStore();
+        var now = DateTimeOffset.UtcNow;
+        await store.CreateOperationAsync(
+            new WorkflowRunOperation
+            {
+                OperationId = Guid.NewGuid(),
+                WorkflowRunId = runId,
+                OperationType = "rollback-and-restart",
+                Status = WorkflowOperationStatus.Requested,
+                PayloadJson = null,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            TestContext.Current.CancellationToken);
+        await store.ClaimRollbackAndRestartAsync(
+            runId,
+            "crashed-worker",
+            now,
+            now.AddSeconds(-1),
+            TestContext.Current.CancellationToken);
+
+        var recoveredWorkflow = new RollbackWorkflow();
+        var recoveredEngine = CreateEngine(recoveredWorkflow, "rollback");
+        var picked = await recoveredEngine.RunAvailableAsync(
+            TestContext.Current.CancellationToken);
+
+        picked.Should().BeGreaterThan(0);
+        recoveredWorkflow.CompensatedOrder.Should().Equal(
+            "tests", "deploy", "frontend", "payment");
+        (await recoveredEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Pending);
+    }
+
+    [Fact]
     public async Task RestartStepAsync_StepOnlyMode_InvalidatesJustTheTarget()
     {
         var workflow = new DependentStepsWorkflow();

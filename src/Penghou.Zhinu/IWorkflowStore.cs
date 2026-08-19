@@ -315,4 +315,96 @@ public interface IWorkflowStore
         DateTimeOffset? retryAt,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persists a durable run-scoped operation (for example rollback-and-restart)
+    /// that can be resumed after a crash. The operation row records the intent
+    /// (payload) and the current phase.
+    /// </summary>
+    ValueTask CreateOperationAsync(
+        WorkflowRunOperation operation,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the most recently created operation for the run whose status is
+    /// still in progress (<see cref="WorkflowOperationStatus.Completed"/> and
+    /// <see cref="WorkflowOperationStatus.Failed"/> are excluded), or null when
+    /// no such operation exists.
+    /// </summary>
+    ValueTask<WorkflowRunOperation?> GetActiveOperationAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Transitions an operation's durable phase, updating its timestamp. Returns
+    /// false when the operation no longer exists.
+    /// </summary>
+    ValueTask<bool> UpdateOperationStatusAsync(
+        Guid operationId,
+        WorkflowOperationStatus status,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically claims a completed, failed, or previously rolling-back (lease
+    /// expired) run for rollback-and-restart: bumps its fencing generation,
+    /// transitions it to <see cref="WorkflowStatus.RollingBack"/>, and takes a
+    /// lease. Returns the new generation, or null when the run is not eligible
+    /// (still executing, or already compensated).
+    /// </summary>
+    ValueTask<long?> ClaimRollbackAndRestartAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Renews the rollback-and-restart lease of a rolling-back run.</summary>
+    ValueTask<bool> RenewRollbackAndRestartLeaseAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Releases a rollback-and-restart lease, leaving the run's rolling-back
+    /// status untouched so a later attempt can resume.
+    /// </summary>
+    ValueTask ReleaseRollbackAndRestartLeaseAsync(
+        Guid workflowRunId,
+        string ownerId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically rewinds a rolling-back run back to a re-executable state:
+    /// verifies the operation still owns the run's lease at
+    /// <paramref name="generation"/>, bumps the generation, resets the run to
+    /// <see cref="WorkflowStatus.Pending"/> (clearing output, error, and the
+    /// lease), inserts a fresh pending revision for every invalidated step,
+    /// completes the operation, and emits a durable restart event. Returns false
+    /// (changing nothing) when the operation lost its claim, for example to a
+    /// concurrent rollback.
+    /// </summary>
+    ValueTask<bool> CompleteRollbackAndRestartAsync(
+        Guid workflowRunId,
+        string ownerId,
+        long generation,
+        Guid operationId,
+        IReadOnlyList<string> invalidateStepKeys,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Marks a rollback-and-restart operation failed, leaving the run claimable
+    /// for a later attempt. Best-effort: no-op when the claim was already lost.
+    /// </summary>
+    ValueTask FailRollbackAndRestartAsync(
+        Guid workflowRunId,
+        string ownerId,
+        long generation,
+        Guid operationId,
+        WorkflowError error,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
 }

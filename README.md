@@ -584,6 +584,37 @@ example a permanently failing compensation) leaves the run `Failed` and
 claimable again, and already-completed compensations are reused rather than
 re-executed.
 
+### Roll back and restart
+
+Sometimes undoing the work is not enough - the workflow should then run
+**forward again** with fresh step revisions. `RollbackAndRestartAsync`
+compensates every compensatable step, rewinds the run to a re-executable
+`Pending` state (inserting a fresh pending revision for every step), and lets
+`ExecuteAsync` (or the background worker) run it forward again:
+
+```csharp
+// Compensate everything, then rewind the run so it re-executes from scratch.
+await engine.RollbackAndRestartAsync(runId, actor: "ops", reason: "revert v2");
+
+// Execute the rewound run forward again (also done automatically by the
+// background worker when the run becomes available).
+await engine.ExecuteAsync(runId);
+```
+
+The restarted run returns to `Completed` with a new output; its step revisions
+continue from where the rewind stopped, so step idempotency keys change and
+downstream systems can deduplicate the re-executed side effects.
+
+Rollback-and-restart is **crash-resumable**. The operation's intent and phase
+are persisted in a `workflow_run_operations` row (`Requested →
+Compensating → Rewinding → Restarting → Completed`), the run is fenced by a
+lease and its generation, and if the process dies mid-operation a later
+`ExecuteAsync` / `RunAvailableAsync` call resumes exactly where it stopped:
+already-completed compensations are reused, and the rewind is atomic. The run
+reports itself as `RollingBack` while the operation is in flight, and a
+rollback-and-restart in progress cannot be cancelled out from under the
+operation.
+
 ## External signals
 
 Workflows can durably wait for external input. `WaitForSignalAsync` is a
