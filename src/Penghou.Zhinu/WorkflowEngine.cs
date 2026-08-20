@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
+using Penghou.Zhinu.Execution.Outcomes;
+using Penghou.Zhinu.Execution.Steps;
 
 namespace Penghou.Zhinu;
 
@@ -23,12 +25,14 @@ public sealed class WorkflowEngine
     private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly string ownerId =
         $"process-{Environment.ProcessId}-{Guid.NewGuid():N}";
-    private readonly SemaphoreSlim initializationLock = new(1, 1);
+    private readonly LeaseRecoveryScheduler leaseRecovery;
+    private readonly RunExecutionPipeline executionPipeline;
+    private readonly RunScanner scanner;
+    private readonly RollbackCoordinator rollbackCoordinator;
+    private readonly RollbackAndRestartCoordinator rollbackAndRestart;
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource>
         runningCancellations = new();
     private readonly ConcurrentDictionary<Guid, Channel<byte>> eventChannels = new();
-    private DateTimeOffset lastLeaseRecovery;
-    private volatile bool initialized;
 
     public WorkflowEngine(
         IWorkflowStore store,
@@ -47,6 +51,66 @@ public sealed class WorkflowEngine
         this.timeProvider = timeProvider ?? TimeProvider.System;
         this.logger = logger ?? NullLogger<WorkflowEngine>.Instance;
         this.eventPublisher = eventPublisher;
+        leaseRecovery = new LeaseRecoveryScheduler(
+            store,
+            this.options,
+            this.timeProvider);
+        var outcomeHandler = new RunOutcomeHandler(
+            store,
+            ownerId,
+            this.timeProvider,
+            this.logger,
+            NotifyEventAppended);
+        var compensationExecutor = new CompensationExecutor(
+            store,
+            registry,
+            this.options,
+            this.serializerOptions,
+            this.timeProvider,
+            eventPublisher,
+            ownerId,
+            NotifyEventAppended);
+        rollbackCoordinator = new RollbackCoordinator(
+            store,
+            this.options,
+            this.serializerOptions,
+            this.timeProvider,
+            this.logger,
+            ownerId,
+            NotifyEventAppended,
+            compensationExecutor);
+        rollbackAndRestart = new RollbackAndRestartCoordinator(
+            store,
+            this.options,
+            this.serializerOptions,
+            this.timeProvider,
+            this.logger,
+            ownerId,
+            NotifyEventAppended,
+            compensationExecutor);
+        executionPipeline = new RunExecutionPipeline(
+            store,
+            registry,
+            this.options,
+            this.serializerOptions,
+            this.timeProvider,
+            this.logger,
+            eventPublisher,
+            ownerId,
+            runningCancellations,
+            NotifyEventAppended,
+            (workflowRunId, cancellationToken) =>
+                rollbackAndRestart.ResumeAsync(
+                    workflowRunId,
+                    cancellationToken),
+            outcomeHandler);
+        scanner = new RunScanner(
+            store,
+            this.options,
+            this.timeProvider,
+            leaseRecovery,
+            (workflowRunId, cancellationToken) =>
+                ExecuteAsync(workflowRunId, cancellationToken));
     }
 
     /// <summary>Creates a pending durable run without waiting for its execution.</summary>
@@ -59,7 +123,7 @@ public sealed class WorkflowEngine
         object? metadata = null,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var registration = registry.Get(workflowName, workflowVersion);
         if (registration.InputType != typeof(TInput))
         {
@@ -146,205 +210,25 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
-        await ExecuteCoreAsync(
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await executionPipeline.ExecuteAsync(
             workflowRunId,
             cancellationToken,
             0).ConfigureAwait(false);
     }
 
-    private async Task ExecuteCoreAsync(
-        Guid workflowRunId,
-        CancellationToken cancellationToken,
-        int depth)
-    {
-        if (depth > options.MaxNestingDepth)
-            return;
-        var run = await store.GetRunAsync(workflowRunId, cancellationToken)
-            .ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
-                $"Workflow '{workflowRunId:D}' does not exist.");
-        if (IsTerminal(run.Status))
-            return;
-        if (run.Status == WorkflowStatus.RollingBack)
-        {
-            await ResumeRollbackRestartAsync(
-                workflowRunId,
-                cancellationToken).ConfigureAwait(false);
-            return;
-        }
-        var now = timeProvider.GetUtcNow();
-        var leaseGeneration = await store.TryClaimRunAsync(
-                workflowRunId,
-                ownerId,
-                now,
-                now + options.LeaseDuration,
-                cancellationToken).ConfigureAwait(false);
-        if (leaseGeneration is null)
-        {
-            return;
-        }
-        if (run.Deadline is { } deadline && now > deadline)
-        {
-            await store.FailRunAsync(
-                workflowRunId,
-                ownerId,
-                WorkflowError.FromException(
-                    new TimeoutException(
-                        $"Workflow '{workflowRunId:D}' exceeded its deadline of {deadline:O}."),
-                    now),
-                now,
-                CancellationToken.None).ConfigureAwait(false);
-            NotifyEventAppended(workflowRunId);
-            return;
-        }
-
-        using var runCancellation = CancellationTokenSource
-            .CreateLinkedTokenSource(cancellationToken);
-        if (!runningCancellations.TryAdd(workflowRunId, runCancellation))
-        {
-            await store.ReleaseRunLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow(),
-                cancellationToken).ConfigureAwait(false);
-            return;
-        }
-
-        await using var renewal = new LeaseRenewal(
-            timeProvider,
-            options.LeaseRenewalInterval,
-            token => store.RenewRunLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow() + options.LeaseDuration,
-                token));
-        try
-        {
-            if (!registry.TryGet(
-                    run.WorkflowName,
-                    run.WorkflowVersion,
-                    out var registration))
-            {
-                throw new WorkflowDefinitionUnavailableException(
-                    run.WorkflowName,
-                    run.WorkflowVersion);
-            }
-            ValidateRunTypes(run, registration!);
-            var context = new WorkflowContext(
-                workflowRunId,
-                store,
-                ownerId,
-                options,
-                serializerOptions,
-                timeProvider,
-                leaseGeneration.Value,
-                runCancellation.Token,
-                eventPublisher,
-                executeChildRun: (childId, childCancellation) =>
-                    ExecuteCoreAsync(
-                        childId,
-                        childCancellation,
-                        depth + 1),
-                onEventAppended: NotifyEventAppended);
-            logger.LogInformation(
-                "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",
-                workflowRunId,
-                run.WorkflowName,
-                run.WorkflowVersion);
-            var outputJson = await registration!.ExecuteAsync(
-                context,
-                run.InputJson ?? "null",
-                serializerOptions,
-                runCancellation.Token).ConfigureAwait(false);
-            await store.CompleteRunAsync(
-                workflowRunId,
-                ownerId,
-                outputJson,
-                SerializationIdentity.TypeId(registration.OutputType),
-                timeProvider.GetUtcNow(),
-                CancellationToken.None).ConfigureAwait(false);
-            NotifyEventAppended(workflowRunId);
-            logger.LogInformation(
-                "Completed workflow {WorkflowRunId}.",
-                workflowRunId);
-        }
-        catch (OperationCanceledException) when (runCancellation.IsCancellationRequested)
-        {
-            var current = await store.GetRunAsync(
-                workflowRunId,
-                CancellationToken.None).ConfigureAwait(false);
-            if (current?.Status != WorkflowStatus.Cancelled)
-            {
-                await store.ReleaseRunLeaseAsync(
-                    workflowRunId,
-                    ownerId,
-                    timeProvider.GetUtcNow(),
-                    CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-        catch (Exception exception)
-        {
-            var current = await store.GetRunAsync(
-                workflowRunId,
-                CancellationToken.None).ConfigureAwait(false);
-            if (current?.Status == WorkflowStatus.Running)
-            {
-                await store.FailRunAsync(
-                    workflowRunId,
-                    ownerId,
-                    WorkflowError.FromException(
-                        exception,
-                        timeProvider.GetUtcNow()),
-                    timeProvider.GetUtcNow(),
-                    CancellationToken.None).ConfigureAwait(false);
-                NotifyEventAppended(workflowRunId);
-            }
-            logger.LogError(
-                exception,
-                "Workflow {WorkflowRunId} failed.",
-                workflowRunId);
-        }
-        finally
-        {
-            runningCancellations.TryRemove(workflowRunId, out _);
-        }
-    }
-
     /// <summary>Recovers expired leases and executes every currently runnable run.</summary>
-    public async Task<int> RunAvailableAsync(
-        CancellationToken cancellationToken = default)
-    {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
-        await RecoverExpiredLeasesIfDueAsync(cancellationToken).ConfigureAwait(false);
-        var ids = await store.GetRunnableRunIdsAsync(
-            timeProvider.GetUtcNow(),
-            options.ScanBatchSize,
-            cancellationToken).ConfigureAwait(false);
-        using var concurrency = new SemaphoreSlim(
-            options.MaxConcurrentWorkflows,
-            options.MaxConcurrentWorkflows);
-        await Task.WhenAll(ids.Select(async id =>
-        {
-            await concurrency.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
-            {
-                await ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                concurrency.Release();
-            }
-        })).ConfigureAwait(false);
-        return ids.Count;
-    }
+    public Task<int> RunAvailableAsync(
+        CancellationToken cancellationToken = default) =>
+        scanner.RunAvailableAsync(cancellationToken);
 
     /// <summary>Persists cancellation and signals an active local execution.</summary>
     public async Task CancelAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await store.CancelRunAsync(
             workflowRunId,
             timeProvider.GetUtcNow(),
@@ -362,7 +246,7 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.GetRunAsync(workflowRunId, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -372,7 +256,7 @@ public sealed class WorkflowEngine
         RunQuery query,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.GetRunsAsync(query, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -383,7 +267,7 @@ public sealed class WorkflowEngine
         object? metadata,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var metadataJson = metadata is null
             ? null
             : JsonSerializer.Serialize(metadata, serializerOptions);
@@ -404,7 +288,7 @@ public sealed class WorkflowEngine
         IReadOnlyList<WorkflowStatus>? statuses = null,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.PurgeRunsAsync(
             olderThan,
             statuses,
@@ -423,7 +307,7 @@ public sealed class WorkflowEngine
         StepRestartMode mode = StepRestartMode.Dependents,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.PlanRestartAsync(
             workflowRunId,
             stepKey,
@@ -442,7 +326,7 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.GetCompensationsAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false);
@@ -458,7 +342,7 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.GetStepDependenciesAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false);
@@ -483,7 +367,7 @@ public sealed class WorkflowEngine
         RestartStepOptions options,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         if (runningCancellations.TryGetValue(
                 workflowRunId,
                 out var runningCancellation))
@@ -528,7 +412,7 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.PlanRollbackAsync(
             workflowRunId,
             null,
@@ -552,7 +436,7 @@ public sealed class WorkflowEngine
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(targetStepKey);
         ArgumentNullException.ThrowIfNull(options);
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.PlanRollbackAsync(
             workflowRunId,
             targetStepKey,
@@ -579,18 +463,21 @@ public sealed class WorkflowEngine
     /// claimable by a later rollback attempt. Already-completed compensations
     /// are reused, so rollback is safe to repeat (at-least-once).
     /// </summary>
-    public Task RollbackAsync(
+    public async Task RollbackAsync(
         Guid workflowRunId,
         string? actor = null,
         string? reason = null,
-        CancellationToken cancellationToken = default) =>
-        RollbackCoreAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await rollbackCoordinator.RollbackAsync(
             workflowRunId,
             null,
             RollbackBoundary.AfterStep,
             actor,
             reason,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>
     /// Rolls back to <paramref name="stepKey"/>.
@@ -598,7 +485,7 @@ public sealed class WorkflowEngine
     /// operation intact and compensates only its transitive dependents;
     /// <see cref="RollbackBoundary.BeforeStep"/> compensates the target too.
     /// </summary>
-    public Task RollbackToStepAsync(
+    public async Task RollbackToStepAsync(
         Guid workflowRunId,
         string stepKey,
         RollbackBoundary boundary,
@@ -607,13 +494,14 @@ public sealed class WorkflowEngine
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
-        return RollbackCoreAsync(
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await rollbackCoordinator.RollbackAsync(
             workflowRunId,
             stepKey,
             boundary,
             actor,
             reason,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -629,642 +517,12 @@ public sealed class WorkflowEngine
         string? reason = null,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
-        var run = await store.GetRunAsync(
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await rollbackAndRestart.RollbackAndRestartAsync(
             workflowRunId,
-            cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
-                $"Workflow '{workflowRunId:D}' does not exist.");
-        if (run.Status == WorkflowStatus.Compensated)
-            return;
-        if (run.Status == WorkflowStatus.RollingBack)
-            return;
-
-        var operationId = Guid.NewGuid();
-        var now = timeProvider.GetUtcNow();
-        await store.CreateOperationAsync(
-            new WorkflowRunOperation
-            {
-                OperationId = operationId,
-                WorkflowRunId = workflowRunId,
-                OperationType = "rollback-and-restart",
-                Status = WorkflowOperationStatus.Requested,
-                PayloadJson = JsonSerializer.Serialize(
-                    new { actor, reason },
-                    serializerOptions),
-                CreatedAt = now,
-                UpdatedAt = now,
-            },
+            actor,
+            reason,
             cancellationToken).ConfigureAwait(false);
-
-        var generation = await store.ClaimRollbackAndRestartAsync(
-            workflowRunId,
-            ownerId,
-            now,
-            now + options.LeaseDuration,
-            cancellationToken).ConfigureAwait(false);
-        if (generation is null)
-            return;
-
-        await using var renewal = new LeaseRenewal(
-            timeProvider,
-            options.LeaseRenewalInterval,
-            token => store.RenewRollbackAndRestartLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow() + options.LeaseDuration,
-                token));
-        try
-        {
-            await ContinueRollbackRestartAsync(
-                workflowRunId,
-                operationId,
-                generation.Value,
-                actor,
-                reason,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            await store.ReleaseRollbackAndRestartLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow(),
-                CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
-        catch (Exception exception)
-        {
-            try
-            {
-                await store.FailRollbackAndRestartAsync(
-                    workflowRunId,
-                    ownerId,
-                    generation.Value,
-                    operationId,
-                    WorkflowError.FromException(
-                        exception,
-                        timeProvider.GetUtcNow()),
-                    timeProvider.GetUtcNow(),
-                    CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception failureException)
-            {
-                logger.LogWarning(
-                    failureException,
-                    "Could not record rollback-and-restart failure for workflow {WorkflowRunId}.",
-                    workflowRunId);
-            }
-            logger.LogError(
-                exception,
-                "Rollback-and-restart of workflow {WorkflowRunId} failed.",
-                workflowRunId);
-            throw;
-        }
-    }
-
-    private async Task ContinueRollbackRestartAsync(
-        Guid workflowRunId,
-        Guid operationId,
-        long generation,
-        string? actor,
-        string? reason,
-        CancellationToken cancellationToken)
-    {
-        var run = await store.GetRunAsync(
-            workflowRunId,
-            cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
-                $"Workflow '{workflowRunId:D}' does not exist.");
-        var operation = await store.GetActiveOperationAsync(
-            workflowRunId,
-            cancellationToken).ConfigureAwait(false);
-        if (operation is null || operation.OperationId != operationId)
-            return;
-
-        if (operation.Status == WorkflowOperationStatus.Requested ||
-            operation.Status == WorkflowOperationStatus.Compensating)
-        {
-            var now = timeProvider.GetUtcNow();
-            await store.UpdateOperationStatusAsync(
-                operationId,
-                WorkflowOperationStatus.Compensating,
-                now,
-                cancellationToken).ConfigureAwait(false);
-            var plan = await store.PlanRollbackAsync(
-                workflowRunId,
-                null,
-                RollbackBoundary.AfterStep,
-                cancellationToken).ConfigureAwait(false);
-            var compensateKeys = plan.Steps
-                .Where(step => step.Action == RollbackAction.Compensate)
-                .Select(step => step.StepKey)
-                .ToList();
-            await ExecuteRollbackCompensationsAsync(
-                run,
-                compensateKeys,
-                generation,
-                actor,
-                reason,
-                cancellationToken).ConfigureAwait(false);
-            await store.UpdateOperationStatusAsync(
-                operationId,
-                WorkflowOperationStatus.Rewinding,
-                timeProvider.GetUtcNow(),
-                cancellationToken).ConfigureAwait(false);
-        }
-
-        var steps = await store.GetStepsAsync(
-            workflowRunId,
-            cancellationToken).ConfigureAwait(false);
-        var invalidateStepKeys = steps
-            .Select(step => step.StepKey)
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-        var now2 = timeProvider.GetUtcNow();
-        await store.UpdateOperationStatusAsync(
-            operationId,
-            WorkflowOperationStatus.Restarting,
-            now2,
-            cancellationToken).ConfigureAwait(false);
-        var completed = await store.CompleteRollbackAndRestartAsync(
-            workflowRunId,
-            ownerId,
-            generation,
-            operationId,
-            invalidateStepKeys,
-            now2,
-            CancellationToken.None).ConfigureAwait(false);
-        if (!completed)
-        {
-            throw new WorkflowStateException(
-                "Rollback-and-restart lost its run claim before the run could be restarted.");
-        }
-        NotifyEventAppended(workflowRunId);
-        logger.LogInformation(
-            "Rolled back and restarted workflow {WorkflowRunId} ({InvalidatedCount} step(s) rewound).",
-            workflowRunId,
-            invalidateStepKeys.Count);
-    }
-
-    private async Task ResumeRollbackRestartAsync(
-        Guid workflowRunId,
-        CancellationToken cancellationToken)
-    {
-        var operation = await store.GetActiveOperationAsync(
-            workflowRunId,
-            cancellationToken).ConfigureAwait(false);
-        if (operation is null)
-            return;
-
-        var now = timeProvider.GetUtcNow();
-        var generation = await store.ClaimRollbackAndRestartAsync(
-            workflowRunId,
-            ownerId,
-            now,
-            now + options.LeaseDuration,
-            cancellationToken).ConfigureAwait(false);
-        if (generation is null)
-            return;
-
-        await using var renewal = new LeaseRenewal(
-            timeProvider,
-            options.LeaseRenewalInterval,
-            token => store.RenewRollbackAndRestartLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow() + options.LeaseDuration,
-                token));
-        try
-        {
-            var payload = DeserializeRollbackRestartPayload(operation.PayloadJson);
-            await ContinueRollbackRestartAsync(
-                workflowRunId,
-                operation.OperationId,
-                generation.Value,
-                payload?.Actor,
-                payload?.Reason,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            await store.ReleaseRollbackAndRestartLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow(),
-                CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
-        catch (Exception exception)
-        {
-            try
-            {
-                await store.FailRollbackAndRestartAsync(
-                    workflowRunId,
-                    ownerId,
-                    generation.Value,
-                    operation.OperationId,
-                    WorkflowError.FromException(
-                        exception,
-                        timeProvider.GetUtcNow()),
-                    timeProvider.GetUtcNow(),
-                    CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception failureException)
-            {
-                logger.LogWarning(
-                    failureException,
-                    "Could not record rollback-and-restart failure for workflow {WorkflowRunId}.",
-                    workflowRunId);
-            }
-            logger.LogError(
-                exception,
-                "Resuming rollback-and-restart of workflow {WorkflowRunId} failed.",
-                workflowRunId);
-            throw;
-        }
-    }
-
-    private RollbackRestartPayload? DeserializeRollbackRestartPayload(
-        string? payloadJson)
-    {
-        if (string.IsNullOrWhiteSpace(payloadJson))
-            return null;
-        return JsonSerializer.Deserialize<RollbackRestartPayload>(
-            payloadJson,
-            serializerOptions);
-    }
-
-    private sealed record RollbackRestartPayload(string? Actor, string? Reason);
-
-    private async Task RollbackCoreAsync(
-        Guid workflowRunId,
-        string? targetStepKey,
-        RollbackBoundary boundary,
-        string? actor,
-        string? reason,
-        CancellationToken cancellationToken)
-    {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
-        var run = await store.GetRunAsync(
-            workflowRunId,
-            cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
-                $"Workflow '{workflowRunId:D}' does not exist.");
-        if (run.Status == WorkflowStatus.Compensated)
-            return;
-
-        var plan = await store.PlanRollbackAsync(
-            workflowRunId,
-            targetStepKey,
-            boundary,
-            cancellationToken).ConfigureAwait(false);
-        var compensateKeys = plan.Steps
-            .Where(step => step.Action == RollbackAction.Compensate)
-            .Select(step => step.StepKey)
-            .ToList();
-
-        var now = timeProvider.GetUtcNow();
-        var generation = await store.ClaimRollbackAsync(
-            workflowRunId,
-            ownerId,
-            now,
-            now + options.LeaseDuration,
-            cancellationToken).ConfigureAwait(false);
-        if (generation is null)
-            return;
-
-        await using var renewal = new LeaseRenewal(
-            timeProvider,
-            options.LeaseRenewalInterval,
-            token => store.RenewRollbackLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow() + options.LeaseDuration,
-                token));
-        try
-        {
-            await ExecuteRollbackCompensationsAsync(
-                run,
-                compensateKeys,
-                generation.Value,
-                actor,
-                reason,
-                cancellationToken).ConfigureAwait(false);
-
-            var now2 = timeProvider.GetUtcNow();
-            var completed = await store.CompleteRollbackAsync(
-                workflowRunId,
-                ownerId,
-                generation.Value,
-                now2,
-                CancellationToken.None).ConfigureAwait(false);
-            if (!completed)
-            {
-                throw new WorkflowStateException(
-                    "Rollback lost its run claim before the run could be marked compensated.");
-            }
-            await store.AppendEventAsync(
-                workflowRunId,
-                WorkflowEventTypes.WorkflowCompensated,
-                JsonSerializer.Serialize(
-                    new
-                    {
-                        actor,
-                        reason,
-                        compensatedSteps = compensateKeys.Count
-                    },
-                    serializerOptions),
-                cancellationToken: CancellationToken.None).ConfigureAwait(false);
-            NotifyEventAppended(workflowRunId);
-            logger.LogInformation(
-                "Compensated workflow {WorkflowRunId} ({CompensatedCount} step(s)).",
-                workflowRunId,
-                compensateKeys.Count);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            await store.ReleaseRollbackLeaseAsync(
-                workflowRunId,
-                ownerId,
-                timeProvider.GetUtcNow(),
-                CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
-        catch (Exception exception)
-        {
-            try
-            {
-                await store.FailRollbackAsync(
-                    workflowRunId,
-                    ownerId,
-                    generation.Value,
-                    WorkflowError.FromException(
-                        exception,
-                        timeProvider.GetUtcNow()),
-                    timeProvider.GetUtcNow(),
-                    CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception failureException)
-            {
-                logger.LogWarning(
-                    failureException,
-                    "Could not record rollback failure for workflow {WorkflowRunId}.",
-                    workflowRunId);
-            }
-            logger.LogError(
-                exception,
-                "Rollback of workflow {WorkflowRunId} failed.",
-                workflowRunId);
-            throw;
-        }
-    }
-
-    private async Task ExecuteRollbackCompensationsAsync(
-        WorkflowRun run,
-        IReadOnlyList<string> compensateKeys,
-        long generation,
-        string? actor,
-        string? reason,
-        CancellationToken cancellationToken)
-    {
-        if (compensateKeys.Count == 0)
-            return;
-        var steps = (await store.GetStepsAsync(
-            run.Id,
-            cancellationToken).ConfigureAwait(false))
-            .ToDictionary(
-                step => step.StepKey,
-                StringComparer.Ordinal);
-        var rows = await store.GetCompensationsAsync(
-            run.Id,
-            cancellationToken).ConfigureAwait(false);
-        var byKey = new Dictionary<string, WorkflowStepCompensation>(
-            StringComparer.Ordinal);
-        foreach (var key in compensateKeys)
-        {
-            var row = rows
-                .Where(item =>
-                    string.Equals(item.StepKey, key, StringComparison.Ordinal) &&
-                    item.InputJson is not null &&
-                    item.Status is CompensationStatus.Pending or
-                        CompensationStatus.Failed)
-                .OrderByDescending(item => item.Revision)
-                .FirstOrDefault();
-            if (row is not null)
-                byKey[key] = row;
-        }
-        if (byKey.Count == 0)
-            return;
-        if (!registry.TryGet(
-                run.WorkflowName,
-                run.WorkflowVersion,
-                out var registration))
-        {
-            throw new WorkflowDefinitionUnavailableException(
-                run.WorkflowName,
-                run.WorkflowVersion);
-        }
-        var context = new WorkflowContext(
-            run.Id,
-            store,
-            ownerId,
-            options,
-            serializerOptions,
-            timeProvider,
-            generation,
-            cancellationToken,
-            eventPublisher,
-            executeChildRun: null,
-            replaySteps: steps,
-            rollbackCompensations: byKey,
-            onEventAppended: NotifyEventAppended);
-        await registration!.ExecuteAsync(
-            context,
-            run.InputJson ?? "null",
-            serializerOptions,
-            cancellationToken).ConfigureAwait(false);
-        var invocations = context.RollbackInvocations;
-        foreach (var key in compensateKeys)
-        {
-            var invocation = invocations.FirstOrDefault(item =>
-                string.Equals(
-                    item.StepKey,
-                    key,
-                    StringComparison.Ordinal));
-            if (invocation is null)
-                continue;
-            await ExecuteCompensationAsync(
-                invocation,
-                generation,
-                actor,
-                reason,
-                cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    private async Task ExecuteCompensationAsync(
-        WorkflowContext.CompensationInvocation invocation,
-        long generation,
-        string? actor,
-        string? reason,
-        CancellationToken cancellationToken)
-    {
-        var compensation = invocation.Compensation;
-        var retryPolicy = DeserializeRetryPolicy(compensation.RetryPolicyJson);
-        while (true)
-        {
-            var now = timeProvider.GetUtcNow();
-            var claim = await store.ClaimCompensationAsync(
-                compensation.WorkflowRunId,
-                invocation.StepKey,
-                ownerId,
-                generation,
-                now,
-                now + options.LeaseDuration,
-                actor,
-                reason,
-                cancellationToken).ConfigureAwait(false);
-            if (claim is null)
-                return;
-
-            await store.AppendEventAsync(
-                claim.WorkflowRunId,
-                WorkflowEventTypes.CompensationStarted,
-                null,
-                claim.StepKey,
-                claim.Attempt,
-                cancellationToken).ConfigureAwait(false);
-            NotifyEventAppended(claim.WorkflowRunId);
-
-            using var timeoutCancellation = compensation.ExecutionTimeout is { } executionTimeout
-                ? new CancellationTokenSource(executionTimeout, timeProvider)
-                : null;
-            using var executionCancellation = timeoutCancellation is null
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                : CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    timeoutCancellation.Token);
-            try
-            {
-                await invocation.Execute(executionCancellation.Token)
-                    .ConfigureAwait(false);
-                await store.CompleteCompensationAsync(
-                    claim.Id,
-                    ownerId,
-                    null,
-                    timeProvider.GetUtcNow(),
-                    cancellationToken).ConfigureAwait(false);
-                await store.AppendEventAsync(
-                    claim.WorkflowRunId,
-                    WorkflowEventTypes.CompensationCompleted,
-                    null,
-                    claim.StepKey,
-                    claim.Attempt,
-                    cancellationToken).ConfigureAwait(false);
-                NotifyEventAppended(claim.WorkflowRunId);
-                return;
-            }
-            catch (OperationCanceledException) when (
-                timeoutCancellation?.IsCancellationRequested == true &&
-                !cancellationToken.IsCancellationRequested)
-            {
-                var timeout = new TimeoutException(
-                    $"Compensation for step '{claim.StepKey}' exceeded its execution timeout.");
-                var retryAt = ScheduleCompensationRetry(claim, retryPolicy);
-                await RecordCompensationFailureAsync(
-                    claim,
-                    timeout,
-                    retryAt).ConfigureAwait(false);
-                if (retryAt is null)
-                {
-                    throw new RollbackFailedException(
-                        $"Compensation for step '{claim.StepKey}' failed permanently after {claim.Attempt} attempt(s).",
-                        timeout);
-                }
-                await WaitUntilAsync(retryAt.Value, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                var retryAt = ScheduleCompensationRetry(claim, retryPolicy);
-                await RecordCompensationFailureAsync(
-                    claim,
-                    exception,
-                    retryAt).ConfigureAwait(false);
-                if (retryAt is null)
-                {
-                    throw new RollbackFailedException(
-                        $"Compensation for step '{claim.StepKey}' failed permanently after {claim.Attempt} attempt(s).",
-                        exception);
-                }
-                await WaitUntilAsync(retryAt.Value, cancellationToken).ConfigureAwait(false);
-            }
-        }
-    }
-
-    private DateTimeOffset? ScheduleCompensationRetry(
-        WorkflowStepCompensation claim,
-        RetryPolicy retryPolicy) =>
-        claim.Attempt < retryPolicy.MaxAttempts
-            ? timeProvider.GetUtcNow() + retryPolicy.DelayAfter(claim.Attempt)
-            : (DateTimeOffset?)null;
-
-    private async Task RecordCompensationFailureAsync(
-        WorkflowStepCompensation claim,
-        Exception exception,
-        DateTimeOffset? retryAt)
-    {
-        var now = timeProvider.GetUtcNow();
-        var error = WorkflowError.FromException(exception, now, claim.Attempt);
-        await store.FailCompensationAsync(
-            claim.Id,
-            ownerId,
-            error,
-            retryAt,
-            now,
-            CancellationToken.None).ConfigureAwait(false);
-        await store.AppendEventAsync(
-                claim.WorkflowRunId,
-                WorkflowEventTypes.CompensationFailed,
-                JsonSerializer.Serialize(error, serializerOptions),
-                claim.StepKey,
-                claim.Attempt,
-                CancellationToken.None).ConfigureAwait(false);
-        NotifyEventAppended(claim.WorkflowRunId);
-    }
-
-    private RetryPolicy DeserializeRetryPolicy(string? retryPolicyJson)
-    {
-        if (retryPolicyJson is null)
-            return new RetryPolicy();
-        try
-        {
-            return JsonSerializer.Deserialize<RetryPolicy>(
-                    retryPolicyJson,
-                    serializerOptions) ?? new RetryPolicy();
-        }
-        catch (JsonException)
-        {
-            return new RetryPolicy();
-        }
-    }
-
-    private async Task WaitUntilAsync(
-        DateTimeOffset availableAt,
-        CancellationToken cancellationToken)
-    {
-        while (true)
-        {
-            var delay = availableAt - timeProvider.GetUtcNow();
-            if (delay <= TimeSpan.Zero)
-                return;
-            await Task.Delay(delay, timeProvider, cancellationToken)
-                .ConfigureAwait(false);
-        }
     }
 
     /// <summary>
@@ -1280,7 +538,7 @@ public sealed class WorkflowEngine
         object? data = null,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
         var dataJson = data is null
             ? null
@@ -1300,7 +558,7 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.GetStepsAsync(workflowRunId, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -1311,7 +569,7 @@ public sealed class WorkflowEngine
         int limit = 100,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         if (afterSequence < 0)
             throw new ArgumentOutOfRangeException(nameof(afterSequence));
         if (limit is < 1 or > 1000)
@@ -1334,7 +592,7 @@ public sealed class WorkflowEngine
         RunProgressOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var progressOptions = options ?? new RunProgressOptions();
         progressOptions.Validate();
         var runs = await store.GetRunSubtreeAsync(
@@ -1396,7 +654,7 @@ public sealed class WorkflowEngine
         DateTimeOffset? deadline = null,
         CancellationToken cancellationToken = default)
     {
-        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         while (true)
         {
             if (deadline is { } waitDeadline &&
@@ -1483,7 +741,7 @@ public sealed class WorkflowEngine
             }
             var run = await GetRunAsync(workflowRunId, cancellationToken)
                 .ConfigureAwait(false);
-            if (run is null || IsTerminal(run.Status) && events.Count == 0)
+            if (run is null || RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0)
             {
                 eventChannels.TryRemove(workflowRunId, out _);
                 yield break;
@@ -1519,60 +777,6 @@ public sealed class WorkflowEngine
             channel.Writer.TryWrite(0);
         }
     }
-
-    private async ValueTask RecoverExpiredLeasesIfDueAsync(
-        CancellationToken cancellationToken)
-    {
-        var now = timeProvider.GetUtcNow();
-        var nextRecovery = lastLeaseRecovery + options.LeaseRecoveryInterval;
-        if (now < nextRecovery)
-            return;
-        lastLeaseRecovery = now;
-        await store.RecoverExpiredLeasesAsync(
-            now,
-            cancellationToken).ConfigureAwait(false);
-    }
-
-    private async ValueTask EnsureInitializedAsync(
-        CancellationToken cancellationToken)
-    {
-        if (initialized)
-            return;
-        await initializationLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            if (initialized)
-                return;
-            await store.InitializeAsync(cancellationToken).ConfigureAwait(false);
-            await store.RecoverExpiredLeasesAsync(
-                timeProvider.GetUtcNow(),
-                cancellationToken).ConfigureAwait(false);
-            lastLeaseRecovery = timeProvider.GetUtcNow();
-            initialized = true;
-        }
-        finally
-        {
-            initializationLock.Release();
-        }
-    }
-
-    private static void ValidateRunTypes(
-        WorkflowRun run,
-        IWorkflowRegistration registration)
-    {
-        var inputType = SerializationIdentity.TypeId(registration.InputType);
-        var outputType = SerializationIdentity.TypeId(registration.OutputType);
-        if (!string.Equals(run.InputType, inputType, StringComparison.Ordinal) ||
-            !string.Equals(run.OutputType, outputType, StringComparison.Ordinal))
-        {
-            throw new WorkflowSerializationException(
-                $"Stored workflow type contract does not match registered workflow '{run.WorkflowName}' version '{run.WorkflowVersion}'.");
-        }
-    }
-
-    private static bool IsTerminal(WorkflowStatus status) =>
-        status is WorkflowStatus.Completed or WorkflowStatus.Failed or
-            WorkflowStatus.Cancelled or WorkflowStatus.Compensated;
 
     private static JsonSerializerOptions CreateSerializerOptions()
     {

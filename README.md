@@ -4,16 +4,18 @@
 [![NuGet Penghou.Zhinu](https://img.shields.io/nuget/vpre/Penghou.Zhinu)](https://www.nuget.org/packages/Penghou.Zhinu)
 [![NuGet Penghou.Zhinu.Sqlite](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Sqlite)](https://www.nuget.org/packages/Penghou.Zhinu.Sqlite)
 [![NuGet Penghou.Zhinu.Hosting](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Hosting)](https://www.nuget.org/packages/Penghou.Zhinu.Hosting)
+[![NuGet Penghou.Zhinu.Agents](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Agents)](https://www.nuget.org/packages/Penghou.Zhinu.Agents)
 [![License](https://img.shields.io/github/license/jenolaszlo-sketch/penghou-zhinu)](LICENSE)
 
 Penghou.Zhinu is a lightweight, embedded durable workflow engine for .NET. It
-persists workflow and step state in SQLite so applications can resume after
-crashes or restarts without operating a workflow server, message broker,
+persists workflow and step state in SQLite so applications can recover from
+crashes or restarts without running a separate workflow server, message broker,
 PostgreSQL, Redis, or Docker infrastructure.
 
-Zhinu is designed for AI workflows, coding agents, developer tools, local
-automation, batch processing, and other applications containing expensive
-operations that should not be repeated after their results are committed.
+Zhinu is designed for durable, replay-safe orchestration of AI workflows,
+coding agents, developer tools, local automation, batch processing, and other
+workloads where expensive or side-effecting operations should not be repeated
+after their results are committed.
 
 ## Framework support
 
@@ -24,18 +26,21 @@ All packages target **.NET 8.0** and **.NET 10.0**.
 | `Penghou.Zhinu` | Host-independent workflow engine, contracts, retries, durable events, and inspection | net8.0, net10.0 |
 | `Penghou.Zhinu.Sqlite` | Transactional SQLite state, leases, recovery, and schema management | net8.0, net10.0 |
 | `Penghou.Zhinu.Hosting` | Optional `Microsoft.Extensions.Hosting` execution loop and DI registration | net8.0, net10.0 |
+| `Penghou.Zhinu.Agents` | Optional Microsoft Agent Framework integration and durable SQLite checkpointing | net8.0, net10.0 |
 
 ## Install
 
+Install the SQLite store, then add the optional packages you need:
+
 ```bash
 dotnet add package Penghou.Zhinu.Sqlite --prerelease
-dotnet add package Penghou.Zhinu.Hosting --prerelease
-dotnet add package Penghou.Zhinu.Agents --prerelease
+dotnet add package Penghou.Zhinu.Hosting --prerelease   # optional
+dotnet add package Penghou.Zhinu.Agents --prerelease    # optional
 ```
 
-Hosting is optional. Direct construction only requires the core and chosen
-store implementation. Agents (Microsoft Agent Framework integration) is
-optional.
+Direct construction requires only the core engine and a store implementation.
+`Penghou.Zhinu.Hosting` adds the hosted execution loop and DI registration.
+`Penghou.Zhinu.Agents` adds Microsoft Agent Framework integration.
 
 ## Hosted quick start
 
@@ -119,8 +124,8 @@ var result = await engine.RunAsync<CodeRequest, CodeResult>(
     request);
 ```
 
-Call `RunAvailableAsync` on application startup when not using the hosting
-package. It recovers expired leases and executes currently runnable workflows.
+When not using the hosting package, call `RunAvailableAsync` during application
+startup. It recovers expired leases and executes currently runnable workflows.
 
 ## Serialization
 
@@ -197,18 +202,14 @@ await workflow.StepAsync(
 - `StartAsync`/`RunAsync` accept an optional run-level `deadline`. A run claimed
   after its deadline is failed with a timeout error instead of executing,
   which bounds how long a stuck or orphaned run can hold resources.
-- Expired leases are swept automatically. Recovery runs once at engine
-  initialization and then at most every `ZhinuOptions.LeaseRecoveryInterval`
-  (default 30 seconds), so a background scan loop does not issue a recovery
-  write on every poll tick.
 
 ## Polling and long-running loops
 
 `DelayAsync` is a one-shot step: once it completes, re-claiming the same key
 returns the committed result immediately, so a loop must not reuse one delay
-key per iteration. The durable pattern for a poll loop is a single step whose
-delegate owns the whole loop with an ordinary `Task.Delay` inside. Only the
-work that must never replay is split out as a durable step:
+key per iteration. A durable polling pattern is to keep the polling loop inside a single step
+and use an ordinary `Task.Delay` between status checks. Split out only work that
+must not replay as its own durable step:
 
 ```csharp
 var handle = await workflow.StepAsync(
@@ -243,13 +244,13 @@ var output = await workflow.StepAsync(
 `submit` is durable and never re-executes after its result is committed. `poll`
 holds a renewed lease for the whole wait; if the process dies mid-poll, the
 step is re-acquired on recovery and re-runs its loop from the same committed
-handle — safe because status reads are idempotent. Call `EmitAsync` to record
-durable, caller-visible progress that survives reconnection.
+handle, which is safe because status reads are idempotent. Call `EmitAsync` to
+record durable, caller-visible progress that survives reconnection.
 
 ## Progress and inspection
 
-State transitions and their diagnostic events commit transactionally. Current
-state remains authoritative; events are not used for execution replay.
+Engine state transitions and their diagnostic events commit transactionally.
+Current state remains authoritative; events are not used for execution replay.
 
 ```csharp
 var run = await engine.GetRunAsync(runId);
@@ -271,10 +272,7 @@ await workflow.EmitAsync(
 
 Emitted events carry serialized data and survive restarts, so consumers can
 reconnect after their last sequence without requiring Redis or another
-messaging service. `SubscribeAsync` is notified in-process when events are
-committed by this engine, so subscribers wake immediately instead of polling
-the store on every `PollInterval`; the poll interval remains a fallback for
-events appended by other processes or before the subscription started.
+messaging service.
 
 **Atomicity caveat:** `EmitAsync` appends the event with its own store write,
 not in the same transaction as the step that emitted it. If the process exits
@@ -291,7 +289,7 @@ their last sequence.
 
 Inputs and outputs are not copied into progress events by default.
 
-A single call returns a point-in-time progress snapshot of a run and its whole
+A single call returns a point-in-time progress snapshot of a run and its entire
 child-run subtree: the run, its durable steps, its recent events, and the same
 shape recursively for every child started with `StartChildAsync`:
 
@@ -322,7 +320,7 @@ var page = await engine.GetRunsAsync(new RunQuery
 });
 ```
 
-Attach caller metadata (correlation ids, owners, tags) when starting, and
+Attach caller metadata (correlation IDs, owners, tags) when starting, and
 update it later. Metadata never participates in idempotency:
 
 ```csharp
@@ -350,7 +348,7 @@ record.
 ## Parallel durable steps
 
 Run one durable step per item in parallel with `FanOutAsync`. Each item is
-independently durable — after a restart, completed items are reused and only
+independently durable. After a restart, completed items are reused and only
 unfinished items re-run:
 
 ```csharp
@@ -434,11 +432,11 @@ await engine.RestartStepAsync(runId, "encode.video",
 steps on the next execution. The prefix is reconstructed from committed results
 (its delegates are not re-run). Restart modes:
 
-- `StepRestartMode.Dependents` (default) — invalidates the target step and its
+- `StepRestartMode.Dependents` (default): invalidates the target step and its
   **transitive durable dependents**, reusing unrelated branches.
-- `StepRestartMode.StepOnly` — invalidates just the target, explicitly opting
+- `StepRestartMode.StepOnly`: invalidates just the target, explicitly opting
   out of dependent invalidation.
-- `StepRestartMode.CreationOrder` — the legacy behavior: the target plus every
+- `StepRestartMode.CreationOrder`: the legacy behavior, invalidating the target plus every
   step created at or after it, useful for graphs built before dependencies
   existed or for a coarse invalidation.
 
@@ -447,7 +445,7 @@ bumped, the run resets, and every invalidated step gets a fresh **execution
 revision** (a new `Pending` row; the previous revision is preserved, never
 deleted, so history and audit remain intact). If the run is currently executing
 in this process, that execution is cancelled first (best-effort). Restarting a
-run that another process is executing is not supported — cancel it there first.
+run that another process is executing is not supported; cancel it there first.
 
 Because step rows carry the generation in effect when they were claimed, any
 worker that held a lease before the restart is **fenced out**: its subsequent
@@ -458,7 +456,7 @@ restart should extend it.
 
 ## Compensations
 
-Steps that mutate the outside world can register a **compensation** — a
+Steps that mutate the outside world can register a **compensation**, a
 delegate that undoes the committed forward result. Registration is a
 first-class parameter of `StepAsync`, kept out of `StepOptions` (which is
 execution policy) and carried internally as part of the step definition:
@@ -472,17 +470,17 @@ var reservation = await context.StepAsync(
         await ReleaseAsync(result, step.IdempotencyKey, ct));
 ```
 
-The compensation receives the **committed forward result** — often the exact
-resource id needed to undo the operation:
+The compensation receives the **committed forward result**, often the exact
+resource ID needed to undo the operation:
 
 ```text
-Create VM ──► VM id = vm-8127 ──► compensation receives vm-8127 ──► Delete VM
+Create VM -> VM ID = vm-8127 -> compensation receives vm-8127 -> Delete VM
 ```
 
 Compensation metadata is persisted **separately** from step revisions, in its
 own table (`workflow_step_compensations`), so forward history and rollback
 history stay independently understandable. Each compensation row carries its
-own lifecycle — status, attempts, retry policy, execution timeout, idempotency
+own lifecycle: status, attempts, retry policy, execution timeout, idempotency
 key, started/completed timestamps, failure, fencing generation, and the
 actor/reason of the rollback it belongs to:
 
@@ -497,11 +495,11 @@ foreach (var c in compensations)
 
 Lifecycle:
 
-- **Pending** — registered when the compensated step is claimed; the committed
+- **Pending**: registered when the compensated step is claimed; the committed
   result is filled in when the forward step completes.
-- **Skipped** — the forward step failed terminally, so there is no committed
+- **Skipped**: the forward step failed terminally, so there is no committed
   result to undo (a scheduled retry re-arms the registration).
-- **Running / Completed / Failed** — reserved for compensation execution.
+- **Running / Completed / Failed**: reserved for compensation execution.
 
 Registration is durable at claim time and never duplicated on replay; a
 restarted step revision registers its own compensation row, so
@@ -530,7 +528,7 @@ attempt.
 
 ### Planning a rollback
 
-`PlanRollbackAsync` resolves — without changing any state — what a rollback
+`PlanRollbackAsync` resolves, without changing any state, what a rollback
 would do to each step and why:
 
 ```csharp
@@ -552,7 +550,7 @@ foreach (var step in plan.Steps)
 `RollbackBoundary.AfterStep` preserves it. A plan entry states what would
 happen (`Compensate` or `Preserve`) and why (`Boundary`, `Dependent`,
 `Ancestor`, or `IndependentBranch`). For example, rolling back `deploy` before
-it with a chain `plan → payment → deploy → tests` plus an independent
+it with a chain `plan -> payment -> deploy -> tests` plus an independent
 `frontend` yields:
 
 ```text
@@ -579,41 +577,10 @@ await engine.RollbackToStepAsync(runId, "payment", RollbackBoundary.BeforeStep);
 A successful rollback moves the run to the terminal `Compensated` state; the
 run's status itself records that its forward history was undone. Rollback of a
 `Completed` or `Failed` run is serialized by a lease, fenced by the run's
-lease generation, and safe to retry: a rollback that fails mid-way (for
+lease generation, and safe to retry: a rollback that fails midway (for
 example a permanently failing compensation) leaves the run `Failed` and
 claimable again, and already-completed compensations are reused rather than
 re-executed.
-
-### Roll back and restart
-
-Sometimes undoing the work is not enough - the workflow should then run
-**forward again** with fresh step revisions. `RollbackAndRestartAsync`
-compensates every compensatable step, rewinds the run to a re-executable
-`Pending` state (inserting a fresh pending revision for every step), and lets
-`ExecuteAsync` (or the background worker) run it forward again:
-
-```csharp
-// Compensate everything, then rewind the run so it re-executes from scratch.
-await engine.RollbackAndRestartAsync(runId, actor: "ops", reason: "revert v2");
-
-// Execute the rewound run forward again (also done automatically by the
-// background worker when the run becomes available).
-await engine.ExecuteAsync(runId);
-```
-
-The restarted run returns to `Completed` with a new output; its step revisions
-continue from where the rewind stopped, so step idempotency keys change and
-downstream systems can deduplicate the re-executed side effects.
-
-Rollback-and-restart is **crash-resumable**. The operation's intent and phase
-are persisted in a `workflow_run_operations` row (`Requested →
-Compensating → Rewinding → Restarting → Completed`), the run is fenced by a
-lease and its generation, and if the process dies mid-operation a later
-`ExecuteAsync` / `RunAvailableAsync` call resumes exactly where it stopped:
-already-completed compensations are reused, and the rewind is atomic. The run
-reports itself as `RollingBack` while the operation is in flight, and a
-rollback-and-restart in progress cannot be cancelled out from under the
-operation.
 
 ## External signals
 
@@ -644,7 +611,7 @@ Semantics to be aware of:
 - `SignalSent` and `SignalDelivered` events are appended atomically with the
   signal, so a delivered signal is always observable.
 - When the wait times out, the run fails with a `TimeoutException` while the
-  wait step stays recorded as waiting — a late signal can still be consumed if
+  wait step stays recorded as waiting; a late signal can still be consumed if
   the step is later restarted.
 - Sending a signal to a finished run buffers it but it is never delivered;
   the `SignalSent` event still records that it was sent.
@@ -666,8 +633,8 @@ var thumbnail = await context.StartChildAsync<VideoRef, Thumbnail>(
 
 - The child is an ordinary run linked via `ParentRunId`, so it shows up in
   queries and is executed by the same machinery (leases, recovery, deadlines).
-- The child's id is **deterministic** — a hash of the parent id and the step
-  key — so replaying the parent reuses the exact same child run instead of
+- The child's ID is **deterministic**: a hash of the parent ID and the step
+  key. Replaying the parent therefore reuses the exact same child run instead of
   creating duplicates, even across a crash between creating the child and
   recording the step.
 - Children execute **inline** by default: the parent's `ExecuteAsync` drives
@@ -684,8 +651,8 @@ var thumbnail = await context.StartChildAsync<VideoRef, Thumbnail>(
 `Penghou.Zhinu.Agents` turns MAF graph workflows into durable Zhinu steps and
 gives MAF checkpointing a thread-safe, restart-surviving SQLite home.
 
-Durable checkpoint store — MAF's built-in file store is single-process and not
-thread-safe; this one lives in the same SQLite database as your runs:
+Durable checkpoint store: MAF's built-in file store is single-process and not
+thread-safe; this implementation lives in the same SQLite database as your runs:
 
 ```csharp
 var store = new SqliteJsonCheckpointStore(new ZhinuSqliteOptions
@@ -698,7 +665,7 @@ await InProcessExecution.RunStreamingAsync(
     workflow, input, checkpoints, sessionId);
 ```
 
-MAF graph as a durable step — run a whole MAF workflow inside one Zhinu step.
+MAF graph as a durable step: run a whole MAF workflow inside one Zhinu step.
 The terminal output commits with the step; a replay reuses it without touching
 MAF. If a previous attempt of the step crashed mid-run, execution resumes from
 the most recent MAF checkpoint instead of starting over:

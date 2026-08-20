@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Penghou.Zhinu.Context;
 
 namespace Penghou.Zhinu;
 
@@ -22,9 +23,9 @@ public sealed class WorkflowContext
     private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
     private readonly Action<Guid>? onEventAppended;
-    private readonly object stepLocksLock = new();
-    private readonly Dictionary<string, RefCountedSemaphore> stepLocks = new(StringComparer.Ordinal);
-    private readonly List<string> currentDependencies = [];
+    private readonly StepLockManager stepLocks = new();
+    private readonly DependencyTracker dependencies = new();
+    private readonly ChildRunCoordinator childRuns;
     private readonly IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps;
     private readonly IReadOnlyDictionary<string, WorkflowStepCompensation>?
         rollbackCompensations;
@@ -58,6 +59,12 @@ public sealed class WorkflowContext
         this.replaySteps = replaySteps;
         this.rollbackCompensations = rollbackCompensations;
         this.onEventAppended = onEventAppended;
+        childRuns = new ChildRunCoordinator(
+            store,
+            this.options,
+            this.serializerOptions,
+            this.timeProvider,
+            executeChildRun);
     }
 
     public Guid WorkflowRunId { get; }
@@ -72,47 +79,11 @@ public sealed class WorkflowContext
     {
         foreach (var stepKey in stepKeys)
             ValidateStepKey(stepKey);
-        var added = stepKeys
-            .Where(stepKey => !currentDependencies.Contains(stepKey))
-            .ToList();
-        currentDependencies.AddRange(added);
-        return new DependencyScope(this, added);
+        return dependencies.Declare(stepKeys);
     }
 
-    private sealed class DependencyScope : IDisposable
-    {
-        private readonly WorkflowContext owner;
-        private readonly IReadOnlyList<string> added;
-        private bool disposed;
-
-        public DependencyScope(WorkflowContext owner, IReadOnlyList<string> added)
-        {
-            this.owner = owner;
-            this.added = added;
-        }
-
-        public void Dispose()
-        {
-            if (disposed)
-                return;
-            disposed = true;
-            foreach (var stepKey in added)
-                owner.currentDependencies.Remove(stepKey);
-        }
-    }
-
-    private IReadOnlyCollection<string>? ResolveDependencies(StepOptions? options)
-    {
-        var explicitKeys = options?.DependsOn;
-        if (currentDependencies.Count == 0)
-            return explicitKeys is { Count: > 0 } ? explicitKeys : null;
-        if (explicitKeys is null or { Count: 0 })
-            return currentDependencies.ToArray();
-        return explicitKeys
-            .Concat(currentDependencies)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-    }
+    private IReadOnlyCollection<string>? ResolveDependencies(StepOptions? options) =>
+        dependencies.Resolve(options?.DependsOn);
 
     /// <summary>Executes or reuses a durable step without an explicit input value.</summary>
     public Task<TOutput> StepAsync<TOutput>(
@@ -193,7 +164,7 @@ public sealed class WorkflowContext
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
                 cancellationToken);
-        var stepLock = await AcquireStepLockAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
+        var stepLock = await stepLocks.AcquireAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
         try
         {
             if (IsRollback)
@@ -255,7 +226,7 @@ public sealed class WorkflowContext
         }
         finally
         {
-            ReleaseStepLock(stepKey, stepLock);
+            stepLock.Dispose();
         }
     }
 
@@ -275,7 +246,7 @@ public sealed class WorkflowContext
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
                 cancellationToken);
-        var stepLock = await AcquireStepLockAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
+        var stepLock = await stepLocks.AcquireAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
         try
         {
             if (IsRollback)
@@ -346,7 +317,7 @@ public sealed class WorkflowContext
         }
         finally
         {
-            ReleaseStepLock(stepKey, stepLock);
+            stepLock.Dispose();
         }
     }
 
@@ -373,7 +344,7 @@ public sealed class WorkflowContext
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
                 cancellationToken);
-        var stepLock = await AcquireStepLockAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
+        var stepLock = await stepLocks.AcquireAsync(stepKey, linkedCancellation.Token).ConfigureAwait(false);
         try
         {
             if (IsRollback)
@@ -448,7 +419,7 @@ public sealed class WorkflowContext
         }
         finally
         {
-            ReleaseStepLock(stepKey, stepLock);
+            stepLock.Dispose();
         }
     }
 
@@ -564,7 +535,7 @@ public sealed class WorkflowContext
         ValidateStepKey(stepKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowName);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowVersion);
-        var request = new ChildStartRequest(
+        var request = new ChildRunCoordinator.ChildStartRequest(
             workflowName,
             workflowVersion,
             JsonSerializer.Serialize(input, serializerOptions),
@@ -573,106 +544,20 @@ public sealed class WorkflowContext
         var childId = await StepAsync(
             $"{stepKey}:start",
             request,
-            (value, _, ct) => CreateChildRunAsync(stepKey, value, ct),
+            (value, _, ct) => childRuns.CreateChildRunAsync(
+                WorkflowRunId,
+                stepKey,
+                value,
+                ct),
             cancellationToken: cancellationToken).ConfigureAwait(false);
-        return await WaitForChildAsync<TOutput>(
+        return await StepAsync(
             $"{stepKey}:wait",
-            $"{stepKey}:start",
             childId,
+            (value, _, ct) => childRuns.AwaitChildCoreAsync<TOutput>(
+                value,
+                ct),
+            new StepOptions { DependsOn = [$"{stepKey}:start"] },
             cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task<Guid> CreateChildRunAsync(
-        string stepKey,
-        ChildStartRequest request,
-        CancellationToken cancellationToken)
-    {
-        var childId = SerializationIdentity.HashId($"{WorkflowRunId:D}:{stepKey}");
-        var existing = await store.GetRunAsync(
-            childId,
-            cancellationToken).ConfigureAwait(false);
-        if (existing is not null)
-            return childId;
-        var now = timeProvider.GetUtcNow();
-        await store.CreateRunAsync(
-            new WorkflowRun
-            {
-                Id = childId,
-                WorkflowName = request.WorkflowName,
-                WorkflowVersion = request.WorkflowVersion,
-                Status = WorkflowStatus.Pending,
-                CreatedAt = now,
-                UpdatedAt = now,
-                InputJson = request.InputJson,
-                InputType = request.InputType,
-                OutputType = request.OutputType,
-                ParentRunId = WorkflowRunId
-            },
-            cancellationToken).ConfigureAwait(false);
-        return childId;
-    }
-
-    private async Task<TOutput> WaitForChildAsync<TOutput>(
-        string stepKey,
-        string dependsOnStepKey,
-        Guid childId,
-        CancellationToken cancellationToken) =>
-        await StepAsync(
-            stepKey,
-            childId,
-            (value, _, ct) => AwaitChildCoreAsync<TOutput>(value, ct),
-            new StepOptions { DependsOn = [dependsOnStepKey] },
-            cancellationToken).ConfigureAwait(false);
-
-    private async Task<TOutput> AwaitChildCoreAsync<TOutput>(
-        Guid childId,
-        CancellationToken cancellationToken)
-    {
-        var outputType = SerializationIdentity.TypeId(typeof(TOutput));
-        while (true)
-        {
-            var child = await store.GetRunAsync(childId, cancellationToken)
-                .ConfigureAwait(false) ??
-                throw new WorkflowStateException(
-                    $"Child workflow '{childId:D}' does not exist.");
-            switch (child.Status)
-            {
-                case WorkflowStatus.Completed:
-                    if (!string.Equals(
-                            child.OutputType,
-                            outputType,
-                            StringComparison.Ordinal))
-                    {
-                        throw new WorkflowSerializationException(
-                            $"Child workflow result was stored as '{child.OutputType}', not '{outputType}'.");
-                    }
-                    return Deserialize<TOutput>(child.OutputJson, outputType);
-                case WorkflowStatus.Failed:
-                    throw new WorkflowExecutionFailedException(
-                        childId,
-                        child.Error ?? new WorkflowError
-                        {
-                            Type = typeof(WorkflowStateException).FullName!,
-                            Message = $"Child workflow '{childId:D}' failed without persisted details.",
-                            Timestamp = timeProvider.GetUtcNow()
-                        });
-                case WorkflowStatus.Cancelled:
-                    throw new OperationCanceledException(
-                        $"Child workflow '{childId:D}' was cancelled.",
-                        cancellationToken);
-                case WorkflowStatus.Compensated:
-                    throw new WorkflowStateException(
-                        $"Child workflow '{childId:D}' was compensated and has no forward result to return.");
-            }
-            if (executeChildRun is not null)
-            {
-                await executeChildRun(childId, cancellationToken).ConfigureAwait(false);
-            }
-            await Task.Delay(
-                options.PollInterval,
-                timeProvider,
-                cancellationToken).ConfigureAwait(false);
-        }
     }
 
     private async Task<TOutput> ExecuteClaimedAsync<TInput, TOutput>(
@@ -910,25 +795,8 @@ public sealed class WorkflowContext
         }
     }
 
-    private T Deserialize<T>(string? json, string expectedType)
-    {
-        try
-        {
-            var value = JsonSerializer.Deserialize<T>(json ?? "null", serializerOptions);
-            if (value is null && default(T) is not null)
-            {
-                throw new WorkflowSerializationException(
-                    $"Stored step result '{expectedType}' was null.");
-            }
-            return value!;
-        }
-        catch (JsonException exception)
-        {
-            throw new WorkflowSerializationException(
-                $"Stored step result could not be deserialized as '{expectedType}'.",
-                exception);
-        }
-    }
+    private T Deserialize<T>(string? json, string expectedType) =>
+        StepResultSerializer.Deserialize<T>(json, expectedType, serializerOptions);
 
     private static WorkflowError UnknownFailure(string stepKey) => new()
     {
@@ -946,67 +814,4 @@ public sealed class WorkflowContext
     }
 
     private readonly record struct DurableDelayMarker;
-
-    private sealed record ChildStartRequest(
-        string WorkflowName,
-        string WorkflowVersion,
-        string InputJson,
-        string InputType,
-        string OutputType);
-
-    private sealed class RefCountedSemaphore
-    {
-        public readonly SemaphoreSlim Semaphore = new(1, 1);
-        public int RefCount = 1;
-    }
-
-    private async Task<RefCountedSemaphore> AcquireStepLockAsync(string stepKey, CancellationToken cancellationToken)
-    {
-        RefCountedSemaphore refSem;
-        lock (stepLocksLock)
-        {
-            if (stepLocks.TryGetValue(stepKey, out var existing))
-            {
-                existing.RefCount++;
-                refSem = existing;
-            }
-            else
-            {
-                refSem = new RefCountedSemaphore();
-                stepLocks[stepKey] = refSem;
-            }
-        }
-        try
-        {
-            await refSem.Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            return refSem;
-        }
-        catch
-        {
-            lock (stepLocksLock)
-            {
-                refSem.RefCount--;
-                if (refSem.RefCount == 0)
-                {
-                    stepLocks.Remove(stepKey);
-                    refSem.Semaphore.Dispose();
-                }
-            }
-            throw;
-        }
-    }
-
-    private void ReleaseStepLock(string stepKey, RefCountedSemaphore refSem)
-    {
-        refSem.Semaphore.Release();
-        lock (stepLocksLock)
-        {
-            refSem.RefCount--;
-            if (refSem.RefCount == 0)
-            {
-                stepLocks.Remove(stepKey);
-                refSem.Semaphore.Dispose();
-            }
-        }
-    }
 }
