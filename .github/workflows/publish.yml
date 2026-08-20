@@ -34,7 +34,10 @@ jobs:
           for csproj in \
             src/Penghou.Zhinu/Penghou.Zhinu.csproj \
             src/Penghou.Zhinu.Sqlite/Penghou.Zhinu.Sqlite.csproj \
-            src/Penghou.Zhinu.Hosting/Penghou.Zhinu.Hosting.csproj; do
+            src/Penghou.Zhinu.Hosting/Penghou.Zhinu.Hosting.csproj \
+            src/Penghou.Zhinu.Agents/Penghou.Zhinu.Agents.csproj \
+            src/Penghou.Zhinu.Testing/Penghou.Zhinu.Testing.csproj \
+            src/Penghou.Zhinu.OpenTelemetry/Penghou.Zhinu.OpenTelemetry.csproj; do
             dotnet pack "$csproj" \
               --configuration Release \
               --output ./artifacts \

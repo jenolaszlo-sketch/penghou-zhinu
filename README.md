@@ -1,10 +1,9 @@
 # Penghou.Zhinu
 
 [![CI](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/workflows/ci.yml/badge.svg)](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/workflows/ci.yml)
-[![NuGet Penghou.Zhinu](https://img.shields.io/nuget/vpre/Penghou.Zhinu)](https://www.nuget.org/packages/Penghou.Zhinu)
-[![NuGet Penghou.Zhinu.Sqlite](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Sqlite)](https://www.nuget.org/packages/Penghou.Zhinu.Sqlite)
-[![NuGet Penghou.Zhinu.Hosting](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Hosting)](https://www.nuget.org/packages/Penghou.Zhinu.Hosting)
-[![NuGet Penghou.Zhinu.Agents](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Agents)](https://www.nuget.org/packages/Penghou.Zhinu.Agents)
+[![NuGet Core](https://img.shields.io/nuget/vpre/Penghou.Zhinu?label=NuGet%20Core)](https://www.nuget.org/packages/Penghou.Zhinu)
+[![NuGet SQLite](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Sqlite?label=NuGet%20SQLite)](https://www.nuget.org/packages/Penghou.Zhinu.Sqlite)
+[![NuGet Hosting](https://img.shields.io/nuget/vpre/Penghou.Zhinu.Hosting?label=NuGet%20Hosting)](https://www.nuget.org/packages/Penghou.Zhinu.Hosting)
 [![License](https://img.shields.io/github/license/jenolaszlo-sketch/penghou-zhinu)](LICENSE)
 
 Penghou.Zhinu is a lightweight, embedded durable workflow engine for .NET. It
@@ -16,6 +15,21 @@ Zhinu is designed for durable, replay-safe orchestration of AI workflows,
 coding agents, developer tools, local automation, batch processing, and other
 workloads where expensive or side-effecting operations should not be repeated
 after their results are committed.
+
+## Features
+
+- Replay-safe durable steps with transactional SQLite persistence, leases,
+  fencing, crash recovery, retries, delays, deadlines, and cancellation.
+- Parallel steps, explicit dependencies, buffered external signals, and
+  deterministic child workflows.
+- Typed run handles, status snapshots, progress trees, event inspection,
+  metadata queries, and retention controls.
+- Compensations plus resumable rollback and rollback-and-restart operations,
+  including dry-run plans before durable state changes are applied.
+- Optional hosting, Microsoft Agent Framework checkpointing, isolated workflow
+  test hosts, and custom-store conformance tests.
+- OpenTelemetry traces and metrics with durable cross-process correlation,
+  bounded dimensions, and privacy-safe defaults.
 
 ## Framework support
 
@@ -73,14 +87,31 @@ services.AddOpenTelemetry().AddZhinuInstrumentation();
 ```
 
 Exporters remain application-owned. Durable events remain authoritative for
-committed state. See [`docs/observability.md`](docs/observability.md) for span,
-metric, correlation, privacy, and cardinality conventions.
+committed state. Each workflow run persists a W3C trace ID, allowing execution
+resumed by another process to remain correlated. Inputs, outputs, prompts,
+signal payloads, SQL, and exception messages are excluded from built-in
+telemetry.
+
+Detailed SQLite connection and initialization spans are opt-in:
+
+```csharp
+services.AddZhinuSqlite(options =>
+{
+    options.DatabasePath = "zhinu.db";
+    options.EnableDetailedDiagnostics = true;
+});
+```
+
+See [`docs/observability.md`](docs/observability.md) for source names, spans,
+metrics, correlation, privacy, and cardinality conventions.
 
 ## Testing workflows and stores
 
 `Penghou.Zhinu.Testing` supplies `ZhinuTestHost`, an isolated temporary SQLite
 engine, plus `WorkflowStoreConformance` for validating custom stores. Dispose
-the host after each test to cancel local work and remove its database.
+the host after each test to cancel local work and remove its database. This
+keeps workflow integration tests independent without requiring an external
+database or service.
 
 ## Preview API policy
 
