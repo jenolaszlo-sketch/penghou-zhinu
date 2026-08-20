@@ -106,6 +106,43 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task StartChildAsync_RestartWithChangedInputRejectsExistingChildRun()
+    {
+        var firstEngine = CreateEngine(
+            new WorkflowRegistry()
+                .Register("mutable-parent", "1", new MutableChildInputParentWorkflow())
+                .Register("child", "1", new ChildWorkflow()));
+        var runId = await firstEngine.StartAsync(
+            "mutable-parent",
+            "1",
+            "go",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await firstEngine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        await firstEngine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await firstEngine.RestartStepAsync(
+            runId,
+            "parent-step",
+            TestContext.Current.CancellationToken);
+        var changedEngine = CreateEngine(
+            new WorkflowRegistry()
+                .Register(
+                    "mutable-parent",
+                    "1",
+                    new MutableChildInputParentWorkflow { Suffix = "b" })
+                .Register("child", "1", new ChildWorkflow()));
+        await changedEngine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var action = () => changedEngine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        await action.Should().ThrowAsync<WorkflowExecutionFailedException>()
+            .WithMessage("*incompatible input or result contract*");
+    }
+
+    [Fact]
     public async Task StartChildAsync_RecordsWaitToStartDependencyEdge()
     {
         var parent = new ParentWorkflow();

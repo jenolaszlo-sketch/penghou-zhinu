@@ -40,7 +40,19 @@ internal sealed class ChildRunCoordinator
             childId,
             cancellationToken).ConfigureAwait(false);
         if (existing is not null)
+        {
+            if (!string.Equals(existing.WorkflowName, request.WorkflowName, StringComparison.Ordinal) ||
+                !string.Equals(existing.WorkflowVersion, request.WorkflowVersion, StringComparison.Ordinal) ||
+                !string.Equals(existing.InputJson, request.InputJson, StringComparison.Ordinal) ||
+                !string.Equals(existing.InputType, request.InputType, StringComparison.Ordinal) ||
+                !string.Equals(existing.OutputType, request.OutputType, StringComparison.Ordinal) ||
+                existing.ParentRunId != parentRunId)
+            {
+                throw new WorkflowStateException(
+                    $"Child workflow step '{stepKey}' is already associated with a different workflow or input.");
+            }
             return childId;
+        }
         var now = timeProvider.GetUtcNow();
         await store.CreateRunAsync(
             new WorkflowRun

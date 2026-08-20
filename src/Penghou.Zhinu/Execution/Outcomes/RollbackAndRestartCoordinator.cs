@@ -57,23 +57,20 @@ internal sealed class RollbackAndRestartCoordinator
 
         var operationId = Guid.NewGuid();
         var now = timeProvider.GetUtcNow();
-        await store.CreateOperationAsync(
-            new WorkflowRunOperation
-            {
-                OperationId = operationId,
-                WorkflowRunId = workflowRunId,
-                OperationType = "rollback-and-restart",
-                Status = WorkflowOperationStatus.Requested,
-                PayloadJson = JsonSerializer.Serialize(
+        var operation = new WorkflowRunOperation
+        {
+            OperationId = operationId,
+            WorkflowRunId = workflowRunId,
+            OperationType = "rollback-and-restart",
+            Status = WorkflowOperationStatus.Requested,
+            PayloadJson = JsonSerializer.Serialize(
                     new { actor, reason },
                     serializerOptions),
-                CreatedAt = now,
-                UpdatedAt = now,
-            },
-            cancellationToken).ConfigureAwait(false);
-
-        var generation = await store.ClaimRollbackAndRestartAsync(
-            workflowRunId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var generation = await store.TryCreateAndClaimRollbackAndRestartAsync(
+            operation,
             ownerId,
             now,
             now + options.LeaseDuration,

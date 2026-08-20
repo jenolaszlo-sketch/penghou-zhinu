@@ -331,6 +331,50 @@ public sealed class RollbackTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task TryCreateAndClaimRollbackAndRestartAsync_ConcurrentClaimsPersistOneOperation()
+    {
+        var workflow = new RollbackWorkflow();
+        var engine = CreateEngine(workflow, "rollback");
+        await engine.RunAsync<string, string>(
+            "rollback",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = workflow.RunId;
+        var now = DateTimeOffset.UtcNow;
+        var stores = new[] { CreateStore(), CreateStore() };
+        var claims = stores.Select((store, index) =>
+            store.TryCreateAndClaimRollbackAndRestartAsync(
+                new WorkflowRunOperation
+                {
+                    OperationId = Guid.NewGuid(),
+                    WorkflowRunId = runId,
+                    OperationType = "rollback-and-restart",
+                    Status = WorkflowOperationStatus.Requested,
+                    PayloadJson = null,
+                    CreatedAt = now.AddTicks(index),
+                    UpdatedAt = now.AddTicks(index)
+                },
+                $"owner-{index}",
+                now,
+                now.AddMinutes(1),
+                TestContext.Current.CancellationToken).AsTask());
+
+        var results = await Task.WhenAll(claims);
+
+        results.Count(result => result.HasValue).Should().Be(1);
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+            $"Data Source={Path.Combine(root, "zhinu.db")}");
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(*) FROM workflow_run_operations WHERE workflow_run_id = $runId;";
+        command.Parameters.AddWithValue("$runId", runId.ToString("D"));
+        Convert.ToInt64(await command.ExecuteScalarAsync(
+            TestContext.Current.CancellationToken)).Should().Be(1);
+    }
+
+    [Fact]
     public async Task RollbackAndRestartAsync_ResumesInterruptedOperationOnExecute()
     {
         var forward = new RollbackWorkflow();

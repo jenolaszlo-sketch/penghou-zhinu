@@ -350,6 +350,29 @@ internal sealed class ParentWorkflow : IWorkflow<string, string>
     }
 }
 
+internal sealed class MutableChildInputParentWorkflow : IWorkflow<string, string>
+{
+    public string Suffix { get; init; } = "a";
+
+    public async Task<string> RunAsync(
+        WorkflowContext context,
+        string input,
+        CancellationToken cancellationToken)
+    {
+        var childInput = await context.StepAsync(
+            "parent-step",
+            input,
+            (value, _) => Task.FromResult($"{value}:{Suffix}"),
+            cancellationToken: cancellationToken);
+        return await context.StartChildAsync<string, string>(
+            "child",
+            "child",
+            "1",
+            childInput,
+            cancellationToken);
+    }
+}
+
 internal sealed class ChildWorkflow : IWorkflow<string, string>
 {
     public int Calls { get; private set; }

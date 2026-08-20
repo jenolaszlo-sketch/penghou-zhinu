@@ -6,10 +6,11 @@ internal sealed class InsertOperationCommand
 {
     public async ValueTask ExecuteAsync(
         SqliteConnection connection,
+        SqliteTransaction? transaction,
         WorkflowRunOperation operation,
         CancellationToken cancellationToken)
     {
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             INSERT INTO workflow_run_operations
             (operation_id, workflow_run_id, operation_type, status, payload_json,
              created_at, updated_at, completed_at)

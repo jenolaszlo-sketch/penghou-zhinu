@@ -191,6 +191,17 @@ public interface IWorkflowStepRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Atomically persists a rollback-and-restart operation and claims its run.
+    /// If the run cannot be claimed, neither state change is committed.
+    /// </summary>
+    ValueTask<long?> TryCreateAndClaimRollbackAndRestartAsync(
+        WorkflowRunOperation operation,
+        string ownerId,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Returns the most recently created operation for the run whose status is
     /// still in progress (<see cref="WorkflowOperationStatus.Completed"/> and
     /// <see cref="WorkflowOperationStatus.Failed"/> are excluded), or null when

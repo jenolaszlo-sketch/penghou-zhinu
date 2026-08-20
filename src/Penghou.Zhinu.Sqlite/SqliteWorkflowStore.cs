@@ -301,6 +301,19 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         CancellationToken cancellationToken = default) =>
         steps.CreateOperationAsync(operation, cancellationToken);
 
+    public ValueTask<long?> TryCreateAndClaimRollbackAndRestartAsync(
+        WorkflowRunOperation operation,
+        string ownerId,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default) =>
+        steps.TryCreateAndClaimRollbackAndRestartAsync(
+            operation,
+            ownerId,
+            now,
+            leaseExpiresAt,
+            cancellationToken);
+
     public ValueTask<WorkflowRunOperation?> GetActiveOperationAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>

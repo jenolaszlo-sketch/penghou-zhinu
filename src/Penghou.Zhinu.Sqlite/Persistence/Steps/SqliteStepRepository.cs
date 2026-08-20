@@ -767,8 +767,41 @@ internal sealed class SqliteStepRepository : IWorkflowStepRepository
         await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await insertOperation.ExecuteAsync(connection, operation, cancellationToken)
+        await insertOperation.ExecuteAsync(connection, null, operation, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    public async ValueTask<long?> TryCreateAndClaimRollbackAndRestartAsync(
+        WorkflowRunOperation operation,
+        string ownerId,
+        DateTimeOffset now,
+        DateTimeOffset leaseExpiresAt,
+        CancellationToken cancellationToken = default)
+    {
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var generation = await claimRollbackAndRestart.ExecuteAsync(
+            connection,
+            transaction,
+            operation.WorkflowRunId,
+            ownerId,
+            now,
+            leaseExpiresAt,
+            cancellationToken).ConfigureAwait(false);
+        if (generation is null)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+        await insertOperation.ExecuteAsync(
+            connection,
+            transaction,
+            operation,
+            cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return generation;
     }
 
     public async ValueTask<WorkflowRunOperation?> GetActiveOperationAsync(

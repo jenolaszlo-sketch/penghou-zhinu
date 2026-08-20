@@ -53,9 +53,8 @@ internal sealed class SqliteConnectionFactory
                     "PRAGMA journal_mode = WAL;",
                     cancellationToken).ConfigureAwait(false);
             }
-            // The schema script is idempotent (CREATE TABLE IF NOT EXISTS and a
-            // guarded version insert), so it is safe to run on both new and
-            // existing databases without a versioned migration system.
+            // Schema creation is idempotent for databases created by this
+            // package version. Pre-release schema upgrades are not supported.
             await SqliteStoreSupport.ExecuteAsync(
                 connection,
                 null,
