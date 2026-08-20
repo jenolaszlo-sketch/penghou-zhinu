@@ -29,6 +29,7 @@ public static class ZhinuDiagnostics
         public const string WorkflowVersion = "zhinu.workflow.version";
         public const string WorkflowStatus = "zhinu.workflow.status";
         public const string ParentRunId = "zhinu.workflow.parent_run.id";
+        public const string SourceRunId = "zhinu.workflow.source_run.id";
         public const string StepId = "zhinu.step.id";
         public const string StepKey = "zhinu.step.key";
         public const string StepAttempt = "zhinu.step.attempt";
@@ -108,6 +109,7 @@ public static class ZhinuDiagnostics
         activity?.SetTag(Attributes.WorkflowName, run?.WorkflowName);
         activity?.SetTag(Attributes.WorkflowVersion, run?.WorkflowVersion);
         activity?.SetTag(Attributes.ParentRunId, run?.ParentRunId);
+        activity?.SetTag(Attributes.SourceRunId, run?.SourceRunId);
         activity?.SetTag(Attributes.LeaseGeneration, run?.LeaseGeneration);
         return activity;
     }

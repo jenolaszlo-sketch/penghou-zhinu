@@ -141,6 +141,7 @@ internal sealed class SqliteConnectionFactory
             deadline TEXT NULL,
             metadata_json TEXT NULL,
             parent_run_id TEXT NULL,
+            source_run_id TEXT NULL,
             trace_id TEXT NULL,
             lease_owner TEXT NULL,
             lease_expires_at TEXT NULL,
@@ -150,6 +151,8 @@ internal sealed class SqliteConnectionFactory
             ON workflow_runs(status, lease_expires_at, created_at);
         CREATE INDEX IF NOT EXISTS ix_workflow_runs_created
             ON workflow_runs(created_at, id);
+        CREATE INDEX IF NOT EXISTS ix_workflow_runs_source
+            ON workflow_runs(source_run_id);
 
         CREATE TABLE IF NOT EXISTS workflow_steps
         (

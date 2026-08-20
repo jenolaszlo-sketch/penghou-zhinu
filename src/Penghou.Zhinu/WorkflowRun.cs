@@ -42,6 +42,12 @@ public sealed record WorkflowRun
     public Guid? ParentRunId { get; init; }
 
     /// <summary>
+    /// Source run whose committed step results seeded this run. Fork lineage is
+    /// independent of child-workflow ancestry in <see cref="ParentRunId"/>.
+    /// </summary>
+    public Guid? SourceRunId { get; init; }
+
+    /// <summary>
     /// Optional caller-supplied metadata serialized as JSON (for example
     /// correlation ids, owners, or tags). Metadata does not participate in
     /// idempotency or workflow contract validation.

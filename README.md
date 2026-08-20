@@ -24,6 +24,8 @@ after their results are committed.
   deterministic child workflows.
 - Typed run handles, status snapshots, progress trees, event inspection,
   metadata queries, and retention controls.
+- Previewable workflow forks that create a new run while reusing compatible
+  committed steps and preserving explicit source lineage.
 - Compensations plus resumable rollback and rollback-and-restart operations,
   including dry-run plans before durable state changes are applied.
 - Optional hosting, Microsoft Agent Framework checkpointing, isolated workflow
@@ -536,6 +538,44 @@ claims throw `LeaseLostException` and its lease renewals or step completions
 are rejected, so a stale worker can never commit output to a restarted run.
 Run metadata and deadline are preserved; clear the deadline yourself if a
 restart should extend it.
+
+## Forking into a new run
+
+Use a fork when work should continue under a new workflow identity rather than
+rewinding the source run. A fork preserves the source workflow name, version,
+serialized input, and output contract. It atomically creates a pending run,
+copies completed results outside the selected invalidation boundary, and
+records the source in `WorkflowRun.SourceRunId`:
+
+```csharp
+var preview = await engine.PlanForkAsync(sourceRunId, "build");
+// preview.StepsToReuse
+// preview.StepsToReexecute, including requested/dependent/incomplete reasons
+
+var forkId = await engine.ForkAsync(
+    sourceRunId,
+    "build",
+    new ForkRunOptions
+    {
+        Mode = StepRestartMode.Dependents,
+        Actor = "demo-ui",
+        Reason = "try another build implementation"
+    },
+    cancellationToken);
+```
+
+The hosted worker will discover the pending fork, or an application can call
+`ExecuteAsync(forkId)`. The source remains unchanged and may be running,
+failed, or completed. Only completed steps are reusable; pending, running,
+waiting, and failed steps execute again. Source deadlines are deliberately not
+inherited.
+
+Fork safety follows the same dependency rules as selective restart. Declare
+`DependsOn` edges for precise invalidation, or explicitly choose
+`StepRestartMode.CreationOrder` for a coarse prefix/suffix boundary. Zhinu
+validates durable workflow and input compatibility, but applications remain
+responsible for validating external workspace, file, or service state before
+reusing a result that refers to it.
 
 ## Compensations
 

@@ -474,6 +474,131 @@ public sealed class WorkflowEngine : IAsyncDisposable
             cancellationToken);
 
     /// <summary>
+    /// Previews a new run seeded from completed source steps. The source run is
+    /// not changed and no new run is created.
+    /// </summary>
+    public async Task<ForkPlan> PlanForkAsync(
+        Guid sourceWorkflowRunId,
+        string targetStepKey,
+        StepRestartMode mode = StepRestartMode.Dependents,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetStepKey);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return await store.PlanForkAsync(
+            sourceWorkflowRunId,
+            targetStepKey,
+            mode,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Atomically creates a pending run with the same workflow contract and
+    /// input as <paramref name="sourceWorkflowRunId"/>. Completed source steps
+    /// outside the selected restart boundary are copied as reusable results;
+    /// the selected step, its invalidated dependents, and incomplete steps run
+    /// normally under the new identity. The source run is never modified.
+    /// </summary>
+    public async Task<Guid> ForkAsync(
+        Guid sourceWorkflowRunId,
+        string targetStepKey,
+        ForkRunOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        ArgumentException.ThrowIfNullOrWhiteSpace(targetStepKey);
+        options ??= new ForkRunOptions();
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var source = await store.GetRunAsync(sourceWorkflowRunId, cancellationToken)
+            .ConfigureAwait(false) ??
+            throw new KeyNotFoundException(
+                $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
+        var registration = registry.Get(source.WorkflowName, source.WorkflowVersion);
+        if (source.InputType != SerializationIdentity.TypeId(registration.InputType) ||
+            source.OutputType != SerializationIdentity.TypeId(registration.OutputType))
+        {
+            throw new WorkflowStateException(
+                "The source run's serialized contract does not match the registered workflow.");
+        }
+        var id = options.WorkflowRunId ?? Guid.NewGuid();
+        var now = timeProvider.GetUtcNow();
+        var newRun = new WorkflowRun
+        {
+            Id = id,
+            WorkflowName = source.WorkflowName,
+            WorkflowVersion = source.WorkflowVersion,
+            Status = WorkflowStatus.Pending,
+            InputJson = source.InputJson,
+            InputType = source.InputType,
+            OutputType = source.OutputType,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Deadline = options.Deadline,
+            MetadataJson = source.MetadataJson,
+            SourceRunId = sourceWorkflowRunId,
+            TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
+                .ToHexString()
+        };
+        var plan = await store.ForkRunAsync(
+            sourceWorkflowRunId,
+            newRun,
+            targetStepKey,
+            options.Mode,
+            options.Actor,
+            options.Reason,
+            cancellationToken).ConfigureAwait(false);
+        logger.LogInformation(
+            "Forked workflow {SourceWorkflowRunId} into {WorkflowRunId} from " +
+            "step '{StepKey}'; reused {ReusedCount} step(s).",
+            sourceWorkflowRunId,
+            id,
+            targetStepKey,
+            plan.StepsToReuse.Count);
+        ZhinuDiagnostics.RunsStartedCounter.Add(
+            1,
+            new KeyValuePair<string, object?>(
+                ZhinuDiagnostics.Attributes.WorkflowName,
+                source.WorkflowName),
+            new KeyValuePair<string, object?>(
+                ZhinuDiagnostics.Attributes.WorkflowVersion,
+                source.WorkflowVersion));
+        return id;
+    }
+
+    /// <summary>Creates a typed handle for a forked pending run.</summary>
+    public async Task<WorkflowHandle<TOutput>> ForkHandleAsync<TOutput>(
+        Guid sourceWorkflowRunId,
+        string targetStepKey,
+        ForkRunOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var source = await store.GetRunAsync(sourceWorkflowRunId, cancellationToken)
+            .ConfigureAwait(false) ??
+            throw new KeyNotFoundException(
+                $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
+        var registration = registry.Get(source.WorkflowName, source.WorkflowVersion);
+        if (registration.OutputType != typeof(TOutput))
+        {
+            throw new ArgumentException(
+                $"Workflow '{source.WorkflowName}' version '{source.WorkflowVersion}' " +
+                $"returns '{registration.OutputType}', not '{typeof(TOutput)}'.",
+                nameof(TOutput));
+        }
+        var id = await ForkAsync(
+            sourceWorkflowRunId,
+            targetStepKey,
+            options,
+            cancellationToken).ConfigureAwait(false);
+        return new WorkflowHandle<TOutput>(this, id);
+    }
+
+    /// <summary>
     /// Resolves which steps a full rollback of <paramref name="workflowRunId"/>
     /// would compensate without changing any state: every step with a committed
     /// forward result and a claimable compensation, in reverse dependency order.

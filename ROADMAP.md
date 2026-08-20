@@ -92,8 +92,9 @@ Product harness such as Solo
 Status: substantially complete; continue hardening.
 
 Existing foundations include durable steps, retries, timeouts, signals, child
-workflows, dependencies, selective restart, compensation, rollback, fencing,
-crash recovery, typed handles, diagnostics, and SQLite persistence.
+workflows, dependencies, selective restart, previewable restart-as-new forks,
+compensation, rollback, fencing, crash recovery, typed handles, diagnostics,
+and SQLite persistence.
 
 Remaining foundation work:
 

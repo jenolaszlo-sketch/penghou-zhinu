@@ -10,3 +10,8 @@ Run `WorkflowStoreConformance.VerifyRunRoundTripAsync` from
 should additionally simulate concurrent claims, expired leases, cancellation,
 restart fencing, compensation retries, and process loss between operation
 phases.
+
+`ForkRunAsync` must create the new pending run, copy every reusable completed
+step, copy dependency edges among those steps, and append the fork event in one
+transaction. Failure must leave no destination run or copied rows. Forking must
+never mutate, cancel, or fence the source run.

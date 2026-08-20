@@ -193,6 +193,34 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             now,
             cancellationToken);
 
+    public ValueTask<ForkPlan> PlanForkAsync(
+        Guid sourceWorkflowRunId,
+        string targetStepKey,
+        StepRestartMode mode,
+        CancellationToken cancellationToken = default) =>
+        steps.PlanForkAsync(
+            sourceWorkflowRunId,
+            targetStepKey,
+            mode,
+            cancellationToken);
+
+    public ValueTask<ForkPlan> ForkRunAsync(
+        Guid sourceWorkflowRunId,
+        WorkflowRun newRun,
+        string targetStepKey,
+        StepRestartMode mode,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken = default) =>
+        steps.ForkRunAsync(
+            sourceWorkflowRunId,
+            newRun,
+            targetStepKey,
+            mode,
+            actor,
+            reason,
+            cancellationToken);
+
     public ValueTask<RollbackPlan> PlanRollbackAsync(
         Guid workflowRunId,
         string? targetStepKey,
