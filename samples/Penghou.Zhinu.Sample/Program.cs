@@ -40,13 +40,14 @@ else
 }
 
 Console.WriteLine("Terminate this process during a step, then run it again.");
-await foreach (var progress in engine.SubscribeAsync(runId))
+var handle = engine.GetHandle<string>(runId);
+await foreach (var progress in handle.SubscribeAsync())
 {
     Console.WriteLine(
         $"[{progress.Timestamp:HH:mm:ss}] {progress.EventType}" +
         (progress.StepKey is null ? string.Empty : $": {progress.StepKey}"));
 }
-var result = await engine.WaitForCompletionAsync<string>(runId);
+var result = await handle.WaitAsync();
 Console.WriteLine($"Result: {result}");
 File.Delete(runIdPath);
 await host.StopAsync();

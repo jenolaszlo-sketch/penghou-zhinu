@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Penghou.Zhinu.Sqlite\Penghou.Zhinu.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\Penghou.Zhinu.Testing\Penghou.Zhinu.Testing.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

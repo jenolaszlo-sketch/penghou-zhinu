@@ -7,6 +7,7 @@
     <Project Path="src/Penghou.Zhinu.Sqlite/Penghou.Zhinu.Sqlite.csproj" />
     <Project Path="src/Penghou.Zhinu.Hosting/Penghou.Zhinu.Hosting.csproj" />
     <Project Path="src/Penghou.Zhinu.Agents/Penghou.Zhinu.Agents.csproj" />
+    <Project Path="src/Penghou.Zhinu.Testing/Penghou.Zhinu.Testing.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Penghou.Zhinu.Tests/Penghou.Zhinu.Tests.csproj" />

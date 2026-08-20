@@ -14,7 +14,7 @@ namespace Penghou.Zhinu;
 /// Runs registered workflows against an explicit durable store. The engine is
 /// embedded and does not require a server, scheduler, or message broker.
 /// </summary>
-public sealed class WorkflowEngine
+public sealed class WorkflowEngine : IAsyncDisposable
 {
     private readonly IWorkflowStore store;
     private readonly IWorkflowRegistry registry;
@@ -33,6 +33,7 @@ public sealed class WorkflowEngine
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource>
         runningCancellations = new();
     private readonly ConcurrentDictionary<Guid, Channel<byte>> eventChannels = new();
+    private int disposed;
 
     public WorkflowEngine(
         IWorkflowStore store,
@@ -123,6 +124,7 @@ public sealed class WorkflowEngine
         object? metadata = null,
         CancellationToken cancellationToken = default)
     {
+        ThrowIfDisposed();
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var registration = registry.Get(workflowName, workflowVersion);
         if (registration.InputType != typeof(TInput))
@@ -175,7 +177,33 @@ public sealed class WorkflowEngine
             id,
             workflowName,
             workflowVersion);
+        ZhinuDiagnostics.RunsStarted.Add(1);
         return id;
+    }
+
+    /// <summary>Starts a run and returns a typed durable handle.</summary>
+    public async Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId = null, DateTimeOffset? deadline = null,
+        object? metadata = null, CancellationToken cancellationToken = default)
+    {
+        var registration = registry.Get(workflowName, workflowVersion);
+        if (registration.OutputType != typeof(TOutput))
+        {
+            throw new ArgumentException(
+                $"Workflow '{workflowName}' version '{workflowVersion}' returns '{registration.OutputType}', not '{typeof(TOutput)}'.",
+                nameof(TOutput));
+        }
+        var id = await StartAsync(workflowName, workflowVersion, input,
+            workflowRunId, deadline, metadata, cancellationToken).ConfigureAwait(false);
+        return new WorkflowHandle<TOutput>(this, id);
+    }
+
+    /// <summary>Creates a typed handle for an existing durable run.</summary>
+    public WorkflowHandle<TOutput> GetHandle<TOutput>(Guid workflowRunId)
+    {
+        ThrowIfDisposed();
+        return new WorkflowHandle<TOutput>(this, workflowRunId);
     }
 
     /// <summary>Starts, executes, and waits for one workflow result.</summary>
@@ -210,18 +238,31 @@ public sealed class WorkflowEngine
         Guid workflowRunId,
         CancellationToken cancellationToken = default)
     {
+        ThrowIfDisposed();
+        using var activity = ZhinuDiagnostics.Activities.StartActivity("workflow.execute");
+        activity?.SetTag("workflow.run_id", workflowRunId);
+        var started = timeProvider.GetTimestamp();
         await leaseRecovery.EnsureInitializedAsync(cancellationToken)
             .ConfigureAwait(false);
-        await executionPipeline.ExecuteAsync(
-            workflowRunId,
-            cancellationToken,
-            0).ConfigureAwait(false);
+        try
+        {
+            await executionPipeline.ExecuteAsync(workflowRunId, cancellationToken, 0)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            ZhinuDiagnostics.RunDuration.Record(
+                timeProvider.GetElapsedTime(started).TotalSeconds);
+        }
     }
 
     /// <summary>Recovers expired leases and executes every currently runnable run.</summary>
-    public Task<int> RunAvailableAsync(
-        CancellationToken cancellationToken = default) =>
-        scanner.RunAvailableAsync(cancellationToken);
+    public async Task<int> RunAvailableAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        return await scanner.RunAvailableAsync(cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>Persists cancellation and signals an active local execution.</summary>
     public async Task CancelAsync(
@@ -777,6 +818,66 @@ public sealed class WorkflowEngine
             channel.Writer.TryWrite(0);
         }
     }
+
+    /// <summary>Returns a non-throwing point-in-time result for a run.</summary>
+    public async Task<WorkflowResult<TOutput>> GetResultAsync<TOutput>(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        var run = await GetRunAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new KeyNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        TOutput? value = default;
+        if (run.Status == WorkflowStatus.Completed)
+        {
+            var expectedType = SerializationIdentity.TypeId(typeof(TOutput));
+            if (!string.Equals(run.OutputType, expectedType, StringComparison.Ordinal))
+            {
+                throw new WorkflowSerializationException(
+                    $"Workflow result was stored as '{run.OutputType}', not '{expectedType}'.");
+            }
+            try
+            {
+                value = JsonSerializer.Deserialize<TOutput>(
+                    run.OutputJson ?? "null", serializerOptions);
+            }
+            catch (JsonException exception)
+            {
+                throw new WorkflowSerializationException(
+                    $"Workflow result could not be deserialized as '{expectedType}'.",
+                    exception);
+            }
+        }
+        return new WorkflowResult<TOutput>
+        {
+            WorkflowRunId = workflowRunId,
+            Status = run.Status,
+            Value = value,
+            Error = run.Error
+        };
+    }
+
+    /// <summary>Cancels local executions and closes local subscriptions.</summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref disposed, 1) != 0)
+            return;
+        foreach (var cancellation in runningCancellations.Values)
+            await cancellation.CancelAsync().ConfigureAwait(false);
+        var settleDeadline = timeProvider.GetUtcNow() + options.LeaseDuration;
+        while (!runningCancellations.IsEmpty &&
+               timeProvider.GetUtcNow() < settleDeadline)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(10), timeProvider)
+                .ConfigureAwait(false);
+        }
+        foreach (var channel in eventChannels.Values)
+            channel.Writer.TryComplete();
+        eventChannels.Clear();
+    }
+
+    private void ThrowIfDisposed() =>
+        ObjectDisposedException.ThrowIf(disposed != 0, this);
 
     private static JsonSerializerOptions CreateSerializerOptions()
     {

@@ -570,6 +570,10 @@ public sealed class WorkflowContext
         CompensationMetadata? compensation,
         CancellationToken cancellationToken)
     {
+        using var activity = ZhinuDiagnostics.Activities.StartActivity("workflow.step.execute");
+        activity?.SetTag("workflow.run_id", WorkflowRunId);
+        activity?.SetTag("workflow.step.key", step.StepKey);
+        activity?.SetTag("workflow.step.attempt", step.Attempt);
         while (true)
         {
             using var timeoutCancellation = configured.ExecutionTimeout is null

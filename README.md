@@ -27,6 +27,7 @@ All packages target **.NET 8.0** and **.NET 10.0**.
 | `Penghou.Zhinu.Sqlite` | Transactional SQLite state, leases, recovery, and schema management | net8.0, net10.0 |
 | `Penghou.Zhinu.Hosting` | Optional `Microsoft.Extensions.Hosting` execution loop and DI registration | net8.0, net10.0 |
 | `Penghou.Zhinu.Agents` | Optional Microsoft Agent Framework integration and durable SQLite checkpointing | net8.0, net10.0 |
+| `Penghou.Zhinu.Testing` | Isolated test host and custom-store conformance checks | net8.0, net10.0 |
 
 ## Install
 
@@ -36,7 +37,50 @@ Install the SQLite store, then add the optional packages you need:
 dotnet add package Penghou.Zhinu.Sqlite --prerelease
 dotnet add package Penghou.Zhinu.Hosting --prerelease   # optional
 dotnet add package Penghou.Zhinu.Agents --prerelease    # optional
+dotnet add package Penghou.Zhinu.Testing --prerelease   # test projects
 ```
+
+## Typed handles and result inspection
+
+Use a typed handle when application code needs to retain, cancel, subscribe to,
+or inspect a run without repeatedly passing its identifier:
+
+```csharp
+WorkflowHandle<CodeResult> handle =
+    await engine.StartHandleAsync<CodeRequest, CodeResult>(
+        "code-generation", "1", request);
+
+WorkflowResult<CodeResult> snapshot = await handle.GetResultAsync();
+if (!snapshot.IsTerminal)
+    Console.WriteLine($"Run {handle.WorkflowRunId} is {snapshot.Status}");
+
+CodeResult result = await handle.WaitAsync();
+```
+
+`GetResultAsync` does not throw for failed, cancelled, compensated, or pending
+runs. `WaitAsync` retains exception-based application-flow semantics.
+
+## OpenTelemetry
+
+Zhinu emits activities from `Penghou.Zhinu` and metrics from the meter with the
+same name. Configure an OpenTelemetry provider with
+`ZhinuDiagnostics.ActivitySourceName` and `ZhinuDiagnostics.MeterName`. The
+initial instruments are `zhinu.runs.started`, `zhinu.runs.completed`,
+`zhinu.runs.failed`, and `zhinu.runs.duration`.
+
+## Testing workflows and stores
+
+`Penghou.Zhinu.Testing` supplies `ZhinuTestHost`, an isolated temporary SQLite
+engine, plus `WorkflowStoreConformance` for validating custom stores. Dispose
+the host after each test to cancel local work and remove its database.
+
+## Preview API policy
+
+The public API is frozen for the remainder of the `0.1.0-preview` line: additive
+changes are allowed, while breaking changes require the next preview minor.
+Store implementations must honor the atomicity statements on repository
+methods. `dotnet pack` package validation and the full multi-target test suite
+run in CI for every change.
 
 Direct construction requires only the core engine and a store implementation.
 `Penghou.Zhinu.Hosting` adds the hosted execution loop and DI registration.

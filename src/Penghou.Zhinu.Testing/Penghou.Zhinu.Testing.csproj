@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Penghou.Zhinu.Testing</PackageId>
+    <Description>Test fixtures and store conformance checks for Penghou.Zhinu.</Description>
+    <PackageTags>workflow;durable;testing</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Penghou.Zhinu\Penghou.Zhinu.csproj" />
+    <ProjectReference Include="..\Penghou.Zhinu.Sqlite\Penghou.Zhinu.Sqlite.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
