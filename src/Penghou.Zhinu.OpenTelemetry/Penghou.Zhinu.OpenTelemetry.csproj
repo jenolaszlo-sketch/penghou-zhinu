@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Penghou.Zhinu.OpenTelemetry</PackageId>
+    <Description>OpenTelemetry registration helpers for Penghou.Zhinu.</Description>
+    <PackageTags>workflow;durable;opentelemetry;tracing;metrics</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Penghou.Zhinu\Penghou.Zhinu.csproj" />
+    <ProjectReference Include="..\Penghou.Zhinu.Sqlite\Penghou.Zhinu.Sqlite.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
+  </ItemGroup>
+</Project>

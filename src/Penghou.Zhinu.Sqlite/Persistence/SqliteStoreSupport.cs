@@ -88,9 +88,10 @@ internal static class SqliteStoreSupport
         Deadline = ParseNullableTimestamp(reader, 12),
         MetadataJson = GetNullableString(reader, 13),
         ParentRunId = reader.IsDBNull(14) ? null : Guid.Parse(reader.GetString(14)),
-        LeaseOwner = GetNullableString(reader, 15),
-        LeaseExpiresAt = ParseNullableTimestamp(reader, 16),
-        LeaseGeneration = reader.GetInt64(17)
+        TraceId = GetNullableString(reader, 15),
+        LeaseOwner = GetNullableString(reader, 16),
+        LeaseExpiresAt = ParseNullableTimestamp(reader, 17),
+        LeaseGeneration = reader.GetInt64(18)
     };
 
     internal static WorkflowStepRun ReadStep(SqliteDataReader reader) => new()
@@ -175,7 +176,7 @@ internal static class SqliteStoreSupport
         id, workflow_name, workflow_version, status, input_json, input_type,
         output_json, output_type, error_json, created_at, updated_at,
         completed_at, deadline, metadata_json, parent_run_id,
-        lease_owner, lease_expires_at, lease_generation
+        trace_id, lease_owner, lease_expires_at, lease_generation
         """;
 
     internal const string StepColumns = """

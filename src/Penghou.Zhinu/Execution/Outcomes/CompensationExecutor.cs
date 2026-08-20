@@ -129,6 +129,12 @@ internal sealed class CompensationExecutor
         CancellationToken cancellationToken)
     {
         var compensation = invocation.Compensation;
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.CompensationExecute);
+        activity?.SetTag(
+            ZhinuDiagnostics.Attributes.WorkflowRunId,
+            compensation.WorkflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, invocation.StepKey);
         var retryPolicy = DeserializeRetryPolicy(compensation.RetryPolicyJson);
         while (true)
         {
@@ -145,6 +151,8 @@ internal sealed class CompensationExecutor
                 cancellationToken).ConfigureAwait(false);
             if (claim is null)
                 return;
+            activity?.SetTag(ZhinuDiagnostics.Attributes.StepAttempt, claim.Attempt);
+            activity?.SetTag(ZhinuDiagnostics.Attributes.StepRevision, claim.Revision);
 
             await store.AppendEventAsync(
                 claim.WorkflowRunId,
@@ -181,6 +189,8 @@ internal sealed class CompensationExecutor
                     claim.Attempt,
                     cancellationToken).ConfigureAwait(false);
                 notifyEventAppended(claim.WorkflowRunId);
+                ZhinuDiagnostics.CompensationsExecutedCounter.Add(1);
+                activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
                 return;
             }
             catch (OperationCanceledException) when (

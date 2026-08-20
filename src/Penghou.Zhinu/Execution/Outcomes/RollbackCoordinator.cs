@@ -47,6 +47,10 @@ internal sealed class RollbackCoordinator
         string? reason,
         CancellationToken cancellationToken)
     {
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.RollbackExecute);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, workflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.OperationType, "rollback");
         var run = await store.GetRunAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false) ??
@@ -122,6 +126,8 @@ internal sealed class RollbackCoordinator
                 "Compensated workflow {WorkflowRunId} ({CompensatedCount} step(s)).",
                 workflowRunId,
                 compensateKeys.Count);
+            ZhinuDiagnostics.RollbacksCompletedCounter.Add(1);
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -134,6 +140,7 @@ internal sealed class RollbackCoordinator
         }
         catch (Exception exception)
         {
+            ZhinuDiagnostics.RecordException(activity, exception);
             try
             {
                 await store.FailRollbackAsync(

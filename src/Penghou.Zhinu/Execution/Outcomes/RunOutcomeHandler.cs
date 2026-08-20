@@ -40,7 +40,7 @@ internal sealed class RunOutcomeHandler
             outputType,
             timeProvider.GetUtcNow(),
             CancellationToken.None).ConfigureAwait(false);
-        ZhinuDiagnostics.RunsCompleted.Add(1);
+        ZhinuDiagnostics.RunsCompletedCounter.Add(1);
         notifyEventAppended(workflowRunId);
         logger.LogInformation(
             "Completed workflow {WorkflowRunId}.",
@@ -80,7 +80,7 @@ internal sealed class RunOutcomeHandler
                     timeProvider.GetUtcNow()),
                 timeProvider.GetUtcNow(),
                 CancellationToken.None).ConfigureAwait(false);
-            ZhinuDiagnostics.RunsFailed.Add(1);
+            ZhinuDiagnostics.RunsFailedCounter.Add(1);
             notifyEventAppended(workflowRunId);
         }
         logger.LogError(

@@ -32,6 +32,9 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
             cancellationToken: TestContext.Current.CancellationToken)).Single();
         childRun.Status.Should().Be(WorkflowStatus.Completed);
         childRun.ParentRunId.Should().Be(runId);
+        childRun.TraceId.Should().Be((await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken))!.TraceId);
         (await engine.GetStepsAsync(
             runId,
             TestContext.Current.CancellationToken)).Should().HaveCount(3)

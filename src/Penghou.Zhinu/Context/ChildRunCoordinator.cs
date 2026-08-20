@@ -54,6 +54,8 @@ internal sealed class ChildRunCoordinator
             return childId;
         }
         var now = timeProvider.GetUtcNow();
+        var parent = await store.GetRunAsync(parentRunId, cancellationToken)
+            .ConfigureAwait(false);
         await store.CreateRunAsync(
             new WorkflowRun
             {
@@ -66,7 +68,8 @@ internal sealed class ChildRunCoordinator
                 InputJson = request.InputJson,
                 InputType = request.InputType,
                 OutputType = request.OutputType,
-                ParentRunId = parentRunId
+                ParentRunId = parentRunId,
+                TraceId = parent?.TraceId
             },
             cancellationToken).ConfigureAwait(false);
         return childId;

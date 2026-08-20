@@ -48,6 +48,12 @@ public sealed record WorkflowRun
     /// </summary>
     public string? MetadataJson { get; init; }
 
+    /// <summary>
+    /// W3C trace identifier used to correlate separate execution segments when
+    /// this durable run resumes in another process. It is diagnostic only.
+    /// </summary>
+    public string? TraceId { get; init; }
+
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }

@@ -4,6 +4,8 @@ using Penghou.Zhinu.Sqlite.Persistence.Signals;
 using Penghou.Zhinu.Sqlite.Persistence.Steps;
 using Penghou.Zhinu.Sqlite.Persistence.Timers;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
+using Microsoft.Data.Sqlite;
+using System.Diagnostics;
 
 namespace Penghou.Zhinu.Sqlite;
 
@@ -19,10 +21,12 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private readonly SqliteSignalRepository signals;
     private readonly SqliteTimerRepository timers;
     private readonly SqliteLeaseRepository leases;
+    private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        detailedDiagnostics = options.EnableDetailedDiagnostics;
         var factory = new SqliteConnectionFactory(options);
         workflows = new SqliteWorkflowRepository(factory);
         steps = new SqliteStepRepository(factory);
@@ -32,17 +36,17 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
-        workflows.InitializeAsync(cancellationToken);
+        ObserveAsync("initialize", () => workflows.InitializeAsync(cancellationToken));
 
     public ValueTask CreateRunAsync(
         WorkflowRun run,
         CancellationToken cancellationToken = default) =>
-        workflows.CreateRunAsync(run, cancellationToken);
+        ObserveAsync("run.create", () => workflows.CreateRunAsync(run, cancellationToken));
 
     public ValueTask<WorkflowRun?> GetRunAsync(
         Guid id,
         CancellationToken cancellationToken = default) =>
-        workflows.GetRunAsync(id, cancellationToken);
+        ObserveAsync("run.get", () => workflows.GetRunAsync(id, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowRun>> GetRunsAsync(
         RunQuery query,
@@ -126,7 +130,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask<StepClaimResult> ClaimStepAsync(
         StepClaimRequest request,
         CancellationToken cancellationToken = default) =>
-        steps.ClaimStepAsync(request, cancellationToken);
+        ObserveAsync("step.claim", () => steps.ClaimStepAsync(request, cancellationToken));
 
     public ValueTask<bool> RenewStepLeaseAsync(
         Guid stepId,
@@ -141,7 +145,10 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         string? outputJson,
         DateTimeOffset now,
         CancellationToken cancellationToken = default) =>
-        steps.CompleteStepAsync(stepId, ownerId, outputJson, now, cancellationToken);
+        ObserveAsync(
+            "step.complete",
+            () => steps.CompleteStepAsync(
+                stepId, ownerId, outputJson, now, cancellationToken));
 
     public ValueTask FailStepAsync(
         Guid stepId,
@@ -455,5 +462,80 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask<int> RecoverExpiredLeasesAsync(
         DateTimeOffset now,
         CancellationToken cancellationToken = default) =>
-        leases.RecoverExpiredLeasesAsync(now, cancellationToken);
+        ObserveAsync(
+            "lease.recover",
+            () => leases.RecoverExpiredLeasesAsync(now, cancellationToken));
+
+    private async ValueTask ObserveAsync(
+        string operation,
+        Func<ValueTask> action)
+    {
+        using var activity = StartStoreActivity(operation);
+        var started = Stopwatch.GetTimestamp();
+        try
+        {
+            await action().ConfigureAwait(false);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (SqliteException exception)
+        {
+            RecordStoreFailure(activity, exception);
+            throw;
+        }
+        finally
+        {
+            RecordStoreDuration(operation, started);
+        }
+    }
+
+    private async ValueTask<T> ObserveAsync<T>(
+        string operation,
+        Func<ValueTask<T>> action)
+    {
+        using var activity = StartStoreActivity(operation);
+        var started = Stopwatch.GetTimestamp();
+        try
+        {
+            var result = await action().ConfigureAwait(false);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return result;
+        }
+        catch (SqliteException exception)
+        {
+            RecordStoreFailure(activity, exception);
+            throw;
+        }
+        finally
+        {
+            RecordStoreDuration(operation, started);
+        }
+    }
+
+    private Activity? StartStoreActivity(string operation)
+    {
+        if (!detailedDiagnostics)
+            return null;
+        var activity = ZhinuSqliteDiagnostics.ActivitySource.StartActivity(
+            ZhinuSqliteDiagnostics.StoreOperationActivity,
+            ActivityKind.Client);
+        activity?.SetTag(ZhinuSqliteDiagnostics.StoreOperationName, operation);
+        return activity;
+    }
+
+    private static void RecordStoreFailure(
+        Activity? activity,
+        SqliteException exception)
+    {
+        ZhinuSqliteDiagnostics.Failures.Add(1);
+        if (exception.SqliteErrorCode is 5 or 6)
+            ZhinuSqliteDiagnostics.Busy.Add(1);
+        activity?.SetStatus(ActivityStatusCode.Error);
+    }
+
+    private static void RecordStoreDuration(string operation, long started) =>
+        ZhinuSqliteDiagnostics.OperationDuration.Record(
+            Stopwatch.GetElapsedTime(started).TotalSeconds,
+            new KeyValuePair<string, object?>(
+                ZhinuSqliteDiagnostics.StoreOperationName,
+                operation));
 }

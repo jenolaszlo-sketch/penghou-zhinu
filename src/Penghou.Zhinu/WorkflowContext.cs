@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using Penghou.Zhinu.Context;
 
@@ -188,6 +189,7 @@ public sealed class WorkflowContext
                 switch (claim.Disposition)
                 {
                     case StepClaimDisposition.Reused:
+                        ZhinuDiagnostics.StepsReusedCounter.Add(1);
                         return Deserialize<TOutput>(claim.Step.OutputJson, outputType);
                     case StepClaimDisposition.Waiting:
                         await WaitUntilAsync(
@@ -239,6 +241,9 @@ public sealed class WorkflowContext
         CancellationToken cancellationToken = default)
     {
         ValidateStepKey(stepKey);
+        using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.DelayWait);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, stepKey);
         if (delay < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(delay));
         var inputJson = JsonSerializer.Serialize(delay.Ticks, serializerOptions);
@@ -336,6 +341,9 @@ public sealed class WorkflowContext
         CancellationToken cancellationToken = default)
     {
         ValidateStepKey(stepKey);
+        using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.SignalWait);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, stepKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
         if (timeout is { } waitTimeout && waitTimeout < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(timeout));
@@ -397,6 +405,8 @@ public sealed class WorkflowContext
                                 linkedCancellation.Token).ConfigureAwait(false);
                             if (delivery is { } delivered)
                             {
+                                ZhinuDiagnostics.SignalsDeliveredCounter.Add(1);
+                                activity?.SetStatus(ActivityStatusCode.Ok);
                                 return Deserialize<T>(delivered.DataJson, outputType);
                             }
                             if (deadline is { } waitDeadline &&
@@ -533,6 +543,9 @@ public sealed class WorkflowContext
         CancellationToken cancellationToken = default)
     {
         ValidateStepKey(stepKey);
+        using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.ChildExecute);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, stepKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowName);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowVersion);
         var request = new ChildRunCoordinator.ChildStartRequest(
@@ -570,105 +583,99 @@ public sealed class WorkflowContext
         CompensationMetadata? compensation,
         CancellationToken cancellationToken)
     {
-        using var activity = ZhinuDiagnostics.Activities.StartActivity("workflow.step.execute");
-        activity?.SetTag("workflow.run_id", WorkflowRunId);
-        activity?.SetTag("workflow.step.key", step.StepKey);
-        activity?.SetTag("workflow.step.attempt", step.Attempt);
-        while (true)
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.StepExecute);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepId, step.Id);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, step.StepKey);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepRevision, step.Revision);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.LeaseGeneration, step.LeaseGeneration);
+        var started = timeProvider.GetTimestamp();
+        ZhinuDiagnostics.StepsExecutedCounter.Add(1);
+        try
         {
-            using var timeoutCancellation = configured.ExecutionTimeout is null
-                ? null
-                : new CancellationTokenSource(
-                    configured.ExecutionTimeout.Value,
-                    timeProvider);
-            using var executionCancellation = timeoutCancellation is null
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                : CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    timeoutCancellation.Token);
-            await using var renewal = new LeaseRenewal(
-                timeProvider,
-                options.LeaseRenewalInterval,
-                token => store.RenewStepLeaseAsync(
-                    step.Id,
-                    ownerId,
-                    timeProvider.GetUtcNow() + options.LeaseDuration,
-                    token));
-            try
+            while (true)
             {
-                var output = await operation(
-                    input,
-                    new WorkflowStepContext(
-                        WorkflowRunId,
+                activity?.SetTag(ZhinuDiagnostics.Attributes.StepAttempt, step.Attempt);
+                using var timeoutCancellation = configured.ExecutionTimeout is null
+                    ? null
+                    : new CancellationTokenSource(configured.ExecutionTimeout.Value, timeProvider);
+                using var executionCancellation = timeoutCancellation is null
+                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+                    : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellation.Token);
+                await using var renewal = new LeaseRenewal(
+                    timeProvider,
+                    options.LeaseRenewalInterval,
+                    token => store.RenewStepLeaseAsync(
                         step.Id,
-                        step.StepKey,
-                        step.Attempt,
-                        step.Revision),
-                    executionCancellation.Token).ConfigureAwait(false);
-                var outputJson = JsonSerializer.Serialize(
-                    output,
-                    serializerOptions);
-                await store.CompleteStepAsync(
-                    step.Id,
-                    ownerId,
-                    outputJson,
-                    timeProvider.GetUtcNow(),
-                    cancellationToken).ConfigureAwait(false);
-                return output;
-            }
-            catch (OperationCanceledException) when (
-                timeoutCancellation?.IsCancellationRequested == true &&
-                !cancellationToken.IsCancellationRequested)
-            {
-                var timeout = new TimeoutException(
-                    $"Workflow step '{step.StepKey}' exceeded its execution timeout.");
-                step = await RecordFailureAsync(
-                    step,
-                    timeout,
-                    configured.Retry,
-                    outputType,
-                    cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                step = await RecordFailureAsync(
-                    step,
-                    exception,
-                    configured.Retry,
-                    outputType,
-                    cancellationToken).ConfigureAwait(false);
-            }
+                        ownerId,
+                        timeProvider.GetUtcNow() + options.LeaseDuration,
+                        token));
+                try
+                {
+                    var output = await operation(
+                        input,
+                        new WorkflowStepContext(
+                            WorkflowRunId, step.Id, step.StepKey, step.Attempt, step.Revision),
+                        executionCancellation.Token).ConfigureAwait(false);
+                    var outputJson = JsonSerializer.Serialize(output, serializerOptions);
+                    await store.CompleteStepAsync(
+                        step.Id, ownerId, outputJson, timeProvider.GetUtcNow(), cancellationToken)
+                        .ConfigureAwait(false);
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+                    return output;
+                }
+                catch (OperationCanceledException) when (
+                    timeoutCancellation?.IsCancellationRequested == true &&
+                    !cancellationToken.IsCancellationRequested)
+                {
+                    var timeout = new TimeoutException(
+                        $"Workflow step '{step.StepKey}' exceeded its execution timeout.");
+                    step = await RecordFailureAsync(
+                        step, timeout, configured.Retry, outputType, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    step = await RecordFailureAsync(
+                        step, exception, configured.Retry, outputType, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
-            if (step.Status == StepStatus.Failed)
-            {
-                throw new WorkflowStepFailedException(
-                    step.StepKey,
-                    step.Error ?? UnknownFailure(step.StepKey));
+                if (step.Status == StepStatus.Failed)
+                {
+                    ZhinuDiagnostics.StepsFailedCounter.Add(1);
+                    throw new WorkflowStepFailedException(
+                        step.StepKey, step.Error ?? UnknownFailure(step.StepKey));
+                }
+                await WaitUntilAsync(step.AvailableAt, cancellationToken).ConfigureAwait(false);
+                var claim = await ClaimAsync(
+                    step.StepKey, step.InputJson, step.InputType, step.InputHash,
+                    outputType, dependencies, compensation, cancellationToken)
+                    .ConfigureAwait(false);
+                if (claim.Disposition != StepClaimDisposition.Acquired)
+                {
+                    if (claim.Disposition == StepClaimDisposition.Reused)
+                        return Deserialize<TOutput>(claim.Step.OutputJson, outputType);
+                    throw new WorkflowStateException(
+                        $"Retry for step '{step.StepKey}' could not be acquired.");
+                }
+                step = claim.Step;
             }
-            await WaitUntilAsync(
-                step.AvailableAt,
-                cancellationToken).ConfigureAwait(false);
-            var claim = await ClaimAsync(
-                step.StepKey,
-                step.InputJson,
-                step.InputType,
-                step.InputHash,
-                outputType,
-                dependencies,
-                compensation,
-                cancellationToken).ConfigureAwait(false);
-            if (claim.Disposition != StepClaimDisposition.Acquired)
-            {
-                if (claim.Disposition == StepClaimDisposition.Reused)
-                    return Deserialize<TOutput>(claim.Step.OutputJson, outputType);
-                throw new WorkflowStateException(
-                    $"Retry for step '{step.StepKey}' could not be acquired.");
-            }
-            step = claim.Step;
+        }
+        catch (Exception exception)
+        {
+            ZhinuDiagnostics.RecordException(activity, exception);
+            throw;
+        }
+        finally
+        {
+            ZhinuDiagnostics.StepDurationHistogram.Record(
+                timeProvider.GetElapsedTime(started).TotalSeconds);
         }
     }
 
@@ -684,6 +691,11 @@ public sealed class WorkflowContext
         var retryAt = step.Attempt < retry.MaxAttempts
             ? now + retry.DelayAfter(step.Attempt)
             : (DateTimeOffset?)null;
+        if (retryAt is not null)
+        {
+            ZhinuDiagnostics.StepsRetriedCounter.Add(1);
+            Activity.Current?.SetTag(ZhinuDiagnostics.Attributes.RetryScheduled, true);
+        }
         await store.FailStepAsync(
             step.Id,
             ownerId,

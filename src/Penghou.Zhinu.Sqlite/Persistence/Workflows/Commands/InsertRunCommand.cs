@@ -15,12 +15,12 @@ internal sealed class InsertRunCommand
             (id, workflow_name, workflow_version, status, input_json,
              input_type, output_json, output_type, error_json, created_at,
              updated_at, completed_at, deadline, metadata_json, parent_run_id,
-             lease_owner, lease_expires_at)
+             trace_id, lease_owner, lease_expires_at)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
              $updatedAt, $completedAt, $deadline, $metadataJson, $parentRunId,
-             $leaseOwner, $leaseExpiresAt);
+             $traceId, $leaseOwner, $leaseExpiresAt);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -51,6 +51,7 @@ internal sealed class InsertRunCommand
         command.Parameters.AddWithValue(
             "$parentRunId",
             run.ParentRunId is { } parentId ? SqliteStoreSupport.Format(parentId) : DBNull.Value);
+        command.Parameters.AddWithValue("$traceId", SqliteStoreSupport.DbValue(run.TraceId));
         command.Parameters.AddWithValue("$leaseOwner", SqliteStoreSupport.DbValue(run.LeaseOwner));
         command.Parameters.AddWithValue(
             "$leaseExpiresAt",

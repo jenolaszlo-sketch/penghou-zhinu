@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -169,7 +170,9 @@ public sealed class WorkflowEngine : IAsyncDisposable
                 Deadline = deadline,
                 MetadataJson = metadata is null
                     ? null
-                    : JsonSerializer.Serialize(metadata, serializerOptions)
+                    : JsonSerializer.Serialize(metadata, serializerOptions),
+                TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
+                    .ToHexString()
             },
             cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
@@ -177,7 +180,10 @@ public sealed class WorkflowEngine : IAsyncDisposable
             id,
             workflowName,
             workflowVersion);
-        ZhinuDiagnostics.RunsStarted.Add(1);
+        ZhinuDiagnostics.RunsStartedCounter.Add(
+            1,
+            new KeyValuePair<string, object?>(ZhinuDiagnostics.Attributes.WorkflowName, workflowName),
+            new KeyValuePair<string, object?>(ZhinuDiagnostics.Attributes.WorkflowVersion, workflowVersion));
         return id;
     }
 
@@ -239,19 +245,33 @@ public sealed class WorkflowEngine : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
-        using var activity = ZhinuDiagnostics.Activities.StartActivity("workflow.execute");
-        activity?.SetTag("workflow.run_id", workflowRunId);
-        var started = timeProvider.GetTimestamp();
         await leaseRecovery.EnsureInitializedAsync(cancellationToken)
             .ConfigureAwait(false);
+        var diagnosticRun = await store.GetRunAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+        using var activity = ZhinuDiagnostics.StartWorkflowActivity(diagnosticRun);
+        var started = timeProvider.GetTimestamp();
+        ZhinuDiagnostics.RunsActiveCounter.Add(1);
         try
         {
             await executionPipeline.ExecuteAsync(workflowRunId, cancellationToken, 0)
                 .ConfigureAwait(false);
+            var run = await store.GetRunAsync(workflowRunId, CancellationToken.None)
+                .ConfigureAwait(false);
+            activity?.SetTag(
+                ZhinuDiagnostics.Attributes.WorkflowStatus,
+                run?.Status.ToString());
+            activity?.SetStatus(ActivityStatusCode.Ok);
+        }
+        catch (Exception exception)
+        {
+            ZhinuDiagnostics.RecordException(activity, exception);
+            throw;
         }
         finally
         {
-            ZhinuDiagnostics.RunDuration.Record(
+            ZhinuDiagnostics.RunsActiveCounter.Add(-1);
+            ZhinuDiagnostics.RunDurationHistogram.Record(
                 timeProvider.GetElapsedTime(started).TotalSeconds);
         }
     }
@@ -270,10 +290,19 @@ public sealed class WorkflowEngine : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var previous = await store.GetRunAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
         await store.CancelRunAsync(
             workflowRunId,
             timeProvider.GetUtcNow(),
             cancellationToken).ConfigureAwait(false);
+        if (previous?.Status != WorkflowStatus.Cancelled)
+        {
+            var current = await store.GetRunAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false);
+            if (current?.Status == WorkflowStatus.Cancelled)
+                ZhinuDiagnostics.RunsCancelledCounter.Add(1);
+        }
         NotifyEventAppended(workflowRunId);
         if (runningCancellations.TryGetValue(
                 workflowRunId,

@@ -45,6 +45,10 @@ internal sealed class RollbackAndRestartCoordinator
         string? reason,
         CancellationToken cancellationToken)
     {
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.OperationExecute);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, workflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.OperationType, "rollback-and-restart");
         var run = await store.GetRunAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false) ??
@@ -56,6 +60,7 @@ internal sealed class RollbackAndRestartCoordinator
             return;
 
         var operationId = Guid.NewGuid();
+        activity?.SetTag(ZhinuDiagnostics.Attributes.OperationId, operationId);
         var now = timeProvider.GetUtcNow();
         var operation = new WorkflowRunOperation
         {
@@ -107,6 +112,7 @@ internal sealed class RollbackAndRestartCoordinator
         }
         catch (Exception exception)
         {
+            ZhinuDiagnostics.RecordException(activity, exception);
             try
             {
                 await store.FailRollbackAndRestartAsync(
@@ -139,6 +145,10 @@ internal sealed class RollbackAndRestartCoordinator
         Guid workflowRunId,
         CancellationToken cancellationToken)
     {
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.OperationExecute);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, workflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.OperationType, "rollback-and-restart-resume");
         var operation = await store.GetActiveOperationAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false);
@@ -185,6 +195,7 @@ internal sealed class RollbackAndRestartCoordinator
         }
         catch (Exception exception)
         {
+            ZhinuDiagnostics.RecordException(activity, exception);
             try
             {
                 await store.FailRollbackAndRestartAsync(
@@ -295,6 +306,7 @@ internal sealed class RollbackAndRestartCoordinator
             "Rolled back and restarted workflow {WorkflowRunId} ({InvalidatedCount} step(s) rewound).",
             workflowRunId,
             invalidateStepKeys.Count);
+        ZhinuDiagnostics.RollbacksCompletedCounter.Add(1);
     }
 
     private RollbackRestartPayload? DeserializePayload(

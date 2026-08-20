@@ -31,9 +31,13 @@ internal sealed class LeaseRecoveryScheduler
         if (now < nextRecovery)
             return;
         lastLeaseRecovery = now;
-        await store.RecoverExpiredLeasesAsync(
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.LeaseRecover);
+        var recovered = await store.RecoverExpiredLeasesAsync(
             now,
             cancellationToken).ConfigureAwait(false);
+        if (recovered > 0)
+            ZhinuDiagnostics.LeasesRecoveredCounter.Add(recovered);
     }
 
     public async ValueTask EnsureInitializedAsync(
@@ -47,9 +51,11 @@ internal sealed class LeaseRecoveryScheduler
             if (initialized)
                 return;
             await store.InitializeAsync(cancellationToken).ConfigureAwait(false);
-            await store.RecoverExpiredLeasesAsync(
+            var recovered = await store.RecoverExpiredLeasesAsync(
                 timeProvider.GetUtcNow(),
                 cancellationToken).ConfigureAwait(false);
+            if (recovered > 0)
+                ZhinuDiagnostics.LeasesRecoveredCounter.Add(recovered);
             lastLeaseRecovery = timeProvider.GetUtcNow();
             initialized = true;
         }

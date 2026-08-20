@@ -8,11 +8,13 @@
     <Project Path="src/Penghou.Zhinu.Hosting/Penghou.Zhinu.Hosting.csproj" />
     <Project Path="src/Penghou.Zhinu.Agents/Penghou.Zhinu.Agents.csproj" />
     <Project Path="src/Penghou.Zhinu.Testing/Penghou.Zhinu.Testing.csproj" />
+    <Project Path="src/Penghou.Zhinu.OpenTelemetry/Penghou.Zhinu.OpenTelemetry.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Penghou.Zhinu.Tests/Penghou.Zhinu.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Sqlite.Tests/Penghou.Zhinu.Sqlite.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Agents.Tests/Penghou.Zhinu.Agents.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Hosting.Tests/Penghou.Zhinu.Hosting.Tests.csproj" />
+    <Project Path="tests/Penghou.Zhinu.OpenTelemetry.Tests/Penghou.Zhinu.OpenTelemetry.Tests.csproj" />
   </Folder>
 </Solution>

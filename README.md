@@ -28,6 +28,7 @@ All packages target **.NET 8.0** and **.NET 10.0**.
 | `Penghou.Zhinu.Hosting` | Optional `Microsoft.Extensions.Hosting` execution loop and DI registration | net8.0, net10.0 |
 | `Penghou.Zhinu.Agents` | Optional Microsoft Agent Framework integration and durable SQLite checkpointing | net8.0, net10.0 |
 | `Penghou.Zhinu.Testing` | Isolated test host and custom-store conformance checks | net8.0, net10.0 |
+| `Penghou.Zhinu.OpenTelemetry` | Optional tracing and metrics registration helpers | net8.0, net10.0 |
 
 ## Install
 
@@ -38,6 +39,7 @@ dotnet add package Penghou.Zhinu.Sqlite --prerelease
 dotnet add package Penghou.Zhinu.Hosting --prerelease   # optional
 dotnet add package Penghou.Zhinu.Agents --prerelease    # optional
 dotnet add package Penghou.Zhinu.Testing --prerelease   # test projects
+dotnet add package Penghou.Zhinu.OpenTelemetry --prerelease # optional
 ```
 
 ## Typed handles and result inspection
@@ -62,11 +64,17 @@ runs. `WaitAsync` retains exception-based application-flow semantics.
 
 ## OpenTelemetry
 
-Zhinu emits activities from `Penghou.Zhinu` and metrics from the meter with the
-same name. Configure an OpenTelemetry provider with
-`ZhinuDiagnostics.ActivitySourceName` and `ZhinuDiagnostics.MeterName`. The
-initial instruments are `zhinu.runs.started`, `zhinu.runs.completed`,
-`zhinu.runs.failed`, and `zhinu.runs.duration`.
+Zhinu emits activities and metrics from `Penghou.Zhinu`; SQLite emits bounded
+provider diagnostics from `Penghou.Zhinu.Sqlite`. Configure the sources
+directly or install `Penghou.Zhinu.OpenTelemetry` and call:
+
+```csharp
+services.AddOpenTelemetry().AddZhinuInstrumentation();
+```
+
+Exporters remain application-owned. Durable events remain authoritative for
+committed state. See [`docs/observability.md`](docs/observability.md) for span,
+metric, correlation, privacy, and cardinality conventions.
 
 ## Testing workflows and stores
 
