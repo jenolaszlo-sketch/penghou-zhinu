@@ -50,3 +50,9 @@ labels. Metric dimensions are limited to bounded workflow and outcome values.
 SQLite metrics cover connection latency, failures, and busy/locked errors.
 Detailed SQLite connection and initialization spans require
 `ZhinuSqliteOptions.EnableDetailedDiagnostics`; SQL text remains excluded.
+
+Artifact publication emits `zhinu.artifact.publish` with run, producer-step,
+artifact name/type, revision, and creation-disposition attributes. Locations,
+hashes, and custom artifact metadata are deliberately excluded. Newly created
+references increment `zhinu.artifacts.published`; idempotent re-publication does
+not increment it.

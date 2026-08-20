@@ -63,10 +63,12 @@ public static class WorkflowStoreConformance
                 Metadata = new Dictionary<string, string> { ["source"] = "test" }
             }
         };
-        var first = await store.PublishArtifactAsync(request, cancellationToken)
+        var firstPublication = await store.PublishArtifactAsync(request, cancellationToken)
             .ConfigureAwait(false);
-        var repeated = await store.PublishArtifactAsync(request, cancellationToken)
+        var repeatedPublication = await store.PublishArtifactAsync(request, cancellationToken)
             .ConfigureAwait(false);
+        var first = firstPublication.Artifact;
+        var repeated = repeatedPublication.Artifact;
         var fetched = await store.GetArtifactAsync(first.Id, cancellationToken)
             .ConfigureAwait(false);
         var listed = await store.GetArtifactsAsync(run.Id, cancellationToken)
@@ -74,7 +76,9 @@ public static class WorkflowStoreConformance
         var listedArtifact = listed.Count == 1 ? listed[0] : null;
         var hasExpectedMetadata = listedArtifact?.Metadata?.TryGetValue(
             "source", out var source) == true && source == "test";
-        if (first.Id != repeated.Id || fetched?.Id != first.Id ||
+        if (!firstPublication.Created || firstPublication.Event?.EventType !=
+                WorkflowEventTypes.ArtifactPublished || repeatedPublication.Created ||
+            first.Id != repeated.Id || fetched?.Id != first.Id ||
             listedArtifact?.ContentHash != request.Artifact.ContentHash ||
             !hasExpectedMetadata)
         {

@@ -15,11 +15,23 @@ public sealed class RunProgressOptions
     /// <summary>Maximum events to include per run. Defaults to 100.</summary>
     public int EventsLimit { get; set; } = 100;
 
+    public bool IncludeArtifacts { get; set; } = true;
+
+    public bool IncludeDiagnosis { get; set; } = true;
+
+    public bool IncludeActiveOperation { get; set; } = true;
+
+    public bool IncludeSourceLineage { get; set; } = true;
+
+    public int SourceLineageMaxDepth { get; set; } = 16;
+
     public void Validate()
     {
         if (MaxDepth < 0)
             throw new ArgumentOutOfRangeException(nameof(MaxDepth), "MaxDepth must be zero or greater.");
         if (EventsLimit is < 1 or > 1000)
             throw new ArgumentOutOfRangeException(nameof(EventsLimit), "EventsLimit must be between 1 and 1000.");
+        if (SourceLineageMaxDepth < 1)
+            throw new ArgumentOutOfRangeException(nameof(SourceLineageMaxDepth));
     }
 }

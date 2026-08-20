@@ -2,7 +2,8 @@ namespace Penghou.Zhinu;
 
 /// <summary>
 /// A point-in-time snapshot of one run's progress: the run itself, its durable
-/// steps, its recent diagnostic events, and (recursively) the progress of any
+/// steps, artifacts, operation, diagnosis, recent events, lineage, and
+/// (recursively) the progress of any
 /// child runs started via <c>StartChildAsync</c>.
 /// </summary>
 public sealed record WorkflowRunProgress
@@ -12,6 +13,21 @@ public sealed record WorkflowRunProgress
     public IReadOnlyList<WorkflowStepRun> Steps { get; init; } = [];
 
     public IReadOnlyList<WorkflowEvent> Events { get; init; } = [];
+
+    public IReadOnlyList<WorkflowArtifactReference> Artifacts { get; init; } = [];
+
+    public WorkflowRunOperation? ActiveOperation { get; init; }
+
+    public RunDiagnosis? Diagnosis { get; init; }
+
+    /// <summary>The source run for a fork, when it is still retained.</summary>
+    public WorkflowRun? SourceRun { get; init; }
+
+    /// <summary>
+    /// Retained fork ancestors, nearest source first, capped by
+    /// <see cref="RunProgressOptions.SourceLineageMaxDepth"/>.
+    /// </summary>
+    public IReadOnlyList<WorkflowRun> SourceLineage { get; init; } = [];
 
     public IReadOnlyList<WorkflowRunProgress> Children { get; init; } = [];
 

@@ -1,19 +1,21 @@
 using System.Text.Json;
 using System.Collections.ObjectModel;
 using Microsoft.Data.Sqlite;
+using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Artifacts;
 
 internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) :
     IWorkflowArtifactRepository
 {
+    private readonly InsertEventCommand insertEvent = new();
     private const string Columns = """
         id, workflow_run_id, name, revision, artifact_type, artifact_version,
         location, content_hash, metadata_json, producer_step_key,
         producer_step_revision, created_at
         """;
 
-    public async ValueTask<WorkflowArtifactReference> PublishArtifactAsync(
+    public async ValueTask<ArtifactPublicationResult> PublishArtifactAsync(
         ArtifactPublicationRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -34,7 +36,11 @@ internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) 
         if (existing is not null)
         {
             if (Equivalent(existing, request.Artifact, metadataJson))
-                return existing;
+                return new ArtifactPublicationResult
+                {
+                    Artifact = existing,
+                    Created = false
+                };
             throw new WorkflowStateException(
                 $"Artifact '{request.Artifact.Name}' was already published with different " +
                 "data in this execution scope.");
@@ -60,8 +66,23 @@ internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) 
         };
         await InsertAsync(connection, transaction, result, metadataJson, cancellationToken)
             .ConfigureAwait(false);
+        var @event = await insertEvent.ExecuteAsync(
+            connection,
+            transaction,
+            request.WorkflowRunId,
+            request.ProducerStepKey,
+            WorkflowEventTypes.ArtifactPublished,
+            request.Now,
+            null,
+            JsonSerializer.Serialize(result, SqliteStoreSupport.SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
         transaction.Commit();
-        return result;
+        return new ArtifactPublicationResult
+        {
+            Artifact = result,
+            Event = @event,
+            Created = true
+        };
     }
 
     public async ValueTask<WorkflowArtifactReference?> GetArtifactAsync(
@@ -99,6 +120,73 @@ internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             results.Add(Read(reader));
         return results;
+    }
+
+    public async ValueTask<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(
+        Guid workflowRunId,
+        ArtifactQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        query.Validate();
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var conditions = new List<string> { "workflow_run_id = $run" };
+        if (query.Name is not null)
+            conditions.Add("name = $name");
+        if (query.ArtifactType is not null)
+            conditions.Add("artifact_type = $type");
+        if (query.ProducerStepKey is not null)
+            conditions.Add("producer_step_key = $stepKey");
+        var where = string.Join(" AND ", conditions);
+        var sql = query.LatestOnly
+            ? $"""
+                SELECT {Columns} FROM
+                (
+                    SELECT {Columns}, ROW_NUMBER() OVER
+                        (PARTITION BY name ORDER BY revision DESC) AS row_number
+                    FROM workflow_artifacts WHERE {where}
+                )
+                WHERE row_number = 1
+                ORDER BY name
+                LIMIT $limit OFFSET $offset;
+                """
+            : $"""
+                SELECT {Columns} FROM workflow_artifacts
+                WHERE {where}
+                ORDER BY created_at, name, revision
+                LIMIT $limit OFFSET $offset;
+                """;
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, sql);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        if (query.Name is not null)
+            command.Parameters.AddWithValue("$name", query.Name);
+        if (query.ArtifactType is not null)
+            command.Parameters.AddWithValue("$type", query.ArtifactType);
+        if (query.ProducerStepKey is not null)
+            command.Parameters.AddWithValue("$stepKey", query.ProducerStepKey);
+        command.Parameters.AddWithValue("$limit", query.Limit);
+        command.Parameters.AddWithValue("$offset", query.Offset);
+        var results = new List<WorkflowArtifactReference>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(Read(reader));
+        return results;
+    }
+
+    public async ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(
+        Guid workflowRunId,
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var results = await QueryArtifactsAsync(
+            workflowRunId,
+            new ArtifactQuery { Name = name, LatestOnly = true, Limit = 1 },
+            cancellationToken).ConfigureAwait(false);
+        return results.Count == 0 ? null : results[0];
     }
 
     private static async ValueTask VerifyProducerAsync(

@@ -102,7 +102,23 @@ public abstract class WorkflowEngineTestBase : IDisposable
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
+        DeleteTestDirectory(root);
+    }
+
+    private static void DeleteTestDirectory(string path)
+    {
+        for (var attempt = 1; Directory.Exists(path); attempt++)
+        {
+            try
+            {
+                Directory.Delete(path, recursive: true);
+                return;
+            }
+            catch (IOException) when (attempt < 5)
+            {
+                SqliteConnection.ClearAllPools();
+                Thread.Sleep(50 * attempt);
+            }
+        }
     }
 }

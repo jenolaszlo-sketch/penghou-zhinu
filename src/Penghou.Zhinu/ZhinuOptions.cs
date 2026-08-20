@@ -26,6 +26,13 @@ public sealed class ZhinuOptions
     /// </summary>
     public int MaxNestingDepth { get; set; } = 16;
 
+    /// <summary>
+    /// Application policies evaluated before any artifact reference is
+    /// persisted. Validators run in registration order.
+    /// </summary>
+    public IList<IWorkflowArtifactValidator> ArtifactValidators { get; } =
+        new List<IWorkflowArtifactValidator>();
+
     internal void Validate()
     {
         if (MaxConcurrentWorkflows < 1)
@@ -45,5 +52,7 @@ public sealed class ZhinuOptions
             throw new ArgumentOutOfRangeException(nameof(ScanBatchSize));
         if (MaxNestingDepth < 1)
             throw new ArgumentOutOfRangeException(nameof(MaxNestingDepth));
+        if (ArtifactValidators.Any(validator => validator is null))
+            throw new ArgumentException("Artifact validators must not contain null.", nameof(ArtifactValidators));
     }
 }

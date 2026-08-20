@@ -4,7 +4,7 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Workflows;
 
 internal sealed class InsertEventCommand
 {
-    public async ValueTask ExecuteAsync(
+    public async ValueTask<WorkflowEvent> ExecuteAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
         Guid workflowRunId,
@@ -19,6 +19,7 @@ internal sealed class InsertEventCommand
             INSERT INTO workflow_events
             (workflow_run_id, step_key, event_type, timestamp, attempt, data_json)
             VALUES ($runId, $stepKey, $eventType, $timestamp, $attempt, $dataJson);
+            SELECT last_insert_rowid();
             """);
         command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(workflowRunId));
         command.Parameters.AddWithValue("$stepKey", SqliteStoreSupport.DbValue(stepKey));
@@ -28,6 +29,17 @@ internal sealed class InsertEventCommand
             "$attempt",
             attempt is null ? DBNull.Value : attempt.Value);
         command.Parameters.AddWithValue("$dataJson", SqliteStoreSupport.DbValue(dataJson));
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        var sequence = Convert.ToInt64(
+            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
+        return new WorkflowEvent
+        {
+            Sequence = sequence,
+            WorkflowRunId = workflowRunId,
+            StepKey = stepKey,
+            EventType = eventType,
+            Timestamp = timestamp,
+            Attempt = attempt,
+            DataJson = dataJson
+        };
     }
 }

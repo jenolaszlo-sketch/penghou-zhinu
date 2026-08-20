@@ -7,7 +7,7 @@ public interface IWorkflowArtifactRepository
     /// Publishes an artifact. Repeating an identical publication in the same
     /// run/step revision is idempotent; conflicting data is rejected.
     /// </summary>
-    ValueTask<WorkflowArtifactReference> PublishArtifactAsync(
+    ValueTask<ArtifactPublicationResult> PublishArtifactAsync(
         ArtifactPublicationRequest request,
         CancellationToken cancellationToken = default);
 
@@ -18,5 +18,15 @@ public interface IWorkflowArtifactRepository
     /// <summary>Returns every artifact revision produced by a run.</summary>
     ValueTask<IReadOnlyList<WorkflowArtifactReference>> GetArtifactsAsync(
         Guid workflowRunId,
+        CancellationToken cancellationToken = default);
+
+    ValueTask<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(
+        Guid workflowRunId,
+        ArtifactQuery query,
+        CancellationToken cancellationToken = default);
+
+    ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(
+        Guid workflowRunId,
+        string name,
         CancellationToken cancellationToken = default);
 }

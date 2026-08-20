@@ -34,6 +34,12 @@ public sealed class ArtifactTests : WorkflowEngineTestBase
         (await engine.GetArtifactAsync(
             artifact.Id,
             TestContext.Current.CancellationToken)).Should().BeEquivalentTo(artifact);
+        (await engine.GetEventsAsync(
+            workflow.RunId,
+            cancellationToken: TestContext.Current.CancellationToken)).Should()
+            .ContainSingle(item =>
+                item.EventType == WorkflowEventTypes.ArtifactPublished &&
+                item.StepKey == "planning");
     }
 
     [Fact]
@@ -98,6 +104,21 @@ public sealed class ArtifactTests : WorkflowEngineTestBase
         artifacts.Select(item => item.Revision).Should().Equal(1, 2);
         artifacts.Select(item => item.ProducerStepRevision).Should().Equal(1, 2);
         artifacts.Select(item => item.Location).Should().Equal("file:///one", "file:///two");
+        (await engine.GetLatestArtifactAsync(
+            runId,
+            "result",
+            TestContext.Current.CancellationToken))!.Location.Should().Be("file:///two");
+        (await engine.QueryArtifactsAsync(
+            runId,
+            new ArtifactQuery
+            {
+                Name = "result",
+                ArtifactType = "text/plain",
+                ProducerStepKey = "produce",
+                LatestOnly = true
+            },
+            TestContext.Current.CancellationToken)).Should().ContainSingle()
+            .Which.Revision.Should().Be(2);
     }
 
     [Fact]
@@ -128,6 +149,46 @@ public sealed class ArtifactTests : WorkflowEngineTestBase
         (await forkEngine.GetArtifactAsync(
             forkWorkflow.ConsumedArtifact.Id,
             TestContext.Current.CancellationToken)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ArtifactPublication_ValidatesAndForwardsCommittedEvent()
+    {
+        var workflow = new DuplicateArtifactWorkflow(conflict: false);
+        var publisher = new RecordingPublisher();
+        var options = new ZhinuOptions();
+        options.ArtifactValidators.Add(new RequiredHashValidator());
+        var engine = new WorkflowEngine(
+            CreateStore(),
+            new WorkflowRegistry().Register("validated-artifact", "1", workflow),
+            options,
+            eventPublisher: publisher);
+
+        var action = () => engine.RunAsync<string, string>(
+            "validated-artifact",
+            "1",
+            "input",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await action.Should().ThrowAsync<WorkflowExecutionFailedException>();
+        (await engine.GetArtifactsAsync(
+            workflow.RunId,
+            TestContext.Current.CancellationToken)).Should().BeEmpty();
+        publisher.Events.Should().NotContain(item =>
+            item.EventType == WorkflowEventTypes.ArtifactPublished);
+
+        var acceptedWorkflow = new HashedArtifactWorkflow();
+        var acceptedEngine = new WorkflowEngine(
+            CreateStore(),
+            new WorkflowRegistry().Register("accepted-artifact", "1", acceptedWorkflow),
+            options,
+            eventPublisher: publisher);
+        await acceptedEngine.RunAsync<string, string>(
+            "accepted-artifact",
+            "1",
+            "input",
+            cancellationToken: TestContext.Current.CancellationToken);
+        publisher.Events.Should().ContainSingle(item =>
+            item.EventType == WorkflowEventTypes.ArtifactPublished);
     }
 
     private sealed class ArtifactThenFailWorkflow : IWorkflow<string, string>
@@ -262,6 +323,39 @@ public sealed class ArtifactTests : WorkflowEngineTestBase
                 },
                 new StepOptions { DependsOn = ["produce"] },
                 cancellationToken);
+        }
+    }
+
+    private sealed class RequiredHashValidator : IWorkflowArtifactValidator
+    {
+        public ValueTask ValidateAsync(
+            WorkflowArtifactDescriptor artifact,
+            ArtifactValidationContext context,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(artifact.ContentHash))
+                throw new WorkflowStateException("A content hash is required.");
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    private sealed class HashedArtifactWorkflow : IWorkflow<string, string>
+    {
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            await context.PublishArtifactAsync(
+                new WorkflowArtifactDescriptor
+                {
+                    Name = "hashed",
+                    ArtifactType = "text/plain",
+                    Location = "file:///hashed",
+                    ContentHash = "sha256:abc"
+                },
+                cancellationToken);
+            return input;
         }
     }
 }

@@ -55,8 +55,19 @@ public sealed class HostingIntegrationTests : IDisposable
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
+        for (var attempt = 1; Directory.Exists(root); attempt++)
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+                return;
+            }
+            catch (IOException) when (attempt < 5)
+            {
+                SqliteConnection.ClearAllPools();
+                Thread.Sleep(50 * attempt);
+            }
+        }
     }
 
     private sealed class EchoWorkflow : IWorkflow<string, string>

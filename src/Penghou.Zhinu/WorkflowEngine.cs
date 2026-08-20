@@ -771,6 +771,31 @@ public sealed class WorkflowEngine : IAsyncDisposable
             .ConfigureAwait(false);
     }
 
+    /// <summary>Filters and pages artifact references belonging to a run.</summary>
+    public async Task<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(
+        Guid workflowRunId,
+        ArtifactQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        query.Validate();
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.QueryArtifactsAsync(workflowRunId, query, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Returns the newest revision of a named artifact in a run.</summary>
+    public async Task<WorkflowArtifactReference?> GetLatestArtifactAsync(
+        Guid workflowRunId,
+        string name,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.GetLatestArtifactAsync(workflowRunId, name, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     /// <summary>Gets an immutable artifact reference by its globally unique id.</summary>
     public async Task<WorkflowArtifactReference?> GetArtifactAsync(
         Guid artifactId,
@@ -845,6 +870,28 @@ public sealed class WorkflowEngine : IAsyncDisposable
         return null;
     }
 
+    /// <summary>
+    /// Explains why a run is terminal, executable, waiting, blocked, leased,
+    /// or unable to continue. Returns null when the run does not exist.
+    /// </summary>
+    public async Task<RunDiagnosis?> DiagnoseAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var run = await store.GetRunAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+        if (run is null)
+            return null;
+        var steps = await store.GetStepsAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+        var dependencies = await store.GetStepDependenciesAsync(
+            workflowRunId, cancellationToken).ConfigureAwait(false);
+        var operation = await store.GetActiveOperationAsync(
+            workflowRunId, cancellationToken).ConfigureAwait(false);
+        return Diagnose(run, steps, dependencies, operation);
+    }
+
     private async Task<WorkflowRunProgress> CreateProgressSnapshotAsync(
         WorkflowRun run,
         RunProgressOptions options,
@@ -858,12 +905,187 @@ public sealed class WorkflowEngine : IAsyncDisposable
                 limit: options.EventsLimit,
                 cancellationToken).ConfigureAwait(false)
             : [];
+        var artifacts = options.IncludeArtifacts
+            ? await store.GetArtifactsAsync(run.Id, cancellationToken).ConfigureAwait(false)
+            : [];
+        var operation = options.IncludeDiagnosis || options.IncludeActiveOperation
+            ? await store.GetActiveOperationAsync(run.Id, cancellationToken).ConfigureAwait(false)
+            : null;
+        RunDiagnosis? diagnosis = null;
+        if (options.IncludeDiagnosis)
+        {
+            var dependencies = await store.GetStepDependenciesAsync(
+                run.Id, cancellationToken).ConfigureAwait(false);
+            diagnosis = Diagnose(run, steps, dependencies, operation);
+        }
+        var sourceLineage = options.IncludeSourceLineage
+            ? await GetSourceLineageAsync(
+                run.SourceRunId,
+                options.SourceLineageMaxDepth,
+                cancellationToken).ConfigureAwait(false)
+            : [];
         return new WorkflowRunProgress
         {
             Run = run,
             Steps = steps,
-            Events = events
+            Events = events,
+            Artifacts = artifacts,
+            ActiveOperation = operation,
+            Diagnosis = diagnosis,
+            SourceRun = sourceLineage.FirstOrDefault(),
+            SourceLineage = sourceLineage
         };
+    }
+
+    private async Task<IReadOnlyList<WorkflowRun>> GetSourceLineageAsync(
+        Guid? sourceRunId,
+        int maxDepth,
+        CancellationToken cancellationToken)
+    {
+        var lineage = new List<WorkflowRun>();
+        var visited = new HashSet<Guid>();
+        while (sourceRunId is { } id &&
+            lineage.Count < maxDepth &&
+            visited.Add(id))
+        {
+            var source = await store.GetRunAsync(id, cancellationToken).ConfigureAwait(false);
+            if (source is null)
+                break;
+            lineage.Add(source);
+            sourceRunId = source.SourceRunId;
+        }
+        return lineage;
+    }
+
+    private RunDiagnosis Diagnose(
+        WorkflowRun run,
+        IReadOnlyList<WorkflowStepRun> steps,
+        IReadOnlyList<StepDependency> dependencies,
+        WorkflowRunOperation? operation)
+    {
+        RunDiagnosis Result(
+            RunDiagnosisCode code,
+            string summary,
+            WorkflowStepRun? step = null,
+            DateTimeOffset? until = null,
+            IReadOnlyList<string>? blocking = null) => new()
+            {
+                WorkflowRunId = run.Id,
+                Code = code,
+                Summary = summary,
+                StepKey = step?.StepKey,
+                Until = until,
+                LeaseOwner = step?.LeaseOwner ?? run.LeaseOwner,
+                Operation = operation,
+                BlockingStepKeys = blocking ?? []
+            };
+
+        var terminal = run.Status is WorkflowStatus.Completed or
+            WorkflowStatus.Cancelled or WorkflowStatus.Compensated;
+        if (terminal)
+            return Result(RunDiagnosisCode.Terminal, $"Run is terminal in state '{run.Status}'.");
+        var now = timeProvider.GetUtcNow();
+        var failed = steps.FirstOrDefault(step => step.Status == StepStatus.Failed);
+        if (failed is not null)
+        {
+            return Result(
+                RunDiagnosisCode.PermanentlyFailedStep,
+                $"Step '{failed.StepKey}' failed permanently after attempt {failed.Attempt}.",
+                failed);
+        }
+        if (run.Status == WorkflowStatus.Failed)
+            return Result(RunDiagnosisCode.Terminal, "Run is terminal in state 'Failed'.");
+        if (operation is not null || run.Status == WorkflowStatus.RollingBack)
+        {
+            return Result(
+                RunDiagnosisCode.ActiveOperation,
+                operation is null
+                    ? "The run is rolling back and awaits operation recovery."
+                    : $"Operation '{operation.OperationType}' is in phase '{operation.Status}'.");
+        }
+        if (!registry.TryGet(run.WorkflowName, run.WorkflowVersion, out _))
+        {
+            return Result(
+                RunDiagnosisCode.MissingWorkflowRegistration,
+                $"Workflow '{run.WorkflowName}' version '{run.WorkflowVersion}' is not registered.");
+        }
+        if (run.Deadline is { } deadline && deadline <= now)
+            return Result(RunDiagnosisCode.DeadlineExceeded, "The workflow deadline has passed.", until: deadline);
+        var signal = steps.FirstOrDefault(step =>
+            step.Status == StepStatus.Waiting && step.SignalName is not null);
+        if (signal is not null)
+        {
+            return Result(
+                RunDiagnosisCode.WaitingForSignal,
+                $"Step '{signal.StepKey}' is waiting for signal '{signal.SignalName}'.",
+                signal);
+        }
+        var timedWait = steps
+            .Where(step => step.Status == StepStatus.Waiting && step.AvailableAt > now)
+            .OrderBy(step => step.AvailableAt)
+            .FirstOrDefault();
+        if (timedWait is not null)
+        {
+            var retry = timedWait.Error is not null;
+            return Result(
+                retry ? RunDiagnosisCode.WaitingForRetry : RunDiagnosisCode.WaitingForDelay,
+                retry
+                    ? $"Step '{timedWait.StepKey}' is waiting for its retry time."
+                    : $"Step '{timedWait.StepKey}' is waiting for its durable delay.",
+                timedWait,
+                timedWait.AvailableAt);
+        }
+        var completedKeys = steps
+            .Where(step => step.Status == StepStatus.Completed)
+            .Select(step => step.StepKey)
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var pending in steps.Where(step => step.Status == StepStatus.Pending))
+        {
+            var blockers = dependencies
+                .Where(edge => edge.StepKey == pending.StepKey &&
+                    !completedKeys.Contains(edge.DependsOnStepKey))
+                .Select(edge => edge.DependsOnStepKey)
+                .Distinct(StringComparer.Ordinal)
+                .Order(StringComparer.Ordinal)
+                .ToArray();
+            if (blockers.Length > 0)
+            {
+                return Result(
+                    RunDiagnosisCode.BlockedByDependencies,
+                    $"Step '{pending.StepKey}' is blocked by {blockers.Length} incomplete dependency step(s).",
+                    pending,
+                    blocking: blockers);
+            }
+        }
+        var leasedStep = steps.FirstOrDefault(step =>
+            step.Status == StepStatus.Running && step.LeaseExpiresAt > now);
+        if (leasedStep is not null || run.LeaseExpiresAt > now)
+        {
+            return Result(
+                RunDiagnosisCode.Executing,
+                leasedStep is null
+                    ? "The run is actively leased by a worker."
+                    : $"Step '{leasedStep.StepKey}' is actively leased by a worker.",
+                leasedStep,
+                leasedStep?.LeaseExpiresAt ?? run.LeaseExpiresAt);
+        }
+        var expiredStep = steps.FirstOrDefault(step =>
+            step.Status == StepStatus.Running &&
+            (step.LeaseExpiresAt is null || step.LeaseExpiresAt <= now));
+        if (expiredStep is not null ||
+            run.Status == WorkflowStatus.Running &&
+            (run.LeaseExpiresAt is null || run.LeaseExpiresAt <= now))
+        {
+            return Result(
+                RunDiagnosisCode.ExpiredLeaseAwaitingRecovery,
+                expiredStep is null
+                    ? "The run lease expired and awaits recovery."
+                    : $"Step '{expiredStep.StepKey}' has an expired lease and awaits recovery.",
+                expiredStep);
+        }
+        if (run.Status == WorkflowStatus.Pending)
+            return Result(RunDiagnosisCode.ReadyToExecute, "The run is pending and ready for a worker.");
+        return Result(RunDiagnosisCode.AwaitingWorker, "The run has no active lease and awaits a worker.");
     }
 
     /// <summary>Polls durable state without blocking a thread until a run terminates.</summary>

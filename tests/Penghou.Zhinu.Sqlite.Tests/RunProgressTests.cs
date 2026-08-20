@@ -84,4 +84,45 @@ public sealed class RunProgressTests : WorkflowEngineTestBase
         progress.Steps.Should().HaveCount(2);
         progress.CompletedSteps.Should().Be(2);
     }
+
+    [Fact]
+    public async Task GetRunProgressAsync_IncludesArtifactsOperationAndDiagnosisShape()
+    {
+        var workflow = new ProgressArtifactWorkflow();
+        var engine = CreateEngine(workflow, "progress-artifact");
+        var runId = await engine.StartAsync(
+            "progress-artifact",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var progress = await engine.GetRunProgressAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        progress!.Artifacts.Should().ContainSingle().Which.Name.Should().Be("progress-output");
+        progress.Diagnosis!.Code.Should().Be(RunDiagnosisCode.Terminal);
+        progress.ActiveOperation.Should().BeNull();
+        progress.SourceRun.Should().BeNull();
+    }
+
+    private sealed class ProgressArtifactWorkflow : IWorkflow<string, string>
+    {
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            await context.PublishArtifactAsync(
+                new WorkflowArtifactDescriptor
+                {
+                    Name = "progress-output",
+                    ArtifactType = "text/plain",
+                    Location = "file:///progress"
+                },
+                cancellationToken);
+            return input;
+        }
+    }
 }

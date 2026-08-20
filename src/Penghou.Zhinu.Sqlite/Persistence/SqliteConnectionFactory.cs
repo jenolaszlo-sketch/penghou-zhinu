@@ -50,6 +50,8 @@ internal sealed class SqliteConnectionFactory
                 : null;
             await using var connection = await OpenAsync(cancellationToken)
                 .ConfigureAwait(false);
+            await VerifySchemaCompatibilityAsync(connection, cancellationToken)
+                .ConfigureAwait(false);
             if (options.EnableWal)
             {
                 await SqliteStoreSupport.ExecuteAsync(
@@ -83,6 +85,45 @@ internal sealed class SqliteConnectionFactory
     {
         if (!initialized)
             await InitializeAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async ValueTask VerifySchemaCompatibilityAsync(
+        SqliteConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await using var countCommand = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT COUNT(*) FROM sqlite_master
+            WHERE type = 'table' AND name NOT LIKE 'sqlite_%';
+            """);
+        var tableCount = Convert.ToInt32(
+            await countCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
+        if (tableCount == 0)
+            return;
+
+        await using var metadataCommand = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT COUNT(*) FROM sqlite_master
+            WHERE type = 'table' AND name = 'zhinu_schema';
+            """);
+        var hasMetadata = Convert.ToInt32(
+            await metadataCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) == 1;
+        if (!hasMetadata)
+        {
+            throw new ZhinuSchemaCompatibilityException(
+                ZhinuSqliteSchema.CurrentVersion,
+                databaseVersion: null);
+        }
+
+        await using var versionCommand = SqliteStoreSupport.CreateCommand(
+            connection, null, "SELECT version FROM zhinu_schema WHERE id = 1;");
+        var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
+        if (version != ZhinuSqliteSchema.CurrentVersion)
+        {
+            throw new ZhinuSchemaCompatibilityException(
+                ZhinuSqliteSchema.CurrentVersion,
+                version);
+        }
     }
 
     public async ValueTask<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
@@ -124,6 +165,13 @@ internal sealed class SqliteConnectionFactory
     }
 
     private const string Schema = """
+        CREATE TABLE IF NOT EXISTS zhinu_schema
+        (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            version INTEGER NOT NULL
+        );
+        INSERT OR IGNORE INTO zhinu_schema (id, version) VALUES (1, 1);
+
         CREATE TABLE IF NOT EXISTS workflow_runs
         (
             id TEXT PRIMARY KEY,

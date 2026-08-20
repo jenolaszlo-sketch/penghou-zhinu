@@ -48,6 +48,8 @@ public sealed class DiagnosticsTests : WorkflowEngineTestBase
             item.TraceId.ToHexString() == run.TraceId);
         activities.Should().Contain(item =>
             item.OperationName == ZhinuDiagnostics.Activities.StepExecute);
+        activities.Should().Contain(item =>
+            item.OperationName == ZhinuDiagnostics.Activities.ArtifactPublish);
         activities.SelectMany(item => item.TagObjects)
             .Should().NotContain(item =>
                 item.Key.Contains("input", StringComparison.OrdinalIgnoreCase) ||
@@ -55,6 +57,7 @@ public sealed class DiagnosticsTests : WorkflowEngineTestBase
         measurements.Should().Contain(ZhinuDiagnostics.Metrics.RunsStarted)
             .And.Contain(ZhinuDiagnostics.Metrics.RunsCompleted)
             .And.Contain(ZhinuDiagnostics.Metrics.StepsExecuted)
+            .And.Contain(ZhinuDiagnostics.Metrics.ArtifactsPublished)
             .And.Contain(ZhinuDiagnostics.Metrics.RunDuration);
     }
 
@@ -114,7 +117,18 @@ public sealed class DiagnosticsTests : WorkflowEngineTestBase
             await context.StepAsync(
                 "observed-step",
                 input,
-                (value, _) => Task.FromResult(value),
+                async (value, step, token) =>
+                {
+                    await step.PublishArtifactAsync(
+                        new WorkflowArtifactDescriptor
+                        {
+                            Name = "observed-artifact",
+                            ArtifactType = "text/plain",
+                            Location = "file:///observed"
+                        },
+                        token);
+                    return value;
+                },
                 cancellationToken: cancellationToken);
     }
 }

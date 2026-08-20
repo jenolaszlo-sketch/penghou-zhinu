@@ -75,19 +75,12 @@ public sealed class WorkflowContext
     /// Prefer <see cref="WorkflowStepContext.PublishArtifactAsync"/> for
     /// artifacts created inside durable steps so exact provenance is retained.
     /// </summary>
-    public ValueTask<WorkflowArtifactReference> PublishArtifactAsync(
+    public Task<WorkflowArtifactReference> PublishArtifactAsync(
         WorkflowArtifactDescriptor artifact,
         CancellationToken cancellationToken = default)
     {
         ValidateArtifact(artifact);
-        return store.PublishArtifactAsync(
-            new ArtifactPublicationRequest
-            {
-                WorkflowRunId = WorkflowRunId,
-                Artifact = artifact,
-                Now = timeProvider.GetUtcNow()
-            },
-            cancellationToken);
+        return PublishArtifactCoreAsync(artifact, null, cancellationToken);
     }
 
     /// <summary>
@@ -857,17 +850,85 @@ public sealed class WorkflowContext
         CancellationToken cancellationToken)
     {
         ValidateArtifact(artifact);
-        return store.PublishArtifactAsync(
-            new ArtifactPublicationRequest
+        return new ValueTask<WorkflowArtifactReference>(
+            PublishArtifactCoreAsync(artifact, step, cancellationToken));
+    }
+
+    private async Task<WorkflowArtifactReference> PublishArtifactCoreAsync(
+        WorkflowArtifactDescriptor artifact,
+        WorkflowStepRun? step,
+        CancellationToken cancellationToken)
+    {
+        using var activity = ZhinuDiagnostics.StartActivity(
+            ZhinuDiagnostics.Activities.ArtifactPublish);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, step?.StepKey);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.StepRevision, step?.Revision);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.ArtifactName, artifact.Name);
+        activity?.SetTag(ZhinuDiagnostics.Attributes.ArtifactType, artifact.ArtifactType);
+        try
+        {
+            var validationContext = new ArtifactValidationContext
             {
                 WorkflowRunId = WorkflowRunId,
-                StepExecutionId = step.Id,
-                ProducerStepKey = step.StepKey,
-                ProducerStepRevision = step.Revision,
-                Artifact = artifact,
-                Now = timeProvider.GetUtcNow()
-            },
-            cancellationToken);
+                ProducerStepKey = step?.StepKey,
+                ProducerStepRevision = step?.Revision
+            };
+            foreach (var validator in options.ArtifactValidators)
+            {
+                await validator.ValidateAsync(
+                    artifact,
+                    validationContext,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            var publication = await store.PublishArtifactAsync(
+                new ArtifactPublicationRequest
+                {
+                    WorkflowRunId = WorkflowRunId,
+                    StepExecutionId = step?.Id,
+                    ProducerStepKey = step?.StepKey,
+                    ProducerStepRevision = step?.Revision,
+                    Artifact = artifact,
+                    Now = timeProvider.GetUtcNow()
+                },
+                cancellationToken).ConfigureAwait(false);
+            activity?.SetTag(
+                ZhinuDiagnostics.Attributes.ArtifactId,
+                publication.Artifact.Id);
+            activity?.SetTag(
+                ZhinuDiagnostics.Attributes.ArtifactRevision,
+                publication.Artifact.Revision);
+            activity?.SetTag(
+                ZhinuDiagnostics.Attributes.ArtifactCreated,
+                publication.Created);
+            if (publication.Created)
+            {
+                ZhinuDiagnostics.ArtifactsPublishedCounter.Add(1);
+                onEventAppended?.Invoke(WorkflowRunId);
+                if (eventPublisher is not null && publication.Event is not null)
+                {
+                    try
+                    {
+                        await eventPublisher.PublishAsync(
+                            publication.Event,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new WorkflowEventPublisherException(
+                            "A registered event publisher failed to forward a committed artifact event.",
+                            exception);
+                    }
+                }
+            }
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return publication.Artifact;
+        }
+        catch (Exception exception)
+        {
+            ZhinuDiagnostics.RecordException(activity, exception);
+            throw;
+        }
     }
 
     private static void ValidateArtifact(WorkflowArtifactDescriptor artifact)

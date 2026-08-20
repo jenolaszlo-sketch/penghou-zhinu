@@ -95,7 +95,9 @@ Existing foundations include durable steps, retries, timeouts, signals, child
 workflows, dependencies, selective restart, previewable restart-as-new forks,
 compensation, rollback, fencing, crash recovery, typed handles, diagnostics,
 SQLite persistence, and durable external-artifact references with producing
-step revision provenance and post-failure inspection.
+step revision provenance and post-failure inspection. Operational hardening now
+also includes artifact queries and validation, unified run snapshots,
+deterministic run diagnosis, and explicit SQLite schema compatibility checks.
 
 Remaining foundation work:
 

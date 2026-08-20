@@ -130,7 +130,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         CancellationToken cancellationToken = default) =>
         steps.GetStepsAsync(workflowRunId, cancellationToken);
 
-    public ValueTask<WorkflowArtifactReference> PublishArtifactAsync(
+    public ValueTask<ArtifactPublicationResult> PublishArtifactAsync(
         ArtifactPublicationRequest request,
         CancellationToken cancellationToken = default) =>
         ObserveAsync(
@@ -146,6 +146,18 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
         artifacts.GetArtifactsAsync(workflowRunId, cancellationToken);
+
+    public ValueTask<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(
+        Guid workflowRunId,
+        ArtifactQuery query,
+        CancellationToken cancellationToken = default) =>
+        artifacts.QueryArtifactsAsync(workflowRunId, query, cancellationToken);
+
+    public ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(
+        Guid workflowRunId,
+        string name,
+        CancellationToken cancellationToken = default) =>
+        artifacts.GetLatestArtifactAsync(workflowRunId, name, cancellationToken);
 
     public ValueTask<StepClaimResult> ClaimStepAsync(
         StepClaimRequest request,

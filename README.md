@@ -98,7 +98,7 @@ var package = await workflow.StepAsync(
             {
                 Name = "nuget-package",
                 ArtifactType = "application/zip",
-                ArtifactVersion = "0.1.0-preview.4",
+                ArtifactVersion = request.Version,
                 Location = new Uri(path).AbsoluteUri,
                 ContentHash = await Sha256Async(path, cancellationToken),
                 Metadata = new Dictionary<string, string>
@@ -121,7 +121,27 @@ IReadOnlyList<WorkflowArtifactReference> artifacts =
 
 WorkflowArtifactReference? artifact =
     await engine.GetArtifactAsync(artifactId);
+
+WorkflowArtifactReference? latest =
+    await engine.GetLatestArtifactAsync(runId, "nuget-package");
+
+var latestPackages = await engine.QueryArtifactsAsync(
+    runId,
+    new ArtifactQuery
+    {
+        ArtifactType = "application/zip",
+        ProducerStepKey = "package",
+        LatestOnly = true,
+        Limit = 50
+    });
 ```
+
+Every new publication atomically appends an `artifact-published` durable event
+and emits the `zhinu.artifact.publish` activity plus the
+`zhinu.artifacts.published` counter. Applications can register one or more
+`IWorkflowArtifactValidator` instances through
+`ZhinuOptions.ArtifactValidators` to enforce location schemes, required hashes,
+naming rules, or metadata policies before persistence.
 
 Artifact references are ordinary serializable values, so they can be returned
 from steps, passed as downstream step inputs, and included in a typed workflow
@@ -173,11 +193,10 @@ database or service.
 
 ## Preview API policy
 
-The public API is frozen for the remainder of the `0.1.0-preview` line: additive
-changes are allowed, while breaking changes require the next preview minor.
-Store implementations must honor the atomicity statements on repository
-methods. `dotnet pack` package validation and the full multi-target test suite
-run in CI for every change.
+The API is still evolving and preview releases may contain deliberate breaking
+changes. Store implementations must honor the atomicity statements on
+repository methods. `dotnet pack` package validation and the full multi-target
+test suite run in CI for every change.
 
 Direct construction requires only the core engine and a store implementation.
 `Penghou.Zhinu.Hosting` adds the hosted execution loop and DI registration.
@@ -430,22 +449,49 @@ their last sequence.
 
 Inputs and outputs are not copied into progress events by default.
 
-A single call returns a point-in-time progress snapshot of a run and its entire
-child-run subtree: the run, its durable steps, its recent events, and the same
-shape recursively for every child started with `StartChildAsync`:
+A single call returns a point-in-time operational snapshot of a run and its
+entire child-run subtree: the run, durable steps, artifacts, active maintenance
+operation, diagnosis, recent events, fork source, and the same shape recursively
+for every child started with `StartChildAsync`:
 
 ```csharp
 var progress = await engine.GetRunProgressAsync(runId);
 progress.Run.Status;               // WorkflowStatus.Completed
 progress.CompletedSteps;           // 3
 progress.ExecutedStepKeys;         // ["parent-step", "child:start", "child:wait"]
+progress.Artifacts;                // durable external-artifact references
+progress.Diagnosis?.Summary;       // deterministic current-state explanation
+progress.SourceRun;                // source run when this is a fork
+progress.SourceLineage;            // nearest fork source first
 foreach (var child in progress.Children)
     Console.WriteLine($"{child.Run.WorkflowName}: {child.Run.Status}");
 ```
 
 The subtree is fetched with a recursive CTE over `parent_run_id` and capped at
-`RunProgressOptions.MaxDepth` (default 8); events per run can be disabled or
-capped via `IncludeEvents` / `EventsLimit`. Returns null for an unknown run.
+`RunProgressOptions.MaxDepth` (default 8). Events, artifacts, diagnosis, active
+operation, and source-run lookup can be disabled individually. Returns null for
+an unknown run.
+
+For a lightweight operational explanation without the complete snapshot:
+
+```csharp
+RunDiagnosis? diagnosis = await engine.DiagnoseAsync(runId);
+Console.WriteLine($"{diagnosis?.Code}: {diagnosis?.Summary}");
+```
+
+Stable diagnosis codes distinguish terminal runs, ready work, active leases,
+retry/delay/signal waits, dependency blocking, expired leases, permanent step
+failures, active operations, missing registrations, expired deadlines, and runs
+awaiting a worker.
+
+## SQLite schema compatibility
+
+Every new database records `ZhinuSqliteSchema.CurrentVersion`. Initialization
+checks that value before using an existing database and throws
+`ZhinuSchemaCompatibilityException` with both expected and detected versions
+when they differ. Unversioned preview databases are also rejected with an
+explicit instruction to recreate them. Preview releases currently do not run
+schema migrations.
 
 ## Querying, metadata, and retention
 

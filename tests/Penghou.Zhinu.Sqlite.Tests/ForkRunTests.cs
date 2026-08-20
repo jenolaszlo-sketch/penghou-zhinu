@@ -64,6 +64,12 @@ public sealed class ForkRunTests : WorkflowEngineTestBase
             TestContext.Current.CancellationToken);
         source!.Status.Should().Be(WorkflowStatus.Completed);
         source.SourceRunId.Should().BeNull();
+        var progress = await forkEngine.GetRunProgressAsync(
+            forkId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        progress!.SourceRun!.Id.Should().Be(sourceWorkflow.RunId);
+        progress.SourceLineage.Should().ContainSingle()
+            .Which.Id.Should().Be(sourceWorkflow.RunId);
         (await forkEngine.GetEventsAsync(
             forkId,
             cancellationToken: TestContext.Current.CancellationToken)).Should()

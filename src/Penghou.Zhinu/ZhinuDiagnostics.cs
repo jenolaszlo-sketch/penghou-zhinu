@@ -20,6 +20,7 @@ public static class ZhinuDiagnostics
         public const string RollbackExecute = "zhinu.rollback.execute";
         public const string OperationExecute = "zhinu.operation.execute";
         public const string LeaseRecover = "zhinu.lease.recover";
+        public const string ArtifactPublish = "zhinu.artifact.publish";
     }
 
     public static class Attributes
@@ -40,6 +41,11 @@ public static class ZhinuDiagnostics
         public const string ExecutionDisposition = "zhinu.execution.disposition";
         public const string RetryScheduled = "zhinu.retry.scheduled";
         public const string ErrorType = "error.type";
+        public const string ArtifactId = "zhinu.artifact.id";
+        public const string ArtifactName = "zhinu.artifact.name";
+        public const string ArtifactType = "zhinu.artifact.type";
+        public const string ArtifactRevision = "zhinu.artifact.revision";
+        public const string ArtifactCreated = "zhinu.artifact.created";
     }
 
     public static class Metrics
@@ -59,6 +65,7 @@ public static class ZhinuDiagnostics
         public const string CompensationsExecuted = "zhinu.compensations.executed";
         public const string RollbacksCompleted = "zhinu.rollbacks.completed";
         public const string LeasesRecovered = "zhinu.leases.recovered";
+        public const string ArtifactsPublished = "zhinu.artifacts.published";
     }
 
     internal static readonly ActivitySource ActivitySource = new(ActivitySourceName);
@@ -78,6 +85,7 @@ public static class ZhinuDiagnostics
     internal static readonly Counter<long> CompensationsExecutedCounter = Meter.CreateCounter<long>(Metrics.CompensationsExecuted);
     internal static readonly Counter<long> RollbacksCompletedCounter = Meter.CreateCounter<long>(Metrics.RollbacksCompleted);
     internal static readonly Counter<long> LeasesRecoveredCounter = Meter.CreateCounter<long>(Metrics.LeasesRecovered);
+    internal static readonly Counter<long> ArtifactsPublishedCounter = Meter.CreateCounter<long>(Metrics.ArtifactsPublished);
 
     internal static Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal) =>
         ActivitySource.StartActivity(name, kind);
