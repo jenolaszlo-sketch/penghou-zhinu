@@ -758,6 +758,29 @@ public sealed class WorkflowEngine : IAsyncDisposable
             .ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Returns every durable artifact reference published by a run, including
+    /// artifacts produced before a later step or workflow failure.
+    /// </summary>
+    public async Task<IReadOnlyList<WorkflowArtifactReference>> GetArtifactsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.GetArtifactsAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>Gets an immutable artifact reference by its globally unique id.</summary>
+    public async Task<WorkflowArtifactReference?> GetArtifactAsync(
+        Guid artifactId,
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.GetArtifactAsync(artifactId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<IReadOnlyList<WorkflowEvent>> GetEventsAsync(
         Guid workflowRunId,
         long afterSequence = 0,

@@ -26,6 +26,8 @@ after their results are committed.
   metadata queries, and retention controls.
 - Previewable workflow forks that create a new run while reusing compatible
   committed steps and preserving explicit source lineage.
+- Durable artifact references with content identity, custom metadata, exact
+  producing-step provenance, revision history, and post-failure inspection.
 - Compensations plus resumable rollback and rollback-and-restart operations,
   including dry-run plans before durable state changes are applied.
 - Optional hosting, Microsoft Agent Framework checkpointing, isolated workflow
@@ -77,6 +79,60 @@ CodeResult result = await handle.WaitAsync();
 
 `GetResultAsync` does not throw for failed, cancelled, compensated, or pending
 runs. `WaitAsync` retains exception-based application-flow semantics.
+
+## Artifact outputs and chaining
+
+Keep large files, repositories, model packages, and other blobs in storage
+owned by your application. Zhinu durably records small immutable references to
+them, including their logical name, type/version, location, content hash,
+metadata, and exact producing step revision:
+
+```csharp
+var package = await workflow.StepAsync(
+    "package",
+    async (step, cancellationToken) =>
+    {
+        var path = await BuildPackageAsync(cancellationToken);
+        return await step.PublishArtifactAsync(
+            new WorkflowArtifactDescriptor
+            {
+                Name = "nuget-package",
+                ArtifactType = "application/zip",
+                ArtifactVersion = "0.1.0-preview.4",
+                Location = new Uri(path).AbsoluteUri,
+                ContentHash = await Sha256Async(path, cancellationToken),
+                Metadata = new Dictionary<string, string>
+                {
+                    ["packageId"] = "Penghou.Example"
+                }
+            },
+            cancellationToken);
+    });
+```
+
+Publication is durable immediately; the reference remains available even if
+the producing step or workflow fails afterward. Identical publication by the
+same step revision is idempotent. A conflicting publication is rejected, while
+restarting the step produces the next artifact revision.
+
+```csharp
+IReadOnlyList<WorkflowArtifactReference> artifacts =
+    await engine.GetArtifactsAsync(runId);
+
+WorkflowArtifactReference? artifact =
+    await engine.GetArtifactAsync(artifactId);
+```
+
+Artifact references are ordinary serializable values, so they can be returned
+from steps, passed as downstream step inputs, and included in a typed workflow
+output. Outputs that want a discoverable convention may implement
+`IArtifactProducingOutput`; Zhinu does not require a particular output shape.
+When a fork reuses a producing step, its serialized output retains the original
+immutable reference and source-run provenance, so downstream work in the new
+run can continue the same artifact chain without republishing it.
+Run-level publication is also available through
+`WorkflowContext.PublishArtifactAsync`, but step publication is preferred when
+the artifact has a producing step because it captures stronger provenance.
 
 ## OpenTelemetry
 

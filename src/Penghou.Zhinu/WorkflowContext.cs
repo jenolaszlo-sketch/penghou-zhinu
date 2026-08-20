@@ -71,6 +71,26 @@ public sealed class WorkflowContext
     public Guid WorkflowRunId { get; }
 
     /// <summary>
+    /// Publishes a run-level artifact that is not owned by a particular step.
+    /// Prefer <see cref="WorkflowStepContext.PublishArtifactAsync"/> for
+    /// artifacts created inside durable steps so exact provenance is retained.
+    /// </summary>
+    public ValueTask<WorkflowArtifactReference> PublishArtifactAsync(
+        WorkflowArtifactDescriptor artifact,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateArtifact(artifact);
+        return store.PublishArtifactAsync(
+            new ArtifactPublicationRequest
+            {
+                WorkflowRunId = WorkflowRunId,
+                Artifact = artifact,
+                Now = timeProvider.GetUtcNow()
+            },
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Declares durable dependencies for every step created until the returned
     /// scope is disposed. Nested scopes combine their dependencies. The scope
     /// is a runtime helper only: it adds no storage writes of its own, and the
@@ -616,7 +636,14 @@ public sealed class WorkflowContext
                     var output = await operation(
                         input,
                         new WorkflowStepContext(
-                            WorkflowRunId, step.Id, step.StepKey, step.Attempt, step.Revision),
+                            WorkflowRunId,
+                            step.Id,
+                            step.StepKey,
+                            step.Attempt,
+                            step.Revision,
+                            false,
+                            (artifact, token) => PublishStepArtifactAsync(
+                                step, artifact, token)),
                         executionCancellation.Token).ConfigureAwait(false);
                     var outputJson = JsonSerializer.Serialize(output, serializerOptions);
                     await store.CompleteStepAsync(
@@ -780,7 +807,7 @@ public sealed class WorkflowContext
                 stepKey,
                 row.Attempt,
                 row.Revision,
-                IsCompensation: true);
+                isCompensation: true);
             rollbackInvocations.Add(new CompensationInvocation(
                 stepKey,
                 row,
@@ -823,6 +850,33 @@ public sealed class WorkflowContext
 
     private static void ValidateStepKey(string stepKey) =>
         ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
+
+    private ValueTask<WorkflowArtifactReference> PublishStepArtifactAsync(
+        WorkflowStepRun step,
+        WorkflowArtifactDescriptor artifact,
+        CancellationToken cancellationToken)
+    {
+        ValidateArtifact(artifact);
+        return store.PublishArtifactAsync(
+            new ArtifactPublicationRequest
+            {
+                WorkflowRunId = WorkflowRunId,
+                StepExecutionId = step.Id,
+                ProducerStepKey = step.StepKey,
+                ProducerStepRevision = step.Revision,
+                Artifact = artifact,
+                Now = timeProvider.GetUtcNow()
+            },
+            cancellationToken);
+    }
+
+    private static void ValidateArtifact(WorkflowArtifactDescriptor artifact)
+    {
+        ArgumentNullException.ThrowIfNull(artifact);
+        ArgumentException.ThrowIfNullOrWhiteSpace(artifact.Name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(artifact.ArtifactType);
+        ArgumentException.ThrowIfNullOrWhiteSpace(artifact.Location);
+    }
 
     private readonly record struct Unit
     {

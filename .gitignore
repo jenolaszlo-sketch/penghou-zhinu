@@ -1,6 +1,8 @@
 bin/
 obj/
 artifacts/
+!src/Penghou.Zhinu.Sqlite/Persistence/Artifacts/
+!src/Penghou.Zhinu.Sqlite/Persistence/Artifacts/*.cs
 TestResults/
 .vs/
 *.user

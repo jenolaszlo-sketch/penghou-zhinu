@@ -13,6 +13,7 @@ public interface IWorkflowStore :
     IWorkflowSignalRepository,
     IWorkflowTimerRepository,
     IWorkflowLeaseRepository,
-    IWorkflowForkRepository
+    IWorkflowForkRepository,
+    IWorkflowArtifactRepository
 {
 }

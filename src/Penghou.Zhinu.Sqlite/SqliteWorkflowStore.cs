@@ -4,6 +4,7 @@ using Penghou.Zhinu.Sqlite.Persistence.Signals;
 using Penghou.Zhinu.Sqlite.Persistence.Steps;
 using Penghou.Zhinu.Sqlite.Persistence.Timers;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
+using Penghou.Zhinu.Sqlite.Persistence.Artifacts;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 
@@ -21,6 +22,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private readonly SqliteSignalRepository signals;
     private readonly SqliteTimerRepository timers;
     private readonly SqliteLeaseRepository leases;
+    private readonly SqliteArtifactRepository artifacts;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -33,6 +35,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         signals = new SqliteSignalRepository(factory);
         timers = new SqliteTimerRepository(factory);
         leases = new SqliteLeaseRepository(factory);
+        artifacts = new SqliteArtifactRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
@@ -126,6 +129,23 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
         steps.GetStepsAsync(workflowRunId, cancellationToken);
+
+    public ValueTask<WorkflowArtifactReference> PublishArtifactAsync(
+        ArtifactPublicationRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "artifact.publish",
+            () => artifacts.PublishArtifactAsync(request, cancellationToken));
+
+    public ValueTask<WorkflowArtifactReference?> GetArtifactAsync(
+        Guid artifactId,
+        CancellationToken cancellationToken = default) =>
+        artifacts.GetArtifactAsync(artifactId, cancellationToken);
+
+    public ValueTask<IReadOnlyList<WorkflowArtifactReference>> GetArtifactsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        artifacts.GetArtifactsAsync(workflowRunId, cancellationToken);
 
     public ValueTask<StepClaimResult> ClaimStepAsync(
         StepClaimRequest request,

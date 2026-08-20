@@ -200,6 +200,29 @@ internal sealed class SqliteConnectionFactory
         CREATE INDEX IF NOT EXISTS ix_workflow_step_dependencies_depends_on
             ON workflow_step_dependencies(run_id, depends_on_step_key);
 
+        CREATE TABLE IF NOT EXISTS workflow_artifacts
+        (
+            id TEXT PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            revision INTEGER NOT NULL,
+            artifact_type TEXT NOT NULL,
+            artifact_version TEXT NULL,
+            location TEXT NOT NULL,
+            content_hash TEXT NULL,
+            metadata_json TEXT NULL,
+            producer_step_key TEXT NULL,
+            producer_step_revision INTEGER NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(workflow_run_id, name, revision),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_run
+            ON workflow_artifacts(workflow_run_id, name, revision);
+        CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_producer
+            ON workflow_artifacts(workflow_run_id, producer_step_key,
+                producer_step_revision);
+
         CREATE TABLE IF NOT EXISTS workflow_events
         (
             sequence INTEGER PRIMARY KEY AUTOINCREMENT,
