@@ -13,11 +13,16 @@ internal static class StepResultSerializer
         string expectedType,
         JsonSerializerOptions serializerOptions)
     {
+        if (json is null)
+        {
+            if (default(T) is not null)
+                throw new WorkflowSerializationException(
+                    $"Stored step result '{expectedType}' was null.");
+            return default!;
+        }
         try
         {
-            var value = JsonSerializer.Deserialize<T>(
-                json ?? "null",
-                serializerOptions);
+            var value = JsonSerializer.Deserialize<T>(json, serializerOptions);
             if (value is null && default(T) is not null)
             {
                 throw new WorkflowSerializationException(

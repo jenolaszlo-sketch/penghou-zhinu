@@ -33,7 +33,23 @@ public sealed class ZhinuOptions
     public IList<IWorkflowArtifactValidator> ArtifactValidators { get; } =
         new List<IWorkflowArtifactValidator>();
 
-    internal void Validate()
+    internal ZhinuOptions Clone()
+    {
+        var clone = new ZhinuOptions
+        {
+            MaxConcurrentWorkflows = MaxConcurrentWorkflows,
+            LeaseDuration = LeaseDuration,
+            LeaseRenewalInterval = LeaseRenewalInterval,
+            PollInterval = PollInterval,
+            LeaseRecoveryInterval = LeaseRecoveryInterval,
+            ScanBatchSize = ScanBatchSize,
+            MaxNestingDepth = MaxNestingDepth
+        };
+        foreach (var v in ArtifactValidators) clone.ArtifactValidators.Add(v);
+        return clone;
+    }
+
+    public void Validate()
     {
         if (MaxConcurrentWorkflows < 1)
             throw new ArgumentOutOfRangeException(nameof(MaxConcurrentWorkflows));

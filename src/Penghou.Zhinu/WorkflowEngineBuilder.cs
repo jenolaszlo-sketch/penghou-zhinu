@@ -28,7 +28,8 @@ public sealed class WorkflowEngineBuilder
 
     public WorkflowEngineBuilder WithOptions(ZhinuOptions value)
     {
-        options = value ?? throw new ArgumentNullException(nameof(value));
+        ArgumentNullException.ThrowIfNull(value);
+        options = value.Clone();
         return this;
     }
 
@@ -41,7 +42,8 @@ public sealed class WorkflowEngineBuilder
 
     public WorkflowEngineBuilder WithSerializerOptions(JsonSerializerOptions value)
     {
-        serializerOptions = value ?? throw new ArgumentNullException(nameof(value));
+        ArgumentNullException.ThrowIfNull(value);
+        serializerOptions = ZhinuJsonDefaults.CloneAndFreeze(value);
         return this;
     }
 

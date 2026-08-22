@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Penghou.Zhinu.Sqlite;
 
@@ -13,8 +14,8 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configure);
         var options = new ZhinuSqliteOptions { DatabasePath = string.Empty };
         configure(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.DatabasePath);
-        services.AddSingleton(options);
+        options.Validate();
+        services.TryAddSingleton(options);
         services.AddSingleton<SqliteWorkflowStore>();
         services.AddSingleton<IWorkflowStore>(provider =>
             provider.GetRequiredService<SqliteWorkflowStore>());

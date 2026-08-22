@@ -14,7 +14,7 @@ namespace Penghou.Zhinu.Agents;
 public static class WorkflowContextAgentExtensions
 {
     private static readonly JsonSerializerOptions SerializerOptions =
-        new(JsonSerializerDefaults.Web);
+        Penghou.Zhinu.ZhinuJsonDefaults.CreateDefault();
 
     /// <summary>
     /// Executes <paramref name="workflow"/> inside a durable Zhinu step named

@@ -47,9 +47,11 @@ public sealed class WorkflowEngine : IAsyncDisposable
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
-        this.options = options ?? new ZhinuOptions();
+        this.options = (options ?? new ZhinuOptions()).Clone();
         this.options.Validate();
-        this.serializerOptions = serializerOptions ?? CreateSerializerOptions();
+        this.serializerOptions = serializerOptions is null
+            ? ZhinuJsonDefaults.CreateDefault()
+            : ZhinuJsonDefaults.CloneAndFreeze(serializerOptions);
         this.timeProvider = timeProvider ?? TimeProvider.System;
         this.logger = logger ?? NullLogger<WorkflowEngine>.Instance;
         this.eventPublisher = eventPublisher;
@@ -884,30 +886,54 @@ public sealed class WorkflowEngine : IAsyncDisposable
             .ConfigureAwait(false);
     }
 
-    /// <summary>Streams artifact references for a run using offset pagination.</summary>
+    /// <summary>Streams artifact references for a run using cursor pagination (AfterId) for stable ordering.</summary>
     public async IAsyncEnumerable<WorkflowArtifactReference> EnumerateArtifactsAsync(
         Guid workflowRunId,
         ArtifactQuery? query = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var baseQuery = query ?? new ArtifactQuery();
-        var offset = baseQuery.Offset;
-        while (true)
+        if (baseQuery.LatestOnly)
         {
-            var pageQuery = new ArtifactQuery
+            var offset = baseQuery.Offset;
+            while (true)
             {
-                Name = baseQuery.Name,
-                ArtifactType = baseQuery.ArtifactType,
-                ProducerStepKey = baseQuery.ProducerStepKey,
-                LatestOnly = baseQuery.LatestOnly,
-                Offset = offset,
-                Limit = baseQuery.Limit
-            };
-            var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
-                .ConfigureAwait(false);
-            foreach (var artifact in page) yield return artifact;
-            if (page.Count < baseQuery.Limit) yield break;
-            offset += page.Count;
+                var pageQuery = new ArtifactQuery
+                {
+                    Name = baseQuery.Name,
+                    ArtifactType = baseQuery.ArtifactType,
+                    ProducerStepKey = baseQuery.ProducerStepKey,
+                    LatestOnly = true,
+                    Offset = offset,
+                    Limit = baseQuery.Limit
+                };
+                var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var artifact in page) yield return artifact;
+                if (page.Count < baseQuery.Limit) yield break;
+                offset += page.Count;
+            }
+        }
+        else
+        {
+            Guid? afterId = baseQuery.AfterId;
+            while (true)
+            {
+                var pageQuery = new ArtifactQuery
+                {
+                    Name = baseQuery.Name,
+                    ArtifactType = baseQuery.ArtifactType,
+                    ProducerStepKey = baseQuery.ProducerStepKey,
+                    LatestOnly = false,
+                    AfterId = afterId,
+                    Limit = baseQuery.Limit
+                };
+                var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var artifact in page) yield return artifact;
+                if (page.Count < baseQuery.Limit) yield break;
+                afterId = page[^1].Id;
+            }
         }
     }
 
@@ -1405,10 +1431,6 @@ public sealed class WorkflowEngine : IAsyncDisposable
     private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(disposed != 0, this);
 
-    private static JsonSerializerOptions CreateSerializerOptions()
-    {
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        options.Converters.Add(new JsonStringEnumConverter());
-        return options;
-    }
+    private static JsonSerializerOptions CreateSerializerOptions() =>
+        ZhinuJsonDefaults.CreateDefault();
 }

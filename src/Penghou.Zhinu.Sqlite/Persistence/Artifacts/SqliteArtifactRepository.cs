@@ -139,14 +139,42 @@ internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) 
             conditions.Add("artifact_type = $type");
         if (query.ProducerStepKey is not null)
             conditions.Add("producer_step_key = $stepKey");
-        var where = string.Join(" AND ", conditions);
+        if (query.AfterId is not null && !query.LatestOnly)
+        {
+            var cursorCreated = await GetCreatedAtAsync(connection, query.AfterId.Value, cancellationToken)
+                .ConfigureAwait(false);
+            if (cursorCreated is null)
+                throw new KeyNotFoundException($"Artifact '{query.AfterId:D}' does not exist.");
+            conditions.Add("((created_at > $cursorCreated) OR (created_at = $cursorCreated AND id > $cursorId))");
+            var where = string.Join(" AND ", conditions);
+            var sqlCursor = $"""
+                SELECT {Columns} FROM workflow_artifacts
+                WHERE {where}
+                ORDER BY created_at, id
+                LIMIT $limit;
+                """;
+            await using var cmdCursor = SqliteStoreSupport.CreateCommand(connection, null, sqlCursor);
+            cmdCursor.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+            if (query.Name is not null) cmdCursor.Parameters.AddWithValue("$name", query.Name);
+            if (query.ArtifactType is not null) cmdCursor.Parameters.AddWithValue("$type", query.ArtifactType);
+            if (query.ProducerStepKey is not null) cmdCursor.Parameters.AddWithValue("$stepKey", query.ProducerStepKey);
+            cmdCursor.Parameters.AddWithValue("$cursorCreated", SqliteStoreSupport.FormatTimestamp(cursorCreated.Value));
+            cmdCursor.Parameters.AddWithValue("$cursorId", SqliteStoreSupport.Format(query.AfterId.Value));
+            cmdCursor.Parameters.AddWithValue("$limit", query.Limit);
+            var resultsCursor = new List<WorkflowArtifactReference>();
+            await using var readerCursor = await cmdCursor.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await readerCursor.ReadAsync(cancellationToken).ConfigureAwait(false))
+                resultsCursor.Add(Read(readerCursor));
+            return resultsCursor;
+        }
+        var whereClause = string.Join(" AND ", conditions);
         var sql = query.LatestOnly
             ? $"""
                 SELECT {Columns} FROM
                 (
                     SELECT {Columns}, ROW_NUMBER() OVER
                         (PARTITION BY name ORDER BY revision DESC) AS row_number
-                    FROM workflow_artifacts WHERE {where}
+                    FROM workflow_artifacts WHERE {whereClause}
                 )
                 WHERE row_number = 1
                 ORDER BY name
@@ -154,7 +182,7 @@ internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) 
                 """
             : $"""
                 SELECT {Columns} FROM workflow_artifacts
-                WHERE {where}
+                WHERE {whereClause}
                 ORDER BY created_at, name, revision
                 LIMIT $limit OFFSET $offset;
                 """;
@@ -174,6 +202,16 @@ internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) 
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             results.Add(Read(reader));
         return results;
+    }
+
+    private static async ValueTask<DateTimeOffset?> GetCreatedAtAsync(
+        SqliteConnection connection, Guid id, CancellationToken ct)
+    {
+        await using var cmd = SqliteStoreSupport.CreateCommand(connection, null,
+            "SELECT created_at FROM workflow_artifacts WHERE id = $id;");
+        cmd.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(id));
+        var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
+        return val is null or DBNull ? null : SqliteStoreSupport.ParseTimestamp((string)val);
     }
 
     public async ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(

@@ -1,7 +1,6 @@
 using Microsoft.Data.Sqlite;
 using System.Globalization;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Penghou.Zhinu.Sqlite.Persistence;
 
@@ -13,7 +12,7 @@ namespace Penghou.Zhinu.Sqlite.Persistence;
 internal static class SqliteStoreSupport
 {
     internal static readonly JsonSerializerOptions SerializerOptions =
-        CreateSerializerOptions();
+        Penghou.Zhinu.ZhinuJsonDefaults.CreateDefault();
 
     internal static SqliteCommand CreateCommand(
         SqliteConnection connection,
@@ -200,10 +199,6 @@ internal static class SqliteStoreSupport
         created_at, updated_at, completed_at
         """;
 
-    private static JsonSerializerOptions CreateSerializerOptions()
-    {
-        var result = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        result.Converters.Add(new JsonStringEnumConverter());
-        return result;
-    }
+    private static JsonSerializerOptions CreateSerializerOptions() =>
+        Penghou.Zhinu.ZhinuJsonDefaults.CreateDefault();
 }

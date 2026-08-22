@@ -16,4 +16,20 @@ public sealed class ZhinuSqliteOptions
     public bool EnableDetailedDiagnostics { get; set; }
 
     public TimeProvider TimeProvider { get; set; } = TimeProvider.System;
+
+    internal ZhinuSqliteOptions Clone() => new()
+    {
+        DatabasePath = DatabasePath,
+        EnableWal = EnableWal,
+        BusyTimeout = BusyTimeout,
+        EnableDetailedDiagnostics = EnableDetailedDiagnostics,
+        TimeProvider = TimeProvider
+    };
+
+    public void Validate()
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(DatabasePath);
+        if (BusyTimeout < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(BusyTimeout));
+    }
 }

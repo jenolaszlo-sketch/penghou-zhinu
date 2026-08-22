@@ -40,6 +40,8 @@ public sealed class ArtifactQuery
     public bool LatestOnly { get; set; }
     public int Offset { get; set; }
     public int Limit { get; set; } = 100;
+    /// <summary>Cursor: results strictly after this artifact id in stable order (created_at, id). Takes precedence over <see cref="Offset"/>.</summary>
+    public Guid? AfterId { get; set; }
 
     public void Validate()
     {
@@ -53,6 +55,8 @@ public sealed class ArtifactQuery
             throw new ArgumentOutOfRangeException(nameof(Offset));
         if (Limit is < 1 or > 1000)
             throw new ArgumentOutOfRangeException(nameof(Limit));
+        if (AfterId is not null && AfterId.Value == Guid.Empty)
+            throw new ArgumentOutOfRangeException(nameof(AfterId));
     }
 }
 

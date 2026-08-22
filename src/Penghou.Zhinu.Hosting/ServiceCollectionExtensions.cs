@@ -17,7 +17,8 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         var options = new ZhinuOptions();
         configure?.Invoke(options);
-        services.AddSingleton(options);
+        options.Validate();
+        services.TryAddSingleton(options);
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<WorkflowRegistry>(provider =>
         {
@@ -33,7 +34,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<WorkflowRegistry>());
         if (!services.Any(service =>
                 service.ServiceType == typeof(IWorkflowStore) ||
-                typeof(IWorkflowStore).IsAssignableFrom(service.ServiceType)))
+                (service.ImplementationType is not null && typeof(IWorkflowStore).IsAssignableFrom(service.ImplementationType)) ||
+                (service.ImplementationInstance is not null && service.ImplementationInstance is IWorkflowStore)))
         {
             throw new InvalidOperationException(
                 "AddZhinu requires a registered IWorkflowStore. Register the " +
