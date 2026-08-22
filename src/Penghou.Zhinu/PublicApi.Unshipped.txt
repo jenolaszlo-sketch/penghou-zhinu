@@ -1,3 +1,4 @@
+#nullable enable
 Penghou.Zhinu.IWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
 Penghou.Zhinu.WorkflowStoreHealth
 Penghou.Zhinu.WorkflowStoreHealth.Detail.get -> string?
