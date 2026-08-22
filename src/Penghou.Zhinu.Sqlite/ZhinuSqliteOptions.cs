@@ -15,6 +15,13 @@ public sealed class ZhinuSqliteOptions
     /// </summary>
     public bool EnableDetailedDiagnostics { get; set; }
 
+    /// <summary>
+    /// Enables SQLite connection pooling. Leave enabled in production; disable
+    /// for isolated per-test databases so connections close immediately and do
+    /// not share a global pool with concurrent tests.
+    /// </summary>
+    public bool Pooling { get; set; } = true;
+
     public TimeProvider TimeProvider { get; set; } = TimeProvider.System;
 
     internal ZhinuSqliteOptions Clone() => new()
@@ -23,6 +30,7 @@ public sealed class ZhinuSqliteOptions
         EnableWal = EnableWal,
         BusyTimeout = BusyTimeout,
         EnableDetailedDiagnostics = EnableDetailedDiagnostics,
+        Pooling = Pooling,
         TimeProvider = TimeProvider
     };
 

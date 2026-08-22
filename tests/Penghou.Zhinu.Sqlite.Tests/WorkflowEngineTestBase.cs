@@ -73,7 +73,8 @@ public abstract class WorkflowEngineTestBase : IDisposable
         new(new ZhinuSqliteOptions
         {
             DatabasePath = Path.Combine(root, "zhinu.db"),
-            BusyTimeout = TimeSpan.FromSeconds(2)
+            BusyTimeout = TimeSpan.FromSeconds(2),
+            Pooling = false
         });
 
     protected static async Task<Guid> CreateRunAsync(

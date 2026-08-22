@@ -32,7 +32,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             DataSource = path,
             Mode = SqliteOpenMode.ReadWriteCreate,
             Cache = SqliteCacheMode.Shared,
-            Pooling = true
+            Pooling = options.Pooling
         }.ToString();
     }
 
@@ -192,13 +192,13 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         }
     }
 
-    private const string Schema = """
+    private static readonly string Schema = $"""
         CREATE TABLE IF NOT EXISTS zhinu_schema
         (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             version INTEGER NOT NULL
         );
-        INSERT OR IGNORE INTO zhinu_schema (id, version) VALUES (1, 1);
+        INSERT OR IGNORE INTO zhinu_schema (id, version) VALUES (1, {ZhinuSqliteSchema.CurrentVersion});
 
         CREATE TABLE IF NOT EXISTS workflow_runs
         (
@@ -221,7 +221,9 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             trace_id TEXT NULL,
             lease_owner TEXT NULL,
             lease_expires_at TEXT NULL,
-            lease_generation INTEGER NOT NULL DEFAULT 1
+            lease_generation INTEGER NOT NULL DEFAULT 1,
+            CHECK (status BETWEEN 0 AND 6),
+            CHECK (lease_generation >= 1)
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_runs_runnable
             ON workflow_runs(status, lease_expires_at, created_at);
@@ -253,6 +255,10 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             revision INTEGER NOT NULL DEFAULT 1,
             lease_generation INTEGER NOT NULL DEFAULT 1,
             UNIQUE(workflow_run_id, step_key, revision),
+            CHECK (status BETWEEN 0 AND 5),
+            CHECK (attempt >= 0),
+            CHECK (revision >= 1),
+            CHECK (lease_generation >= 1),
             FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_steps_run
@@ -269,6 +275,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             depends_on_step_key TEXT NOT NULL,
             created_at TEXT NOT NULL,
             PRIMARY KEY (run_id, step_key, depends_on_step_key),
+            CHECK (step_key <> depends_on_step_key),
             FOREIGN KEY(run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_step_dependencies_key
@@ -291,6 +298,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             producer_step_revision INTEGER NULL,
             created_at TEXT NOT NULL,
             UNIQUE(workflow_run_id, name, revision),
+            CHECK (revision >= 1),
             FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_run
@@ -353,6 +361,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             reason TEXT NULL,
             idempotency_key TEXT NULL,
             UNIQUE(workflow_run_id, step_key, revision),
+            CHECK (status BETWEEN 0 AND 4),
+            CHECK (attempt >= 0),
             FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_step_compensations_run
@@ -368,6 +378,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
             completed_at TEXT NULL,
+            CHECK (status BETWEEN 0 AND 5),
             FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_run_operations_run

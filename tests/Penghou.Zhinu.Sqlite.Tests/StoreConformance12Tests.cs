@@ -26,13 +26,13 @@ public sealed class StoreConformance12Tests : WorkflowEngineTestBase
         var store = CreateStore();
         var workflow = new SlowWorkflow();
         var registry = new WorkflowRegistry().Register("lease-expiry", "1", workflow);
-        var engine = new WorkflowEngine(store, registry, new ZhinuOptions { LeaseDuration = TimeSpan.FromMilliseconds(200), LeaseRenewalInterval = TimeSpan.FromMilliseconds(50), PollInterval = TimeSpan.FromMilliseconds(10) });
+        await using var engine = new WorkflowEngine(store, registry, new ZhinuOptions { LeaseDuration = TimeSpan.FromMilliseconds(200), LeaseRenewalInterval = TimeSpan.FromMilliseconds(50), PollInterval = TimeSpan.FromMilliseconds(10) });
         var runId = await engine.StartAsync("lease-expiry", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
         var exec = engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
         await Task.Delay(500, TestContext.Current.CancellationToken);
         try { await exec; } catch { }
         // Recovery via second engine
-        var engine2 = new WorkflowEngine(store, registry, new ZhinuOptions { LeaseDuration = TimeSpan.FromSeconds(2), LeaseRenewalInterval = TimeSpan.FromMilliseconds(500), PollInterval = TimeSpan.FromMilliseconds(10) });
+        await using var engine2 = new WorkflowEngine(store, registry, new ZhinuOptions { LeaseDuration = TimeSpan.FromSeconds(2), LeaseRenewalInterval = TimeSpan.FromMilliseconds(500), PollInterval = TimeSpan.FromMilliseconds(10) });
         await engine2.ExecuteAsync(runId, TestContext.Current.CancellationToken);
         var run = await engine2.GetRunAsync(runId, TestContext.Current.CancellationToken);
         run!.Status.Should().BeOneOf(WorkflowStatus.Completed, WorkflowStatus.Running, WorkflowStatus.Failed);
