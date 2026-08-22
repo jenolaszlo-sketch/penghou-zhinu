@@ -893,47 +893,22 @@ public sealed class WorkflowEngine : IAsyncDisposable
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var baseQuery = query ?? new ArtifactQuery();
-        if (baseQuery.LatestOnly)
+        Guid? afterId = baseQuery.AfterId;
+        while (true)
         {
-            var offset = baseQuery.Offset;
-            while (true)
+            var pageQuery = new ArtifactQuery
             {
-                var pageQuery = new ArtifactQuery
-                {
-                    Name = baseQuery.Name,
-                    ArtifactType = baseQuery.ArtifactType,
-                    ProducerStepKey = baseQuery.ProducerStepKey,
-                    LatestOnly = true,
-                    Offset = offset,
-                    Limit = baseQuery.Limit
-                };
-                var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
-                    .ConfigureAwait(false);
-                foreach (var artifact in page) yield return artifact;
-                if (page.Count < baseQuery.Limit) yield break;
-                offset += page.Count;
-            }
-        }
-        else
-        {
-            Guid? afterId = baseQuery.AfterId;
-            while (true)
-            {
-                var pageQuery = new ArtifactQuery
-                {
-                    Name = baseQuery.Name,
-                    ArtifactType = baseQuery.ArtifactType,
-                    ProducerStepKey = baseQuery.ProducerStepKey,
-                    LatestOnly = false,
-                    AfterId = afterId,
-                    Limit = baseQuery.Limit
-                };
-                var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
-                    .ConfigureAwait(false);
-                foreach (var artifact in page) yield return artifact;
-                if (page.Count < baseQuery.Limit) yield break;
-                afterId = page[^1].Id;
-            }
+                Name = baseQuery.Name,
+                ArtifactType = baseQuery.ArtifactType,
+                ProducerStepKey = baseQuery.ProducerStepKey,
+                AfterId = afterId,
+                Limit = baseQuery.Limit
+            };
+            var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var artifact in page) yield return artifact;
+            if (page.Count < baseQuery.Limit) yield break;
+            afterId = page[^1].Id;
         }
     }
 

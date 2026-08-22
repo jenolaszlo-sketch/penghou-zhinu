@@ -139,7 +139,7 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             conditions.Add("artifact_type = $type");
         if (query.ProducerStepKey is not null)
             conditions.Add("producer_step_key = $stepKey");
-        if (query.AfterId is not null && !query.LatestOnly)
+        if (query.AfterId is not null)
         {
             var cursorCreated = await GetCreatedAtAsync(connection, query.AfterId.Value, cancellationToken)
                 .ConfigureAwait(false);
@@ -168,24 +168,12 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             return resultsCursor;
         }
         var whereClause = string.Join(" AND ", conditions);
-        var sql = query.LatestOnly
-            ? $"""
-                SELECT {Columns} FROM
-                (
-                    SELECT {Columns}, ROW_NUMBER() OVER
-                        (PARTITION BY name ORDER BY revision DESC) AS row_number
-                    FROM workflow_artifacts WHERE {whereClause}
-                )
-                WHERE row_number = 1
-                ORDER BY name
-                LIMIT $limit OFFSET $offset;
-                """
-            : $"""
-                SELECT {Columns} FROM workflow_artifacts
-                WHERE {whereClause}
-                ORDER BY created_at, name, revision
-                LIMIT $limit OFFSET $offset;
-                """;
+        var sql = $"""
+            SELECT {Columns} FROM workflow_artifacts
+            WHERE {whereClause}
+            ORDER BY created_at, name, revision
+            LIMIT $limit OFFSET $offset;
+            """;
         await using var command = SqliteStoreSupport.CreateCommand(connection, null, sql);
         command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
         if (query.Name is not null)
@@ -220,11 +208,22 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        var results = await QueryArtifactsAsync(
-            workflowRunId,
-            new ArtifactQuery { Name = name, LatestOnly = true, Limit = 1 },
-            cancellationToken).ConfigureAwait(false);
-        return results.Count == 0 ? null : results[0];
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+            SELECT {Columns} FROM workflow_artifacts
+            WHERE workflow_run_id = $run AND name = $name
+            ORDER BY revision DESC
+            LIMIT 1;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$name", name);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? Read(reader)
+            : null;
     }
 
     private static async ValueTask VerifyProducerAsync(

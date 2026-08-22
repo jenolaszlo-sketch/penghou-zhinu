@@ -108,17 +108,10 @@ public sealed class ArtifactTests : WorkflowEngineTestBase
             runId,
             "result",
             TestContext.Current.CancellationToken))!.Location.Should().Be("file:///two");
-        (await engine.QueryArtifactsAsync(
+        (await engine.GetLatestArtifactAsync(
             runId,
-            new ArtifactQuery
-            {
-                Name = "result",
-                ArtifactType = "text/plain",
-                ProducerStepKey = "produce",
-                LatestOnly = true
-            },
-            TestContext.Current.CancellationToken)).Should().ContainSingle()
-            .Which.Revision.Should().Be(2);
+            "result",
+            TestContext.Current.CancellationToken))!.Revision.Should().Be(2);
     }
 
     [Fact]
@@ -156,8 +149,8 @@ public sealed class ArtifactTests : WorkflowEngineTestBase
     {
         var workflow = new DuplicateArtifactWorkflow(conflict: false);
         var publisher = new RecordingPublisher();
-        var options = new ZhinuOptions();
-        options.ArtifactValidators.Add(new RequiredHashValidator());
+        var options = new ZhinuOptions().AddArtifactValidator(
+            new RequiredHashValidator());
         var engine = new WorkflowEngine(
             CreateStore(),
             new WorkflowRegistry().Register("validated-artifact", "1", workflow),

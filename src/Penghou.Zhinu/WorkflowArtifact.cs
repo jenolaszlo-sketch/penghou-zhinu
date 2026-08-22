@@ -32,16 +32,22 @@ public sealed record WorkflowArtifactReference
 }
 
 /// <summary>Filters and pages artifact references belonging to one workflow run.</summary>
-public sealed class ArtifactQuery
+/// <remarks>
+/// Prefer cursor pagination via <see cref="AfterId"/> for stable iteration under
+/// concurrent publication. <see cref="Offset"/> is provided for simple jumps but
+/// can skip or duplicate rows when artifacts are published concurrently. The
+/// latest revision of a named artifact is served by the dedicated
+/// <see cref="WorkflowEngine.GetLatestArtifactAsync"/> API rather than this query.
+/// </remarks>
+public sealed record ArtifactQuery
 {
-    public string? Name { get; set; }
-    public string? ArtifactType { get; set; }
-    public string? ProducerStepKey { get; set; }
-    public bool LatestOnly { get; set; }
-    public int Offset { get; set; }
-    public int Limit { get; set; } = 100;
+    public string? Name { get; init; }
+    public string? ArtifactType { get; init; }
+    public string? ProducerStepKey { get; init; }
+    public int Offset { get; init; }
+    public int Limit { get; init; } = 100;
     /// <summary>Cursor: results strictly after this artifact id in stable order (created_at, id). Takes precedence over <see cref="Offset"/>.</summary>
-    public Guid? AfterId { get; set; }
+    public Guid? AfterId { get; init; }
 
     public void Validate()
     {

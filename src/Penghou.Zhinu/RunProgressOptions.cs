@@ -1,29 +1,29 @@
 namespace Penghou.Zhinu;
 
 /// <summary>Configures <see cref="WorkflowEngine.GetRunProgressAsync"/>.</summary>
-public sealed class RunProgressOptions
+public sealed record RunProgressOptions
 {
     /// <summary>
     /// How many levels of child runs to include. The run itself is depth 0;
     /// direct children are depth 1. Defaults to 8.
     /// </summary>
-    public int MaxDepth { get; set; } = 8;
+    public int MaxDepth { get; init; } = 8;
 
     /// <summary>Whether to include each run's recent diagnostic events. Defaults to true.</summary>
-    public bool IncludeEvents { get; set; } = true;
+    public bool IncludeEvents { get; init; } = true;
 
     /// <summary>Maximum events to include per run. Defaults to 100.</summary>
-    public int EventsLimit { get; set; } = 100;
+    public int EventsLimit { get; init; } = 100;
 
-    public bool IncludeArtifacts { get; set; } = true;
+    public bool IncludeArtifacts { get; init; } = true;
 
-    public bool IncludeDiagnosis { get; set; } = true;
+    public bool IncludeDiagnosis { get; init; } = true;
 
-    public bool IncludeActiveOperation { get; set; } = true;
+    public bool IncludeActiveOperation { get; init; } = true;
 
-    public bool IncludeSourceLineage { get; set; } = true;
+    public bool IncludeSourceLineage { get; init; } = true;
 
-    public int SourceLineageMaxDepth { get; set; } = 16;
+    public int SourceLineageMaxDepth { get; init; } = 16;
 
     public void Validate()
     {

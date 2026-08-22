@@ -26,12 +26,24 @@ public sealed class ZhinuOptions
     /// </summary>
     public int MaxNestingDepth { get; set; } = 16;
 
+    private readonly List<IWorkflowArtifactValidator> artifactValidators = [];
+
     /// <summary>
     /// Application policies evaluated before any artifact reference is
-    /// persisted. Validators run in registration order.
+    /// persisted. Validators run in registration order. The collection is
+    /// read-only after construction; add validators with
+    /// <see cref="AddArtifactValidator"/>.
     /// </summary>
-    public IList<IWorkflowArtifactValidator> ArtifactValidators { get; } =
-        new List<IWorkflowArtifactValidator>();
+    public IReadOnlyList<IWorkflowArtifactValidator> ArtifactValidators =>
+        artifactValidators;
+
+    /// <summary>Registers an artifact policy validator.</summary>
+    public ZhinuOptions AddArtifactValidator(IWorkflowArtifactValidator validator)
+    {
+        ArgumentNullException.ThrowIfNull(validator);
+        artifactValidators.Add(validator);
+        return this;
+    }
 
     internal ZhinuOptions Clone()
     {
@@ -45,7 +57,7 @@ public sealed class ZhinuOptions
             ScanBatchSize = ScanBatchSize,
             MaxNestingDepth = MaxNestingDepth
         };
-        foreach (var v in ArtifactValidators) clone.ArtifactValidators.Add(v);
+        foreach (var v in artifactValidators) clone.artifactValidators.Add(v);
         return clone;
     }
 
@@ -68,7 +80,7 @@ public sealed class ZhinuOptions
             throw new ArgumentOutOfRangeException(nameof(ScanBatchSize));
         if (MaxNestingDepth < 1)
             throw new ArgumentOutOfRangeException(nameof(MaxNestingDepth));
-        if (ArtifactValidators.Any(validator => validator is null))
+        if (artifactValidators.Any(validator => validator is null))
             throw new ArgumentException("Artifact validators must not contain null.", nameof(ArtifactValidators));
     }
 }
