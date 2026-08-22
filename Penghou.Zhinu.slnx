@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/Penghou.Zhinu.Sample/Penghou.Zhinu.Sample.csproj" />
+    <Project Path="samples/Penghou.Zhinu.Direct/Penghou.Zhinu.Direct.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Penghou.Zhinu/Penghou.Zhinu.csproj" />

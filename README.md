@@ -131,10 +131,15 @@ var latestPackages = await engine.QueryArtifactsAsync(
     {
         ArtifactType = "application/zip",
         ProducerStepKey = "package",
-        LatestOnly = true,
+        AfterId = lastArtifactId,
         Limit = 50
     });
 ```
+
+`ArtifactQuery` is an immutable record. Cursor pagination (`AfterId`, ordered by
+`created_at, id`) is stable under concurrent publication; `Offset` is available
+for simple jumps but can skip or duplicate rows under concurrency. The latest
+revision of a named artifact is served by `GetLatestArtifactAsync`.
 
 Every new publication atomically appends an `artifact-published` durable event
 and emits the `zhinu.artifact.publish` activity plus the
@@ -529,6 +534,17 @@ var deleted = await engine.PurgeRunsAsync(
     new[] { WorkflowStatus.Completed, WorkflowStatus.Failed });
 ```
 
+Cancel many runs with a query. Bulk operations are applied independently and
+may partially succeed; the result reports per-item failures:
+
+```csharp
+BulkOperationResult cancelled = await engine.CancelManyAsync(
+    new RunQuery { Statuses = new[] { WorkflowStatus.Pending } },
+    actor: "ops",
+    reason: "maintenance");
+Console.WriteLine($"Cancelled {cancelled.Succeeded}, failed {cancelled.FailedCount}");
+```
+
 Prefer purging terminal runs; deleting an active run abandons its execution
 record.
 
@@ -827,6 +843,26 @@ The signal is delivered from outside the workflow:
 await engine.SendSignalAsync(runId, "approve", new { decision = "ok" });
 ```
 
+Typed signals bind the signal name to its payload type at compile time:
+
+```csharp
+var approval = new SignalDefinition<string>("approve");
+await engine.SendSignalAsync(runId, approval, "ok");
+var decision = await context.WaitForSignalAsync("approval", approval,
+    timeout: TimeSpan.FromHours(48), cancellationToken);
+```
+
+The signal inbox is visible and bounded independently of the durable history.
+Consumed signals remain in the workflow event history; purging the inbox does
+not lose audit events:
+
+```csharp
+var inbox = await engine.GetSignalsAsync(runId,
+    new SignalQuery { Status = SignalStatus.Buffered });
+var purged = await engine.PurgeSignalsAsync(runId,
+    new SignalPurgeOptions { OlderThan = DateTimeOffset.UtcNow.AddDays(-7) });
+```
+
 Semantics to be aware of:
 
 - Signals are **buffered in the store**. A signal sent before any wait for it
@@ -865,8 +901,15 @@ var thumbnail = await context.StartChildAsync<VideoRef, Thumbnail>(
 - Children execute **inline** by default: the parent's `ExecuteAsync` drives
   the child to completion while the parent holds its own lease, so a child run
   cannot be double-executed concurrently (the child's own claim arbitration
-  decides). Depth is capped by `ZhinuOptions.MaxNestingDepth` (default 16);
-  deeper children are left for the poll loop / background host.
+  decides). Depth is capped by `ZhinuOptions.MaxNestingDepth` (default 16) at
+  child creation; deeper children are rejected rather than created unbounded.
+- Child semantics are explicit via `ChildRunOptions`: the effective child
+  deadline is the earlier of the parent's deadline and `ChildRunOptions.Deadline`
+  (a child cannot outlive its parent), and metadata is inherited only when
+  `InheritMetadata` is set (default off) or provided explicitly.
+- Restarting the parent's `child:start` step creates a **fresh child** (a new
+  deterministic invocation identity derived from the parent, step key, and step
+  revision); a normal replay reuses the existing child.
 - A child that fails or is cancelled propagates to the parent: failure throws
   `WorkflowExecutionFailedException`, cancellation throws
   `OperationCanceledException`.
@@ -945,6 +988,14 @@ dotnet run --project samples/Penghou.Zhinu.Sample
 
 Terminate it during a step and run it again. Committed steps will be reused and
 execution will continue from the interrupted boundary.
+
+A second sample exercises direct construction (no hosted loop): typed handles,
+child workflows, typed signals, artifact publication, query, and durable
+cancellation:
+
+```bash
+dotnet run --project samples/Penghou.Zhinu.Direct
+```
 
 ## License
 

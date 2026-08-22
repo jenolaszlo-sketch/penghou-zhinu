@@ -102,6 +102,8 @@ public abstract class WorkflowEngineTestBase : IDisposable
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
         DeleteTestDirectory(root);
     }
 
@@ -114,9 +116,11 @@ public abstract class WorkflowEngineTestBase : IDisposable
                 Directory.Delete(path, recursive: true);
                 return;
             }
-            catch (IOException) when (attempt < 5)
+            catch (IOException) when (attempt < 10)
             {
                 SqliteConnection.ClearAllPools();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
                 Thread.Sleep(50 * attempt);
             }
         }
