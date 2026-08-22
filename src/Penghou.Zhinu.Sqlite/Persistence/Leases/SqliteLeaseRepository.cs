@@ -6,7 +6,7 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Leases;
 /// <summary>Coordinates run and step lease claims, renewals, and recovery.</summary>
 internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly GetRunnableRunIdsQuery getRunnableRunIds = new();
     private readonly GetRunStatusQuery getRunStatus = new();
     private readonly ClaimRunCommand claimRun = new();
@@ -18,7 +18,7 @@ internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
     private readonly RecoverExpiredCompensationsCommand recoverExpiredCompensations = new();
     private readonly InsertEventCommand insertEvent = new();
 
-    public SqliteLeaseRepository(SqliteConnectionFactory factory) => this.factory = factory;
+    public SqliteLeaseRepository(IZhinuSqliteDatabase factory) => this.factory = factory;
 
     public async ValueTask<IReadOnlyList<Guid>> GetRunnableRunIdsAsync(
         DateTimeOffset now,

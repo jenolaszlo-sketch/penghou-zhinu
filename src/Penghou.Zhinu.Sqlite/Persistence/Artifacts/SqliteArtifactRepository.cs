@@ -5,7 +5,7 @@ using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Artifacts;
 
-internal sealed class SqliteArtifactRepository(SqliteConnectionFactory factory) :
+internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
     IWorkflowArtifactRepository
 {
     private readonly InsertEventCommand insertEvent = new();

@@ -16,7 +16,11 @@ public static class ServiceCollectionExtensions
         configure(options);
         options.Validate();
         services.TryAddSingleton(options);
-        services.AddSingleton<SqliteWorkflowStore>();
+        services.TryAddSingleton<SqliteDatabase>();
+        services.TryAddSingleton<IZhinuSqliteDatabase>(provider =>
+            provider.GetRequiredService<SqliteDatabase>());
+        services.AddSingleton(provider => new SqliteWorkflowStore(
+            provider.GetRequiredService<IZhinuSqliteDatabase>()));
         services.AddSingleton<IWorkflowStore>(provider =>
             provider.GetRequiredService<SqliteWorkflowStore>());
         return services;

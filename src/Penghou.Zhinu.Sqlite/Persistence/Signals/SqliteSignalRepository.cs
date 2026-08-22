@@ -8,7 +8,7 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Signals;
 /// <summary>Coordinates signal buffering and delivery to waiting steps.</summary>
 internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly GetRunStatusQuery getRunStatus = new();
     private readonly InsertSignalCommand insertSignal = new();
     private readonly InsertEventCommand insertEvent = new();
@@ -18,7 +18,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
     private readonly MarkSignalDeliveredCommand markSignalDelivered = new();
     private readonly CompleteStepWithSignalCommand completeStepWithSignal = new();
 
-    public SqliteSignalRepository(SqliteConnectionFactory factory) => this.factory = factory;
+    public SqliteSignalRepository(IZhinuSqliteDatabase factory) => this.factory = factory;
 
     public async ValueTask SendSignalAsync(
         Guid workflowRunId,

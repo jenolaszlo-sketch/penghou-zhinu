@@ -7,13 +7,13 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Timers;
 /// <summary>Coordinates delayed step scheduling (timers).</summary>
 internal sealed class SqliteTimerRepository : IWorkflowTimerRepository
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteStepFinisher stepFinisher;
     private readonly GetStepByIdQuery getStepById = new();
     private readonly CompleteDelayCommand completeDelay = new();
     private readonly InsertEventCommand insertEvent = new();
 
-    public SqliteTimerRepository(SqliteConnectionFactory factory)
+    public SqliteTimerRepository(IZhinuSqliteDatabase factory)
     {
         this.factory = factory;
         stepFinisher = new(factory);

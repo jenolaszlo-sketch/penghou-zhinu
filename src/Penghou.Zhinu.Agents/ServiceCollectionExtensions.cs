@@ -21,9 +21,13 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configure);
         var options = new ZhinuSqliteOptions { DatabasePath = string.Empty };
         configure(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.DatabasePath);
+        options.Validate();
         services.TryAddSingleton(options);
-        services.TryAddSingleton<SqliteJsonCheckpointStore>();
+        services.TryAddSingleton<SqliteDatabase>();
+        services.TryAddSingleton<IZhinuSqliteDatabase>(provider =>
+            provider.GetRequiredService<SqliteDatabase>());
+        services.TryAddSingleton(provider => new SqliteJsonCheckpointStore(
+            provider.GetRequiredService<IZhinuSqliteDatabase>()));
         services.TryAddSingleton<JsonCheckpointStore>(provider =>
             provider.GetRequiredService<SqliteJsonCheckpointStore>());
         services.TryAddSingleton<ICheckpointStore<JsonElement>>(provider =>

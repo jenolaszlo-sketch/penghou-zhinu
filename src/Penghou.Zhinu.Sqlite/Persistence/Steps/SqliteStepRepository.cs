@@ -13,7 +13,7 @@ internal sealed class SqliteStepRepository :
     IWorkflowStepRepository,
     IWorkflowForkRepository
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteStepFinisher stepFinisher;
     private readonly InsertStepCommand insertStep = new();
     private readonly ClaimStepCommand claimStep = new();
@@ -53,7 +53,7 @@ internal sealed class SqliteStepRepository :
     private readonly GetRunQuery getRun = new();
     private readonly InsertRunCommand insertRun = new();
 
-    public SqliteStepRepository(SqliteConnectionFactory factory)
+    public SqliteStepRepository(IZhinuSqliteDatabase factory)
     {
         this.factory = factory;
         stepFinisher = new(factory);

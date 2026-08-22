@@ -17,7 +17,7 @@ namespace Penghou.Zhinu.Sqlite;
 /// </summary>
 public sealed class SqliteWorkflowStore : IWorkflowStore
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
     private readonly SqliteStepRepository steps;
     private readonly SqliteSignalRepository signals;
@@ -27,10 +27,20 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
+        : this(new SqliteDatabase(options))
     {
-        ArgumentNullException.ThrowIfNull(options);
-        detailedDiagnostics = options.EnableDetailedDiagnostics;
-        factory = new SqliteConnectionFactory(options);
+    }
+
+    /// <summary>
+    /// Creates a store over a caller-supplied database owner so multiple
+    /// components can share the same initialization gate and PRAGMAs for one
+    /// database path.
+    /// </summary>
+    public SqliteWorkflowStore(IZhinuSqliteDatabase database)
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        factory = database;
+        detailedDiagnostics = database.Options.EnableDetailedDiagnostics;
         workflows = new SqliteWorkflowRepository(factory);
         steps = new SqliteStepRepository(factory);
         signals = new SqliteSignalRepository(factory);

@@ -1,27 +1,28 @@
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
+using Penghou.Zhinu.Sqlite.Persistence;
 
-namespace Penghou.Zhinu.Sqlite.Persistence;
+namespace Penghou.Zhinu.Sqlite;
 
 /// <summary>
 /// Owns the SQLite connection string, the idempotent schema initialization,
 /// and connection opening (foreign keys and busy timeout PRAGMAs). Shared by
-/// every repository so initialization state and pragmas stay consistent.
+/// every repository and by other components persisting to the same database
+/// path (such as the Agent checkpoint store) so initialization state and
+/// pragmas stay consistent.
 /// </summary>
-internal sealed class SqliteConnectionFactory
+public sealed class SqliteDatabase : IZhinuSqliteDatabase
 {
-    private readonly ZhinuSqliteOptions options;
     private readonly string connectionString;
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private volatile bool initialized;
 
-    public SqliteConnectionFactory(ZhinuSqliteOptions options)
+    public SqliteDatabase(ZhinuSqliteOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.DatabasePath);
-        if (options.BusyTimeout < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(options));
-        this.options = options;
+        options.Validate();
+        Options = options;
+        TimeProvider = options.TimeProvider ?? TimeProvider.System;
         var path = Path.GetFullPath(options.DatabasePath);
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
@@ -35,6 +36,10 @@ internal sealed class SqliteConnectionFactory
         }.ToString();
     }
 
+    public ZhinuSqliteOptions Options { get; }
+
+    public TimeProvider TimeProvider { get; }
+
     public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
     {
         if (initialized)
@@ -44,7 +49,7 @@ internal sealed class SqliteConnectionFactory
         {
             if (initialized)
                 return;
-            using var activity = options.EnableDetailedDiagnostics
+            using var activity = Options.EnableDetailedDiagnostics
                 ? ZhinuSqliteDiagnostics.ActivitySource.StartActivity(
                     ZhinuSqliteDiagnostics.InitializeActivity)
                 : null;
@@ -52,7 +57,7 @@ internal sealed class SqliteConnectionFactory
                 .ConfigureAwait(false);
             await VerifySchemaCompatibilityAsync(connection, cancellationToken)
                 .ConfigureAwait(false);
-            if (options.EnableWal)
+            if (Options.EnableWal)
             {
                 await SqliteStoreSupport.ExecuteAsync(
                     connection,
@@ -102,6 +107,52 @@ internal sealed class SqliteConnectionFactory
             .ConfigureAwait(false);
     }
 
+    public async ValueTask VacuumAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await SqliteStoreSupport.ExecuteAsync(
+            connection, null, "VACUUM;", cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
+    {
+        using var activity = Options.EnableDetailedDiagnostics
+            ? ZhinuSqliteDiagnostics.ActivitySource.StartActivity(
+                ZhinuSqliteDiagnostics.ConnectionOpenActivity,
+                ActivityKind.Client)
+            : null;
+        var started = Stopwatch.GetTimestamp();
+        var connection = new SqliteConnection(connectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await SqliteStoreSupport.ExecuteAsync(
+                connection, null, "PRAGMA foreign_keys = ON;", cancellationToken)
+                .ConfigureAwait(false);
+            await SqliteStoreSupport.ExecuteAsync(
+                connection, null,
+                $"PRAGMA busy_timeout = {(long)Options.BusyTimeout.TotalMilliseconds};",
+                cancellationToken).ConfigureAwait(false);
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return connection;
+        }
+        catch (SqliteException exception)
+        {
+            ZhinuSqliteDiagnostics.ConnectionFailures.Add(1);
+            if (exception.SqliteErrorCode is 5 or 6)
+                ZhinuSqliteDiagnostics.ConnectionBusy.Add(1);
+            activity?.SetStatus(ActivityStatusCode.Error);
+            await connection.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+        finally
+        {
+            ZhinuSqliteDiagnostics.OpenDuration.Record(
+                Stopwatch.GetElapsedTime(started).TotalSeconds);
+        }
+    }
+
     private static async ValueTask VerifySchemaCompatibilityAsync(
         SqliteConnection connection,
         CancellationToken cancellationToken)
@@ -138,44 +189,6 @@ internal sealed class SqliteConnectionFactory
             throw new ZhinuSchemaCompatibilityException(
                 ZhinuSqliteSchema.CurrentVersion,
                 version);
-        }
-    }
-
-    public async ValueTask<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
-    {
-        using var activity = options.EnableDetailedDiagnostics
-            ? ZhinuSqliteDiagnostics.ActivitySource.StartActivity(
-                ZhinuSqliteDiagnostics.ConnectionOpenActivity,
-                ActivityKind.Client)
-            : null;
-        var started = Stopwatch.GetTimestamp();
-        var connection = new SqliteConnection(connectionString);
-        try
-        {
-            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await SqliteStoreSupport.ExecuteAsync(
-                connection, null, "PRAGMA foreign_keys = ON;", cancellationToken)
-                .ConfigureAwait(false);
-            await SqliteStoreSupport.ExecuteAsync(
-                connection, null,
-                $"PRAGMA busy_timeout = {(long)options.BusyTimeout.TotalMilliseconds};",
-                cancellationToken).ConfigureAwait(false);
-            activity?.SetStatus(ActivityStatusCode.Ok);
-            return connection;
-        }
-        catch (SqliteException exception)
-        {
-            ZhinuSqliteDiagnostics.ConnectionFailures.Add(1);
-            if (exception.SqliteErrorCode is 5 or 6)
-                ZhinuSqliteDiagnostics.ConnectionBusy.Add(1);
-            activity?.SetStatus(ActivityStatusCode.Error);
-            await connection.DisposeAsync().ConfigureAwait(false);
-            throw;
-        }
-        finally
-        {
-            ZhinuSqliteDiagnostics.OpenDuration.Record(
-                Stopwatch.GetElapsedTime(started).TotalSeconds);
         }
     }
 

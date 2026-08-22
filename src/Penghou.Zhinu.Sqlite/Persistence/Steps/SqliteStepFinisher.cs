@@ -11,13 +11,13 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Steps;
 /// </summary>
 internal sealed class SqliteStepFinisher
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly GetStepByIdQuery getStepById = new();
     private readonly FinishStepCommand finishStep = new();
     private readonly RecordCompensationInputCommand recordCompensationInput = new();
     private readonly InsertEventCommand insertEvent = new();
 
-    public SqliteStepFinisher(SqliteConnectionFactory factory) => this.factory = factory;
+    public SqliteStepFinisher(IZhinuSqliteDatabase factory) => this.factory = factory;
 
     public async ValueTask FinishStepAsync(
         Guid stepId,

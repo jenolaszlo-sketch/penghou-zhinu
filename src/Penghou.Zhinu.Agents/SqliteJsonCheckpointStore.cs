@@ -30,31 +30,25 @@ public sealed class SqliteJsonCheckpointStore : JsonCheckpointStore
             ON maf_checkpoints(session_id, parent_checkpoint_id);
         """;
 
-    private readonly ZhinuSqliteOptions options;
-    private readonly string connectionString;
+    private readonly IZhinuSqliteDatabase database;
     private readonly TimeProvider timeProvider;
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private volatile bool initialized;
 
     public SqliteJsonCheckpointStore(ZhinuSqliteOptions options, TimeProvider? timeProvider = null)
+        : this(new SqliteDatabase(options), timeProvider)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentException.ThrowIfNullOrWhiteSpace(options.DatabasePath);
-        if (options.BusyTimeout < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(options));
-        this.options = options;
-        this.timeProvider = timeProvider ?? options.TimeProvider ?? TimeProvider.System;
-        var path = Path.GetFullPath(options.DatabasePath);
-        var directory = Path.GetDirectoryName(path);
-        if (!string.IsNullOrWhiteSpace(directory))
-            Directory.CreateDirectory(directory);
-        connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = path,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Cache = SqliteCacheMode.Shared,
-            Pooling = true
-        }.ToString();
+    }
+
+    /// <summary>
+    /// Creates a checkpoint store over a shared database owner so the workflow
+    /// store and checkpoints use the same initialization gate and PRAGMAs.
+    /// </summary>
+    public SqliteJsonCheckpointStore(IZhinuSqliteDatabase database, TimeProvider? timeProvider = null)
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        this.database = database;
+        this.timeProvider = timeProvider ?? database.TimeProvider ?? TimeProvider.System;
     }
 
     /// <summary>
@@ -147,19 +141,13 @@ public sealed class SqliteJsonCheckpointStore : JsonCheckpointStore
     {
         if (initialized)
             return;
+        await database.EnsureInitializedAsync().ConfigureAwait(false);
         await initializationLock.WaitAsync().ConfigureAwait(false);
         try
         {
             if (initialized)
                 return;
-            await using var connection = await OpenAsync().ConfigureAwait(false);
-            if (options.EnableWal)
-            {
-                await using var command = CreateCommand(
-                    connection,
-                    "PRAGMA journal_mode = WAL;");
-                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-            }
+            await using var connection = await database.OpenAsync().ConfigureAwait(false);
             await using var create = CreateCommand(connection, Schema);
             await create.ExecuteNonQueryAsync().ConfigureAwait(false);
             initialized = true;
@@ -172,9 +160,8 @@ public sealed class SqliteJsonCheckpointStore : JsonCheckpointStore
 
     private async ValueTask<SqliteConnection> OpenAsync()
     {
-        var connection = new SqliteConnection(connectionString);
-        await connection.OpenAsync().ConfigureAwait(false);
-        return connection;
+        await EnsureInitializedAsync().ConfigureAwait(false);
+        return await database.OpenAsync().ConfigureAwait(false);
     }
 
     private static SqliteCommand CreateCommand(

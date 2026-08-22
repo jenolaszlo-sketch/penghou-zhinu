@@ -7,7 +7,7 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Workflows;
 /// <summary>Coordinates workflow-run and event commands and queries.</summary>
 internal sealed class SqliteWorkflowRepository : IWorkflowRepository
 {
-    private readonly SqliteConnectionFactory factory;
+    private readonly IZhinuSqliteDatabase factory;
     private readonly InsertRunCommand insertRun = new();
     private readonly InsertEventCommand insertEvent = new();
     private readonly UpdateRunMetadataCommand updateRunMetadata = new();
@@ -21,7 +21,7 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
     private readonly GetRunSubtreeQuery getRunSubtree = new();
     private readonly GetEventsQuery getEvents = new();
 
-    public SqliteWorkflowRepository(SqliteConnectionFactory factory) => this.factory = factory;
+    public SqliteWorkflowRepository(IZhinuSqliteDatabase factory) => this.factory = factory;
 
     public async ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
         await factory.InitializeAsync(cancellationToken).ConfigureAwait(false);
