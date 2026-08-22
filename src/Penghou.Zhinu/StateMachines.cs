@@ -6,7 +6,7 @@ namespace Penghou.Zhinu;
 /// runtime's state machine is auditable in one place instead of scattered
 /// repository checks.
 /// </summary>
-public static class RunStateMachine
+internal static class RunStateMachine
 {
     /// <summary>States that are terminal: immutable except through explicitly permitted administrative operations.</summary>
     public static bool IsTerminal(WorkflowStatus status) =>
@@ -74,7 +74,7 @@ public static class RunStateMachine
 /// A completed step can never return to running; only a fresh revision (via
 /// restart or fork) may re-execute it.
 /// </summary>
-public static class StepStateMachine
+internal static class StepStateMachine
 {
     public static bool CanTransition(StepStatus from, StepStatus to)
     {

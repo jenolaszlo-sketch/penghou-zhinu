@@ -1,7 +1,7 @@
 namespace Penghou.Zhinu;
 
 /// <summary>Validates dependency graphs for cycles.</summary>
-public static class WorkflowDependencyValidator
+internal static class WorkflowDependencyValidator
 {
     public static bool HasCycle(IReadOnlyList<StepDependency> edges)
     {

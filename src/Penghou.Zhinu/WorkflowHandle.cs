@@ -35,7 +35,7 @@ public sealed class WorkflowHandle<TOutput>
         CancellationToken cancellationToken = default) =>
         engine.GetStepsAsync(WorkflowRunId, cancellationToken);
 
-    public Task<WorkflowRunProgress?> GetProgressAsync(
+    public Task<WorkflowRunProgress?> GetRunProgressAsync(
         RunProgressOptions? options = null,
         CancellationToken cancellationToken = default) =>
         engine.GetRunProgressAsync(WorkflowRunId, options, cancellationToken);
@@ -76,7 +76,7 @@ public sealed class WorkflowHandle<TOutput>
         SignalPurgeOptions? options = null, CancellationToken cancellationToken = default) =>
         engine.PurgeSignalsAsync(WorkflowRunId, options, cancellationToken);
 
-    public Task<WorkflowRun?> UpdateMetadataAsync(object? metadata,
+    public Task<WorkflowRun?> UpdateRunMetadataAsync(object? metadata,
         CancellationToken cancellationToken = default) =>
         engine.UpdateRunMetadataAsync(WorkflowRunId, metadata, cancellationToken);
 

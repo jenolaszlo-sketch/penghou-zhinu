@@ -38,7 +38,7 @@ var execution = engine.ExecuteAsync(handle.WorkflowRunId);
 while (execution.IsCompleted == false)
 {
     var signals = await handle.GetSignalsAsync();
-    var progress = await handle.GetProgressAsync();
+    var progress = await handle.GetRunProgressAsync();
     if (signals.Count > 0)
         Console.WriteLine($"  inbox: {signals.Count} signal(s), {signals.Count(s => s.Status == SignalStatus.Consumed)} consumed");
     if (progress is not null)
