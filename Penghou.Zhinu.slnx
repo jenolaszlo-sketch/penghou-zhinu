@@ -17,5 +17,6 @@
     <Project Path="tests/Penghou.Zhinu.Agents.Tests/Penghou.Zhinu.Agents.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Hosting.Tests/Penghou.Zhinu.Hosting.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.OpenTelemetry.Tests/Penghou.Zhinu.OpenTelemetry.Tests.csproj" />
+    <Project Path="tests/Penghou.Zhinu.Benchmarks/Penghou.Zhinu.Benchmarks.csproj" />
   </Folder>
 </Solution>
