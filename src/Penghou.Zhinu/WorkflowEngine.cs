@@ -320,6 +320,25 @@ public sealed class WorkflowEngine : IAsyncDisposable
                 actor ?? "unknown",
                 reason ?? "no reason");
         }
+        try
+        {
+            var subtree = await store.GetRunSubtreeAsync(
+                workflowRunId, options.MaxNestingDepth, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var child in subtree)
+            {
+                if (child.Id == workflowRunId) continue;
+                if (child.Status is WorkflowStatus.Completed or WorkflowStatus.Failed
+                    or WorkflowStatus.Cancelled or WorkflowStatus.Compensated)
+                    continue;
+                await store.CancelRunAsync(child.Id, timeProvider.GetUtcNow(), cancellationToken)
+                    .ConfigureAwait(false);
+                NotifyEventAppended(child.Id);
+                if (runningCancellations.TryGetValue(child.Id, out var childCancellation))
+                    await childCancellation.CancelAsync().ConfigureAwait(false);
+            }
+        }
+        catch { /* best-effort child cancellation */ }
         NotifyEventAppended(workflowRunId);
         if (runningCancellations.TryGetValue(
                 workflowRunId,

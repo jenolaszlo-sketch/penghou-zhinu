@@ -165,6 +165,8 @@ public sealed class WorkflowContext
         var configured = stepOptions ?? new StepOptions();
         configured.Validate();
         var dependencies = ResolveDependencies(configured);
+        if (dependencies is not null && dependencies.Contains(stepKey))
+            throw new WorkflowStateException($"Step '{stepKey}' cannot depend on itself.");
         var compensationMetadata = compensation is null
             ? null
             : new CompensationMetadata(
