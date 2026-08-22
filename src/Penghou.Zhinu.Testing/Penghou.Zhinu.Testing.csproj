@@ -2,11 +2,21 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <PackageId>Penghou.Zhinu.Testing</PackageId>
+    <Title>Penghou Zhinu Testing</Title>
+    <Authors>Penghou.Zhinu contributors</Authors>
     <Description>Test fixtures and store conformance checks for Penghou.Zhinu.</Description>
     <PackageTags>workflow;durable;testing</PackageTags>
+    <RepositoryUrl>https://github.com/jenolaszlo-sketch/penghou-zhinu</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/jenolaszlo-sketch/penghou-zhinu</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Penghou.Zhinu\Penghou.Zhinu.csproj" />
@@ -14,5 +24,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 using System.Text.Json;
 
 namespace Penghou.Zhinu.Hosting;
@@ -65,6 +66,44 @@ public static class ServiceCollectionExtensions
             new WorkflowRegistration<TInput, TOutput>(
                 new WorkflowDefinition { Name = name, Version = version },
                 provider.GetRequiredService<TWorkflow>));
+        return services;
+    }
+
+    /// <summary>Registers all concrete <see cref="IWorkflow{TInput,TOutput}"/> types from an assembly using naming convention.</summary>
+    public static IServiceCollection AddZhinuWorkflowsFromAssembly(
+        this IServiceCollection services,
+        Assembly assembly,
+        Func<Type, string>? nameSelector = null,
+        Func<Type, string>? versionSelector = null)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(assembly);
+        nameSelector ??= t => t.Name.EndsWith("Workflow", StringComparison.Ordinal)
+            ? t.Name[..^8].ToLowerInvariant()
+            : t.Name.ToLowerInvariant();
+        versionSelector ??= _ => "1";
+
+        foreach (var type in assembly.GetExportedTypes())
+        {
+            if (type.IsAbstract || type.IsInterface) continue;
+            var workflowInterface = type.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IWorkflow<,>));
+            if (workflowInterface is null) continue;
+
+            var args = workflowInterface.GetGenericArguments();
+            var inputType = args[0];
+            var outputType = args[1];
+            var name = nameSelector(type);
+            var version = versionSelector(type);
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+            ArgumentException.ThrowIfNullOrWhiteSpace(version);
+
+            var method = typeof(ServiceCollectionExtensions)
+                .GetMethod(nameof(AddZhinuWorkflow), BindingFlags.Public | BindingFlags.Static)!
+                .MakeGenericMethod(type, inputType, outputType);
+            method.Invoke(null, [services, name, version]);
+        }
+
         return services;
     }
 }
