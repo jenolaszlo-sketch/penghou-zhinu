@@ -70,7 +70,7 @@ public sealed class RestartStepTests : WorkflowEngineTestBase
                 runId,
                 "missing",
                 TestContext.Current.CancellationToken))
-            .Should().ThrowAsync<KeyNotFoundException>();
+            .Should().ThrowAsync<WorkflowNotFoundException>();
     }
 
     [Fact]

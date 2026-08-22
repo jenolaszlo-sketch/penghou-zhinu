@@ -39,7 +39,7 @@ internal sealed class SqliteStepFinisher
             transaction,
             stepId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException($"Step '{stepId:D}' does not exist.");
+            throw new WorkflowNotFoundException($"Step '{stepId:D}' does not exist.");
         StepStateMachine.AssertCanTransition(step.Status, status, stepId);
         if (await finishStep.ExecuteAsync(
             connection,

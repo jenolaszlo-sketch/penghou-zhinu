@@ -100,7 +100,7 @@ public sealed class SqliteJsonCheckpointStore : JsonCheckpointStore
         var data = (string?)await command.ExecuteScalarAsync().ConfigureAwait(false);
         if (data is null)
         {
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Checkpoint '{key.CheckpointId}' not found for session '{sessionId}'.");
         }
         return JsonDocument.Parse(data).RootElement.Clone();

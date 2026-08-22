@@ -3,7 +3,7 @@ namespace Penghou.Zhinu;
 public sealed class WorkflowExecutionFailedException(
     Guid workflowRunId,
     WorkflowError error)
-    : Exception($"Workflow '{workflowRunId:D}' failed: {error.Message}")
+    : ZhinuException($"Workflow '{workflowRunId:D}' failed: {error.Message}")
 {
     public Guid WorkflowRunId { get; } = workflowRunId;
 

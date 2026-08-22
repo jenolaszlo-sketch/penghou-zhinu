@@ -62,7 +62,7 @@ internal sealed class RunExecutionPipeline
             return;
         var run = await store.GetRunAsync(workflowRunId, cancellationToken)
             .ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         if (IsTerminal(run.Status))
             return;

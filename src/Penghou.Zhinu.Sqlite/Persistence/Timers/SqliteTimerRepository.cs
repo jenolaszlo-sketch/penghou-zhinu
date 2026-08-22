@@ -50,7 +50,7 @@ internal sealed class SqliteTimerRepository : IWorkflowTimerRepository
             transaction,
             stepId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException($"Step '{stepId:D}' does not exist.");
+            throw new WorkflowNotFoundException($"Step '{stepId:D}' does not exist.");
         if (step.Status == StepStatus.Completed)
             return;
         if (step.Status != StepStatus.Waiting || step.AvailableAt > now)

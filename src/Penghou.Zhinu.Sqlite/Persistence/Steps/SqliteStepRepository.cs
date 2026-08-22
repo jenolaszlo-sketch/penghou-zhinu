@@ -304,7 +304,7 @@ internal sealed class SqliteStepRepository :
             transaction,
             stepId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException($"Step '{stepId:D}' does not exist.");
+            throw new WorkflowNotFoundException($"Step '{stepId:D}' does not exist.");
         var status = retryAt is null ? StepStatus.Failed : StepStatus.Waiting;
         StepStateMachine.AssertCanTransition(step.Status, status, stepId);
         if (await failStep.ExecuteAsync(
@@ -459,7 +459,7 @@ internal sealed class SqliteStepRepository :
                 workflowRunId,
                 entry.StepKey,
                 cancellationToken).ConfigureAwait(false) ??
-                throw new KeyNotFoundException(
+                throw new WorkflowNotFoundException(
                     $"Step '{entry.StepKey}' does not exist in workflow '{workflowRunId:D}'.");
             var next = new WorkflowStepRun
             {
@@ -559,7 +559,7 @@ internal sealed class SqliteStepRepository :
             transaction,
             sourceWorkflowRunId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
         if (await getRun.ExecuteAsync(
                 connection,
@@ -1283,7 +1283,7 @@ internal sealed class SqliteStepRepository :
             cancellationToken).ConfigureAwait(false);
         if (runStatus is null)
         {
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         }
         var target = await getStep.ExecuteAsync(
@@ -1292,7 +1292,7 @@ internal sealed class SqliteStepRepository :
             workflowRunId,
             stepKey,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Step '{stepKey}' does not exist in workflow '{workflowRunId:D}'.");
         var steps = await getCurrentSteps.ExecuteAsync(
             connection,

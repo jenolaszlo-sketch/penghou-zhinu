@@ -144,7 +144,7 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             var cursorCreated = await GetCreatedAtAsync(connection, query.AfterId.Value, cancellationToken)
                 .ConfigureAwait(false);
             if (cursorCreated is null)
-                throw new KeyNotFoundException($"Artifact '{query.AfterId:D}' does not exist.");
+                throw new WorkflowNotFoundException($"Artifact '{query.AfterId:D}' does not exist.");
             conditions.Add("((created_at > $cursorCreated) OR (created_at = $cursorCreated AND id > $cursorId))");
             var where = string.Join(" AND ", conditions);
             var sqlCursor = $"""

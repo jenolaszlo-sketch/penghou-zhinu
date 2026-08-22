@@ -5,7 +5,7 @@ namespace Penghou.Zhinu;
 /// forward an event after the event was durably committed to the store. The
 /// event remains committed; only the best-effort notification failed.
 /// </summary>
-public sealed class WorkflowEventPublisherException : Exception
+public sealed class WorkflowEventPublisherException : ZhinuException
 {
     public WorkflowEventPublisherException(string message, Exception innerException)
         : base(message, innerException)

@@ -83,7 +83,7 @@ internal sealed class GetRunsQuery
             .ConfigureAwait(false);
         if (value is null)
         {
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         }
         return (string)value;

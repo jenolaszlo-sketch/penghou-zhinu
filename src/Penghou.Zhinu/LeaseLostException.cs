@@ -6,7 +6,7 @@ namespace Penghou.Zhinu;
 /// run was restarted or re-claimed after the worker acquired its lease. The
 /// worker is fenced out and must not commit.
 /// </summary>
-public sealed class LeaseLostException : WorkflowStateException
+public sealed class LeaseLostException : WorkflowLeaseException
 {
     public LeaseLostException(string message) : base(message)
     {

@@ -51,7 +51,7 @@ public interface IWorkflowStepRepository
     /// <summary>
     /// Resolves the set of steps a restart of <paramref name="stepKey"/> would
     /// invalidate under <paramref name="mode"/>, without changing any state.
-    /// Throws <see cref="KeyNotFoundException"/> when the run or step does not
+    /// Throws <see cref="WorkflowNotFoundException"/> when the run or step does not
     /// exist.
     /// </summary>
     ValueTask<RestartPlan> PlanRestartAsync(
@@ -82,7 +82,7 @@ public interface IWorkflowStepRepository
     /// Resolves the steps a rollback would compensate, without changing any
     /// state. <paramref name="targetStepKey"/> is null for a full rollback;
     /// <paramref name="boundary"/> then has no effect. Throws
-    /// <see cref="KeyNotFoundException"/> when the run (or a target step) does
+    /// <see cref="WorkflowNotFoundException"/> when the run (or a target step) does
     /// not exist.
     /// </summary>
     ValueTask<RollbackPlan> PlanRollbackAsync(

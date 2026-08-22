@@ -49,7 +49,7 @@ public sealed class PaginationTests : WorkflowEngineTestBase
     {
         var engine = CreateEngine(new TwoStepWorkflow(), "pagination-invalid");
         var act = () => engine.GetRunsAsync(new RunQuery { AfterId = Guid.NewGuid(), Limit = 10 }, TestContext.Current.CancellationToken);
-        await act.Should().ThrowAsync<KeyNotFoundException>();
+        await act.Should().ThrowAsync<WorkflowNotFoundException>();
     }
 
     [Fact]

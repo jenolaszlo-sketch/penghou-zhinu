@@ -52,7 +52,7 @@ internal sealed class RollbackAndRestartCoordinator
         var run = await store.GetRunAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         if (run.Status == WorkflowStatus.Compensated)
             return;
@@ -235,7 +235,7 @@ internal sealed class RollbackAndRestartCoordinator
         var run = await store.GetRunAsync(
             workflowRunId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         var operation = await store.GetActiveOperationAsync(
             workflowRunId,

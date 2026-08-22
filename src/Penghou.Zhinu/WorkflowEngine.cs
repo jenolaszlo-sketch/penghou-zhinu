@@ -619,7 +619,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             .ConfigureAwait(false);
         var source = await store.GetRunAsync(sourceWorkflowRunId, cancellationToken)
             .ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
         var registration = registry.Get(source.WorkflowName, source.WorkflowVersion);
         if (source.InputType != SerializationIdentity.TypeId(registration.InputType) ||
@@ -685,7 +685,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             .ConfigureAwait(false);
         var source = await store.GetRunAsync(sourceWorkflowRunId, cancellationToken)
             .ConfigureAwait(false) ??
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
         var registration = registry.Get(source.WorkflowName, source.WorkflowVersion);
         if (registration.OutputType != typeof(TOutput))
@@ -1285,7 +1285,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             }
             var run = await store.GetRunAsync(workflowRunId, cancellationToken)
                 .ConfigureAwait(false) ??
-                throw new KeyNotFoundException(
+                throw new WorkflowNotFoundException(
                     $"Workflow '{workflowRunId:D}' does not exist.");
             switch (run.Status)
             {
@@ -1404,7 +1404,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
         CancellationToken cancellationToken = default)
     {
         var run = await GetRunAsync(workflowRunId, cancellationToken)
-            .ConfigureAwait(false) ?? throw new KeyNotFoundException(
+            .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         TOutput? value = default;
         if (run.Status == WorkflowStatus.Completed)

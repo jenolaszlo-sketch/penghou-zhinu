@@ -47,7 +47,7 @@ public sealed class SqliteJsonCheckpointStoreTests : IDisposable
             "session-1",
             new CheckpointInfo("session-1", "does-not-exist"));
 
-        await action.Should().ThrowAsync<KeyNotFoundException>();
+        await action.Should().ThrowAsync<WorkflowNotFoundException>();
     }
 
     [Fact]

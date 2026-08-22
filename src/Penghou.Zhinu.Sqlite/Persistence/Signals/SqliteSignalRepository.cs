@@ -40,7 +40,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             cancellationToken).ConfigureAwait(false);
         if (runStatus is null)
         {
-            throw new KeyNotFoundException(
+            throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         }
         var now = DateTimeOffset.UtcNow;
@@ -84,7 +84,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             transaction,
             stepId,
             cancellationToken).ConfigureAwait(false) ??
-            throw new KeyNotFoundException($"Step '{stepId:D}' does not exist.");
+            throw new WorkflowNotFoundException($"Step '{stepId:D}' does not exist.");
         if (step.Status == StepStatus.Completed)
         {
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -176,7 +176,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             cursorCreated = await GetCreatedAtAsync(
                 connection, query.AfterId.Value, cancellationToken).ConfigureAwait(false);
             if (cursorCreated is null)
-                throw new KeyNotFoundException($"Signal '{query.AfterId:D}' does not exist.");
+                throw new WorkflowNotFoundException($"Signal '{query.AfterId:D}' does not exist.");
             conditions.Add("((created_at > $cursorCreated) OR (created_at = $cursorCreated AND id > $cursorId))");
         }
         var where = string.Join(" AND ", conditions);

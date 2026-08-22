@@ -1,6 +1,6 @@
 namespace Penghou.Zhinu;
 
-public sealed class WorkflowStepFailedException : Exception
+public sealed class WorkflowStepFailedException : ZhinuException
 {
     public WorkflowStepFailedException(
         string stepKey,

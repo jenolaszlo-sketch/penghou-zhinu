@@ -6,7 +6,7 @@ namespace Penghou.Zhinu;
 /// Compensations already completed before the failure are reused by a later
 /// rollback attempt (at-least-once execution).
 /// </summary>
-public sealed class RollbackFailedException : Exception
+public sealed class RollbackFailedException : ZhinuException
 {
     public RollbackFailedException(string message)
         : base(message)
