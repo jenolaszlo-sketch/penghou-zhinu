@@ -9,5 +9,9 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <EnablePackageValidation Condition="'$(IsPackable)' == 'true'">true</EnablePackageValidation>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <PublicApiAnalyzerEnabled Condition="'$(IsPackable)' == 'true'">true</PublicApiAnalyzerEnabled>
   </PropertyGroup>
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

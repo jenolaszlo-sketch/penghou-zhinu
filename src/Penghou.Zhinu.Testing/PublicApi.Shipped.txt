@@ -1,0 +1,39 @@
+#nullable enable
+override Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.ToString() -> string!
+Penghou.Zhinu.Testing.IWorkflowStoreFixture
+Penghou.Zhinu.Testing.IWorkflowStoreFixture.CreatePeerStore() -> Penghou.Zhinu.IWorkflowStore!
+Penghou.Zhinu.Testing.IWorkflowStoreFixture.Store.get -> Penghou.Zhinu.IWorkflowStore!
+Penghou.Zhinu.Testing.IWorkflowStoreFixture.TimeProvider.get -> System.TimeProvider!
+Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Artifacts = 5 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Children = 6 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Concurrency = 1 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Core = 0 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Fencing = 2 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Recovery = 3 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Signals = 4 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.Transactions = 7 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.Capability.get -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.Capability.init -> void
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.Error.get -> System.Exception?
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.Error.init -> void
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.Passed.get -> bool
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.Passed.init -> void
+Penghou.Zhinu.Testing.WorkflowConformanceGroupResult.WorkflowConformanceGroupResult(Penghou.Zhinu.Testing.WorkflowConformanceCapability Capability, bool Passed, System.Exception? Error) -> void
+Penghou.Zhinu.Testing.WorkflowStoreConformance
+Penghou.Zhinu.Testing.WorkflowStoreConformanceReport
+Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.AllPassed.get -> bool
+Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.FailedGroups.get -> System.Collections.Generic.IEnumerable<Penghou.Zhinu.Testing.WorkflowConformanceGroupResult!>!
+Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.Groups.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Testing.WorkflowConformanceGroupResult!>!
+Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.Groups.init -> void
+Penghou.Zhinu.Testing.WorkflowStoreConformanceSuite
+Penghou.Zhinu.Testing.ZhinuTestHost
+Penghou.Zhinu.Testing.ZhinuTestHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.Testing.ZhinuTestHost.Engine.get -> Penghou.Zhinu.WorkflowEngine!
+Penghou.Zhinu.Testing.ZhinuTestHost.RunUntilIdleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Testing.ZhinuTestHost.Store.get -> Penghou.Zhinu.Sqlite.SqliteWorkflowStore!
+Penghou.Zhinu.Testing.ZhinuTestHost.ZhinuTestHost(Penghou.Zhinu.WorkflowRegistry! registry, System.Action<Penghou.Zhinu.ZhinuOptions!>? configure = null) -> void
+static Penghou.Zhinu.Testing.WorkflowStoreConformance.VerifyArtifactRoundTripAsync(Penghou.Zhinu.IWorkflowStore! store, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Penghou.Zhinu.Testing.WorkflowStoreConformance.VerifyRunRoundTripAsync(Penghou.Zhinu.IWorkflowStore! store, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Penghou.Zhinu.Testing.WorkflowStoreConformanceSuite.VerifyAsync(Penghou.Zhinu.Testing.IWorkflowStoreFixture! fixture, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.Testing.WorkflowStoreConformanceReport!>!

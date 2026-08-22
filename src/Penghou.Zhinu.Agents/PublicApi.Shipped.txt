@@ -1,0 +1,13 @@
+#nullable enable
+override Penghou.Zhinu.Agents.SqliteJsonCheckpointStore.CreateCheckpointAsync(string! sessionId, System.Text.Json.JsonElement value, Microsoft.Agents.AI.Workflows.CheckpointInfo? parent = null) -> System.Threading.Tasks.ValueTask<Microsoft.Agents.AI.Workflows.CheckpointInfo!>
+override Penghou.Zhinu.Agents.SqliteJsonCheckpointStore.RetrieveCheckpointAsync(string! sessionId, Microsoft.Agents.AI.Workflows.CheckpointInfo! key) -> System.Threading.Tasks.ValueTask<System.Text.Json.JsonElement>
+override Penghou.Zhinu.Agents.SqliteJsonCheckpointStore.RetrieveIndexAsync(string! sessionId, Microsoft.Agents.AI.Workflows.CheckpointInfo? withParent = null) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IEnumerable<Microsoft.Agents.AI.Workflows.CheckpointInfo!>!>
+Penghou.Zhinu.Agents.AgentWorkflowExecutionException
+Penghou.Zhinu.Agents.AgentWorkflowExecutionException.AgentWorkflowExecutionException(string! message, System.Exception? innerException = null) -> void
+Penghou.Zhinu.Agents.ServiceCollectionExtensions
+Penghou.Zhinu.Agents.SqliteJsonCheckpointStore
+Penghou.Zhinu.Agents.SqliteJsonCheckpointStore.SqliteJsonCheckpointStore(Penghou.Zhinu.Sqlite.IZhinuSqliteDatabase! database, System.TimeProvider? timeProvider = null) -> void
+Penghou.Zhinu.Agents.SqliteJsonCheckpointStore.SqliteJsonCheckpointStore(Penghou.Zhinu.Sqlite.ZhinuSqliteOptions! options, System.TimeProvider? timeProvider = null) -> void
+Penghou.Zhinu.Agents.WorkflowContextAgentExtensions
+static Penghou.Zhinu.Agents.ServiceCollectionExtensions.AddZhinuSqliteCheckpoints(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Penghou.Zhinu.Sqlite.ZhinuSqliteOptions!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Penghou.Zhinu.Agents.WorkflowContextAgentExtensions.RunAgentWorkflowAsync<TInput, TOutput>(this Penghou.Zhinu.WorkflowContext! context, string! stepKey, Microsoft.Agents.AI.Workflows.Workflow! workflow, TInput input, Microsoft.Agents.AI.Workflows.Checkpointing.ICheckpointStore<System.Text.Json.JsonElement>! checkpointStore, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!

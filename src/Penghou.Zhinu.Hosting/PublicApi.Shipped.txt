@@ -1,0 +1,7 @@
+#nullable enable
+Penghou.Zhinu.Hosting.ServiceCollectionExtensions
+Penghou.Zhinu.Hosting.ZhinuHostedService
+Penghou.Zhinu.Hosting.ZhinuHostedService.ZhinuHostedService(Penghou.Zhinu.WorkflowEngine! engine, Penghou.Zhinu.ZhinuOptions! options, System.TimeProvider! timeProvider, Microsoft.Extensions.Logging.ILogger<Penghou.Zhinu.Hosting.ZhinuHostedService!>! logger) -> void
+static Penghou.Zhinu.Hosting.ServiceCollectionExtensions.AddZhinu(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Penghou.Zhinu.ZhinuOptions!>? configure = null, System.Text.Json.JsonSerializerOptions? serializerOptions = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Penghou.Zhinu.Hosting.ServiceCollectionExtensions.AddZhinuWorkflow<TWorkflow, TInput, TOutput>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! name, string! version) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Penghou.Zhinu.Hosting.ServiceCollectionExtensions.AddZhinuWorkflowsFromAssembly(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Reflection.Assembly! assembly, System.Func<System.Type!, string!>? nameSelector = null, System.Func<System.Type!, string!>? versionSelector = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

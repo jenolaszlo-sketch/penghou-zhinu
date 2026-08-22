@@ -1,0 +1,3 @@
+#nullable enable
+Penghou.Zhinu.OpenTelemetry.OpenTelemetryBuilderExtensions
+static Penghou.Zhinu.OpenTelemetry.OpenTelemetryBuilderExtensions.AddZhinuInstrumentation(this OpenTelemetry.OpenTelemetryBuilder! builder) -> OpenTelemetry.OpenTelemetryBuilder!
