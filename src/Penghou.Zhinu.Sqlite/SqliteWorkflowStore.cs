@@ -488,6 +488,18 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         CancellationToken cancellationToken = default) =>
         signals.TryDeliverSignalAsync(stepId, ownerId, signalName, now, cancellationToken);
 
+    public ValueTask<IReadOnlyList<WorkflowSignalRecord>> ListSignalsAsync(
+        Guid workflowRunId,
+        SignalQuery query,
+        CancellationToken cancellationToken = default) =>
+        signals.ListSignalsAsync(workflowRunId, query, cancellationToken);
+
+    public ValueTask<int> PurgeSignalsAsync(
+        Guid workflowRunId,
+        SignalPurgeOptions options,
+        CancellationToken cancellationToken = default) =>
+        signals.PurgeSignalsAsync(workflowRunId, options, cancellationToken);
+
     public ValueTask ScheduleDelayAsync(
         Guid stepId,
         string ownerId,

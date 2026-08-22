@@ -401,23 +401,39 @@ public sealed class WorkflowEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>Cancels all runs matching <paramref name="query"/> and returns the count cancelled.</summary>
-    public async Task<int> CancelManyAsync(
+    /// <summary>
+    /// Cancels all non-terminal runs matching <paramref name="query"/>. Each run
+    /// is cancelled independently; the operation may partially succeed. Terminal
+    /// runs are skipped (not counted as failures).
+    /// </summary>
+    public async Task<BulkOperationResult> CancelManyAsync(
         RunQuery query,
         string? actor = null,
         string? reason = null,
         CancellationToken cancellationToken = default)
     {
-        var count = 0;
+        var succeeded = 0;
+        var failed = new List<BulkOperationFailure>();
         await foreach (var run in EnumerateRunsAsync(query, cancellationToken).ConfigureAwait(false))
         {
             if (run.Status is WorkflowStatus.Completed or WorkflowStatus.Failed
                 or WorkflowStatus.Cancelled or WorkflowStatus.Compensated)
                 continue;
-            await CancelAsync(run.Id, actor, reason, cancellationToken).ConfigureAwait(false);
-            count++;
+            try
+            {
+                await CancelAsync(run.Id, actor, reason, cancellationToken).ConfigureAwait(false);
+                succeeded++;
+            }
+            catch (Exception exception)
+            {
+                failed.Add(new BulkOperationFailure
+                {
+                    ItemId = run.Id,
+                    Error = exception.Message
+                });
+            }
         }
-        return count;
+        return new BulkOperationResult { Succeeded = succeeded, Failed = failed };
     }
 
     /// <summary>Replaces a run's metadata without affecting its identity or contracts.</summary>
@@ -845,10 +861,46 @@ public sealed class WorkflowEngine : IAsyncDisposable
             signalName,
             dataJson,
             cancellationToken).ConfigureAwait(false);
+        ZhinuDiagnostics.SignalsBufferedCounter.Add(1);
         logger.LogInformation(
             "Buffered signal '{SignalName}' for workflow {WorkflowRunId}.",
             signalName,
             workflowRunId);
+    }
+
+    /// <summary>
+    /// Lists a run's signal inbox with stable cursor pagination. Includes both
+    /// buffered and consumed records so unbounded buffering is visible.
+    /// </summary>
+    public async Task<IReadOnlyList<WorkflowSignalRecord>> GetSignalsAsync(
+        Guid workflowRunId,
+        SignalQuery? query = null,
+        CancellationToken cancellationToken = default)
+    {
+        var signalQuery = query ?? new SignalQuery();
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.ListSignalsAsync(
+            workflowRunId,
+            signalQuery,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Bounds a run's signal inbox by removing matching rows and returning the
+    /// count removed. Consumed signals remain in the durable
+    /// <c>signal-delivered</c> event history; this only affects the inbox.
+    /// </summary>
+    public async Task<int> PurgeSignalsAsync(
+        Guid workflowRunId,
+        SignalPurgeOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var purgeOptions = options ?? new SignalPurgeOptions();
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        return await store.PurgeSignalsAsync(
+            workflowRunId,
+            purgeOptions,
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(

@@ -47,12 +47,50 @@ file contents, arbitrary metadata, or credentials in built-in diagnostics.
 Durable identifiers appear on trace spans for correlation but never as metric
 labels. Metric dimensions are limited to bounded workflow and outcome values.
 
-SQLite metrics cover connection latency, failures, and busy/locked errors.
-Detailed SQLite connection and initialization spans require
-`ZhinuSqliteOptions.EnableDetailedDiagnostics`; SQL text remains excluded.
+Metric cardinality is a deliberate design constraint:
+
+**Safe dimensions (bounded):**
+
+```text
+workflow.name
+workflow.version
+operation
+status
+```
+
+**Usually unsafe (avoid as metric labels):**
+
+```text
+run_id                      belongs in traces and logs, not metric labels
+step key when dynamically generated (for example fan-out prefixes)
+signal payload / data
+metadata
+artifact name when user-generated
+exception message
+```
 
 Artifact publication emits `zhinu.artifact.publish` with run, producer-step,
 artifact name/type, revision, and creation-disposition attributes. Locations,
 hashes, and custom artifact metadata are deliberately excluded. Newly created
 references increment `zhinu.artifacts.published`; idempotent re-publication does
 not increment it.
+
+Operationally useful counters and histograms the runtime maintains:
+
+```text
+zhinu.runs.started / completed / failed / cancelled / active
+zhinu.run.duration            (histogram, seconds)
+zhinu.steps.claimed / executed / reused / failed / retried
+zhinu.step.duration           (histogram, seconds)
+zhinu.claim.latency           (histogram, seconds)
+zhinu.signals.buffered / delivered
+zhinu.compensations.executed / failed
+zhinu.rollbacks.completed
+zhinu.leases.expired / recovered
+zhinu.fencing.rejections
+zhinu.artifacts.published
+```
+
+SQLite metrics cover connection latency, failures, and busy/locked errors.
+Detailed SQLite connection and initialization spans require
+`ZhinuSqliteOptions.EnableDetailedDiagnostics`; SQL text remains excluded.

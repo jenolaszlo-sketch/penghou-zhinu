@@ -144,6 +144,7 @@ internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
             cancellationToken).ConfigureAwait(false);
         foreach (var step in expired)
         {
+            ZhinuDiagnostics.LeasesExpiredCounter.Add(1);
             await insertEvent.ExecuteAsync(
                 connection,
                 transaction,

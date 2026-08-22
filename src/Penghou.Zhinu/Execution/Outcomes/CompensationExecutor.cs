@@ -248,6 +248,8 @@ internal sealed class CompensationExecutor
     {
         var now = timeProvider.GetUtcNow();
         var error = WorkflowError.FromException(exception, now, claim.Attempt);
+        if (retryAt is null)
+            ZhinuDiagnostics.CompensationsFailedCounter.Add(1);
         await store.FailCompensationAsync(
             claim.Id,
             ownerId,

@@ -243,6 +243,7 @@ public sealed class WorkflowContext
                             $"Workflow step '{stepKey}' was cancelled.",
                             linkedCancellation.Token);
                     case StepClaimDisposition.Acquired:
+                        ZhinuDiagnostics.StepsClaimedCounter.Add(1);
                         return await ExecuteClaimedAsync(
                             claim.Step,
                             input,

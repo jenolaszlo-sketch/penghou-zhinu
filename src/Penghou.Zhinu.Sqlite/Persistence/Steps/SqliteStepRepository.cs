@@ -105,6 +105,7 @@ internal sealed class SqliteStepRepository :
             cancellationToken).ConfigureAwait(false);
         if (request.LeaseGeneration != runGeneration)
         {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
             throw new LeaseLostException(
                 $"Workflow '{request.WorkflowRunId:D}' lease generation {request.LeaseGeneration} " +
                 $"no longer matches the current generation {runGeneration}.");

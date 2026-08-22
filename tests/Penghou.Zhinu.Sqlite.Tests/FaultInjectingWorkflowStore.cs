@@ -178,6 +178,10 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     public ValueTask<SignalDelivery?> TryDeliverSignalAsync(Guid stepId, string ownerId, string signalName, DateTimeOffset now, CancellationToken ct = default) => inner.TryDeliverSignalAsync(stepId, ownerId, signalName, now, ct);
 
+    public ValueTask<IReadOnlyList<WorkflowSignalRecord>> ListSignalsAsync(Guid workflowRunId, SignalQuery query, CancellationToken ct = default) => inner.ListSignalsAsync(workflowRunId, query, ct);
+
+    public ValueTask<int> PurgeSignalsAsync(Guid workflowRunId, SignalPurgeOptions options, CancellationToken ct = default) => inner.PurgeSignalsAsync(workflowRunId, options, ct);
+
     // ---- IWorkflowTimerRepository ----
 
     public ValueTask ScheduleDelayAsync(Guid stepId, string ownerId, DateTimeOffset availableAt, DateTimeOffset now, CancellationToken ct = default) => inner.ScheduleDelayAsync(stepId, ownerId, availableAt, now, ct);

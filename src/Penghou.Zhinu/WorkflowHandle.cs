@@ -68,6 +68,14 @@ public sealed class WorkflowHandle<TOutput>
         CancellationToken cancellationToken = default) =>
         engine.SendSignalAsync(WorkflowRunId, signal, data, cancellationToken);
 
+    public Task<IReadOnlyList<WorkflowSignalRecord>> GetSignalsAsync(
+        SignalQuery? query = null, CancellationToken cancellationToken = default) =>
+        engine.GetSignalsAsync(WorkflowRunId, query, cancellationToken);
+
+    public Task<int> PurgeSignalsAsync(
+        SignalPurgeOptions? options = null, CancellationToken cancellationToken = default) =>
+        engine.PurgeSignalsAsync(WorkflowRunId, options, cancellationToken);
+
     public Task<WorkflowRun?> UpdateMetadataAsync(object? metadata,
         CancellationToken cancellationToken = default) =>
         engine.UpdateRunMetadataAsync(WorkflowRunId, metadata, cancellationToken);

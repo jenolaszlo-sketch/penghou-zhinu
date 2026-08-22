@@ -56,15 +56,21 @@ public static class ZhinuDiagnostics
         public const string RunsCancelled = "zhinu.runs.cancelled";
         public const string RunsActive = "zhinu.runs.active";
         public const string RunDuration = "zhinu.run.duration";
+        public const string StepsClaimed = "zhinu.steps.claimed";
         public const string StepsExecuted = "zhinu.steps.executed";
         public const string StepsReused = "zhinu.steps.reused";
         public const string StepsFailed = "zhinu.steps.failed";
         public const string StepsRetried = "zhinu.steps.retried";
         public const string StepDuration = "zhinu.step.duration";
+        public const string ClaimLatency = "zhinu.claim.latency";
+        public const string SignalsBuffered = "zhinu.signals.buffered";
         public const string SignalsDelivered = "zhinu.signals.delivered";
         public const string CompensationsExecuted = "zhinu.compensations.executed";
+        public const string CompensationsFailed = "zhinu.compensations.failed";
         public const string RollbacksCompleted = "zhinu.rollbacks.completed";
+        public const string LeasesExpired = "zhinu.leases.expired";
         public const string LeasesRecovered = "zhinu.leases.recovered";
+        public const string FencingRejections = "zhinu.fencing.rejections";
         public const string ArtifactsPublished = "zhinu.artifacts.published";
     }
 
@@ -76,15 +82,21 @@ public static class ZhinuDiagnostics
     internal static readonly Counter<long> RunsCancelledCounter = Meter.CreateCounter<long>(Metrics.RunsCancelled);
     internal static readonly UpDownCounter<long> RunsActiveCounter = Meter.CreateUpDownCounter<long>(Metrics.RunsActive);
     internal static readonly Histogram<double> RunDurationHistogram = Meter.CreateHistogram<double>(Metrics.RunDuration, "s");
+    internal static readonly Counter<long> StepsClaimedCounter = Meter.CreateCounter<long>(Metrics.StepsClaimed);
     internal static readonly Counter<long> StepsExecutedCounter = Meter.CreateCounter<long>(Metrics.StepsExecuted);
     internal static readonly Counter<long> StepsReusedCounter = Meter.CreateCounter<long>(Metrics.StepsReused);
     internal static readonly Counter<long> StepsFailedCounter = Meter.CreateCounter<long>(Metrics.StepsFailed);
     internal static readonly Counter<long> StepsRetriedCounter = Meter.CreateCounter<long>(Metrics.StepsRetried);
     internal static readonly Histogram<double> StepDurationHistogram = Meter.CreateHistogram<double>(Metrics.StepDuration, "s");
+    internal static readonly Histogram<double> ClaimLatencyHistogram = Meter.CreateHistogram<double>(Metrics.ClaimLatency, "s");
+    internal static readonly Counter<long> SignalsBufferedCounter = Meter.CreateCounter<long>(Metrics.SignalsBuffered);
     internal static readonly Counter<long> SignalsDeliveredCounter = Meter.CreateCounter<long>(Metrics.SignalsDelivered);
     internal static readonly Counter<long> CompensationsExecutedCounter = Meter.CreateCounter<long>(Metrics.CompensationsExecuted);
+    internal static readonly Counter<long> CompensationsFailedCounter = Meter.CreateCounter<long>(Metrics.CompensationsFailed);
     internal static readonly Counter<long> RollbacksCompletedCounter = Meter.CreateCounter<long>(Metrics.RollbacksCompleted);
+    internal static readonly Counter<long> LeasesExpiredCounter = Meter.CreateCounter<long>(Metrics.LeasesExpired);
     internal static readonly Counter<long> LeasesRecoveredCounter = Meter.CreateCounter<long>(Metrics.LeasesRecovered);
+    internal static readonly Counter<long> FencingRejectionsCounter = Meter.CreateCounter<long>(Metrics.FencingRejections);
     internal static readonly Counter<long> ArtifactsPublishedCounter = Meter.CreateCounter<long>(Metrics.ArtifactsPublished);
 
     internal static Activity? StartActivity(string name, ActivityKind kind = ActivityKind.Internal) =>

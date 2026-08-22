@@ -73,12 +73,15 @@ internal sealed class RunExecutionPipeline
             return;
         }
         var now = timeProvider.GetUtcNow();
+        var claimStarted = timeProvider.GetTimestamp();
         var leaseGeneration = await store.TryClaimRunAsync(
                 workflowRunId,
                 ownerId,
                 now,
                 now + options.LeaseDuration,
                 cancellationToken).ConfigureAwait(false);
+        ZhinuDiagnostics.ClaimLatencyHistogram.Record(
+            timeProvider.GetElapsedTime(claimStarted).TotalSeconds);
         if (leaseGeneration is null)
         {
             return;

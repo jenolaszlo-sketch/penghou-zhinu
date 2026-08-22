@@ -24,4 +24,23 @@ public interface IWorkflowSignalRepository
         string signalName,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lists the run's signal inbox with stable cursor pagination. Includes both
+    /// buffered (undelivered) and consumed records so unbounded buffering is
+    /// visible and bounded by <see cref="WorkflowEngine.PurgeSignalsAsync"/>.
+    /// </summary>
+    ValueTask<IReadOnlyList<WorkflowSignalRecord>> ListSignalsAsync(
+        Guid workflowRunId,
+        SignalQuery query,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes matching signal inbox rows and returns the count removed. Consumed
+    /// signals remain in the durable event history; this only bounds the inbox.
+    /// </summary>
+    ValueTask<int> PurgeSignalsAsync(
+        Guid workflowRunId,
+        SignalPurgeOptions options,
+        CancellationToken cancellationToken = default);
 }
