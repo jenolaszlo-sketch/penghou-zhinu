@@ -23,7 +23,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Penghou.Zhinu\Penghou.Zhinu.csproj" />
-    <ProjectReference Include="..\Penghou.Zhinu.Hosting\Penghou.Zhinu.Hosting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />

@@ -29,6 +29,24 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void CoreAndHosting_DoNotReferenceAspNetCore()
+    {
+        References(Core, "Microsoft.AspNetCore.App").Should().BeFalse();
+        References(Load("Penghou.Zhinu.Hosting"), "Microsoft.AspNetCore.App").Should().BeFalse();
+    }
+
+    [Fact]
+    public void AspNetCoreEndpoints_DependOnlyOnCore()
+    {
+        var endpoints = Load("Penghou.Zhinu.Hosting.AspNetCore");
+        References(endpoints, "Penghou.Zhinu").Should().BeTrue();
+        // The endpoints package must not know about the SQLite provider or Hosting.
+        References(endpoints, "Penghou.Zhinu.Sqlite").Should().BeFalse();
+        References(endpoints, "Microsoft.Data.Sqlite").Should().BeFalse();
+        References(endpoints, "Penghou.Zhinu.Hosting").Should().BeFalse();
+    }
+
+    [Fact]
     public void Sqlite_ReferencesCoreOnlyForStoreContract()
     {
         var sqlite = Load("Penghou.Zhinu.Sqlite");
