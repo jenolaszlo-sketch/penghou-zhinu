@@ -1347,46 +1347,59 @@ public sealed class WorkflowEngine : IAsyncDisposable
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var cursor = afterSequence;
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            var events = await GetEventsAsync(
-                workflowRunId,
-                cursor,
-                100,
-                cancellationToken).ConfigureAwait(false);
-            foreach (var item in events)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                cursor = item.Sequence;
-                yield return item;
-            }
-            var run = await GetRunAsync(workflowRunId, cancellationToken)
-                .ConfigureAwait(false);
-            if (run is null || RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0)
-            {
-                eventChannels.TryRemove(workflowRunId, out _);
-                yield break;
-            }
-            if (events.Count == 0)
-            {
-                // Wait briefly for an in-process notification instead of
-                // hammering the store every poll interval. Fall back to the
-                // poll interval so events appended by other processes (or
-                // before this subscriber existed) are still observed.
-                var channel = eventChannels.GetOrAdd(
+                var events = await GetEventsAsync(
                     workflowRunId,
-                    _ => Channel.CreateBounded<byte>(
-                        new BoundedChannelOptions(1)
-                        {
-                            FullMode = BoundedChannelFullMode.DropWrite
-                        }));
-                var notify = channel.Reader.WaitToReadAsync(cancellationToken)
-                    .AsTask();
-                var poll = Task.Delay(
-                    options.PollInterval,
-                    timeProvider,
-                    cancellationToken);
-                await Task.WhenAny(notify, poll).ConfigureAwait(false);
+                    cursor,
+                    100,
+                    cancellationToken).ConfigureAwait(false);
+                foreach (var item in events)
+                {
+                    cursor = item.Sequence;
+                    yield return item;
+                }
+                var run = await GetRunAsync(workflowRunId, cancellationToken)
+                    .ConfigureAwait(false);
+                if (run is null || RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0)
+                {
+                    yield break;
+                }
+                if (events.Count == 0)
+                {
+                    // Wait briefly for an in-process notification instead of
+                    // hammering the store every poll interval. Fall back to the
+                    // poll interval so events appended by other processes (or
+                    // before this subscriber existed) are still observed.
+                    var channel = eventChannels.GetOrAdd(
+                        workflowRunId,
+                        _ => Channel.CreateBounded<byte>(
+                            new BoundedChannelOptions(1)
+                            {
+                                FullMode = BoundedChannelFullMode.DropWrite
+                            }));
+                    var notify = channel.Reader.WaitToReadAsync(cancellationToken)
+                        .AsTask();
+                    var poll = Task.Delay(
+                        options.PollInterval,
+                        timeProvider,
+                        cancellationToken);
+                    await Task.WhenAny(notify, poll).ConfigureAwait(false);
+                    // Drain the notification byte so the next wait actually
+                    // blocks instead of busy-spinning on a stale signal.
+                    channel.Reader.TryRead(out _);
+                }
             }
+        }
+        finally
+        {
+            // Release the per-run wakeup channel when this subscriber leaves
+            // (terminal, cancellation, or disconnection) so eventChannels cannot
+            // grow unbounded with abandoned subscriptions. A concurrent
+            // subscriber re-creates it on demand.
+            eventChannels.TryRemove(workflowRunId, out _);
         }
     }
 
@@ -1457,6 +1470,8 @@ public sealed class WorkflowEngine : IAsyncDisposable
 
     private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(disposed != 0, this);
+
+    internal int SubscriptionChannelCount => eventChannels.Count;
 
     private static JsonSerializerOptions CreateSerializerOptions() =>
         ZhinuJsonDefaults.CreateDefault();
