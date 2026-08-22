@@ -43,6 +43,7 @@ internal sealed class RunOutcomeHandler
         ZhinuDiagnostics.RunsCompletedCounter.Add(1);
         notifyEventAppended(workflowRunId);
         logger.LogInformation(
+            ZhinuLogEvents.RunCompleted,
             "Completed workflow {WorkflowRunId}.",
             workflowRunId);
     }
@@ -84,6 +85,7 @@ internal sealed class RunOutcomeHandler
             notifyEventAppended(workflowRunId);
         }
         logger.LogError(
+            ZhinuLogEvents.RunFailed,
             exception,
             "Workflow {WorkflowRunId} failed.",
             workflowRunId);

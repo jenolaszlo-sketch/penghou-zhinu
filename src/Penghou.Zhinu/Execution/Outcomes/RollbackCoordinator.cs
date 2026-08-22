@@ -123,6 +123,7 @@ internal sealed class RollbackCoordinator
                 cancellationToken: CancellationToken.None).ConfigureAwait(false);
             notifyEventAppended(workflowRunId);
             logger.LogInformation(
+                ZhinuLogEvents.RunCompensated,
                 "Compensated workflow {WorkflowRunId} ({CompensatedCount} step(s)).",
                 workflowRunId,
                 compensateKeys.Count);

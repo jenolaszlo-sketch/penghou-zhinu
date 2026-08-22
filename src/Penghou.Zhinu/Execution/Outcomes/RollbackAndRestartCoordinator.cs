@@ -303,6 +303,7 @@ internal sealed class RollbackAndRestartCoordinator
         }
         notifyEventAppended(workflowRunId);
         logger.LogInformation(
+            ZhinuLogEvents.RunRolledBackAndRestarted,
             "Rolled back and restarted workflow {WorkflowRunId} ({InvalidatedCount} step(s) rewound).",
             workflowRunId,
             invalidateStepKeys.Count);

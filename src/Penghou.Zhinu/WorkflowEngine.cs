@@ -178,6 +178,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             },
             cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
+            ZhinuLogEvents.RunCreated,
             "Created workflow {WorkflowRunId} for {WorkflowName} version {WorkflowVersion}.",
             id,
             workflowName,
@@ -317,6 +318,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
         if (actor is not null || reason is not null)
         {
             logger.LogInformation(
+                ZhinuLogEvents.RunCancelled,
                 "Cancelled workflow {WorkflowRunId} by {Actor}: {Reason}",
                 workflowRunId,
                 actor ?? "unknown",
@@ -558,6 +560,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             timeProvider.GetUtcNow(),
             cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
+            ZhinuLogEvents.StepRestarted,
             "Restarted step '{StepKey}' of workflow {WorkflowRunId} ({Mode}); " +
             "invalidated {InvalidatedCount} step(s).",
             stepKey,
@@ -863,6 +866,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             cancellationToken).ConfigureAwait(false);
         ZhinuDiagnostics.SignalsBufferedCounter.Add(1);
         logger.LogInformation(
+            ZhinuLogEvents.SignalBuffered,
             "Buffered signal '{SignalName}' for workflow {WorkflowRunId}.",
             signalName,
             workflowRunId);

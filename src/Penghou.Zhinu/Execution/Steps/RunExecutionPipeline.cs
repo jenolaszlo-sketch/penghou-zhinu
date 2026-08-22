@@ -150,6 +150,7 @@ internal sealed class RunExecutionPipeline
                         depth + 1),
                 onEventAppended: notifyEventAppended);
             logger.LogInformation(
+                ZhinuLogEvents.RunExecuting,
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",
                 workflowRunId,
                 run.WorkflowName,
