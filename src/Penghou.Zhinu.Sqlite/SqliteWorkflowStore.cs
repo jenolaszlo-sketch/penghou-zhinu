@@ -65,26 +65,34 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask<IReadOnlyList<WorkflowRun>> GetRunsAsync(
         RunQuery query,
         CancellationToken cancellationToken = default) =>
-        workflows.GetRunsAsync(query, cancellationToken);
+        ObserveAsync(
+            "runs.get",
+            () => workflows.GetRunsAsync(query, cancellationToken));
 
     public ValueTask<WorkflowRun?> UpdateRunMetadataAsync(
         Guid workflowRunId,
         string? metadataJson,
         CancellationToken cancellationToken = default) =>
-        workflows.UpdateRunMetadataAsync(workflowRunId, metadataJson, cancellationToken);
+        ObserveAsync(
+            "run.update.metadata",
+            () => workflows.UpdateRunMetadataAsync(workflowRunId, metadataJson, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowRun>> GetRunSubtreeAsync(
         Guid workflowRunId,
         int maxDepth,
         CancellationToken cancellationToken = default) =>
-        workflows.GetRunSubtreeAsync(workflowRunId, maxDepth, cancellationToken);
+        ObserveAsync(
+            "runs.subtree",
+            () => workflows.GetRunSubtreeAsync(workflowRunId, maxDepth, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowEvent>> GetEventsAsync(
         Guid workflowRunId,
         long afterSequence,
         int limit,
         CancellationToken cancellationToken = default) =>
-        workflows.GetEventsAsync(workflowRunId, afterSequence, limit, cancellationToken);
+        ObserveAsync(
+            "events.get",
+            () => workflows.GetEventsAsync(workflowRunId, afterSequence, limit, cancellationToken));
 
     public ValueTask<WorkflowEvent> AppendEventAsync(
         Guid workflowRunId,
@@ -93,13 +101,15 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         string? stepKey = null,
         int? attempt = null,
         CancellationToken cancellationToken = default) =>
-        workflows.AppendEventAsync(
-            workflowRunId,
-            eventType,
-            dataJson,
-            stepKey,
-            attempt,
-            cancellationToken);
+        ObserveAsync(
+            "event.append",
+            () => workflows.AppendEventAsync(
+                workflowRunId,
+                eventType,
+                dataJson,
+                stepKey,
+                attempt,
+                cancellationToken));
 
     public ValueTask CompleteRunAsync(
         Guid workflowRunId,
@@ -108,13 +118,15 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         string outputType,
         DateTimeOffset now,
         CancellationToken cancellationToken = default) =>
-        workflows.CompleteRunAsync(
-            workflowRunId,
-            ownerId,
-            outputJson,
-            outputType,
-            now,
-            cancellationToken);
+        ObserveAsync(
+            "run.complete",
+            () => workflows.CompleteRunAsync(
+                workflowRunId,
+                ownerId,
+                outputJson,
+                outputType,
+                now,
+                cancellationToken));
 
     public ValueTask FailRunAsync(
         Guid workflowRunId,
@@ -122,24 +134,32 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         WorkflowError error,
         DateTimeOffset now,
         CancellationToken cancellationToken = default) =>
-        workflows.FailRunAsync(workflowRunId, ownerId, error, now, cancellationToken);
+        ObserveAsync(
+            "run.fail",
+            () => workflows.FailRunAsync(workflowRunId, ownerId, error, now, cancellationToken));
 
     public ValueTask CancelRunAsync(
         Guid workflowRunId,
         DateTimeOffset now,
         CancellationToken cancellationToken = default) =>
-        workflows.CancelRunAsync(workflowRunId, now, cancellationToken);
+        ObserveAsync(
+            "run.cancel",
+            () => workflows.CancelRunAsync(workflowRunId, now, cancellationToken));
 
     public ValueTask<int> PurgeRunsAsync(
         DateTimeOffset olderThan,
         IReadOnlyList<WorkflowStatus>? statuses = null,
         CancellationToken cancellationToken = default) =>
-        workflows.PurgeRunsAsync(olderThan, statuses, cancellationToken);
+        ObserveAsync(
+            "runs.purge",
+            () => workflows.PurgeRunsAsync(olderThan, statuses, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
-        steps.GetStepsAsync(workflowRunId, cancellationToken);
+        ObserveAsync(
+            "steps.get",
+            () => steps.GetStepsAsync(workflowRunId, cancellationToken));
 
     public ValueTask<ArtifactPublicationResult> PublishArtifactAsync(
         ArtifactPublicationRequest request,
@@ -151,24 +171,32 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask<WorkflowArtifactReference?> GetArtifactAsync(
         Guid artifactId,
         CancellationToken cancellationToken = default) =>
-        artifacts.GetArtifactAsync(artifactId, cancellationToken);
+        ObserveAsync(
+            "artifact.get",
+            () => artifacts.GetArtifactAsync(artifactId, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowArtifactReference>> GetArtifactsAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
-        artifacts.GetArtifactsAsync(workflowRunId, cancellationToken);
+        ObserveAsync(
+            "artifacts.get",
+            () => artifacts.GetArtifactsAsync(workflowRunId, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(
         Guid workflowRunId,
         ArtifactQuery query,
         CancellationToken cancellationToken = default) =>
-        artifacts.QueryArtifactsAsync(workflowRunId, query, cancellationToken);
+        ObserveAsync(
+            "artifacts.query",
+            () => artifacts.QueryArtifactsAsync(workflowRunId, query, cancellationToken));
 
     public ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(
         Guid workflowRunId,
         string name,
         CancellationToken cancellationToken = default) =>
-        artifacts.GetLatestArtifactAsync(workflowRunId, name, cancellationToken);
+        ObserveAsync(
+            "artifacts.latest",
+            () => artifacts.GetLatestArtifactAsync(workflowRunId, name, cancellationToken));
 
     public ValueTask<StepClaimResult> ClaimStepAsync(
         StepClaimRequest request,
@@ -217,12 +245,16 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask<IReadOnlyList<StepDependency>> GetStepDependenciesAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
-        steps.GetStepDependenciesAsync(workflowRunId, cancellationToken);
+        ObserveAsync(
+            "steps.dependencies",
+            () => steps.GetStepDependenciesAsync(workflowRunId, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowStepCompensation>> GetCompensationsAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
-        steps.GetCompensationsAsync(workflowRunId, cancellationToken);
+        ObserveAsync(
+            "steps.compensations",
+            () => steps.GetCompensationsAsync(workflowRunId, cancellationToken));
 
     public ValueTask<RestartPlan> PlanRestartAsync(
         Guid workflowRunId,
@@ -407,7 +439,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask<WorkflowRunOperation?> GetActiveOperationAsync(
         Guid workflowRunId,
         CancellationToken cancellationToken = default) =>
-        steps.GetActiveOperationAsync(workflowRunId, cancellationToken);
+        ObserveAsync(
+            "operations.active",
+            () => steps.GetActiveOperationAsync(workflowRunId, cancellationToken));
 
     public ValueTask<bool> UpdateOperationStatusAsync(
         Guid operationId,
@@ -490,7 +524,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         string signalName,
         string? dataJson,
         CancellationToken cancellationToken = default) =>
-        signals.SendSignalAsync(workflowRunId, signalName, dataJson, cancellationToken);
+        ObserveAsync(
+            "signal.send",
+            () => signals.SendSignalAsync(workflowRunId, signalName, dataJson, cancellationToken));
 
     public ValueTask<SignalDelivery?> TryDeliverSignalAsync(
         Guid stepId,
@@ -504,13 +540,17 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         Guid workflowRunId,
         SignalQuery query,
         CancellationToken cancellationToken = default) =>
-        signals.ListSignalsAsync(workflowRunId, query, cancellationToken);
+        ObserveAsync(
+            "signals.list",
+            () => signals.ListSignalsAsync(workflowRunId, query, cancellationToken));
 
     public ValueTask<int> PurgeSignalsAsync(
         Guid workflowRunId,
         SignalPurgeOptions options,
         CancellationToken cancellationToken = default) =>
-        signals.PurgeSignalsAsync(workflowRunId, options, cancellationToken);
+        ObserveAsync(
+            "signals.purge",
+            () => signals.PurgeSignalsAsync(workflowRunId, options, cancellationToken));
 
     public ValueTask ScheduleDelayAsync(
         Guid stepId,
@@ -579,7 +619,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         catch (SqliteException exception)
         {
             RecordStoreFailure(activity, exception);
-            throw;
+            throw new WorkflowPersistenceException(
+                $"SQLite operation '{operation}' failed.",
+                exception);
         }
         finally
         {
@@ -602,7 +644,9 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         catch (SqliteException exception)
         {
             RecordStoreFailure(activity, exception);
-            throw;
+            throw new WorkflowPersistenceException(
+                $"SQLite operation '{operation}' failed.",
+                exception);
         }
         finally
         {
