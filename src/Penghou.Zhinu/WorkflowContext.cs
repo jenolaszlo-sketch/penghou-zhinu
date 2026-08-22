@@ -347,6 +347,16 @@ public sealed class WorkflowContext
     /// survives process restarts; when it times out, the step stays recorded as
     /// waiting so a later re-execution can still consume a late signal.
     /// </summary>
+    public Task<T> WaitForSignalAsync<T>(
+        string stepKey,
+        SignalDefinition<T> signal,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(signal);
+        return WaitForSignalAsync<T>(stepKey, signal.Name, timeout, cancellationToken);
+    }
+
     public async Task<T> WaitForSignalAsync<T>(
         string stepKey,
         string signalName,

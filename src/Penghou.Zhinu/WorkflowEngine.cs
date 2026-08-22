@@ -738,6 +738,19 @@ public sealed class WorkflowEngine : IAsyncDisposable
     }
 
     /// <summary>
+    /// Buffers a typed external signal for <paramref name="workflowRunId"/>.
+    /// </summary>
+    public Task SendSignalAsync<TPayload>(
+        Guid workflowRunId,
+        SignalDefinition<TPayload> signal,
+        TPayload? data = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(signal);
+        return SendSignalAsync(workflowRunId, signal.Name, data, cancellationToken);
+    }
+
+    /// <summary>
     /// Buffers an external signal for <paramref name="workflowRunId"/> under
     /// <paramref name="signalName"/>. Signals are consumed by a
     /// <c>WaitForSignalAsync</c> wait in the workflow; signals sent before any
