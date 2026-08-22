@@ -73,6 +73,12 @@ internal sealed class SqliteConnectionFactory
                 "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent" +
                 " ON workflow_runs(parent_run_id);",
                 cancellationToken).ConfigureAwait(false);
+            await SqliteStoreSupport.ExecuteAsync(
+                connection,
+                null,
+                "CREATE INDEX IF NOT EXISTS ix_workflow_runs_name_version" +
+                " ON workflow_runs(workflow_name, workflow_version);",
+                cancellationToken).ConfigureAwait(false);
             initialized = true;
         }
         finally
@@ -85,6 +91,15 @@ internal sealed class SqliteConnectionFactory
     {
         if (!initialized)
             await InitializeAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask CheckpointAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await SqliteStoreSupport.ExecuteAsync(
+            connection, null, "PRAGMA wal_checkpoint(TRUNCATE);", cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private static async ValueTask VerifySchemaCompatibilityAsync(

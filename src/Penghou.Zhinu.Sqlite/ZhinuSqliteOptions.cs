@@ -14,4 +14,6 @@ public sealed class ZhinuSqliteOptions
     /// listeners regardless of this setting. SQL and payloads are never added.
     /// </summary>
     public bool EnableDetailedDiagnostics { get; set; }
+
+    public TimeProvider TimeProvider { get; set; } = TimeProvider.System;
 }

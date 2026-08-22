@@ -17,6 +17,7 @@ namespace Penghou.Zhinu.Sqlite;
 /// </summary>
 public sealed class SqliteWorkflowStore : IWorkflowStore
 {
+    private readonly SqliteConnectionFactory factory;
     private readonly SqliteWorkflowRepository workflows;
     private readonly SqliteStepRepository steps;
     private readonly SqliteSignalRepository signals;
@@ -29,7 +30,7 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     {
         ArgumentNullException.ThrowIfNull(options);
         detailedDiagnostics = options.EnableDetailedDiagnostics;
-        var factory = new SqliteConnectionFactory(options);
+        factory = new SqliteConnectionFactory(options);
         workflows = new SqliteWorkflowRepository(factory);
         steps = new SqliteStepRepository(factory);
         signals = new SqliteSignalRepository(factory);
@@ -525,6 +526,10 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
         ObserveAsync(
             "lease.recover",
             () => leases.RecoverExpiredLeasesAsync(now, cancellationToken));
+
+    /// <summary>Truncates the WAL file via a checkpoint.</summary>
+    public ValueTask CheckpointAsync(CancellationToken cancellationToken = default) =>
+        factory.CheckpointAsync(cancellationToken);
 
     private async ValueTask ObserveAsync(
         string operation,

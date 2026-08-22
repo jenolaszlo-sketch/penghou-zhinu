@@ -32,16 +32,18 @@ public sealed class SqliteJsonCheckpointStore : JsonCheckpointStore
 
     private readonly ZhinuSqliteOptions options;
     private readonly string connectionString;
+    private readonly TimeProvider timeProvider;
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private volatile bool initialized;
 
-    public SqliteJsonCheckpointStore(ZhinuSqliteOptions options)
+    public SqliteJsonCheckpointStore(ZhinuSqliteOptions options, TimeProvider? timeProvider = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrWhiteSpace(options.DatabasePath);
         if (options.BusyTimeout < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(options));
         this.options = options;
+        this.timeProvider = timeProvider ?? options.TimeProvider ?? TimeProvider.System;
         var path = Path.GetFullPath(options.DatabasePath);
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
@@ -81,7 +83,7 @@ public sealed class SqliteJsonCheckpointStore : JsonCheckpointStore
             "$parent_checkpoint_id",
             DbValue(parent?.CheckpointId));
         command.Parameters.AddWithValue("$data_json", value.GetRawText());
-        command.Parameters.AddWithValue("$created_at", FormatTimestamp(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$created_at", FormatTimestamp(timeProvider.GetUtcNow()));
         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         return new CheckpointInfo(sessionId, checkpointId);
     }
