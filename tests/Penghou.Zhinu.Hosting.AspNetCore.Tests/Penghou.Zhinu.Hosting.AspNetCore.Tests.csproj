@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="1.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0-pre.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="FluentAssertions" Version="7.*" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Penghou.Zhinu\Penghou.Zhinu.csproj" />
+    <ProjectReference Include="..\..\src\Penghou.Zhinu.Sqlite\Penghou.Zhinu.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\Penghou.Zhinu.Hosting\Penghou.Zhinu.Hosting.csproj" />
+    <ProjectReference Include="..\..\src\Penghou.Zhinu.Hosting.AspNetCore\Penghou.Zhinu.Hosting.AspNetCore.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

@@ -88,8 +88,12 @@ public class CompleteResultSizeBenchmarks : IDisposable
         var now = DateTimeOffset.UtcNow;
         await store.CreateRunAsync(new WorkflowRun
         {
-            Id = runId, WorkflowName = "bench", WorkflowVersion = "1",
-            Status = WorkflowStatus.Pending, CreatedAt = now, UpdatedAt = now
+            Id = runId,
+            WorkflowName = "bench",
+            WorkflowVersion = "1",
+            Status = WorkflowStatus.Pending,
+            CreatedAt = now,
+            UpdatedAt = now
         });
         leaseGeneration = (await store.TryClaimRunAsync(runId, ownerId, now, now + TimeSpan.FromSeconds(30)))!.Value;
     }
@@ -102,9 +106,15 @@ public class CompleteResultSizeBenchmarks : IDisposable
         var payload = new string('x', ResultBytes);
         var claim = await store!.ClaimStepAsync(new StepClaimRequest
         {
-            WorkflowRunId = runId, StepKey = key, InputJson = "\"x\"",
-            InputType = "System.String", InputHash = "h", OutputType = "System.String",
-            OwnerId = ownerId, Now = now, LeaseExpiresAt = now + TimeSpan.FromSeconds(30),
+            WorkflowRunId = runId,
+            StepKey = key,
+            InputJson = "\"x\"",
+            InputType = "System.String",
+            InputHash = "h",
+            OutputType = "System.String",
+            OwnerId = ownerId,
+            Now = now,
+            LeaseExpiresAt = now + TimeSpan.FromSeconds(30),
             LeaseGeneration = leaseGeneration
         });
         await store!.CompleteStepAsync(claim.Step.Id, ownerId, JsonSerializer.Serialize(payload), DateTimeOffset.UtcNow);
@@ -189,8 +199,12 @@ public class ArtifactPublishBenchmarks : IDisposable
         var now = DateTimeOffset.UtcNow;
         await store.CreateRunAsync(new WorkflowRun
         {
-            Id = runId, WorkflowName = "bench", WorkflowVersion = "1",
-            Status = WorkflowStatus.Pending, CreatedAt = now, UpdatedAt = now
+            Id = runId,
+            WorkflowName = "bench",
+            WorkflowVersion = "1",
+            Status = WorkflowStatus.Pending,
+            CreatedAt = now,
+            UpdatedAt = now
         });
     }
 
@@ -240,15 +254,27 @@ public class LeaseRecoveryBenchmarks : IDisposable
             var runId = Guid.NewGuid();
             await store.CreateRunAsync(new WorkflowRun
             {
-                Id = runId, WorkflowName = "bench", WorkflowVersion = "1",
-                Status = WorkflowStatus.Running, CreatedAt = now, UpdatedAt = now,
-                LeaseOwner = "dead", LeaseExpiresAt = expired
+                Id = runId,
+                WorkflowName = "bench",
+                WorkflowVersion = "1",
+                Status = WorkflowStatus.Running,
+                CreatedAt = now,
+                UpdatedAt = now,
+                LeaseOwner = "dead",
+                LeaseExpiresAt = expired
             });
             var claim = await store.ClaimStepAsync(new StepClaimRequest
             {
-                WorkflowRunId = runId, StepKey = "s", InputJson = "\"x\"",
-                InputType = "System.String", InputHash = "h", OutputType = "System.String",
-                OwnerId = "dead", Now = now, LeaseExpiresAt = expired, LeaseGeneration = 1
+                WorkflowRunId = runId,
+                StepKey = "s",
+                InputJson = "\"x\"",
+                InputType = "System.String",
+                InputHash = "h",
+                OutputType = "System.String",
+                OwnerId = "dead",
+                Now = now,
+                LeaseExpiresAt = expired,
+                LeaseGeneration = 1
             });
             await store.FailStepAsync(claim.Step.Id, "dead",
                 new WorkflowError { Type = "x", Message = "dead", Timestamp = now },
@@ -287,8 +313,12 @@ public class HistoryGrowthBenchmarks : IDisposable
         var now = DateTimeOffset.UtcNow;
         await store.CreateRunAsync(new WorkflowRun
         {
-            Id = runId, WorkflowName = "bench", WorkflowVersion = "1",
-            Status = WorkflowStatus.Pending, CreatedAt = now, UpdatedAt = now
+            Id = runId,
+            WorkflowName = "bench",
+            WorkflowVersion = "1",
+            Status = WorkflowStatus.Pending,
+            CreatedAt = now,
+            UpdatedAt = now
         });
         for (var i = 0; i < Events; i++)
             await store.AppendEventAsync(runId, "progress", null);

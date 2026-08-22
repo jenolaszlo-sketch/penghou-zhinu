@@ -1,0 +1,3 @@
+#nullable enable
+Penghou.Zhinu.Hosting.WorkflowEngineEndpoints
+static Penghou.Zhinu.Hosting.WorkflowEngineEndpoints.MapZhinuEndpoints(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints, string! prefix = "/zhinu") -> Microsoft.AspNetCore.Routing.IEndpointRouteBuilder!

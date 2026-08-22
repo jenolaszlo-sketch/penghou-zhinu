@@ -72,6 +72,10 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
         FaultBefore(faultPoint);
     }
 
+    // ---- IWorkflowStore ----
+
+    public ValueTask<WorkflowStoreHealth> CheckHealthAsync(CancellationToken ct = default) => inner.CheckHealthAsync(ct);
+
     // ---- IWorkflowRepository ----
 
     public ValueTask InitializeAsync(CancellationToken ct = default) => inner.InitializeAsync(ct);

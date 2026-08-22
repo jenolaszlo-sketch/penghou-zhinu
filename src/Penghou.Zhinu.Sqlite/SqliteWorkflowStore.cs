@@ -605,6 +605,40 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
     public ValueTask CheckpointAsync(CancellationToken cancellationToken = default) =>
         factory.CheckpointAsync(cancellationToken);
 
+    /// <summary>
+    /// Safe readiness probe: opens the database, verifies schema compatibility,
+    /// and runs a trivial read. Never claims a step or mutates state.
+    /// </summary>
+    public async ValueTask<WorkflowStoreHealth> CheckHealthAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+            await using var connection = await factory.OpenAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await using var command = SqliteStoreSupport.CreateCommand(
+                connection, null, "SELECT 1;");
+            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+            return new WorkflowStoreHealth
+            {
+                IsHealthy = true,
+                StoreName = "sqlite",
+                SchemaVersion = ZhinuSqliteSchema.CurrentVersion,
+                WalMode = factory.Options.EnableWal
+            };
+        }
+        catch (Exception exception)
+        {
+            return new WorkflowStoreHealth
+            {
+                IsHealthy = false,
+                StoreName = "sqlite",
+                Detail = exception.Message
+            };
+        }
+    }
+
     private async ValueTask ObserveAsync(
         string operation,
         Func<ValueTask> action)

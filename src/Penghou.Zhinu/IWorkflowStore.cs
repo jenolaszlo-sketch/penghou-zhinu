@@ -16,4 +16,11 @@ public interface IWorkflowStore :
     IWorkflowForkRepository,
     IWorkflowArtifactRepository
 {
+    /// <summary>
+    /// Performs a safe health probe: verifies the backing store can be opened,
+    /// its schema is compatible, and a trivial read succeeds. Readiness
+    /// endpoints use this; it must never claim a production step or mutate state.
+    /// </summary>
+    ValueTask<WorkflowStoreHealth> CheckHealthAsync(
+        CancellationToken cancellationToken = default);
 }

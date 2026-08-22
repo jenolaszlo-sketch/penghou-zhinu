@@ -44,6 +44,7 @@ All packages target **.NET 8.0** and **.NET 10.0**.
 | `Penghou.Zhinu` | Host-independent workflow engine, contracts, retries, durable events, and inspection | net8.0, net10.0 |
 | `Penghou.Zhinu.Sqlite` | Transactional SQLite state, leases, recovery, and schema management | net8.0, net10.0 |
 | `Penghou.Zhinu.Hosting` | Optional `Microsoft.Extensions.Hosting` execution loop and DI registration | net8.0, net10.0 |
+| `Penghou.Zhinu.Hosting.AspNetCore` | Minimal ASP.NET Core liveness/readiness/diagnostics endpoints | net8.0, net10.0 |
 | `Penghou.Zhinu.Agents` | Optional Microsoft Agent Framework integration and durable SQLite checkpointing | net8.0, net10.0 |
 | `Penghou.Zhinu.Testing` | Isolated test host and custom-store conformance checks | net8.0, net10.0 |
 | `Penghou.Zhinu.OpenTelemetry` | Optional tracing and metrics registration helpers | net8.0, net10.0 |
@@ -206,6 +207,28 @@ test suite run in CI for every change.
 Direct construction requires only the core engine and a store implementation.
 `Penghou.Zhinu.Hosting` adds the hosted execution loop and DI registration.
 `Penghou.Zhinu.Agents` adds Microsoft Agent Framework integration.
+
+## Health endpoints
+
+The optional `Penghou.Zhinu.Hosting.AspNetCore` package maps three minimal
+endpoints that distinguish liveness from readiness:
+
+```csharp
+app.MapZhinuEndpoints("/zhinu");
+```
+
+- `GET /zhinu/liveness` — answers without touching the store (process alive).
+- `GET /zhinu/readiness` — resolves `IWorkflowStore.CheckHealthAsync()` (opens the
+  store, verifies schema compatibility, runs a trivial read) and returns 503 when
+  the host cannot participate in workflow execution. Never claims a step.
+- `GET /zhinu/diagnostics` — runtime health: `store`, `schemaVersion`, `walMode`.
+  No workflow payloads, metadata, signal bodies, or artifact contents.
+
+```csharp
+services.AddZhinuSqlite(options => options.DatabasePath = "zhinu.db");
+services.AddZhinu();
+// then app.MapZhinuEndpoints();
+```
 
 ## Hosted quick start
 

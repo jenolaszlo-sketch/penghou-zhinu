@@ -1,0 +1,12 @@
+Penghou.Zhinu.IWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
+Penghou.Zhinu.WorkflowStoreHealth
+Penghou.Zhinu.WorkflowStoreHealth.Detail.get -> string?
+Penghou.Zhinu.WorkflowStoreHealth.Detail.init -> void
+Penghou.Zhinu.WorkflowStoreHealth.IsHealthy.get -> bool
+Penghou.Zhinu.WorkflowStoreHealth.IsHealthy.init -> void
+Penghou.Zhinu.WorkflowStoreHealth.SchemaVersion.get -> int?
+Penghou.Zhinu.WorkflowStoreHealth.SchemaVersion.init -> void
+Penghou.Zhinu.WorkflowStoreHealth.StoreName.get -> string?
+Penghou.Zhinu.WorkflowStoreHealth.StoreName.init -> void
+Penghou.Zhinu.WorkflowStoreHealth.WalMode.get -> bool?
+Penghou.Zhinu.WorkflowStoreHealth.WalMode.init -> void
