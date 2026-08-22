@@ -303,6 +303,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_run
             ON workflow_artifacts(workflow_run_id, name, revision);
+        CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_created
+            ON workflow_artifacts(workflow_run_id, created_at, name, revision);
         CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_producer
             ON workflow_artifacts(workflow_run_id, producer_step_key,
                 producer_step_revision);
@@ -332,7 +334,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_signals_run_name
-            ON workflow_signals(workflow_run_id, signal_name, delivered_step_id);
+            ON workflow_signals(workflow_run_id, signal_name, delivered_step_id, created_at);
 
         CREATE TABLE IF NOT EXISTS workflow_step_compensations
         (
