@@ -190,6 +190,23 @@ public sealed class WorkflowContext
                     outputType,
                     compensation);
             }
+            if (dependencies is not null)
+            {
+                var existing = await store.GetStepDependenciesAsync(WorkflowRunId, linkedCancellation.Token)
+                    .ConfigureAwait(false);
+                var existingForStep = existing.Where(e => e.StepKey == stepKey).Select(e => e.DependsOnStepKey).ToHashSet(StringComparer.Ordinal);
+                var newEdges = dependencies.Where(d => !existingForStep.Contains(d)).ToList();
+                if (newEdges.Count > 0)
+                {
+                    var combined = new List<StepDependency>(existing);
+                    foreach (var dep in newEdges) combined.Add(new StepDependency(stepKey, dep));
+                    if (WorkflowDependencyValidator.HasCycle(combined))
+                        throw new WorkflowStateException($"Adding dependencies for step '{stepKey}' would create a cycle.");
+                    var steps = await store.GetStepsAsync(WorkflowRunId, linkedCancellation.Token).ConfigureAwait(false);
+                    if (steps.Any(s => s.StepKey == stepKey && s.Status == StepStatus.Completed))
+                        throw new WorkflowStateException($"Cannot add dependencies for step '{stepKey}' after it has completed.");
+                }
+            }
             while (true)
             {
                 var claim = await ClaimAsync(
