@@ -32,10 +32,23 @@ internal sealed class ChildRunCoordinator
     public async Task<Guid> CreateChildRunAsync(
         Guid parentRunId,
         string stepKey,
+        int invocationGeneration,
         ChildStartRequest request,
         CancellationToken cancellationToken)
     {
-        var childId = SerializationIdentity.HashId($"{parentRunId:D}:{stepKey}");
+        var childId = SerializationIdentity.HashId(
+            $"{parentRunId:D}:{stepKey}:{invocationGeneration}");
+        var parent = await store.GetRunAsync(parentRunId, cancellationToken)
+            .ConfigureAwait(false) ??
+            throw new WorkflowStateException(
+                $"Parent workflow '{parentRunId:D}' does not exist.");
+        var childDepth = await GetRunDepthAsync(parentRunId, cancellationToken)
+            .ConfigureAwait(false) + 1;
+        if (childDepth > options.MaxNestingDepth)
+        {
+            throw new WorkflowStateException(
+                $"Child workflow step '{stepKey}' exceeds the maximum nesting depth of {options.MaxNestingDepth}.");
+        }
         var existing = await store.GetRunAsync(
             childId,
             cancellationToken).ConfigureAwait(false);
@@ -54,8 +67,8 @@ internal sealed class ChildRunCoordinator
             return childId;
         }
         var now = timeProvider.GetUtcNow();
-        var parent = await store.GetRunAsync(parentRunId, cancellationToken)
-            .ConfigureAwait(false);
+        var deadline = EffectiveDeadline(parent.Deadline, request.Deadline);
+        var metadataJson = ResolveMetadata(parent, request);
         await store.CreateRunAsync(
             new WorkflowRun
             {
@@ -69,10 +82,53 @@ internal sealed class ChildRunCoordinator
                 InputType = request.InputType,
                 OutputType = request.OutputType,
                 ParentRunId = parentRunId,
-                TraceId = parent?.TraceId
+                Deadline = deadline,
+                MetadataJson = metadataJson,
+                TraceId = parent.TraceId
             },
             cancellationToken).ConfigureAwait(false);
         return childId;
+    }
+
+    private async Task<int> GetRunDepthAsync(
+        Guid runId,
+        CancellationToken cancellationToken)
+    {
+        var depth = 0;
+        var current = await store.GetRunAsync(runId, cancellationToken)
+            .ConfigureAwait(false);
+        var visited = new HashSet<Guid>();
+        while (current?.ParentRunId is { } parentId && visited.Add(parentId))
+        {
+            depth++;
+            current = await store.GetRunAsync(parentId, cancellationToken)
+                .ConfigureAwait(false);
+            if (depth > options.MaxNestingDepth + 1)
+                break;
+        }
+        return depth;
+    }
+
+    private static DateTimeOffset? EffectiveDeadline(
+        DateTimeOffset? parentDeadline,
+        DateTimeOffset? explicitDeadline)
+    {
+        if (parentDeadline is null)
+            return explicitDeadline;
+        if (explicitDeadline is null)
+            return parentDeadline;
+        return parentDeadline.Value < explicitDeadline.Value
+            ? parentDeadline
+            : explicitDeadline;
+    }
+
+    private string? ResolveMetadata(WorkflowRun parent, ChildStartRequest request)
+    {
+        if (request.MetadataJson is not null)
+            return request.MetadataJson;
+        if (request.InheritMetadata)
+            return parent.MetadataJson;
+        return null;
     }
 
     public async Task<TOutput> AwaitChildCoreAsync<TOutput>(
@@ -134,5 +190,8 @@ internal sealed class ChildRunCoordinator
         string WorkflowVersion,
         string InputJson,
         string InputType,
-        string OutputType);
+        string OutputType,
+        DateTimeOffset? Deadline = null,
+        string? MetadataJson = null,
+        bool InheritMetadata = false);
 }

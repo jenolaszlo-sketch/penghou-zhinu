@@ -1694,8 +1694,16 @@ internal sealed class SqliteStepRepository :
         WorkflowStepRun existing,
         StepClaimRequest request)
     {
+        // A Pending revision was created by a restart or fork and has not
+        // committed anything: its input value is re-derived on execution (for
+        // example a child:wait step whose input is the child id produced by a
+        // restarted child:start). Only the type contract must match; the value
+        // hash is established by the re-execution. Committed or in-flight steps
+        // keep the durable-reuse contract on the value hash.
+        var valueHashMatches = existing.Status == StepStatus.Pending ||
+            string.Equals(existing.InputHash, request.InputHash, StringComparison.Ordinal);
         if (!string.Equals(existing.InputType, request.InputType, StringComparison.Ordinal) ||
-            !string.Equals(existing.InputHash, request.InputHash, StringComparison.Ordinal) ||
+            !valueHashMatches ||
             !string.Equals(existing.OutputType, request.OutputType, StringComparison.Ordinal))
         {
             throw new WorkflowStateException(

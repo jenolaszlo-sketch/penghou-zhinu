@@ -135,12 +135,13 @@ public sealed class StoreConformance12Tests : WorkflowEngineTestBase
         var subtree = await store.GetRunSubtreeAsync(runId, 5, TestContext.Current.CancellationToken);
         subtree.Count(r => r.ParentRunId == runId).Should().Be(1);
         var childId = subtree.First(r => r.ParentRunId == runId).Id;
-        // Re-execute should reuse same child
+        // Re-execute after restart creates a fresh child (new invocation generation)
         await engine.RestartStepAsync(runId, "child:start", TestContext.Current.CancellationToken);
         await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
         await engine.WaitForCompletionAsync<string>(runId, cancellationToken: TestContext.Current.CancellationToken);
         var subtree2 = await store.GetRunSubtreeAsync(runId, 5, TestContext.Current.CancellationToken);
-        subtree2.First(r => r.ParentRunId == runId).Id.Should().Be(childId);
+        subtree2.Count(r => r.ParentRunId == runId).Should().Be(2);
+        subtree2.Should().Contain(r => r.Id == childId);
     }
 
     [Fact]

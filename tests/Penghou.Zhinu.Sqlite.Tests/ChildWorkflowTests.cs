@@ -73,7 +73,7 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
     }
 
     [Fact]
-    public async Task StartChildAsync_RestartingStartStepReusesExistingChildRun()
+    public async Task StartChildAsync_RestartingStartStepCreatesFreshChildRun()
     {
         var parent = new ParentWorkflow();
         var child = new ChildWorkflow();
@@ -91,6 +91,11 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
             runId,
             cancellationToken: TestContext.Current.CancellationToken);
         original.Should().Be("child:parent:go");
+        var before = await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "child" },
+            cancellationToken: TestContext.Current.CancellationToken);
+        before.Should().ContainSingle().Which.ParentRunId.Should().Be(runId);
+        var firstChildId = before.Single().Id;
 
         await engine.RestartStepAsync(
             runId,
@@ -101,11 +106,14 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
             runId,
             cancellationToken: TestContext.Current.CancellationToken);
         rerun.Should().Be("child:parent:go");
-        var runs = await engine.GetRunsAsync(
+        var after = await engine.GetRunsAsync(
             new RunQuery { WorkflowName = "child" },
             cancellationToken: TestContext.Current.CancellationToken);
-        runs.Should().ContainSingle()
-            .Which.ParentRunId.Should().Be(runId);
+        after.Should().HaveCount(2);
+        after.Should().Contain(r => r.Id == firstChildId);
+        // A fresh child identity must be used after restart (new invocation generation).
+        var newChild = after.Single(r => r.Id != firstChildId);
+        newChild.ParentRunId.Should().Be(runId);
     }
 
     [Fact]
@@ -185,6 +193,6 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
         (await engine.GetRunsAsync(
             new RunQuery { WorkflowName = "child" },
             cancellationToken: TestContext.Current.CancellationToken))
-            .Should().ContainSingle();
+            .Should().HaveCount(2);
     }
 }

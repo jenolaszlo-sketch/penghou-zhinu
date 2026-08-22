@@ -574,15 +574,56 @@ public sealed class WorkflowContext
     /// <summary>
     /// Starts a child workflow and durably waits for its result. The child is a
     /// regular run linked via <see cref="WorkflowRun.ParentRunId"/>; its id is
-    /// derived deterministically from the parent and step key so replays reuse
-    /// it. Child failure or cancellation propagates to this step.
+    /// derived deterministically from the parent run, step key, and the
+    /// <c>child:start</c> step revision, so replays reuse the child while
+    /// restarting the step creates a fresh child. Child failure or cancellation
+    /// propagates to this step.
     /// </summary>
-    public async Task<TOutput> StartChildAsync<TInput, TOutput>(
+    public Task<TOutput> StartChildAsync<TInput, TOutput>(
         string stepKey,
         string workflowName,
         string workflowVersion,
         TInput input,
+        CancellationToken cancellationToken = default) =>
+        StartChildCoreAsync<TInput, TOutput>(
+            stepKey,
+            workflowName,
+            workflowVersion,
+            input,
+            options: null,
+            cancellationToken);
+
+    /// <summary>
+    /// Starts a child workflow with explicit deadline and metadata semantics.
+    /// The effective child deadline is the earlier of the parent's deadline and
+    /// <see cref="ChildRunOptions.Deadline"/>; metadata is only inherited when
+    /// <see cref="ChildRunOptions.InheritMetadata"/> is set.
+    /// </summary>
+    public Task<TOutput> StartChildAsync<TInput, TOutput>(
+        string stepKey,
+        string workflowName,
+        string workflowVersion,
+        TInput input,
+        ChildRunOptions options,
         CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        return StartChildCoreAsync<TInput, TOutput>(
+            stepKey,
+            workflowName,
+            workflowVersion,
+            input,
+            options,
+            cancellationToken);
+    }
+
+    private async Task<TOutput> StartChildCoreAsync<TInput, TOutput>(
+        string stepKey,
+        string workflowName,
+        string workflowVersion,
+        TInput input,
+        ChildRunOptions? options,
+        CancellationToken cancellationToken)
     {
         ValidateStepKey(stepKey);
         using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.ChildExecute);
@@ -595,13 +636,19 @@ public sealed class WorkflowContext
             workflowVersion,
             JsonSerializer.Serialize(input, serializerOptions),
             SerializationIdentity.TypeId(typeof(TInput)),
-            SerializationIdentity.TypeId(typeof(TOutput)));
+            SerializationIdentity.TypeId(typeof(TOutput)),
+            options?.Deadline,
+            options?.Metadata is null
+                ? null
+                : JsonSerializer.Serialize(options.Metadata, serializerOptions),
+            options?.InheritMetadata ?? false);
         var childId = await StepAsync(
             $"{stepKey}:start",
             request,
-            (value, _, ct) => childRuns.CreateChildRunAsync(
+            (value, step, ct) => childRuns.CreateChildRunAsync(
                 WorkflowRunId,
                 stepKey,
+                step.Revision,
                 value,
                 ct),
             cancellationToken: cancellationToken).ConfigureAwait(false);
