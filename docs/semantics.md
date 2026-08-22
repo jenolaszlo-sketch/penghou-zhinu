@@ -74,9 +74,10 @@ rather than only implied by code.
 | Rollback completion (`Compensated`) | one transaction |
 | Rollback-and-restart phase transitions | one transaction per phase |
 
-`EmitAsync` is the deliberate exception: it appends its own event in a separate
-transaction from the emitting step. Treat emitted events as durable but
-best-effort diagnostic output.
+`EmitAsync` called inside a step delegate commits with that step (one
+transaction); called outside a step it appends its own event in a separate
+transaction. Only the outside-a-step form is the deliberate best-effort
+exception.
 
 ## What fork copies
 

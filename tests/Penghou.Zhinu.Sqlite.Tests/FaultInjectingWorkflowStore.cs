@@ -113,6 +113,12 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
         return FaultAfter(AfterStepCompletionCommit, inner.CompleteStepAsync(stepId, ownerId, outputJson, now, ct));
     }
 
+    public ValueTask<IReadOnlyList<WorkflowEvent>> CompleteStepWithEventsAsync(Guid stepId, string ownerId, string? outputJson, DateTimeOffset now, IReadOnlyList<PendingWorkflowEvent>? events, CancellationToken ct = default)
+    {
+        FaultBefore(BeforeStepCompletionCommit);
+        return FaultAfter(AfterStepCompletionCommit, inner.CompleteStepWithEventsAsync(stepId, ownerId, outputJson, now, events, ct));
+    }
+
     public ValueTask FailStepAsync(Guid stepId, string ownerId, WorkflowError error, DateTimeOffset? retryAt, DateTimeOffset now, CancellationToken ct = default) => inner.FailStepAsync(stepId, ownerId, error, retryAt, now, ct);
 
     public ValueTask<IReadOnlyList<StepDependency>> GetStepDependenciesAsync(Guid workflowRunId, CancellationToken ct = default) => inner.GetStepDependenciesAsync(workflowRunId, ct);

@@ -19,7 +19,7 @@ internal sealed class SqliteStepFinisher
 
     public SqliteStepFinisher(IZhinuSqliteDatabase factory) => this.factory = factory;
 
-    public async ValueTask FinishStepAsync(
+    public async ValueTask<IReadOnlyList<WorkflowEvent>> FinishStepAsync(
         Guid stepId,
         string ownerId,
         StepStatus status,
@@ -28,7 +28,8 @@ internal sealed class SqliteStepFinisher
         DateTimeOffset? availableAt,
         string eventType,
         DateTimeOffset now,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<PendingWorkflowEvent>? extraEvents = null)
     {
         await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken)
@@ -67,7 +68,8 @@ internal sealed class SqliteStepFinisher
                 step.OutputType,
                 cancellationToken).ConfigureAwait(false);
         }
-        await insertEvent.ExecuteAsync(
+        var committed = new List<WorkflowEvent>();
+        committed.Add(await insertEvent.ExecuteAsync(
             connection,
             transaction,
             step.WorkflowRunId,
@@ -78,7 +80,24 @@ internal sealed class SqliteStepFinisher
             error is null
                 ? null
                 : JsonSerializer.Serialize(error, SqliteStoreSupport.SerializerOptions),
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false));
+        if (extraEvents is not null)
+        {
+            foreach (var pending in extraEvents)
+            {
+                committed.Add(await insertEvent.ExecuteAsync(
+                    connection,
+                    transaction,
+                    step.WorkflowRunId,
+                    step.StepKey,
+                    pending.EventType,
+                    now,
+                    step.Attempt,
+                    pending.DataJson,
+                    cancellationToken).ConfigureAwait(false));
+            }
+        }
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return committed;
     }
 }

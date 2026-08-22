@@ -110,6 +110,39 @@ public sealed class FailureInjectionRecoveryTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task Emit_AfterStepCommitFault_EventsSurviveWithTheStep()
+    {
+        var store = CreateFaultStore();
+        var workflow = new EmitInsideStepWorkflow();
+        var engine = CreateEngine(store, workflow, "fault-emit-atomic");
+        // Fire after the step commits; the emitted event must survive with it.
+        store.Arm(FaultInjectingWorkflowStore.AfterStepCompletionCommit, count: 1);
+        var runId = await engine.StartAsync("fault-emit-atomic", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        var events = await store.GetEventsAsync(runId, 0, 100, TestContext.Current.CancellationToken);
+        events.Should().Contain(e => e.EventType == "my-progress");
+        var steps = await store.GetStepsAsync(runId, TestContext.Current.CancellationToken);
+        steps.Should().Contain(s => s.StepKey == "work" && s.Status == StepStatus.Completed);
+    }
+
+    private sealed class EmitInsideStepWorkflow : IWorkflow<string, string>
+    {
+        public async Task<string> RunAsync(WorkflowContext ctx, string input, CancellationToken ct)
+        {
+            return await ctx.StepAsync<string, string>(
+                "work",
+                input,
+                async (value, _, innerCt) =>
+                {
+                    await ctx.EmitAsync("my-progress", new { percent = 50 }, innerCt);
+                    return "done";
+                },
+                cancellationToken: ct);
+        }
+    }
+
+    [Fact]
     public async Task Recover_BeforeCompensationCommit_CompensationRetriedOnNextRollback()
     {
         var store = CreateFaultStore();

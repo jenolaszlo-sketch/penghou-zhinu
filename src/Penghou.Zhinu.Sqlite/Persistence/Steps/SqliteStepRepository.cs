@@ -287,6 +287,25 @@ internal sealed class SqliteStepRepository :
             now,
             cancellationToken).ConfigureAwait(false);
 
+    public ValueTask<IReadOnlyList<WorkflowEvent>> CompleteStepWithEventsAsync(
+        Guid stepId,
+        string ownerId,
+        string? outputJson,
+        DateTimeOffset now,
+        IReadOnlyList<PendingWorkflowEvent>? events,
+        CancellationToken cancellationToken = default) =>
+        stepFinisher.FinishStepAsync(
+            stepId,
+            ownerId,
+            StepStatus.Completed,
+            outputJson,
+            null,
+            null,
+            WorkflowEventTypes.StepCompleted,
+            now,
+            cancellationToken,
+            events);
+
     public async ValueTask FailStepAsync(
         Guid stepId,
         string ownerId,

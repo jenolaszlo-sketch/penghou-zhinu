@@ -439,13 +439,13 @@ Emitted events carry serialized data and survive restarts, so consumers can
 reconnect after their last sequence without requiring Redis or another
 messaging service.
 
-**Atomicity caveat:** `EmitAsync` appends the event with its own store write,
-not in the same transaction as the step that emitted it. If the process exits
-after the event is committed but before the surrounding step completes, the
-event survives but the step may re-run; conversely, if the step commits but the
-process exits before the append, that event is lost. Treat emitted events as
-durable but best-effort diagnostic output, not as part of the execution
-contract.
+**Atomicity:** `EmitAsync` called **inside a step delegate** is buffered and
+committed atomically with the step's result and `step-completed` event: if the
+step fails, its emitted events are rolled back too, and after a crash the step
+and its events survive or are lost together. `EmitAsync` called **outside a
+step** (between steps, at workflow top level) still appends in its own
+transaction, so such events are durable but best-effort diagnostic output that
+can diverge from the surrounding run.
 
 If an `IWorkflowEventPublisher` is registered, committed events are also
 forwarded after the store write (best-effort). The store remains the

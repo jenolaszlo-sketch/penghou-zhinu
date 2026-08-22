@@ -32,6 +32,8 @@ public sealed class WorkflowContext
         rollbackCompensations;
     private readonly List<CompensationInvocation> rollbackInvocations = [];
 
+    private static readonly AsyncLocal<List<PendingWorkflowEvent>?> PendingStepEmits = new();
+
     internal WorkflowContext(
         Guid workflowRunId,
         IWorkflowStore store,
@@ -496,6 +498,14 @@ public sealed class WorkflowContext
         var dataJson = data is null
             ? null
             : JsonSerializer.Serialize(data, serializerOptions);
+        // While a step delegate is executing, buffer the emit so it commits
+        // atomically with the step (see ExecuteClaimedAsync). Outside a step the
+        // event is appended immediately in its own transaction.
+        if (PendingStepEmits.Value is { } buffer)
+        {
+            buffer.Add(new PendingWorkflowEvent(eventType, dataJson));
+            return;
+        }
         var @event = await store.AppendEventAsync(
             WorkflowRunId,
             eventType,
@@ -703,24 +713,59 @@ public sealed class WorkflowContext
                         token));
                 try
                 {
-                    var output = await operation(
-                        input,
-                        new WorkflowStepContext(
-                            WorkflowRunId,
+                    var buffer = new List<PendingWorkflowEvent>();
+                    PendingStepEmits.Value = buffer;
+                    try
+                    {
+                        var output = await operation(
+                            input,
+                            new WorkflowStepContext(
+                                WorkflowRunId,
+                                step.Id,
+                                step.StepKey,
+                                step.Attempt,
+                                step.Revision,
+                                false,
+                                (artifact, token) => PublishStepArtifactAsync(
+                                    step, artifact, token)),
+                            executionCancellation.Token).ConfigureAwait(false);
+                        var outputJson = JsonSerializer.Serialize(output, serializerOptions);
+                        var committed = await store.CompleteStepWithEventsAsync(
                             step.Id,
-                            step.StepKey,
-                            step.Attempt,
-                            step.Revision,
-                            false,
-                            (artifact, token) => PublishStepArtifactAsync(
-                                step, artifact, token)),
-                        executionCancellation.Token).ConfigureAwait(false);
-                    var outputJson = JsonSerializer.Serialize(output, serializerOptions);
-                    await store.CompleteStepAsync(
-                        step.Id, ownerId, outputJson, timeProvider.GetUtcNow(), cancellationToken)
-                        .ConfigureAwait(false);
-                    activity?.SetStatus(ActivityStatusCode.Ok);
-                    return output;
+                            ownerId,
+                            outputJson,
+                            timeProvider.GetUtcNow(),
+                            buffer.Count == 0 ? null : buffer,
+                            cancellationToken).ConfigureAwait(false);
+                        // Forward events emitted inside the step now that they are
+                        // durably committed with it (the leading step-completed event
+                        // is not part of the emit stream).
+                        onEventAppended?.Invoke(WorkflowRunId);
+                        if (eventPublisher is not null)
+                        {
+                            foreach (var @event in committed.Skip(1))
+                            {
+                                try
+                                {
+                                    await eventPublisher.PublishAsync(
+                                        @event,
+                                        cancellationToken).ConfigureAwait(false);
+                                }
+                                catch (Exception exception)
+                                {
+                                    throw new WorkflowEventPublisherException(
+                                        "A registered event publisher failed to forward a committed event.",
+                                        exception);
+                                }
+                            }
+                        }
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+                        return output;
+                    }
+                    finally
+                    {
+                        PendingStepEmits.Value = null;
+                    }
                 }
                 catch (OperationCanceledException) when (
                     timeoutCancellation?.IsCancellationRequested == true &&

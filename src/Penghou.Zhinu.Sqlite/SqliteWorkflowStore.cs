@@ -193,6 +193,18 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             () => steps.CompleteStepAsync(
                 stepId, ownerId, outputJson, now, cancellationToken));
 
+    public ValueTask<IReadOnlyList<WorkflowEvent>> CompleteStepWithEventsAsync(
+        Guid stepId,
+        string ownerId,
+        string? outputJson,
+        DateTimeOffset now,
+        IReadOnlyList<PendingWorkflowEvent>? events,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "step.complete",
+            () => steps.CompleteStepWithEventsAsync(
+                stepId, ownerId, outputJson, now, events, cancellationToken));
+
     public ValueTask FailStepAsync(
         Guid stepId,
         string ownerId,

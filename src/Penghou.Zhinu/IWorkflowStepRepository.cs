@@ -27,6 +27,21 @@ public interface IWorkflowStepRepository
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Completes a step and appends <paramref name="events"/> in one transaction,
+    /// so the committed result and its emitted events are a single durable
+    /// decision. Returns the committed events (including the step-completed
+    /// event) with their assigned sequences. Pass null or an empty list to
+    /// behave like <see cref="CompleteStepAsync"/>.
+    /// </summary>
+    ValueTask<IReadOnlyList<WorkflowEvent>> CompleteStepWithEventsAsync(
+        Guid stepId,
+        string ownerId,
+        string? outputJson,
+        DateTimeOffset now,
+        IReadOnlyList<PendingWorkflowEvent>? events,
+        CancellationToken cancellationToken = default);
+
     ValueTask FailStepAsync(
         Guid stepId,
         string ownerId,
