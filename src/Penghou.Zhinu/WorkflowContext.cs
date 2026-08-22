@@ -169,8 +169,8 @@ public sealed class WorkflowContext
             ? null
             : new CompensationMetadata(
                 stepKey,
-                JsonSerializer.Serialize(new RetryPolicy(), serializerOptions),
-                null);
+                JsonSerializer.Serialize(configured.Retry, serializerOptions),
+                configured.ExecutionTimeout);
         var inputJson = JsonSerializer.Serialize(input, serializerOptions);
         var inputType = SerializationIdentity.TypeId(typeof(TInput));
         var outputType = SerializationIdentity.TypeId(typeof(TOutput));

@@ -287,6 +287,15 @@ public sealed class WorkflowEngine : IAsyncDisposable
     /// <summary>Persists cancellation and signals an active local execution.</summary>
     public async Task CancelAsync(
         Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        await CancelAsync(workflowRunId, actor: null, reason: null, cancellationToken)
+            .ConfigureAwait(false);
+
+    /// <summary>Persists cancellation with audit fields and signals an active local execution.</summary>
+    public async Task CancelAsync(
+        Guid workflowRunId,
+        string? actor,
+        string? reason,
         CancellationToken cancellationToken = default)
     {
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
@@ -302,6 +311,14 @@ public sealed class WorkflowEngine : IAsyncDisposable
                 .ConfigureAwait(false);
             if (current?.Status == WorkflowStatus.Cancelled)
                 ZhinuDiagnostics.RunsCancelledCounter.Add(1);
+        }
+        if (actor is not null || reason is not null)
+        {
+            logger.LogInformation(
+                "Cancelled workflow {WorkflowRunId} by {Actor}: {Reason}",
+                workflowRunId,
+                actor ?? "unknown",
+                reason ?? "no reason");
         }
         NotifyEventAppended(workflowRunId);
         if (runningCancellations.TryGetValue(
