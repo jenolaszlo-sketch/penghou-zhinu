@@ -278,6 +278,22 @@ Detailed contracts:
 - [Public API policy](docs/public-api-policy.md)
 - [Roadmap](ROADMAP.md)
 
+## When not to use Zhinu
+
+Zhinu is probably not the right choice when you need:
+
+- distributed workers, multi-region availability, or a managed workflow
+  control plane;
+- a remote task queue or general-purpose message broker;
+- exactly-once external side effects without downstream idempotency;
+- cron scheduling as the primary product capability;
+- durable storage for large files or binary artifacts;
+- a model provider, autonomous agent framework, or application-specific user
+  interface.
+
+For those cases, use infrastructure designed for that responsibility and, when
+useful, compose it with Zhinu at explicit durable step boundaries.
+
 ## Project direction
 
 Zhinu is independently useful as a code-first durable workflow engine. Its
@@ -285,10 +301,6 @@ roadmap adds validated declarative workflow definitions, activity catalogues,
 capability enforcement, revision-bound evidence, and bounded AI activities.
 Natural-language methodology compilation belongs above the runtime and will be
 pursued only after hand-authored declarative workflows are proven.
-
-Zhinu is not a distributed multi-region scheduler, an exactly-once side-effect
-system, a model provider, an agent framework, or a replacement for
-application-owned artifact storage.
 
 The API is currently preview and may evolve between preview releases. Public
 surface changes are tracked through shipped/unshipped API baselines and package
