@@ -200,6 +200,7 @@ internal sealed class SqliteStepRepository :
         }
 
         var attempt = existing.Attempt < 1 ? 1 : existing.Attempt + 1;
+        StepStateMachine.AssertCanTransition(existing.Status, StepStatus.Running, existing.Id);
         await claimStep.ExecuteAsync(
             connection,
             transaction,
@@ -305,6 +306,7 @@ internal sealed class SqliteStepRepository :
             cancellationToken).ConfigureAwait(false) ??
             throw new KeyNotFoundException($"Step '{stepId:D}' does not exist.");
         var status = retryAt is null ? StepStatus.Failed : StepStatus.Waiting;
+        StepStateMachine.AssertCanTransition(step.Status, status, stepId);
         if (await failStep.ExecuteAsync(
             connection,
             transaction,

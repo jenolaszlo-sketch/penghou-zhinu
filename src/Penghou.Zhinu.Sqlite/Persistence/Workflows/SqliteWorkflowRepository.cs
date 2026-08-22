@@ -212,6 +212,16 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
+        var run = await getRun.ExecuteAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (run is not null &&
+            run.Status is WorkflowStatus.Pending or WorkflowStatus.Running)
+        {
+            RunStateMachine.AssertCanTransition(run.Status, WorkflowStatus.Cancelled, workflowRunId);
+        }
         if (await cancelRun.ExecuteAsync(
             connection,
             transaction,
@@ -274,6 +284,15 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
+        var run = await getRun.ExecuteAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (run is not null)
+        {
+            RunStateMachine.AssertCanTransition(run.Status, status, workflowRunId);
+        }
         if (await finishRun.ExecuteAsync(
             connection,
             transaction,
