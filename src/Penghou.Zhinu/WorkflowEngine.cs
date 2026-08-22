@@ -348,6 +348,57 @@ public sealed class WorkflowEngine : IAsyncDisposable
             .ConfigureAwait(false);
     }
 
+    /// <summary>Streams runs matching <paramref name="query"/> using cursor pagination.</summary>
+    public async IAsyncEnumerable<WorkflowRun> EnumerateRunsAsync(
+        RunQuery query,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var cursor = query;
+        while (true)
+        {
+            var page = await GetRunsAsync(cursor, cancellationToken).ConfigureAwait(false);
+            foreach (var run in page) yield return run;
+            if (page.Count < cursor.Limit) yield break;
+            cursor = cursor with { AfterId = page[^1].Id };
+        }
+    }
+
+    /// <summary>Streams events for a run in sequence order.</summary>
+    public async IAsyncEnumerable<WorkflowEvent> EnumerateEventsAsync(
+        Guid workflowRunId,
+        long afterSequence = 0,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var cursor = afterSequence;
+        while (true)
+        {
+            var page = await GetEventsAsync(workflowRunId, cursor, 100, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var @event in page) yield return @event;
+            if (page.Count == 0) yield break;
+            cursor = page[^1].Sequence;
+        }
+    }
+
+    /// <summary>Cancels all runs matching <paramref name="query"/> and returns the count cancelled.</summary>
+    public async Task<int> CancelManyAsync(
+        RunQuery query,
+        string? actor = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var count = 0;
+        await foreach (var run in EnumerateRunsAsync(query, cancellationToken).ConfigureAwait(false))
+        {
+            if (run.Status is WorkflowStatus.Completed or WorkflowStatus.Failed
+                or WorkflowStatus.Cancelled or WorkflowStatus.Compensated)
+                continue;
+            await CancelAsync(run.Id, actor, reason, cancellationToken).ConfigureAwait(false);
+            count++;
+        }
+        return count;
+    }
+
     /// <summary>Replaces a run's metadata without affecting its identity or contracts.</summary>
     public async Task<WorkflowRun?> UpdateRunMetadataAsync(
         Guid workflowRunId,
@@ -812,6 +863,33 @@ public sealed class WorkflowEngine : IAsyncDisposable
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.QueryArtifactsAsync(workflowRunId, query, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>Streams artifact references for a run using offset pagination.</summary>
+    public async IAsyncEnumerable<WorkflowArtifactReference> EnumerateArtifactsAsync(
+        Guid workflowRunId,
+        ArtifactQuery? query = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var baseQuery = query ?? new ArtifactQuery();
+        var offset = baseQuery.Offset;
+        while (true)
+        {
+            var pageQuery = new ArtifactQuery
+            {
+                Name = baseQuery.Name,
+                ArtifactType = baseQuery.ArtifactType,
+                ProducerStepKey = baseQuery.ProducerStepKey,
+                LatestOnly = baseQuery.LatestOnly,
+                Offset = offset,
+                Limit = baseQuery.Limit
+            };
+            var page = await QueryArtifactsAsync(workflowRunId, pageQuery, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var artifact in page) yield return artifact;
+            if (page.Count < baseQuery.Limit) yield break;
+            offset += page.Count;
+        }
     }
 
     /// <summary>Returns the newest revision of a named artifact in a run.</summary>
