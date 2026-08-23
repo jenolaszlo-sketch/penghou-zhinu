@@ -1,15 +1,17 @@
 namespace Penghou.Zhinu.Declarative;
 
-internal sealed record WorkflowCompilationResult
+public sealed record WorkflowCompilationResult
 {
     public bool IsValid => Compiled is not null;
     public CompiledWorkflowDefinition? Compiled { get; init; }
     public required IReadOnlyList<WorkflowValidationDiagnostic> Diagnostics { get; init; }
 }
 
-internal static class WorkflowCompiler
+public static class WorkflowCompiler
 {
-    public static WorkflowCompilationResult Compile(DeclarativeWorkflowDefinition definition, IActivityCatalogue catalogue)
+    public static WorkflowCompilationResult Compile(
+        DeclarativeWorkflowDefinition definition,
+        ActivityCatalogue catalogue)
     {
         var validation = WorkflowDefinitionValidator.Validate(definition, catalogue);
         if (!validation.IsValid)

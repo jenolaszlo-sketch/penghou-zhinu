@@ -41,7 +41,9 @@ internal static class WorkflowCanonicalizer
                 {
                     id = s.Id,
                     activity = new { name = s.Activity.Name, version = s.Activity.Version },
-                    dependsOn = s.DependsOn.OrderBy(d => d, StringComparer.Ordinal).ToArray()
+                    dependsOn = s.DependsOn.OrderBy(d => d, StringComparer.Ordinal).ToArray(),
+                    inputContract = s.Descriptor.Input.TypeId,
+                    outputContract = s.Descriptor.Output.TypeId
                 }).ToArray()
         };
         var options = new JsonSerializerOptions

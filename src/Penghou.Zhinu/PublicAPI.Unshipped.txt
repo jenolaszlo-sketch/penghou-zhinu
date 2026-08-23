@@ -1,8 +1,14 @@
 #nullable enable
 override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
+Penghou.Zhinu.Declarative.ActivityCatalogue
+Penghou.Zhinu.Declarative.ActivityCatalogue.ActivityCatalogue() -> void
+Penghou.Zhinu.Declarative.ActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
+Penghou.Zhinu.Declarative.ActivityCatalogue.ListDescriptors() -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.ActivityDescriptor!>!
+Penghou.Zhinu.Declarative.ActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation) -> void
+Penghou.Zhinu.Declarative.ActivityCatalogue.TryGetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference, out Penghou.Zhinu.Declarative.ActivityDescriptor! descriptor) -> bool
 Penghou.Zhinu.Declarative.ActivityContract
-Penghou.Zhinu.Declarative.ActivityContract.ClrType.get -> System.Type!
-Penghou.Zhinu.Declarative.ActivityContract.ClrType.init -> void
+Penghou.Zhinu.Declarative.ActivityContract.TypeId.get -> string!
+Penghou.Zhinu.Declarative.ActivityContract.TypeId.init -> void
 Penghou.Zhinu.Declarative.ActivityDescriptor
 Penghou.Zhinu.Declarative.ActivityDescriptor.Input.get -> Penghou.Zhinu.Declarative.ActivityContract!
 Penghou.Zhinu.Declarative.ActivityDescriptor.Input.init -> void
@@ -35,6 +41,42 @@ Penghou.Zhinu.Declarative.CompiledWorkflowStep.Descriptor.get -> Penghou.Zhinu.D
 Penghou.Zhinu.Declarative.CompiledWorkflowStep.Descriptor.init -> void
 Penghou.Zhinu.Declarative.CompiledWorkflowStep.Id.get -> string!
 Penghou.Zhinu.Declarative.CompiledWorkflowStep.Id.init -> void
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition.Name.get -> string!
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition.Name.init -> void
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition.Steps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.DeclarativeWorkflowStep!>!
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition.Steps.init -> void
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition.Version.get -> string!
+Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition.Version.init -> void
+Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.Activity.get -> Penghou.Zhinu.Declarative.ActivityReference!
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.Activity.init -> void
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.DependsOn.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.DependsOn.init -> void
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.Id.get -> string!
+Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.Id.init -> void
+Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>
+Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>.ExecuteAsync(TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.Declarative.WorkflowCompilationResult
+Penghou.Zhinu.Declarative.WorkflowCompilationResult.Compiled.get -> Penghou.Zhinu.Declarative.CompiledWorkflowDefinition?
+Penghou.Zhinu.Declarative.WorkflowCompilationResult.Compiled.init -> void
+Penghou.Zhinu.Declarative.WorkflowCompilationResult.Diagnostics.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic!>!
+Penghou.Zhinu.Declarative.WorkflowCompilationResult.Diagnostics.init -> void
+Penghou.Zhinu.Declarative.WorkflowCompilationResult.IsValid.get -> bool
+Penghou.Zhinu.Declarative.WorkflowCompiler
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.Code.get -> string!
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.Code.init -> void
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.Message.get -> string!
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.Message.init -> void
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.Severity.get -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.Severity.init -> void
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.StepId.get -> string?
+Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.StepId.init -> void
+Penghou.Zhinu.Declarative.WorkflowValidationSeverity
+Penghou.Zhinu.Declarative.WorkflowValidationSeverity.Error = 0 -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
+Penghou.Zhinu.Declarative.WorkflowValidationSeverity.Warning = 1 -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
@@ -53,3 +95,5 @@ Penghou.Zhinu.WorkflowStoreHealth.StoreName.get -> string?
 Penghou.Zhinu.WorkflowStoreHealth.StoreName.init -> void
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.get -> bool?
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.init -> void
+static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.ActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!
+static Penghou.Zhinu.Declarative.WorkflowCompiler.Compile(Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition! definition, Penghou.Zhinu.Declarative.ActivityCatalogue! catalogue) -> Penghou.Zhinu.Declarative.WorkflowCompilationResult!

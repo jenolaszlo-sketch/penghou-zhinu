@@ -1,9 +1,9 @@
 namespace Penghou.Zhinu.Declarative;
 
-/// <summary>Contract for an activity's input or output. For the minimal vertical, CLR type is sufficient.</summary>
+/// <summary>A portable identity for an activity's input or output contract.</summary>
 public sealed record ActivityContract
 {
-    public required Type ClrType { get; init; }
+    public required string TypeId { get; init; }
 }
 
 /// <summary>Describes an activity's identity and its input/output contracts. Does not contain executable code.</summary>

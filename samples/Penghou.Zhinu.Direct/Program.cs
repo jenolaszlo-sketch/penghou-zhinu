@@ -1,5 +1,7 @@
 using Penghou.Zhinu;
+using Penghou.Zhinu.Declarative;
 using Penghou.Zhinu.Sqlite;
+using System.Text.Json;
 
 // Direct construction: no hosted loop, no DI. The engine drives only the
 // runs you ask it to. This sample exercises typed handles, child workflows,
@@ -9,9 +11,33 @@ var store = new SqliteWorkflowStore(new ZhinuSqliteOptions
 {
     DatabasePath = Path.Combine(AppContext.BaseDirectory, "data", "zhinu.db")
 });
+var activityCatalogue = new ActivityCatalogue();
+activityCatalogue.Register(
+    new ActivityReference("append-reviewed", "1"),
+    new AppendActivity("-reviewed"));
+var declarativeDefinition = new DeclarativeWorkflowDefinition
+{
+    Name = "declarative-review",
+    Version = "1",
+    Steps =
+    [
+        new DeclarativeWorkflowStep
+        {
+            Id = "review",
+            Activity = new ActivityReference("append-reviewed", "1")
+        }
+    ]
+};
+var compilation = WorkflowCompiler.Compile(
+    declarativeDefinition,
+    activityCatalogue);
+var compiledDefinition = compilation.Compiled ?? throw new InvalidOperationException(
+    string.Join(Environment.NewLine, compilation.Diagnostics.Select(d => d.Message)));
+
 var registry = new WorkflowRegistry()
     .Register("parent", "1", new ParentWorkflow())
-    .Register("thumbnail", "1", new ThumbnailWorkflow());
+    .Register("thumbnail", "1", new ThumbnailWorkflow())
+    .RegisterDeclarative(compiledDefinition, activityCatalogue);
 var engine = new WorkflowEngine(
     store,
     registry,
@@ -52,6 +78,16 @@ WorkflowResult<string> snapshot = await handle.GetResultAsync();
 Console.WriteLine($"Snapshot: {snapshot.Status} -> {snapshot.Value}");
 string result = await handle.WaitAsync();
 Console.WriteLine($"WaitAsync: {result}");
+
+// The declarative definition uses the same engine and durability model.
+var declarativeRun = await engine.StartAsync(
+    "declarative-review",
+    "1",
+    JsonSerializer.SerializeToElement("plan"));
+await engine.ExecuteAsync(declarativeRun);
+var declarativeResult = await engine.WaitForCompletionAsync<JsonElement>(
+    declarativeRun);
+Console.WriteLine($"Declarative: {declarativeResult.GetString()}");
 
 // 3. Artifacts published by the child, queried by cursor.
 var artifacts = await handle.QueryArtifactsAsync(
@@ -140,4 +176,15 @@ internal sealed class ThumbnailWorkflow : IWorkflow<string, string>
             cancellationToken: cancellationToken);
         return image;
     }
+}
+
+internal sealed class AppendActivity : IActivity<string, string>
+{
+    private readonly string suffix;
+
+    public AppendActivity(string suffix) => this.suffix = suffix;
+
+    public Task<string> ExecuteAsync(
+        string input,
+        CancellationToken cancellationToken) => Task.FromResult(input + suffix);
 }

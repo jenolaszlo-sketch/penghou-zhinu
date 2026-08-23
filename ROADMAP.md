@@ -147,7 +147,11 @@ Deliverables:
 - Canonical JSON representation and JSON Schema
 - Stable artifact identity, version, and content hash
 - Artifact serializer with deterministic output
+- Portable activity contract identities that do not serialize runtime-specific
+  `System.Type` values into compiled artifacts
 - Interpreter backed by the existing durable runtime
+- A coherent public authoring surface covering definition construction,
+  catalogue registration, compilation, registration, and execution
 - Human-authored examples covering coding and non-AI workflows
 - Artifact compatibility and versioning policy
 
@@ -157,6 +161,33 @@ Exit criteria:
 - Invalid activity references, bindings, transitions, and cycles are rejected
   before execution.
 - The same immutable artifact produces the same graph and policy model.
+- A package consumer can compile and execute the documented example from a
+  separate assembly using only public APIs.
+- A compiled artifact round-trips through canonical JSON without requiring the
+  originating process's CLR type objects.
+
+### Bounded-loop design checkpoint
+
+Loops remain a roadmap item, not part of the current linear declarative
+vertical. Before implementation, define and test:
+
+- a statically declared maximum iteration count and deterministic termination
+  behavior;
+- durable iteration identity so step keys cannot collide across iterations;
+- whether the current iteration counter is explicit persisted workflow state,
+  derived from committed iteration records, or represented by another durable
+  primitive;
+- restart behavior at every boundary: before the body, during the body, after
+  body completion, and while evaluating the continuation condition;
+- retry semantics that cannot increment the logical iteration twice;
+- fingerprint and compatibility behavior when loop bounds or conditions change;
+- diagnostics exposing current iteration, configured limit, termination reason,
+  and exhausted-loop failures;
+- validation rejecting unbounded loops and conditions with undeclared or
+  non-durable state dependencies.
+
+Acceptance requires process-loss tests at every loop boundary and proof that a
+resumed run neither skips nor duplicates a committed logical iteration.
 
 ## Phase 2 — Activity catalogue and type system
 
@@ -457,10 +488,12 @@ Before beginning natural-language compilation:
 1. Write two hand-authored `WorkflowArtifact` examples.
 2. Define the minimal IR and its canonical JSON representation.
 3. Define activity identity, versioning, schemas, and trust levels.
-4. Implement graph, type, and mandatory-gate validation.
-5. Prototype revision-bound build and test evidence.
-6. Integrate one restricted coding activity executor.
-7. Exercise the design through Solo before expanding the grammar.
+4. Specify bounded-loop durability, iteration identity, limits, and counter-state
+   ownership before implementing loops.
+5. Implement graph, type, and mandatory-gate validation.
+6. Prototype revision-bound build and test evidence.
+7. Integrate one restricted coding activity executor.
+8. Exercise the design through Solo before expanding the grammar.
 
 ## Explicit non-goals for the first compiled-workflow release
 

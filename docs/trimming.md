@@ -26,8 +26,9 @@ a requirement:
 - Activity identities resolve from a typed catalogue, not by reflecting over
   assemblies at runtime.
 - Compiled workflow definitions are plain data (serializable, versioned) with
-  deterministic validation; execution binds to activities through a typed
-  contract, not reflection.
+  deterministic validation. Contracts persist stable string identities rather
+  than CLR `Type` objects; runtime CLR types remain inside the typed activity
+  catalogue and are checked when an artifact is compiled or registered.
 - Keep `AddZhinuWorkflowsFromAssembly` as an opt-in convenience; never make it
   the only way to register.
 

@@ -20,7 +20,7 @@ WorkflowResult / WorkflowArtifactReference
 | Term | Meaning |
 | --- | --- |
 | `DeclarativeWorkflowDefinition` | The source/model: name, version, ordered steps. Contains no delegates, services, DI, store, or runtime handles. |
-| `CompiledWorkflowDefinition` | The validated, canonical, immutable executable definition: name, version, SHA-256 fingerprint, and resolved steps (id, activity reference, dependencies, input/output contracts). Serializable, no executable state. |
+| `CompiledWorkflowDefinition` | The validated, canonical, immutable executable definition: name, version, SHA-256 fingerprint, and resolved steps (id, activity reference, dependencies, portable input/output contract identities). Serializable, no executable state or CLR `Type` objects. |
 | `WorkflowRun` | A durable execution instance of a compiled definition. Retains `WorkflowName`, `WorkflowVersion`, and `DefinitionFingerprint` so recovery is exact. |
 | `WorkflowArtifact` | Output produced by a run: the workflow result (`WorkflowResult`) and any durable external-artifact references (`WorkflowArtifactReference`) published by activities. |
 
@@ -110,11 +110,15 @@ var definition = new DeclarativeWorkflowDefinition
 };
 
 var compiled = WorkflowCompiler.Compile(definition, catalogue).Compiled!;
-var workflow = new DeclarativeWorkflow(compiled, catalogue); // internal adapter
-var registry = new WorkflowRegistry().Register(compiled.Name, compiled.Version, workflow);
+var registry = new WorkflowRegistry().RegisterDeclarative(compiled, catalogue);
 var engine = new WorkflowEngine(store, registry);
 var runId = await engine.StartAsync<JsonElement>("build", "1", input);
 ```
+
+`RegisterDeclarative` is the public runtime seam. It verifies the artifact's
+canonical fingerprint and resolved contracts against the catalogue, then creates
+the internal adapter. Consumers do not depend on untyped executors or adapter
+implementation details.
 
 ## What this vertical deliberately does not include
 

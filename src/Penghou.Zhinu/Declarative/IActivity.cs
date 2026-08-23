@@ -1,7 +1,7 @@
 namespace Penghou.Zhinu.Declarative;
 
 /// <summary>Executable implementation of an activity. Separated from its descriptor.</summary>
-internal interface IActivity<TInput, TOutput>
+public interface IActivity<TInput, TOutput>
 {
     Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 }

@@ -1,7 +1,7 @@
 namespace Penghou.Zhinu.Declarative;
 
 /// <summary>Declarative source model for a workflow. Contains no executable delegates.</summary>
-internal sealed record DeclarativeWorkflowDefinition
+public sealed record DeclarativeWorkflowDefinition
 {
     public required string Name { get; init; }
     public required string Version { get; init; }
@@ -9,7 +9,7 @@ internal sealed record DeclarativeWorkflowDefinition
 }
 
 /// <summary>One step in a declarative workflow. For the minimal vertical, steps are sequential.</summary>
-internal sealed record DeclarativeWorkflowStep
+public sealed record DeclarativeWorkflowStep
 {
     public required string Id { get; init; }
     public required ActivityReference Activity { get; init; }

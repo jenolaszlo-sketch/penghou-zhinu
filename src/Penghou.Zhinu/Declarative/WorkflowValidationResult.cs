@@ -1,12 +1,12 @@
 namespace Penghou.Zhinu.Declarative;
 
-internal enum WorkflowValidationSeverity
+public enum WorkflowValidationSeverity
 {
     Error,
     Warning
 }
 
-internal sealed record WorkflowValidationDiagnostic
+public sealed record WorkflowValidationDiagnostic
 {
     public required string Code { get; init; }
     public required WorkflowValidationSeverity Severity { get; init; }

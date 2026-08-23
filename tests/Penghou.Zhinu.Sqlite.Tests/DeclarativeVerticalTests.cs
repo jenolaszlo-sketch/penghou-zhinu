@@ -41,6 +41,23 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         act.Should().Throw<KeyNotFoundException>();
     }
 
+    [Fact]
+    public void Catalogue_GenericContractIdentity_DoesNotContainAssemblyVersions()
+    {
+        var catalogue = new ActivityCatalogue();
+        var reference = new ActivityReference("generic", "1");
+        catalogue.Register(
+            reference,
+            new FuncActivity<IReadOnlyList<string>, Dictionary<string, int>>(
+                _ => Task.FromResult(new Dictionary<string, int>())));
+
+        var descriptor = catalogue.GetDescriptor(reference);
+
+        descriptor.Input.TypeId.Should().NotContain("Version=");
+        descriptor.Output.TypeId.Should().NotContain("Version=");
+        descriptor.Input.TypeId.Should().Contain("System.String, System.Private.CoreLib");
+    }
+
     // --- Validation ---
 
     [Fact]
@@ -195,6 +212,41 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public void Fingerprint_ActivityContractChange_ChangesHash()
+    {
+        var stringCatalogue = new ActivityCatalogue();
+        stringCatalogue.Register(
+            new ActivityReference("activity", "1"),
+            new FuncActivity<string, string>(Task.FromResult));
+        var integerCatalogue = new ActivityCatalogue();
+        integerCatalogue.Register(
+            new ActivityReference("activity", "1"),
+            new FuncActivity<int, int>(Task.FromResult));
+        var definition = new DeclarativeWorkflowDefinition
+        {
+            Name = "contract-hash",
+            Version = "1",
+            Steps =
+            [
+                new DeclarativeWorkflowStep
+                {
+                    Id = "activity",
+                    Activity = new ActivityReference("activity", "1")
+                }
+            ]
+        };
+
+        var stringFingerprint = WorkflowCompiler.Compile(
+            definition,
+            stringCatalogue).Compiled!.Fingerprint;
+        var integerFingerprint = WorkflowCompiler.Compile(
+            definition,
+            integerCatalogue).Compiled!.Fingerprint;
+
+        stringFingerprint.Should().NotBe(integerFingerprint);
+    }
+
+    [Fact]
     public async Task DefinitionIdentity_MatchingFingerprint_Resumes()
     {
         var catalogue = CreateCatalogue();
@@ -280,6 +332,64 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), CreateCatalogue()).Compiled!;
 
         WorkflowFingerprint.Compute(compiled).Should().Be(compiled.Fingerprint);
+    }
+
+    [Fact]
+    public void CompiledDefinition_JsonRoundTrip_PreservesPortableContracts()
+    {
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), CreateCatalogue()).Compiled!;
+
+        var json = JsonSerializer.Serialize(compiled);
+        var restored = JsonSerializer.Deserialize<CompiledWorkflowDefinition>(json)!;
+
+        json.Should().NotContain("ClrType");
+        restored.Fingerprint.Should().Be(compiled.Fingerprint);
+        WorkflowCanonicalizer.Canonicalize(restored)
+            .Should().Be(WorkflowCanonicalizer.Canonicalize(compiled));
+        restored.Steps.Select(s => s.Descriptor.Input.TypeId)
+            .Should().Equal(compiled.Steps.Select(s => s.Descriptor.Input.TypeId));
+        restored.Steps.Select(s => s.Descriptor.Output.TypeId)
+            .Should().Equal(compiled.Steps.Select(s => s.Descriptor.Output.TypeId));
+    }
+
+    [Fact]
+    public async Task CompiledDefinition_JsonRoundTrip_CanRegisterAndExecute()
+    {
+        var catalogue = CreateCatalogue();
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), catalogue).Compiled!;
+        var restored = JsonSerializer.Deserialize<CompiledWorkflowDefinition>(
+            JsonSerializer.Serialize(compiled))!;
+        var engine = CreateDeclarativeEngine(restored, catalogue);
+        var runId = await engine.StartAsync(
+            "test",
+            "1",
+            JsonSerializer.SerializeToElement("start"),
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var result = await engine.WaitForCompletionAsync<JsonElement>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.GetString().Should().Be("start-a-b-c");
+    }
+
+    [Fact]
+    public void Registration_CatalogueContractMismatch_IsRejected()
+    {
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), CreateCatalogue()).Compiled!;
+        var incompatibleCatalogue = new ActivityCatalogue();
+        incompatibleCatalogue.Register(
+            new ActivityReference("echo-a", "1"),
+            new FuncActivity<int, int>(value => Task.FromResult(value)));
+        incompatibleCatalogue.Register(new ActivityReference("echo-b", "1"), Echo("-b"));
+        incompatibleCatalogue.Register(new ActivityReference("echo-c", "1"), Echo("-c"));
+
+        var registration = () => new WorkflowRegistry()
+            .RegisterDeclarative(compiled, incompatibleCatalogue);
+
+        registration.Should().Throw<ArgumentException>()
+            .WithMessage("*does not match registered activity*");
     }
 
     // --- Inspection ---
@@ -497,7 +607,7 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         (compiled1.Name == compiled2.Name && compiled1.Version == compiled2.Version).Should().BeTrue();
     }
 
-    private static IActivityCatalogue CreateCatalogue()
+    private static ActivityCatalogue CreateCatalogue()
     {
         var catalogue = new ActivityCatalogue();
         catalogue.Register(new ActivityReference("echo-a", "1"), Echo("-a"));
@@ -520,13 +630,12 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
 
     private WorkflowEngine CreateDeclarativeEngine(
         CompiledWorkflowDefinition compiled,
-        IActivityCatalogue catalogue,
+        ActivityCatalogue catalogue,
         SqliteWorkflowStore? storeOverride = null,
         ZhinuOptions? options = null)
     {
         var store = storeOverride ?? CreateStore();
-        var workflow = new DeclarativeWorkflow(compiled, catalogue);
-        var registry = new WorkflowRegistry().Register(compiled.Name, compiled.Version, workflow);
+        var registry = new WorkflowRegistry().RegisterDeclarative(compiled, catalogue);
         return new WorkflowEngine(
             store,
             registry,

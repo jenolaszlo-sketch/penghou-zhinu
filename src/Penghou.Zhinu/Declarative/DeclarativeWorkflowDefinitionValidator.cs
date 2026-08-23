@@ -2,7 +2,9 @@ namespace Penghou.Zhinu.Declarative;
 
 internal static class WorkflowDefinitionValidator
 {
-    public static WorkflowValidationResult Validate(DeclarativeWorkflowDefinition definition, IActivityCatalogue catalogue)
+    public static WorkflowValidationResult Validate(
+        DeclarativeWorkflowDefinition definition,
+        ActivityCatalogue catalogue)
     {
         var diagnostics = new List<WorkflowValidationDiagnostic>();
 
@@ -69,11 +71,14 @@ internal static class WorkflowDefinitionValidator
                 !descriptors.TryGetValue(dependencyId, out var dependencyDescriptor))
                 continue;
 
-            var previousOutputType = dependencyDescriptor.Output.ClrType;
-            if (descriptor.Input.ClrType != typeof(object) &&
-                !descriptor.Input.ClrType.IsAssignableFrom(previousOutputType))
+            var executor = catalogue.Resolve(step.Activity);
+            var dependencyExecutor = catalogue.Resolve(
+                definition.Steps.Single(s => s.Id == dependencyId).Activity);
+            var previousOutputType = dependencyExecutor.OutputType;
+            if (executor.InputType != typeof(object) &&
+                !executor.InputType.IsAssignableFrom(previousOutputType))
             {
-                diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF031", Severity = WorkflowValidationSeverity.Error, Message = $"Step '{step.Id}' input type '{descriptor.Input.ClrType.Name}' is not compatible with dependency '{dependencyId}' output '{previousOutputType.Name}'.", StepId = step.Id });
+                diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF031", Severity = WorkflowValidationSeverity.Error, Message = $"Step '{step.Id}' input type '{executor.InputType.Name}' is not compatible with dependency '{dependencyId}' output '{previousOutputType.Name}'.", StepId = step.Id });
             }
         }
 
