@@ -201,7 +201,6 @@ internal sealed class RunExecutionPipeline
         // started from. A different registered definition for the same name and
         // version must not silently replay the older run's durable state.
         if (run.DefinitionFingerprint is not null &&
-            registration.DefinitionFingerprint is not null &&
             !string.Equals(
                 run.DefinitionFingerprint,
                 registration.DefinitionFingerprint,

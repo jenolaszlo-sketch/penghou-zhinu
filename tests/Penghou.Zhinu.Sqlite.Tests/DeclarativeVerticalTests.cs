@@ -108,6 +108,52 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         result.IsValid.Should().BeTrue();
     }
 
+    [Fact]
+    public void Validation_BranchingWorkflow_IsRejectedUntilBranchSemanticsExist()
+    {
+        var catalogue = CreateCatalogue();
+        var definition = new DeclarativeWorkflowDefinition
+        {
+            Name = "test",
+            Version = "1",
+            Steps = new[]
+            {
+                new DeclarativeWorkflowStep { Id = "a", Activity = new ActivityReference("echo-a", "1") },
+                new DeclarativeWorkflowStep { Id = "b", Activity = new ActivityReference("echo-b", "1"), DependsOn = new[] { "a" } },
+                new DeclarativeWorkflowStep { Id = "c", Activity = new ActivityReference("echo-c", "1"), DependsOn = new[] { "a" } }
+            }
+        };
+
+        var result = WorkflowDefinitionValidator.Validate(definition, catalogue);
+
+        result.IsValid.Should().BeFalse();
+        result.Diagnostics.Should().Contain(d => d.Code == "WF023");
+    }
+
+    [Fact]
+    public void Validation_TypeCompatibility_FollowsDependencyRatherThanSourceOrder()
+    {
+        var catalogue = new ActivityCatalogue();
+        catalogue.Register(
+            new ActivityReference("length", "1"),
+            new FuncActivity<string, int>(value => Task.FromResult(value.Length)));
+        catalogue.Register(
+            new ActivityReference("format", "1"),
+            new FuncActivity<int, string>(value => Task.FromResult(value.ToString())));
+        var definition = new DeclarativeWorkflowDefinition
+        {
+            Name = "test",
+            Version = "1",
+            Steps = new[]
+            {
+                new DeclarativeWorkflowStep { Id = "b", Activity = new ActivityReference("format", "1"), DependsOn = new[] { "a" } },
+                new DeclarativeWorkflowStep { Id = "a", Activity = new ActivityReference("length", "1") }
+            }
+        };
+
+        WorkflowDefinitionValidator.Validate(definition, catalogue).IsValid.Should().BeTrue();
+    }
+
     // --- Canonical / Fingerprint ---
 
     [Fact]
@@ -228,6 +274,14 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         fp1.Should().Be(fp2);
     }
 
+    [Fact]
+    public void Fingerprint_RecomputedFromCompiledDefinition_MatchesStoredFingerprint()
+    {
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), CreateCatalogue()).Compiled!;
+
+        WorkflowFingerprint.Compute(compiled).Should().Be(compiled.Fingerprint);
+    }
+
     // --- Inspection ---
 
     [Fact]
@@ -302,27 +356,120 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         await act.Should().ThrowAsync<WorkflowExecutionFailedException>();
     }
 
+    [Fact]
+    public async Task Execution_StringActivityOutput_IsPreservedVerbatim()
+    {
+        const string expected = "line one\n\"quoted\" \\ tail\t";
+        var catalogue = new ActivityCatalogue();
+        catalogue.Register(
+            new ActivityReference("special", "1"),
+            new FuncActivity<string, string>(_ => Task.FromResult(expected)));
+        var definition = new DeclarativeWorkflowDefinition
+        {
+            Name = "special-text",
+            Version = "1",
+            Steps = new[]
+            {
+                new DeclarativeWorkflowStep { Id = "a", Activity = new ActivityReference("special", "1") }
+            }
+        };
+        var compiled = WorkflowCompiler.Compile(definition, catalogue).Compiled!;
+        var engine = CreateDeclarativeEngine(compiled, catalogue);
+        var runId = await engine.StartAsync<JsonElement>(
+            "special-text",
+            "1",
+            JsonSerializer.SerializeToElement("input"),
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var result = await engine.WaitForCompletionAsync<JsonElement>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.GetString().Should().Be(expected);
+    }
+
+    [Fact]
+    public async Task DefinitionIdentity_FingerprintedRun_CannotUseUnfingerprintedRegistration()
+    {
+        var catalogue = CreateCatalogue();
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), catalogue).Compiled!;
+        var store = CreateStore();
+        var runId = Guid.NewGuid();
+        var engine1 = CreateDeclarativeEngine(compiled, catalogue, store);
+        await engine1.StartAsync(
+            "test",
+            "1",
+            JsonSerializer.SerializeToElement("start"),
+            workflowRunId: runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var registry = new WorkflowRegistry().Register<JsonElement, JsonElement>(
+            "test",
+            "1",
+            new PlainJsonWorkflow());
+        var engine2 = new WorkflowEngine(
+            store,
+            registry,
+            new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+
+        var restart = () => engine2.StartAsync(
+            "test",
+            "1",
+            JsonSerializer.SerializeToElement("start"),
+            workflowRunId: runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        await restart.Should().ThrowAsync<WorkflowStateException>();
+
+        await engine2.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var completion = () => engine2.WaitForCompletionAsync<JsonElement>(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        await completion.Should().ThrowAsync<WorkflowExecutionFailedException>();
+    }
+
     // --- Persistence / Restart ---
 
     [Fact]
     public async Task Execution_RestartBetweenSteps_ResumesFromDurableState()
     {
-        var catalogue = CreateCatalogue();
+        var enteredSecondStep = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondActivity = new BlockingFirstAttemptActivity(enteredSecondStep);
+        var catalogue = new ActivityCatalogue();
+        catalogue.Register(new ActivityReference("echo-a", "1"), Echo("-a"));
+        catalogue.Register(new ActivityReference("echo-b", "1"), secondActivity);
+        catalogue.Register(new ActivityReference("echo-c", "1"), Echo("-c"));
         var definition = ValidLinearDefinition();
         var compiled = WorkflowCompiler.Compile(definition, catalogue).Compiled!;
         var store = CreateStore();
-        var engine1 = CreateDeclarativeEngine(compiled, catalogue, store);
+        var recoveryOptions = new ZhinuOptions
+        {
+            PollInterval = TimeSpan.FromMilliseconds(10),
+            LeaseDuration = TimeSpan.FromMilliseconds(150),
+            LeaseRenewalInterval = TimeSpan.FromMilliseconds(40)
+        };
+        var engine1 = CreateDeclarativeEngine(compiled, catalogue, store, recoveryOptions);
         var runId = await engine1.StartAsync<JsonElement>("test", "1", JsonSerializer.SerializeToElement("start"), cancellationToken: TestContext.Current.CancellationToken);
-        await engine1.ExecuteAsync(runId, TestContext.Current.CancellationToken);
-        // After first engine, at least one step should be completed
-        var steps1 = await store.GetStepsAsync(runId, TestContext.Current.CancellationToken);
-        steps1.Should().Contain(s => s.Status == StepStatus.Completed);
+        using var interruption = CancellationTokenSource.CreateLinkedTokenSource(
+            TestContext.Current.CancellationToken);
+        var interruptedExecution = engine1.ExecuteAsync(runId, interruption.Token);
+        await enteredSecondStep.Task.WaitAsync(TestContext.Current.CancellationToken);
 
-        // Fresh engine with same compiled definition and catalogue resumes
+        var steps1 = await store.GetStepsAsync(runId, TestContext.Current.CancellationToken);
+        steps1.Should().ContainSingle(s => s.StepKey == "a" && s.Status == StepStatus.Completed);
+        await interruption.CancelAsync();
+        await interruptedExecution;
+
+        // Simulate process loss: after the abandoned lease expires, a fresh
+        // engine must replay the completed A step and continue from B.
+        await Task.Delay(300, TestContext.Current.CancellationToken);
+
         var engine2 = CreateDeclarativeEngine(compiled, catalogue, store);
-        await engine2.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        await engine2.RunAvailableAsync(TestContext.Current.CancellationToken);
         var result = await engine2.WaitForCompletionAsync<JsonElement>(runId, cancellationToken: TestContext.Current.CancellationToken);
         result.GetString().Should().Be("start-a-b-c");
+        secondActivity.Attempts.Should().Be(2);
     }
 
     // --- Definition Identity ---
@@ -371,12 +518,19 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         }
     };
 
-    private WorkflowEngine CreateDeclarativeEngine(CompiledWorkflowDefinition compiled, IActivityCatalogue catalogue, SqliteWorkflowStore? storeOverride = null)
+    private WorkflowEngine CreateDeclarativeEngine(
+        CompiledWorkflowDefinition compiled,
+        IActivityCatalogue catalogue,
+        SqliteWorkflowStore? storeOverride = null,
+        ZhinuOptions? options = null)
     {
         var store = storeOverride ?? CreateStore();
         var workflow = new DeclarativeWorkflow(compiled, catalogue);
         var registry = new WorkflowRegistry().Register(compiled.Name, compiled.Version, workflow);
-        return new WorkflowEngine(store, registry, new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+        return new WorkflowEngine(
+            store,
+            registry,
+            options ?? new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
     }
 
     private sealed class FuncActivity<TInput, TOutput> : IActivity<TInput, TOutput>
@@ -384,5 +538,35 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         private readonly Func<TInput, Task<TOutput>> func;
         public FuncActivity(Func<TInput, Task<TOutput>> func) => this.func = func;
         public Task<TOutput> ExecuteAsync(TInput input, CancellationToken ct) => func(input);
+    }
+
+    private sealed class PlainJsonWorkflow : IWorkflow<JsonElement, JsonElement>
+    {
+        public Task<JsonElement> RunAsync(
+            WorkflowContext context,
+            JsonElement input,
+            CancellationToken cancellationToken) => Task.FromResult(input);
+    }
+
+    private sealed class BlockingFirstAttemptActivity : IActivity<string, string>
+    {
+        private readonly TaskCompletionSource entered;
+        private int attempts;
+
+        public BlockingFirstAttemptActivity(TaskCompletionSource entered) =>
+            this.entered = entered;
+
+        public int Attempts => Volatile.Read(ref attempts);
+
+        public async Task<string> ExecuteAsync(string input, CancellationToken cancellationToken)
+        {
+            if (Interlocked.Increment(ref attempts) == 1)
+            {
+                entered.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            }
+
+            return input + "-b";
+        }
     }
 }

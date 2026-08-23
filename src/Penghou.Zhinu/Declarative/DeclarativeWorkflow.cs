@@ -60,9 +60,9 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>,
                     var result = await executor.ExecuteAsync(typedInput, ct);
                     // Normalize result to JsonElement
                     if (result is JsonElement je) return je;
-                    if (result is string s) return JsonSerializer.Deserialize<JsonElement>($"\"{s}\"");
-                    var json = JsonSerializer.Serialize(result, result?.GetType() ?? typeof(object));
-                    return JsonSerializer.Deserialize<JsonElement>(json);
+                    return JsonSerializer.SerializeToElement(
+                        result,
+                        result?.GetType() ?? typeof(object));
                 },
                 cancellationToken: cancellationToken);
 

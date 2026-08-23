@@ -35,7 +35,6 @@ internal static class WorkflowCanonicalizer
         {
             name = compiled.Name,
             version = compiled.Version,
-            fingerprint = compiled.Fingerprint,
             steps = compiled.Steps
                 .OrderBy(s => s.Id, StringComparer.Ordinal)
                 .Select(s => new

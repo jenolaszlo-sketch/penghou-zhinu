@@ -148,7 +148,11 @@ public sealed class WorkflowEngine : IAsyncDisposable
                     existing.WorkflowVersion == workflowVersion &&
                     existing.InputType ==
                         SerializationIdentity.TypeId(registration.InputType) &&
-                    existing.InputJson == inputJson)
+                    existing.InputJson == inputJson &&
+                    string.Equals(
+                        existing.DefinitionFingerprint,
+                        registration.DefinitionFingerprint,
+                        StringComparison.Ordinal))
                 {
                     return id;
                 }

@@ -40,12 +40,16 @@ internal static class WorkflowDefinitionValidator
             }
         }
 
-        // Check for cycles
-        if (HasCycle(definition.Steps))
+        // Check for cycles before validating the currently supported linear shape.
+        var hasCycle = HasCycle(definition.Steps);
+        if (hasCycle)
             diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF022", Severity = WorkflowValidationSeverity.Error, Message = "Dependency graph contains a cycle." });
 
+        if (!hasCycle && !diagnostics.Any(d => d.Code is "WF012" or "WF020" or "WF021"))
+            ValidateLinearTopology(definition.Steps, diagnostics);
+
         // Validate activity references and contracts
-        var previousOutputType = (Type?)null;
+        var descriptors = new Dictionary<string, ActivityDescriptor>(StringComparer.Ordinal);
         foreach (var step in definition.Steps)
         {
             if (step.Activity is null) continue;
@@ -54,18 +58,51 @@ internal static class WorkflowDefinitionValidator
                 diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF030", Severity = WorkflowValidationSeverity.Error, Message = $"Unknown activity '{step.Activity}'.", StepId = step.Id });
                 continue;
             }
-            // For minimal vertical, we check that if step has a dependency, its input type should be compatible with dependency's output
-            // For sequential A->B->C, B's input should be assignable from A's output
-            if (previousOutputType is not null && descriptor.Input.ClrType != typeof(object) && !descriptor.Input.ClrType.IsAssignableFrom(previousOutputType))
+            descriptors[step.Id] = descriptor;
+        }
+
+        foreach (var step in definition.Steps)
+        {
+            var dependencyId = step.DependsOn?.Count == 1 ? step.DependsOn[0] : null;
+            if (dependencyId is null ||
+                !descriptors.TryGetValue(step.Id, out var descriptor) ||
+                !descriptors.TryGetValue(dependencyId, out var dependencyDescriptor))
+                continue;
+
+            var previousOutputType = dependencyDescriptor.Output.ClrType;
+            if (descriptor.Input.ClrType != typeof(object) &&
+                !descriptor.Input.ClrType.IsAssignableFrom(previousOutputType))
             {
-                // Allow object as universal, otherwise check assignability
-                if (previousOutputType != descriptor.Input.ClrType)
-                    diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF031", Severity = WorkflowValidationSeverity.Error, Message = $"Step '{step.Id}' input type '{descriptor.Input.ClrType.Name}' is not compatible with previous step output '{previousOutputType.Name}'.", StepId = step.Id });
+                diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF031", Severity = WorkflowValidationSeverity.Error, Message = $"Step '{step.Id}' input type '{descriptor.Input.ClrType.Name}' is not compatible with dependency '{dependencyId}' output '{previousOutputType.Name}'.", StepId = step.Id });
             }
-            previousOutputType = descriptor.Output.ClrType;
         }
 
         return new WorkflowValidationResult { IsValid = !diagnostics.Any(d => d.Severity == WorkflowValidationSeverity.Error), Diagnostics = diagnostics };
+    }
+
+    private static void ValidateLinearTopology(
+        IReadOnlyList<DeclarativeWorkflowStep> steps,
+        List<WorkflowValidationDiagnostic> diagnostics)
+    {
+        var roots = steps.Where(s => (s.DependsOn?.Count ?? 0) == 0).ToArray();
+        var invalidDependencyCounts = steps.Where(s => (s.DependsOn?.Count ?? 0) > 1).ToArray();
+        var dependentCounts = steps
+            .SelectMany(s => s.DependsOn ?? Array.Empty<string>())
+            .GroupBy(id => id, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+        var branchingSteps = steps.Where(s => dependentCounts.GetValueOrDefault(s.Id) > 1).ToArray();
+        var sinks = steps.Where(s => dependentCounts.GetValueOrDefault(s.Id) == 0).ToArray();
+
+        if (roots.Length != 1 || sinks.Length != 1 ||
+            invalidDependencyCounts.Length != 0 || branchingSteps.Length != 0)
+        {
+            diagnostics.Add(new WorkflowValidationDiagnostic
+            {
+                Code = "WF023",
+                Severity = WorkflowValidationSeverity.Error,
+                Message = "The current declarative runtime supports one linear chain only: exactly one root and sink, one predecessor per non-root step, and one successor per non-sink step."
+            });
+        }
     }
 
     private static bool HasCycle(IReadOnlyList<DeclarativeWorkflowStep> steps)
