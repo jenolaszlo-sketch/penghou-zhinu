@@ -7,6 +7,7 @@ public sealed class WorkflowRegistration<TInput, TOutput>
     : IWorkflowRegistration
 {
     private readonly Func<IWorkflow<TInput, TOutput>> workflowFactory;
+    private readonly Lazy<string?> definitionFingerprint;
 
     public WorkflowRegistration(
         WorkflowDefinition definition,
@@ -15,9 +16,13 @@ public sealed class WorkflowRegistration<TInput, TOutput>
         Definition = ValidateDefinition(definition);
         this.workflowFactory = workflowFactory ??
             throw new ArgumentNullException(nameof(workflowFactory));
+        definitionFingerprint = new Lazy<string?>(
+            () => (workflowFactory() as IWorkflowFingerprint)?.Fingerprint);
     }
 
     public WorkflowDefinition Definition { get; }
+
+    public string? DefinitionFingerprint => definitionFingerprint.Value;
 
     public Type InputType => typeof(TInput);
 

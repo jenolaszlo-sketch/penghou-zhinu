@@ -60,6 +60,15 @@ public sealed record WorkflowRun
     /// </summary>
     public string? TraceId { get; init; }
 
+    /// <summary>
+    /// Deterministic fingerprint of the workflow definition this run was started
+    /// from, when the registered workflow carries one (for example a compiled
+    /// declarative definition). Execution rejects a run whose registered
+    /// definition fingerprint no longer matches this value, so a changed
+    /// definition cannot silently resume an older run.
+    /// </summary>
+    public string? DefinitionFingerprint { get; init; }
+
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }

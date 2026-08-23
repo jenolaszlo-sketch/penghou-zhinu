@@ -11,7 +11,7 @@ const Penghou.Zhinu.Sqlite.ZhinuSqliteDiagnostics.MeterName = "Penghou.Zhinu.Sql
 const Penghou.Zhinu.Sqlite.ZhinuSqliteDiagnostics.StoreOperationActivity = "zhinu.sqlite.store.operation" -> string!
 const Penghou.Zhinu.Sqlite.ZhinuSqliteDiagnostics.StoreOperationDuration = "zhinu.sqlite.store.operation.duration" -> string!
 const Penghou.Zhinu.Sqlite.ZhinuSqliteDiagnostics.StoreOperationName = "zhinu.sqlite.operation" -> string!
-const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 2 -> int
+const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 3 -> int
 Penghou.Zhinu.Sqlite.IZhinuSqliteDatabase
 Penghou.Zhinu.Sqlite.IZhinuSqliteDatabase.CheckpointAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Penghou.Zhinu.Sqlite.IZhinuSqliteDatabase.EnsureInitializedAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask

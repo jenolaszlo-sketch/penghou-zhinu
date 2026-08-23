@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Penghou.Zhinu.Declarative;
 
 /// <summary>Executes a CompiledWorkflowDefinition through the existing durable runtime.</summary>
-internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>
+internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>, IWorkflowFingerprint
 {
     private readonly CompiledWorkflowDefinition compiled;
     private readonly IActivityCatalogue catalogue;
@@ -15,6 +15,8 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>
         this.compiled = compiled;
         this.catalogue = catalogue;
     }
+
+    public string Fingerprint => compiled.Fingerprint;
 
     public async Task<JsonElement> RunAsync(WorkflowContext context, JsonElement input, CancellationToken cancellationToken)
     {

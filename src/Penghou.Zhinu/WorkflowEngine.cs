@@ -157,6 +157,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             }
         }
         var now = timeProvider.GetUtcNow();
+        var fingerprint = registration.DefinitionFingerprint;
         await store.CreateRunAsync(
             new WorkflowRun
             {
@@ -173,6 +174,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
                 MetadataJson = metadata is null
                     ? null
                     : JsonSerializer.Serialize(metadata, serializerOptions),
+                DefinitionFingerprint = fingerprint,
                 TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                     .ToHexString()
             },
@@ -646,6 +648,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             UpdatedAt = now,
             Deadline = options.Deadline,
             MetadataJson = source.MetadataJson,
+            DefinitionFingerprint = source.DefinitionFingerprint,
             SourceRunId = sourceWorkflowRunId,
             TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                 .ToHexString()

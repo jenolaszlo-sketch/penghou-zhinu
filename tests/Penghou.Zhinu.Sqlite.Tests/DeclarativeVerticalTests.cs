@@ -149,6 +149,76 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task DefinitionIdentity_MatchingFingerprint_Resumes()
+    {
+        var catalogue = CreateCatalogue();
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), catalogue).Compiled!;
+        var store = CreateStore();
+        var engine1 = CreateDeclarativeEngine(compiled, catalogue, store);
+        var runId = await engine1.StartAsync<JsonElement>("test", "1", JsonSerializer.SerializeToElement("start"), cancellationToken: TestContext.Current.CancellationToken);
+        // Recorded fingerprint must be persisted on the run.
+        var recorded = await store.GetRunAsync(runId, TestContext.Current.CancellationToken);
+        recorded!.DefinitionFingerprint.Should().Be(compiled.Fingerprint);
+
+        // Fresh engine with the SAME compiled definition resumes.
+        var engine2 = CreateDeclarativeEngine(compiled, catalogue, store);
+        await engine2.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var result = await engine2.WaitForCompletionAsync<JsonElement>(runId, cancellationToken: TestContext.Current.CancellationToken);
+        result.GetString().Should().Be("start-a-b-c");
+    }
+
+    [Fact]
+    public async Task DefinitionIdentity_MismatchedFingerprint_RejectsExecution()
+    {
+        var catalogue = CreateCatalogue();
+        var compiled1 = WorkflowCompiler.Compile(ValidLinearDefinition(), catalogue).Compiled!;
+        var store = CreateStore();
+        var engine1 = CreateDeclarativeEngine(compiled1, catalogue, store);
+        // Leave the run Pending: resume with a different definition must be rejected.
+        var runId = await engine1.StartAsync<JsonElement>("test", "1", JsonSerializer.SerializeToElement("start"), cancellationToken: TestContext.Current.CancellationToken);
+
+        // Register a DIFFERENT compiled definition with the same name/version.
+        var changed = new DeclarativeWorkflowDefinition
+        {
+            Name = "test",
+            Version = "1",
+            Steps = new[]
+            {
+                new DeclarativeWorkflowStep { Id = "a", Activity = new ActivityReference("echo-b", "1") }
+            }
+        };
+        var compiled2 = WorkflowCompiler.Compile(changed, catalogue).Compiled!;
+        compiled2.Fingerprint.Should().NotBe(compiled1.Fingerprint);
+        var engine2 = CreateDeclarativeEngine(compiled2, catalogue, store);
+        await engine2.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var act = () => engine2.WaitForCompletionAsync<JsonElement>(runId, cancellationToken: TestContext.Current.CancellationToken);
+        await act.Should().ThrowAsync<WorkflowExecutionFailedException>();
+        var run = await store.GetRunAsync(runId, TestContext.Current.CancellationToken);
+        run!.Status.Should().Be(WorkflowStatus.Failed);
+    }
+
+    [Fact]
+    public async Task DefinitionIdentity_MissingRegistration_RejectsExecution()
+    {
+        var catalogue = CreateCatalogue();
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), catalogue).Compiled!;
+        var store = CreateStore();
+        var engine1 = CreateDeclarativeEngine(compiled, catalogue, store);
+        var runId = await engine1.StartAsync<JsonElement>("test", "1", JsonSerializer.SerializeToElement("start"), cancellationToken: TestContext.Current.CancellationToken);
+
+        // Fresh engine with an EMPTY registry: the run cannot resume.
+        var engine2 = new WorkflowEngine(
+            store,
+            new WorkflowRegistry(),
+            new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+        await engine2.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var act = () => engine2.WaitForCompletionAsync<JsonElement>(runId, cancellationToken: TestContext.Current.CancellationToken);
+        await act.Should().ThrowAsync<WorkflowExecutionFailedException>();
+        var run = await store.GetRunAsync(runId, TestContext.Current.CancellationToken);
+        run!.Status.Should().Be(WorkflowStatus.Failed);
+    }
+
+    [Fact]
     public void Fingerprint_StableAcrossRepeatedCompilation()
     {
         var catalogue = CreateCatalogue();

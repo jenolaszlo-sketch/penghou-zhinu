@@ -25,5 +25,5 @@ public sealed class ZhinuSchemaCompatibilityException : Exception
 /// <summary>Exposes the schema expected by this SQLite package version.</summary>
 public static class ZhinuSqliteSchema
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 }

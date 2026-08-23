@@ -222,6 +222,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             lease_owner TEXT NULL,
             lease_expires_at TEXT NULL,
             lease_generation INTEGER NOT NULL DEFAULT 1,
+            definition_fingerprint TEXT NULL,
             CHECK (status BETWEEN 0 AND 6),
             CHECK (lease_generation >= 1)
         );

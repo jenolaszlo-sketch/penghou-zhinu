@@ -15,12 +15,14 @@ internal sealed class InsertRunCommand
             (id, workflow_name, workflow_version, status, input_json,
              input_type, output_json, output_type, error_json, created_at,
              updated_at, completed_at, deadline, metadata_json, parent_run_id,
-             source_run_id, trace_id, lease_owner, lease_expires_at)
+             source_run_id, trace_id, lease_owner, lease_expires_at,
+             definition_fingerprint)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
              $updatedAt, $completedAt, $deadline, $metadataJson, $parentRunId,
-             $sourceRunId, $traceId, $leaseOwner, $leaseExpiresAt);
+             $sourceRunId, $traceId, $leaseOwner, $leaseExpiresAt,
+             $definitionFingerprint);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -59,5 +61,8 @@ internal sealed class InsertRunCommand
         command.Parameters.AddWithValue(
             "$leaseExpiresAt",
             SqliteStoreSupport.DbValue(SqliteStoreSupport.FormatNullable(run.LeaseExpiresAt)));
+        command.Parameters.AddWithValue(
+            "$definitionFingerprint",
+            SqliteStoreSupport.DbValue(run.DefinitionFingerprint));
     }
 }

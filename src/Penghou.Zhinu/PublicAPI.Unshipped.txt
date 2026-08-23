@@ -1,5 +1,11 @@
 #nullable enable
+Penghou.Zhinu.IWorkflowFingerprint
+Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
+Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.IWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
+Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
 Penghou.Zhinu.WorkflowStoreHealth
 Penghou.Zhinu.WorkflowStoreHealth.Detail.get -> string?
 Penghou.Zhinu.WorkflowStoreHealth.Detail.init -> void

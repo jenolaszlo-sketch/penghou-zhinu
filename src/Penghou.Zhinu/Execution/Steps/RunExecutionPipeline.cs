@@ -197,5 +197,19 @@ internal sealed class RunExecutionPipeline
             throw new WorkflowSerializationException(
                 $"Stored workflow type contract does not match registered workflow '{run.WorkflowName}' version '{run.WorkflowVersion}'.");
         }
+        // A declarative run records the fingerprint of the definition it was
+        // started from. A different registered definition for the same name and
+        // version must not silently replay the older run's durable state.
+        if (run.DefinitionFingerprint is not null &&
+            registration.DefinitionFingerprint is not null &&
+            !string.Equals(
+                run.DefinitionFingerprint,
+                registration.DefinitionFingerprint,
+                StringComparison.Ordinal))
+        {
+            throw new WorkflowSerializationException(
+                $"Registered definition for workflow '{run.WorkflowName}' version '{run.WorkflowVersion}' " +
+                $"fingerprint does not match the run's recorded fingerprint '{run.DefinitionFingerprint}'.");
+        }
     }
 }
