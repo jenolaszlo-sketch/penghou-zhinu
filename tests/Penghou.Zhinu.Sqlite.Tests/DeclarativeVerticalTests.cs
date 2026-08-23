@@ -228,6 +228,46 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         fp1.Should().Be(fp2);
     }
 
+    // --- Inspection ---
+
+    [Fact]
+    public async Task Inspection_RunExposesFingerprintStepsActivitiesHistoryAndResult()
+    {
+        var catalogue = CreateCatalogue();
+        var compiled = WorkflowCompiler.Compile(ValidLinearDefinition(), catalogue).Compiled!;
+        var store = CreateStore();
+        var engine = CreateDeclarativeEngine(compiled, catalogue, store);
+        var runId = await engine.StartAsync<JsonElement>("test", "1", JsonSerializer.SerializeToElement("start"), cancellationToken: TestContext.Current.CancellationToken);
+
+        // Fingerprint on the run.
+        var recorded = await store.GetRunAsync(runId, TestContext.Current.CancellationToken);
+        recorded!.WorkflowName.Should().Be("test");
+        recorded.WorkflowVersion.Should().Be("1");
+        recorded.DefinitionFingerprint.Should().Be(compiled.Fingerprint);
+
+        // Compiled definition exposes resolved activity references per step.
+        compiled.Steps.Should().HaveCount(3);
+        compiled.Steps.Select(s => s.Id).Should().Equal("a", "b", "c");
+        foreach (var step in compiled.Steps)
+        {
+            step.Activity.Name.Should().StartWith("echo-");
+            catalogue.GetDescriptor(step.Activity).Reference.Should().Be(step.Activity);
+        }
+
+        // After execution: durable steps (keys = declarative step IDs), history, terminal result.
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        var result = await engine.WaitForCompletionAsync<JsonElement>(runId, cancellationToken: TestContext.Current.CancellationToken);
+        result.GetString().Should().Be("start-a-b-c");
+        var steps = await engine.GetStepsAsync(runId, TestContext.Current.CancellationToken);
+        steps.Select(s => s.StepKey).Should().Equal("a", "b", "c");
+        steps.Should().OnlyContain(s => s.Status == StepStatus.Completed);
+        var events = await engine.GetEventsAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+        events.Should().Contain(e => e.EventType == WorkflowEventTypes.WorkflowCompleted);
+        var final = await engine.GetRunAsync(runId, TestContext.Current.CancellationToken);
+        final!.Status.Should().Be(WorkflowStatus.Completed);
+        final.DefinitionFingerprint.Should().Be(compiled.Fingerprint);
+    }
+
     // --- Execution ---
 
     [Fact]

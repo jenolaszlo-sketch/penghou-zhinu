@@ -1,4 +1,40 @@
 #nullable enable
+override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
+Penghou.Zhinu.Declarative.ActivityContract
+Penghou.Zhinu.Declarative.ActivityContract.ClrType.get -> System.Type!
+Penghou.Zhinu.Declarative.ActivityContract.ClrType.init -> void
+Penghou.Zhinu.Declarative.ActivityDescriptor
+Penghou.Zhinu.Declarative.ActivityDescriptor.Input.get -> Penghou.Zhinu.Declarative.ActivityContract!
+Penghou.Zhinu.Declarative.ActivityDescriptor.Input.init -> void
+Penghou.Zhinu.Declarative.ActivityDescriptor.Output.get -> Penghou.Zhinu.Declarative.ActivityContract!
+Penghou.Zhinu.Declarative.ActivityDescriptor.Output.init -> void
+Penghou.Zhinu.Declarative.ActivityDescriptor.Reference.get -> Penghou.Zhinu.Declarative.ActivityReference!
+Penghou.Zhinu.Declarative.ActivityDescriptor.Reference.init -> void
+Penghou.Zhinu.Declarative.ActivityReference
+Penghou.Zhinu.Declarative.ActivityReference.ActivityReference() -> void
+Penghou.Zhinu.Declarative.ActivityReference.ActivityReference(string! name, string! version) -> void
+Penghou.Zhinu.Declarative.ActivityReference.Name.get -> string!
+Penghou.Zhinu.Declarative.ActivityReference.Name.init -> void
+Penghou.Zhinu.Declarative.ActivityReference.Version.get -> string!
+Penghou.Zhinu.Declarative.ActivityReference.Version.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Fingerprint.get -> string!
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Fingerprint.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Name.get -> string!
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Name.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Steps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.CompiledWorkflowStep!>!
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Steps.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Version.get -> string!
+Penghou.Zhinu.Declarative.CompiledWorkflowDefinition.Version.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowStep
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.Activity.get -> Penghou.Zhinu.Declarative.ActivityReference!
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.Activity.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.DependsOn.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.DependsOn.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.Descriptor.get -> Penghou.Zhinu.Declarative.ActivityDescriptor!
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.Descriptor.init -> void
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.Id.get -> string!
+Penghou.Zhinu.Declarative.CompiledWorkflowStep.Id.init -> void
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
