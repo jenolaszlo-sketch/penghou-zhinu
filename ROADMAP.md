@@ -107,6 +107,53 @@ Remaining foundation work:
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
 
+### Runtime and API hardening checkpoint
+
+Before stabilizing the preview API, address the following review findings in
+coherent batches rather than as isolated access-modifier changes:
+
+- Split the consumer-facing `WorkflowEngine` surface behind narrow runtime,
+  client/query, and administration contracts. `WorkflowEngine` may remain the
+  implementation, but applications, hosting, and adapters should depend on the
+  smallest relevant capability. Wire or remove the currently unused runtime
+  abstraction as part of this work.
+- Move definition/fingerprint validation behind an optional core definition-
+  identity validation seam so the generic execution pipeline does not acquire
+  declarative-specific responsibilities.
+- Resolve registration identity without invoking a workflow factory merely to
+  inspect its fingerprint; registration metadata must not construct
+  heavyweight or side-effecting workflow instances unexpectedly.
+- Define multi-engine behavior over one store. Make lease-recovery throttling
+  concurrency-safe and document which coordination guarantees come from
+  leases, fencing, the store, and in-process scheduling.
+- Add a bounded graceful-shutdown policy instead of allowing engine disposal to
+  wait for the full lease duration. Preserve fencing even when shutdown stops
+  waiting for an activity.
+- Cancel activity execution proactively when lease renewal reports ownership
+  loss, while retaining the final fenced-write check as the durable authority.
+- Add jittered/decorrelated backoff for hosted scans and lease renewal after
+  transient failures to avoid synchronized retry storms across workers.
+- Unify completion waiting with the existing event-channel wake-up path and
+  centralize output contract validation/deserialization used by wait and result
+  APIs.
+- Complete the public exception taxonomy with typed workflow timeout and
+  duplicate-registration/configuration failures; do not leak ambiguous raw BCL
+  exceptions from normal workflow operations.
+- Bring `ZhinuTestHost` cleanup, clock injection, and store configurability to
+  parity with the hardened test fixtures, including Windows file-lock retries.
+- Add an optional deep health probe for operational checks that must detect
+  post-initialization schema damage; keep the default probe inexpensive.
+- Record and publish the existing benchmark suite baseline on a representative
+  machine, then use it to guard material regressions.
+
+Recommended order:
+
+1. shutdown timeout and typed public failures;
+2. engine capability interfaces and definition-validation seam;
+3. lease-loss cancellation, concurrency-safe recovery, and retry backoff;
+4. test-host parity and benchmark baseline;
+5. deep operational inspection only where deployment evidence requires it.
+
 Exit criteria:
 
 - Store and runtime invariants have executable conformance coverage.
@@ -154,6 +201,41 @@ Deliverables:
   catalogue registration, compilation, registration, and execution
 - Human-authored examples covering coding and non-AI workflows
 - Artifact compatibility and versioning policy
+- An authored-JSON loading path that deserializes, validates, and returns
+  structured diagnostics, plus a published JSON Schema
+- A one-shot compile-and-register path that centralizes canonicalization,
+  fingerprint verification, contract validation, and registry mutation
+- Declarative run inspection that reports definition fingerprint,
+  step-to-activity mapping, status, results, and produced artifact references
+- First-class declarative result access to durable artifact references without
+  copying external artifact payloads
+
+### Declarative correctness and usability checkpoint
+
+Before expanding beyond the current linear vertical:
+
+- Make the compiled definition's validated shape authoritative. The runtime
+  must either iterate the validated linear chain directly or reject a
+  hand-constructed compiled definition that violates the supported topology;
+  it must not silently execute a graph the compiler would reject.
+- Add compiler-bypass, fingerprint-tamper, restart-identity, and source-versus-
+  compiled canonical-stability tests.
+- Replace duplicate canonicalization options and algorithms with one frozen
+  JSON configuration and shared canonicalizer core.
+- Carry the compiler-produced fingerprint through registration while retaining
+  an explicit defense-in-depth verification point; avoid accidental divergent
+  source and compiled identity rules.
+- Derive validation success from diagnostics or compiled output rather than
+  maintaining adjacent hand-set and derived `IsValid` truths.
+- Reuse precomputed step, descriptor, and executor maps during validation; do
+  not repeatedly scan steps or resolve the same activity.
+- Remove implicit object-cast dispatch from the activity execution boundary.
+  Dispatch should use the compiled input/output contract and produce a typed,
+  diagnosable mismatch rather than an unchecked cast or incidental JSON
+  round-trip.
+- Add ergonomic `ActivityReference.Parse`/`TryParse`, catalogue registration by
+  name and version, JSON load/validate, and compile-and-register entry points.
+  Keep the lower-level APIs available for tooling.
 
 Exit criteria:
 
@@ -218,10 +300,19 @@ Activity levels:
 Deliverables:
 
 - Typed activity interfaces and registration APIs
+- One coherent public catalogue abstraction used by compiler and registration
+  entry points. Either promote `IActivityCatalogue` as the supported extension
+  contract or remove it; do not expose a concrete-only API alongside a private
+  interface seam.
 - Catalogue export for compilers and user interfaces
 - Schema compatibility validation for bindings
 - Activity version resolution rules
 - Startup diagnostics for duplicate or incomplete registrations
+- A DI-friendly registration and discovery path where demonstrated by hosting
+  use, without requiring reflection-based global discovery
+- Descriptor evolution points for idempotency, retry, compensation,
+  capabilities, trust, and execution environment without weakening typed
+  dispatch
 
 Exit criteria:
 
@@ -450,6 +541,8 @@ Potential work:
 - Intervention queue for runs requiring attention
 - OpenTelemetry dashboards
 - ASP.NET Core operational endpoints
+- Hosting documentation and startup validation that make the required
+  `IWorkflowStore` registration explicit
 - Additional durable stores based on demonstrated demand
 - Signed activity catalogues and artifact supply-chain metadata
 

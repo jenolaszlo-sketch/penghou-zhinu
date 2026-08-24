@@ -10,21 +10,16 @@ public static class DeclarativeWorkflowRegistryExtensions
     public static WorkflowRegistry RegisterDeclarative(
         this WorkflowRegistry registry,
         CompiledWorkflowDefinition definition,
-        ActivityCatalogue catalogue)
+        IActivityCatalogue catalogue)
     {
         ArgumentNullException.ThrowIfNull(registry);
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(catalogue);
 
-        var computedFingerprint = WorkflowFingerprint.Compute(definition);
-        if (!string.Equals(
-            definition.Fingerprint,
-            computedFingerprint,
-            StringComparison.Ordinal))
+        if (catalogue is not IActivityExecutorResolver executorResolver)
         {
-            throw new ArgumentException(
-                "The compiled workflow fingerprint does not match its canonical content.",
-                nameof(definition));
+            throw new WorkflowConfigurationException(
+                "The activity catalogue supports compilation but does not provide runtime activity execution.");
         }
 
         foreach (var step in definition.Steps)
@@ -38,9 +33,22 @@ public static class DeclarativeWorkflowRegistryExtensions
             }
         }
 
+        CompiledWorkflowDefinitionValidator.Validate(definition, catalogue);
+
+        var computedFingerprint = WorkflowFingerprint.Compute(definition);
+        if (!string.Equals(
+            definition.Fingerprint,
+            computedFingerprint,
+            StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "The compiled workflow fingerprint does not match its canonical content.",
+                nameof(definition));
+        }
+
         return registry.Register(
             definition.Name,
             definition.Version,
-            new DeclarativeWorkflow(definition, catalogue));
+            new DeclarativeWorkflow(definition, executorResolver));
     }
 }

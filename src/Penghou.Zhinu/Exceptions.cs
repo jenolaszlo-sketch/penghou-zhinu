@@ -38,6 +38,18 @@ public class WorkflowConfigurationException : ZhinuException
     public WorkflowConfigurationException(string message) : base(message) { }
 }
 
+/// <summary>A caller-facing workflow operation exceeded its configured deadline.</summary>
+public sealed class WorkflowTimeoutException : ZhinuException
+{
+    public WorkflowTimeoutException(string message) : base(message) { }
+}
+
+/// <summary>A workflow or activity could not be registered because its identity is already in use.</summary>
+public sealed class WorkflowRegistrationException : ZhinuException
+{
+    public WorkflowRegistrationException(string message) : base(message) { }
+}
+
 /// <summary>A transient or corrupt persistence failure escaped the store boundary.</summary>
 public class WorkflowPersistenceException : ZhinuException
 {

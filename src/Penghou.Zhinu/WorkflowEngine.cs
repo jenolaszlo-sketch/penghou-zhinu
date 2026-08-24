@@ -15,7 +15,7 @@ namespace Penghou.Zhinu;
 /// Runs registered workflows against an explicit durable store. The engine is
 /// embedded and does not require a server, scheduler, or message broker.
 /// </summary>
-public sealed class WorkflowEngine : IAsyncDisposable
+public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflowAdministration, IAsyncDisposable
 {
     private readonly IWorkflowStore store;
     private readonly IWorkflowRegistry registry;
@@ -1291,7 +1291,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             if (deadline is { } waitDeadline &&
                 timeProvider.GetUtcNow() > waitDeadline)
             {
-                throw new TimeoutException(
+                throw new WorkflowTimeoutException(
                     $"Workflow '{workflowRunId:D}' did not complete before the wait deadline of {waitDeadline:O}.");
             }
             var run = await store.GetRunAsync(workflowRunId, cancellationToken)
@@ -1467,7 +1467,7 @@ public sealed class WorkflowEngine : IAsyncDisposable
             return;
         foreach (var cancellation in runningCancellations.Values)
             await cancellation.CancelAsync().ConfigureAwait(false);
-        var settleDeadline = timeProvider.GetUtcNow() + options.LeaseDuration;
+        var settleDeadline = timeProvider.GetUtcNow() + options.ShutdownTimeout;
         while (!runningCancellations.IsEmpty &&
                timeProvider.GetUtcNow() < settleDeadline)
         {

@@ -27,7 +27,7 @@ public sealed class WorkflowRegistryTests
             "1",
             new EchoWorkflow());
 
-        action.Should().Throw<InvalidOperationException>()
+        action.Should().Throw<WorkflowRegistrationException>()
             .WithMessage("*already registered*");
     }
 

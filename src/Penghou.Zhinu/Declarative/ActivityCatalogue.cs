@@ -1,6 +1,6 @@
 namespace Penghou.Zhinu.Declarative;
 
-public sealed class ActivityCatalogue : IActivityCatalogue
+public sealed class ActivityCatalogue : IActivityCatalogue, IActivityExecutorResolver
 {
     private readonly Dictionary<ActivityReference, (ActivityDescriptor Descriptor, IActivityExecutor Executor)> entries = new();
 
@@ -9,7 +9,7 @@ public sealed class ActivityCatalogue : IActivityCatalogue
         ArgumentNullException.ThrowIfNull(reference);
         ArgumentNullException.ThrowIfNull(implementation);
         if (entries.ContainsKey(reference))
-            throw new InvalidOperationException($"Activity '{reference}' is already registered.");
+            throw new WorkflowRegistrationException($"Activity '{reference}' is already registered.");
 
         var descriptor = new ActivityDescriptor
         {
@@ -45,7 +45,7 @@ public sealed class ActivityCatalogue : IActivityCatalogue
         throw new KeyNotFoundException($"Activity '{reference}' is not registered.");
     }
 
-    IActivityExecutor IActivityCatalogue.Resolve(ActivityReference reference) =>
+    IActivityExecutor IActivityExecutorResolver.Resolve(ActivityReference reference) =>
         Resolve(reference);
 
     public IReadOnlyList<ActivityDescriptor> ListDescriptors() => entries.Values.Select(e => e.Descriptor).ToList();

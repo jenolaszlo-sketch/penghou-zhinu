@@ -11,6 +11,9 @@ public sealed class ZhinuOptions
 
     public TimeSpan PollInterval { get; set; } = TimeSpan.FromMilliseconds(250);
 
+    /// <summary>Maximum time disposal waits for local executions to observe cancellation.</summary>
+    public TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// Minimum interval between expired-lease recovery sweeps. Recovery is also
     /// always performed once on initialization, so this only throttles the
@@ -53,6 +56,7 @@ public sealed class ZhinuOptions
             LeaseDuration = LeaseDuration,
             LeaseRenewalInterval = LeaseRenewalInterval,
             PollInterval = PollInterval,
+            ShutdownTimeout = ShutdownTimeout,
             LeaseRecoveryInterval = LeaseRecoveryInterval,
             ScanBatchSize = ScanBatchSize,
             MaxNestingDepth = MaxNestingDepth
@@ -74,6 +78,8 @@ public sealed class ZhinuOptions
         }
         if (PollInterval <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(PollInterval));
+        if (ShutdownTimeout < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(ShutdownTimeout));
         if (LeaseRecoveryInterval <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(LeaseRecoveryInterval));
         if (ScanBatchSize < 1)

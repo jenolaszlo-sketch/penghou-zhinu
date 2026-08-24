@@ -50,6 +50,12 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<TimeProvider>(),
             provider.GetService<ILogger<WorkflowEngine>>(),
             provider.GetService<IWorkflowEventPublisher>()));
+        services.TryAddSingleton<IWorkflowRuntime>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IWorkflowClient>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IWorkflowAdministration>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
         services.AddHostedService<ZhinuHostedService>();
         return services;
     }

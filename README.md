@@ -77,7 +77,10 @@ builder.Services.AddZhinuSqlite(options =>
     options.DatabasePath = "zhinu.db");
 
 builder.Services.AddZhinu(options =>
-    options.MaxConcurrentWorkflows = 4);
+{
+    options.MaxConcurrentWorkflows = 4;
+    options.ShutdownTimeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddZhinuWorkflow<OrderWorkflow, OrderRequest, OrderResult>(
     "process-order",
@@ -152,6 +155,21 @@ public sealed record OrderResult(string Confirmation);
 `workflowRunId` is an optional idempotency key for starting the run. Repeating
 the same workflow, version, input, and ID returns the existing run. Reusing the
 ID with a different contract or input fails explicitly.
+
+### Focused runtime interfaces
+
+Hosted applications can depend on the smallest capability surface they need:
+
+- `IWorkflowRuntime` starts and executes work and is suitable for workers or
+  external schedulers;
+- `IWorkflowClient` queries runs, waits for completion, and sends signals;
+- `IWorkflowAdministration` performs administrative cancellation.
+
+All three resolve to the same `WorkflowEngine` singleton when using `AddZhinu`.
+The concrete engine remains available for typed handles and advanced inspection
+or recovery operations. Caller-facing wait and signal deadlines throw
+`WorkflowTimeoutException`; duplicate workflow or activity identities throw
+`WorkflowRegistrationException`.
 
 ## Delivery guarantee
 
@@ -266,6 +284,18 @@ The runnable [hosted sample](samples/Penghou.Zhinu.Sample/Program.cs) demonstrat
 process recovery. The [direct-construction sample](samples/Penghou.Zhinu.Direct/Program.cs)
 demonstrates typed handles, signals, child workflows, artifacts, and
 cancellation without dependency injection.
+
+## Declarative workflows
+
+The preview declarative layer separates portable workflow descriptions from
+executable activity implementations. Applications register activities in an
+`ActivityCatalogue`, compile against the public `IActivityCatalogue` contract,
+and register the resulting immutable definition with the durable runtime.
+
+Compiled definitions are treated as untrusted input at registration: Zhinu
+revalidates the supported topology, activity contracts, catalogue descriptors,
+and canonical fingerprint. Hand-authored or modified compiled artifacts cannot
+bypass the compiler's structural rules.
 
 Detailed contracts:
 

@@ -16,7 +16,7 @@ public sealed class WorkflowRegistry : IWorkflowRegistry
             registration.Definition.Version);
         if (!registrations.TryAdd(key, registration))
         {
-            throw new InvalidOperationException(
+            throw new WorkflowRegistrationException(
                 $"Workflow '{key.Name}' version '{key.Version}' is already registered.");
         }
         return this;

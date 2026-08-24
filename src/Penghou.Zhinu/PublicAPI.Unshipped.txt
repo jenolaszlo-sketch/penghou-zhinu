@@ -95,5 +95,26 @@ Penghou.Zhinu.WorkflowStoreHealth.StoreName.get -> string?
 Penghou.Zhinu.WorkflowStoreHealth.StoreName.init -> void
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.get -> bool?
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.init -> void
-static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.ActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!
-static Penghou.Zhinu.Declarative.WorkflowCompiler.Compile(Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition! definition, Penghou.Zhinu.Declarative.ActivityCatalogue! catalogue) -> Penghou.Zhinu.Declarative.WorkflowCompilationResult!
+Penghou.Zhinu.Declarative.IActivityCatalogue
+Penghou.Zhinu.Declarative.IActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
+Penghou.Zhinu.Declarative.IActivityCatalogue.ListDescriptors() -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.ActivityDescriptor!>!
+Penghou.Zhinu.Declarative.IActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation) -> void
+Penghou.Zhinu.Declarative.IActivityCatalogue.TryGetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference, out Penghou.Zhinu.Declarative.ActivityDescriptor! descriptor) -> bool
+Penghou.Zhinu.IWorkflowAdministration
+Penghou.Zhinu.IWorkflowAdministration.CancelAsync(System.Guid workflowRunId, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowClient
+Penghou.Zhinu.IWorkflowClient.GetRunAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRun?>!
+Penghou.Zhinu.IWorkflowClient.SendSignalAsync(System.Guid workflowRunId, string! signalName, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowClient.WaitForCompletionAsync<TOutput>(System.Guid workflowRunId, System.DateTimeOffset? deadline = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.IWorkflowRuntime
+Penghou.Zhinu.IWorkflowRuntime.ExecuteAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowRuntime.RunAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+Penghou.Zhinu.IWorkflowRuntime.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
+Penghou.Zhinu.WorkflowRegistrationException
+Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
+Penghou.Zhinu.WorkflowTimeoutException
+Penghou.Zhinu.WorkflowTimeoutException.WorkflowTimeoutException(string! message) -> void
+Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan
+Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.set -> void
+static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!
+static Penghou.Zhinu.Declarative.WorkflowCompiler.Compile(Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.Declarative.WorkflowCompilationResult!

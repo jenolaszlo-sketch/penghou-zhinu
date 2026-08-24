@@ -18,7 +18,7 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
         var reference = new ActivityReference("echo", "1");
         catalogue.Register(reference, Echo("-a"));
         var act = () => catalogue.Register(reference, Echo("-b"));
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<WorkflowRegistrationException>();
     }
 
     [Fact]
@@ -145,6 +145,31 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
 
         result.IsValid.Should().BeFalse();
         result.Diagnostics.Should().Contain(d => d.Code == "WF023");
+    }
+
+    [Fact]
+    public void Registration_HandConstructedBranchingCompiledDefinition_IsRejected()
+    {
+        var catalogue = CreateCatalogue();
+        var a = catalogue.GetDescriptor(new ActivityReference("echo-a", "1"));
+        var b = catalogue.GetDescriptor(new ActivityReference("echo-b", "1"));
+        var c = catalogue.GetDescriptor(new ActivityReference("echo-c", "1"));
+        var definition = new CompiledWorkflowDefinition
+        {
+            Name = "test",
+            Version = "1",
+            Fingerprint = "untrusted",
+            Steps = new[]
+            {
+                new CompiledWorkflowStep { Id = "a", Activity = a.Reference, Descriptor = a, DependsOn = Array.Empty<string>() },
+                new CompiledWorkflowStep { Id = "b", Activity = b.Reference, Descriptor = b, DependsOn = new[] { "a" } },
+                new CompiledWorkflowStep { Id = "c", Activity = c.Reference, Descriptor = c, DependsOn = new[] { "a" } }
+            }
+        };
+
+        var action = () => new WorkflowRegistry().RegisterDeclarative(definition, catalogue);
+
+        action.Should().Throw<ArgumentException>().WithMessage("*WF023*");
     }
 
     [Fact]

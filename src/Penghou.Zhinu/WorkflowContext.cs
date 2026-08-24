@@ -457,7 +457,7 @@ public sealed class WorkflowContext
                             if (deadline is { } waitDeadline &&
                                 timeProvider.GetUtcNow() > waitDeadline)
                             {
-                                throw new TimeoutException(
+                                throw new WorkflowTimeoutException(
                                     $"Signal '{signalName}' was not delivered before the wait deadline.");
                             }
                             await Task.Delay(

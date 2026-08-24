@@ -4,7 +4,7 @@ internal static class WorkflowDefinitionValidator
 {
     public static WorkflowValidationResult Validate(
         DeclarativeWorkflowDefinition definition,
-        ActivityCatalogue catalogue)
+        IActivityCatalogue catalogue)
     {
         var diagnostics = new List<WorkflowValidationDiagnostic>();
 
@@ -71,14 +71,9 @@ internal static class WorkflowDefinitionValidator
                 !descriptors.TryGetValue(dependencyId, out var dependencyDescriptor))
                 continue;
 
-            var executor = catalogue.Resolve(step.Activity);
-            var dependencyExecutor = catalogue.Resolve(
-                definition.Steps.Single(s => s.Id == dependencyId).Activity);
-            var previousOutputType = dependencyExecutor.OutputType;
-            if (executor.InputType != typeof(object) &&
-                !executor.InputType.IsAssignableFrom(previousOutputType))
+            if (descriptor.Input.TypeId != dependencyDescriptor.Output.TypeId)
             {
-                diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF031", Severity = WorkflowValidationSeverity.Error, Message = $"Step '{step.Id}' input type '{executor.InputType.Name}' is not compatible with dependency '{dependencyId}' output '{previousOutputType.Name}'.", StepId = step.Id });
+                diagnostics.Add(new WorkflowValidationDiagnostic { Code = "WF031", Severity = WorkflowValidationSeverity.Error, Message = $"Step '{step.Id}' input contract '{descriptor.Input.TypeId}' is not compatible with dependency '{dependencyId}' output '{dependencyDescriptor.Output.TypeId}'.", StepId = step.Id });
             }
         }
 

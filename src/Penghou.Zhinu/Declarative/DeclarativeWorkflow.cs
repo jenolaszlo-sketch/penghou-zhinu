@@ -6,9 +6,9 @@ namespace Penghou.Zhinu.Declarative;
 internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>, IWorkflowFingerprint
 {
     private readonly CompiledWorkflowDefinition compiled;
-    private readonly IActivityCatalogue catalogue;
+    private readonly IActivityExecutorResolver catalogue;
 
-    public DeclarativeWorkflow(CompiledWorkflowDefinition compiled, IActivityCatalogue catalogue)
+    public DeclarativeWorkflow(CompiledWorkflowDefinition compiled, IActivityExecutorResolver catalogue)
     {
         ArgumentNullException.ThrowIfNull(compiled);
         ArgumentNullException.ThrowIfNull(catalogue);

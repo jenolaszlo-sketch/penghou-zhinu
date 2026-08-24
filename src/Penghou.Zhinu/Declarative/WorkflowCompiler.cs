@@ -11,7 +11,7 @@ public static class WorkflowCompiler
 {
     public static WorkflowCompilationResult Compile(
         DeclarativeWorkflowDefinition definition,
-        ActivityCatalogue catalogue)
+        IActivityCatalogue catalogue)
     {
         var validation = WorkflowDefinitionValidator.Validate(definition, catalogue);
         if (!validation.IsValid)

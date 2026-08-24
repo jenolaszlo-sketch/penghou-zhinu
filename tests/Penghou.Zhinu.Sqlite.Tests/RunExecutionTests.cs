@@ -386,7 +386,7 @@ public sealed class RunExecutionTests : WorkflowEngineTestBase
             DateTimeOffset.UtcNow.AddMilliseconds(20),
             TestContext.Current.CancellationToken);
 
-        await action.Should().ThrowAsync<TimeoutException>()
+        await action.Should().ThrowAsync<WorkflowTimeoutException>()
             .WithMessage("*wait deadline*");
     }
 
