@@ -136,6 +136,9 @@ coherent batches rather than as isolated access-modifier changes:
 - Unify completion waiting with the existing event-channel wake-up path and
   centralize output contract validation/deserialization used by wait and result
   APIs.
+- Remove the exact-page extra query from run enumeration and cancel or reuse
+  losing subscription poll timers so idle subscribers do not create needless
+  store work or short-lived timer churn.
 - Complete the public exception taxonomy with typed workflow timeout and
   duplicate-registration/configuration failures; do not leak ambiguous raw BCL
   exceptions from normal workflow operations.
@@ -236,6 +239,9 @@ Before expanding beyond the current linear vertical:
 - Add ergonomic `ActivityReference.Parse`/`TryParse`, catalogue registration by
   name and version, JSON load/validate, and compile-and-register entry points.
   Keep the lower-level APIs available for tooling.
+- Standardize declarative model construction conventions, including choosing
+  one clear `ActivityReference` creation idiom instead of combining required
+  initializers with a required-member-satisfying constructor.
 
 Exit criteria:
 
