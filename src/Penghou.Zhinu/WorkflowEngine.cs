@@ -44,6 +44,32 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflo
         TimeProvider? timeProvider = null,
         ILogger<WorkflowEngine>? logger = null,
         IWorkflowEventPublisher? eventPublisher = null)
+        : this(
+            store,
+            registry,
+            options,
+            serializerOptions,
+            timeProvider,
+            logger,
+            eventPublisher,
+            workflowStepResolver: null)
+    {
+    }
+
+    /// <summary>
+    /// Creates an engine with a provider-neutral class-based step resolver.
+    /// Each resolver lease owns the resources for one execution or
+    /// compensation attempt.
+    /// </summary>
+    public WorkflowEngine(
+        IWorkflowStore store,
+        IWorkflowRegistry registry,
+        ZhinuOptions? options,
+        JsonSerializerOptions? serializerOptions,
+        TimeProvider? timeProvider,
+        ILogger<WorkflowEngine>? logger,
+        IWorkflowEventPublisher? eventPublisher,
+        IWorkflowStepResolver? workflowStepResolver)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
@@ -73,7 +99,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflo
             this.timeProvider,
             eventPublisher,
             ownerId,
-            NotifyEventAppended);
+            NotifyEventAppended,
+            workflowStepResolver);
         rollbackCoordinator = new RollbackCoordinator(
             store,
             this.options,
@@ -107,7 +134,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflo
                 rollbackAndRestart.ResumeAsync(
                     workflowRunId,
                     cancellationToken),
-            outcomeHandler);
+            outcomeHandler,
+            workflowStepResolver);
         scanner = new RunScanner(
             store,
             this.options,

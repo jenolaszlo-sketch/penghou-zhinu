@@ -123,6 +123,7 @@ internal sealed class SqliteStepRepository :
                 Id = Guid.NewGuid(),
                 WorkflowRunId = request.WorkflowRunId,
                 StepKey = request.StepKey,
+                ImplementationKey = request.ImplementationKey,
                 Status = StepStatus.Running,
                 Attempt = 1,
                 CreatedAt = request.Now,
@@ -485,6 +486,7 @@ internal sealed class SqliteStepRepository :
                 Id = Guid.NewGuid(),
                 WorkflowRunId = workflowRunId,
                 StepKey = entry.StepKey,
+                ImplementationKey = latest.ImplementationKey,
                 Status = StepStatus.Pending,
                 Attempt = 0,
                 CreatedAt = now,
@@ -1095,6 +1097,7 @@ internal sealed class SqliteStepRepository :
                 Id = Guid.NewGuid(),
                 WorkflowRunId = workflowRunId,
                 StepKey = stepKey,
+                ImplementationKey = latest.ImplementationKey,
                 Status = StepStatus.Pending,
                 Attempt = 0,
                 CreatedAt = now,
@@ -1233,6 +1236,7 @@ internal sealed class SqliteStepRepository :
             Id = Guid.NewGuid(),
             WorkflowRunId = destination.Id,
             StepKey = source.StepKey,
+            ImplementationKey = source.ImplementationKey,
             Status = StepStatus.Completed,
             Attempt = source.Attempt,
             InputJson = source.InputJson,
@@ -1726,10 +1730,15 @@ internal sealed class SqliteStepRepository :
             string.Equals(existing.InputHash, request.InputHash, StringComparison.Ordinal);
         if (!string.Equals(existing.InputType, request.InputType, StringComparison.Ordinal) ||
             !valueHashMatches ||
-            !string.Equals(existing.OutputType, request.OutputType, StringComparison.Ordinal))
+            !string.Equals(existing.OutputType, request.OutputType, StringComparison.Ordinal) ||
+            !string.Equals(
+                existing.ImplementationKey,
+                request.ImplementationKey,
+                StringComparison.Ordinal))
         {
             throw new WorkflowStateException(
-                $"Step key '{request.StepKey}' was reused with an incompatible input or result contract.");
+                $"Step key '{request.StepKey}' was reused with an incompatible input or result contract, " +
+                "or with a different implementation key.");
         }
     }
 
@@ -1739,6 +1748,7 @@ internal sealed class SqliteStepRepository :
             Id = Guid.Empty,
             WorkflowRunId = request.WorkflowRunId,
             StepKey = request.StepKey,
+            ImplementationKey = request.ImplementationKey,
             Status = StepStatus.Cancelled,
             Attempt = 0,
             CreatedAt = request.Now,

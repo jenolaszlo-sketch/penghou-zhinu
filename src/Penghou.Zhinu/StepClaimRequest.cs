@@ -7,6 +7,12 @@ public sealed record StepClaimRequest
 
     public required string StepKey { get; init; }
 
+    /// <summary>
+    /// The class-based implementation selected for this invocation. Null for
+    /// functional steps and built-in durable operations.
+    /// </summary>
+    public string? ImplementationKey { get; init; }
+
     public string? InputJson { get; init; }
 
     public string? InputType { get; init; }

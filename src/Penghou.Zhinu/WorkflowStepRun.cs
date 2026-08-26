@@ -9,6 +9,12 @@ public sealed record WorkflowStepRun
 
     public required string StepKey { get; init; }
 
+    /// <summary>
+    /// The class-based implementation selected for this invocation. Null for
+    /// functional steps and other built-in durable operations.
+    /// </summary>
+    public string? ImplementationKey { get; init; }
+
     public required StepStatus Status { get; init; }
 
     public required int Attempt { get; init; }

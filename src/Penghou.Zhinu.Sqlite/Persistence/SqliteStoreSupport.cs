@@ -116,7 +116,8 @@ internal static class SqliteStoreSupport
         LeaseOwner = GetNullableString(reader, 16),
         LeaseExpiresAt = ParseNullableTimestamp(reader, 17),
         Revision = reader.GetInt32(18),
-        LeaseGeneration = reader.GetInt64(19)
+        LeaseGeneration = reader.GetInt64(19),
+        ImplementationKey = GetNullableString(reader, 20)
     };
 
     internal static WorkflowStepCompensation ReadCompensation(SqliteDataReader reader) => new()
@@ -185,7 +186,7 @@ internal static class SqliteStoreSupport
         id, workflow_run_id, step_key, status, attempt, input_json, input_type,
         input_hash, output_json, output_type, error_json, signal_name, created_at,
         started_at, completed_at, available_at, lease_owner, lease_expires_at,
-        revision, lease_generation
+        revision, lease_generation, implementation_key
         """;
 
     internal const string CompensationColumns = """

@@ -24,6 +24,7 @@ public sealed class WorkflowContext
     private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
     private readonly Action<Guid>? onEventAppended;
+    private readonly IWorkflowStepResolver workflowStepResolver;
     private readonly StepLockManager stepLocks = new();
     private readonly DependencyTracker dependencies = new();
     private readonly ChildRunCoordinator childRuns;
@@ -47,7 +48,8 @@ public sealed class WorkflowContext
         Func<Guid, CancellationToken, Task>? executeChildRun = null,
         IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps = null,
         IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null,
-        Action<Guid>? onEventAppended = null)
+        Action<Guid>? onEventAppended = null,
+        IWorkflowStepResolver? workflowStepResolver = null)
     {
         WorkflowRunId = workflowRunId;
         this.store = store;
@@ -62,6 +64,8 @@ public sealed class WorkflowContext
         this.replaySteps = replaySteps;
         this.rollbackCompensations = rollbackCompensations;
         this.onEventAppended = onEventAppended;
+        this.workflowStepResolver = workflowStepResolver ??
+            UnavailableWorkflowStepResolver.Instance;
         childRuns = new ChildRunCoordinator(
             store,
             this.options,
@@ -151,16 +155,92 @@ public sealed class WorkflowContext
             compensation);
 
     /// <summary>
+    /// Executes or reuses a keyed class-based step. The durable
+    /// <paramref name="stepKey"/> remains independent from the implementation
+    /// selected by <paramref name="implementationKey"/>.
+    /// </summary>
+    public Task<TOutput> StepAsync<TInput, TOutput>(
+        string stepKey,
+        StepImplementationKey implementationKey,
+        TInput input,
+        StepOptions? stepOptions = null,
+        CancellationToken cancellationToken = default,
+        StepCompensationMode compensation = StepCompensationMode.None)
+    {
+        implementationKey.Validate(nameof(implementationKey));
+        if (!Enum.IsDefined(compensation))
+            throw new ArgumentOutOfRangeException(nameof(compensation));
+
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>?
+            compensationOperation = compensation == StepCompensationMode.Enabled
+                ? (output, context, token) => CompensateClassStepAsync<TInput, TOutput>(
+                    stepKey,
+                    implementationKey,
+                    context,
+                    output,
+                    token)
+                : null;
+
+        return StepCoreAsync(
+            stepKey,
+            input,
+            async (value, context, token) =>
+            {
+                await using var lease = await workflowStepResolver
+                    .ResolveAsync<IWorkflowStep<TInput, TOutput>>(
+                        implementationKey,
+                        token)
+                    .ConfigureAwait(false);
+                if (compensation == StepCompensationMode.Enabled &&
+                    lease.Step is not ICompensatingWorkflowStep<TInput, TOutput>)
+                {
+                    throw new WorkflowConfigurationException(
+                        $"Workflow step '{implementationKey}' enabled compensation but its implementation " +
+                        $"does not implement '{typeof(ICompensatingWorkflowStep<TInput, TOutput>).FullName}'.");
+                }
+                Activity.Current?.SetTag(
+                    ZhinuDiagnostics.Attributes.StepImplementationKey,
+                    implementationKey.Value);
+                Activity.Current?.SetTag(
+                    ZhinuDiagnostics.Attributes.StepImplementationType,
+                    lease.Step.GetType().FullName);
+                return await lease.Step.ExecuteAsync(context, value, token)
+                    .ConfigureAwait(false);
+            },
+            stepOptions,
+            cancellationToken,
+            compensationOperation,
+            implementationKey.Value);
+    }
+
+    /// <summary>
     /// Executes or reuses a typed durable step while exposing a stable
     /// downstream idempotency key for the current attempt.
     /// </summary>
-    public async Task<TOutput> StepAsync<TInput, TOutput>(
+    public Task<TOutput> StepAsync<TInput, TOutput>(
         string stepKey,
         TInput input,
         Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
         StepOptions? stepOptions = null,
         CancellationToken cancellationToken = default,
-        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation = null)
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation = null) =>
+        StepCoreAsync(
+            stepKey,
+            input,
+            operation,
+            stepOptions,
+            cancellationToken,
+            compensation,
+            implementationKey: null);
+
+    private async Task<TOutput> StepCoreAsync<TInput, TOutput>(
+        string stepKey,
+        TInput input,
+        Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
+        StepOptions? stepOptions,
+        CancellationToken cancellationToken,
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation,
+        string? implementationKey)
     {
         ValidateStepKey(stepKey);
         ArgumentNullException.ThrowIfNull(operation);
@@ -190,7 +270,8 @@ public sealed class WorkflowContext
                 return ResolveRollbackStep<TOutput>(
                     stepKey,
                     outputType,
-                    compensation);
+                    compensation,
+                    implementationKey);
             }
             if (dependencies is not null)
             {
@@ -219,6 +300,7 @@ public sealed class WorkflowContext
                     outputType,
                     dependencies,
                     compensationMetadata,
+                    implementationKey,
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
@@ -305,6 +387,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.Hash(inputJson),
                     DelayOutputType,
                     ResolveDependencies(null),
+                    null,
                     null,
                     linkedCancellation.Token).ConfigureAwait(false);
                 if (claim.Disposition == StepClaimDisposition.Reused)
@@ -419,6 +502,7 @@ public sealed class WorkflowContext
                     SerializationIdentity.Hash(signalName),
                     outputType,
                     ResolveDependencies(null),
+                    null,
                     null,
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
@@ -797,7 +881,8 @@ public sealed class WorkflowContext
                 await WaitUntilAsync(step.AvailableAt, cancellationToken).ConfigureAwait(false);
                 var claim = await ClaimAsync(
                     step.StepKey, step.InputJson, step.InputType, step.InputHash,
-                    outputType, dependencies, compensation, cancellationToken)
+                    outputType, dependencies, compensation,
+                    step.ImplementationKey, cancellationToken)
                     .ConfigureAwait(false);
                 if (claim.Disposition != StepClaimDisposition.Acquired)
                 {
@@ -864,6 +949,7 @@ public sealed class WorkflowContext
         string outputType,
         IReadOnlyCollection<string>? dependencies,
         CompensationMetadata? compensation,
+        string? implementationKey,
         CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
@@ -872,6 +958,7 @@ public sealed class WorkflowContext
             {
                 WorkflowRunId = WorkflowRunId,
                 StepKey = stepKey,
+                ImplementationKey = implementationKey,
                 InputJson = inputJson,
                 InputType = inputType,
                 InputHash = inputHash,
@@ -904,8 +991,22 @@ public sealed class WorkflowContext
     private TOutput ResolveRollbackStep<TOutput>(
         string stepKey,
         string outputType,
-        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation)
+        Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation,
+        string? implementationKey)
     {
+        if (!replaySteps!.TryGetValue(stepKey, out var stored))
+        {
+            throw new WorkflowStateException(
+                $"Step '{stepKey}' has no committed result to replay during rollback.");
+        }
+        if (!string.Equals(
+                stored.ImplementationKey,
+                implementationKey,
+                StringComparison.Ordinal))
+        {
+            throw new WorkflowStateException(
+                $"Step key '{stepKey}' was reused with a different implementation key.");
+        }
         if (rollbackCompensations is not null &&
             rollbackCompensations.TryGetValue(stepKey, out var row) &&
             row.InputJson is not null)
@@ -929,12 +1030,57 @@ public sealed class WorkflowContext
                 ct => compensation(result, stepContext, ct)));
             return result;
         }
-        if (replaySteps!.TryGetValue(stepKey, out var stored))
+        return Deserialize<TOutput>(stored.OutputJson, outputType);
+    }
+
+    private async Task CompensateClassStepAsync<TInput, TOutput>(
+        string stepKey,
+        StepImplementationKey implementationKey,
+        WorkflowStepContext context,
+        TOutput output,
+        CancellationToken cancellationToken)
+    {
+        var input = DeserializeRollbackInput<TInput>(stepKey);
+        await using var lease = await workflowStepResolver
+            .ResolveAsync<IWorkflowStep<TInput, TOutput>>(
+                implementationKey,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (lease.Step is not ICompensatingWorkflowStep<TInput, TOutput> compensatingStep)
         {
-            return Deserialize<TOutput>(stored.OutputJson, outputType);
+            throw new WorkflowConfigurationException(
+                $"Workflow step '{implementationKey}' has durable compensation metadata but its current " +
+                $"implementation does not implement '{typeof(ICompensatingWorkflowStep<TInput, TOutput>).FullName}'.");
         }
-        throw new WorkflowStateException(
-            $"Step '{stepKey}' has no committed result to replay during rollback.");
+        Activity.Current?.SetTag(
+            ZhinuDiagnostics.Attributes.StepImplementationKey,
+            implementationKey.Value);
+        Activity.Current?.SetTag(
+            ZhinuDiagnostics.Attributes.StepImplementationType,
+            lease.Step.GetType().FullName);
+        await compensatingStep.CompensateAsync(
+            context,
+            input,
+            output,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private TInput DeserializeRollbackInput<TInput>(string stepKey)
+    {
+        if (!replaySteps!.TryGetValue(stepKey, out var stored))
+        {
+            throw new WorkflowStateException(
+                $"Step '{stepKey}' has no committed input to compensate.");
+        }
+        var expectedType = SerializationIdentity.TypeId(typeof(TInput));
+        if (!string.Equals(stored.InputType, expectedType, StringComparison.Ordinal))
+        {
+            throw new WorkflowSerializationException(
+                $"Stored input type for step '{stepKey}' does not match '{expectedType}'.");
+        }
+        return Deserialize<TInput>(
+            stored.InputJson,
+            expectedType);
     }
 
     private async Task WaitUntilAsync(

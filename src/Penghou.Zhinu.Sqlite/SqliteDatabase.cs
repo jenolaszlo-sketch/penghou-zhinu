@@ -255,6 +255,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             lease_expires_at TEXT NULL,
             revision INTEGER NOT NULL DEFAULT 1,
             lease_generation INTEGER NOT NULL DEFAULT 1,
+            implementation_key TEXT NULL,
             UNIQUE(workflow_run_id, step_key, revision),
             CHECK (status BETWEEN 0 AND 5),
             CHECK (attempt >= 0),

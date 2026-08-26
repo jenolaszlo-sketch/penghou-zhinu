@@ -13,6 +13,7 @@ public sealed class WorkflowEngineBuilder
     private TimeProvider? timeProvider;
     private ILogger<WorkflowEngine>? logger;
     private IWorkflowEventPublisher? eventPublisher;
+    private IWorkflowStepResolver? workflowStepResolver;
 
     public WorkflowEngineBuilder WithStore(IWorkflowStore value)
     {
@@ -65,10 +66,24 @@ public sealed class WorkflowEngineBuilder
         return this;
     }
 
+    public WorkflowEngineBuilder WithStepResolver(IWorkflowStepResolver value)
+    {
+        workflowStepResolver = value ?? throw new ArgumentNullException(nameof(value));
+        return this;
+    }
+
     public WorkflowEngine Build()
     {
         if (store is null) throw new InvalidOperationException("Store must be configured.");
         if (registry is null) throw new InvalidOperationException("Registry must be configured.");
-        return new WorkflowEngine(store, registry, options, serializerOptions, timeProvider, logger, eventPublisher);
+        return new WorkflowEngine(
+            store,
+            registry,
+            options,
+            serializerOptions,
+            timeProvider,
+            logger,
+            eventPublisher,
+            workflowStepResolver);
     }
 }

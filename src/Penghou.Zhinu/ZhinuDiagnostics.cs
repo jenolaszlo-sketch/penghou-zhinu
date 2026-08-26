@@ -35,6 +35,8 @@ public static class ZhinuDiagnostics
         public const string StepKey = "zhinu.step.key";
         public const string StepAttempt = "zhinu.step.attempt";
         public const string StepRevision = "zhinu.step.revision";
+        public const string StepImplementationKey = "zhinu.step.implementation.key";
+        public const string StepImplementationType = "zhinu.step.implementation.type";
         public const string LeaseGeneration = "zhinu.lease.generation";
         public const string OperationId = "zhinu.operation.id";
         public const string OperationType = "zhinu.operation.type";

@@ -17,6 +17,7 @@ internal sealed class CompensationExecutor
     private readonly IWorkflowEventPublisher? eventPublisher;
     private readonly string ownerId;
     private readonly Action<Guid> notifyEventAppended;
+    private readonly IWorkflowStepResolver? workflowStepResolver;
 
     public CompensationExecutor(
         IWorkflowStore store,
@@ -26,7 +27,8 @@ internal sealed class CompensationExecutor
         TimeProvider timeProvider,
         IWorkflowEventPublisher? eventPublisher,
         string ownerId,
-        Action<Guid> notifyEventAppended)
+        Action<Guid> notifyEventAppended,
+        IWorkflowStepResolver? workflowStepResolver)
     {
         this.store = store;
         this.registry = registry;
@@ -36,6 +38,7 @@ internal sealed class CompensationExecutor
         this.eventPublisher = eventPublisher;
         this.ownerId = ownerId;
         this.notifyEventAppended = notifyEventAppended;
+        this.workflowStepResolver = workflowStepResolver;
     }
 
     public async Task ExecuteAsync(
@@ -96,7 +99,8 @@ internal sealed class CompensationExecutor
             executeChildRun: null,
             replaySteps: steps,
             rollbackCompensations: byKey,
-            onEventAppended: notifyEventAppended);
+            onEventAppended: notifyEventAppended,
+            workflowStepResolver: workflowStepResolver);
         await registration!.ExecuteAsync(
             context,
             run.InputJson ?? "null",

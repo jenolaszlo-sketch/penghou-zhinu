@@ -39,6 +39,10 @@ rather than only implied by code.
   then re-claims as a new attempt.
 - Retries are durable: a process restart between attempts preserves the attempt
   count and schedule.
+- A class-based step resolves a fresh implementation and DI scope for every
+  attempt. The scope is asynchronously disposed before successful completion is
+  committed. A disposal failure is an attempt failure and follows the same
+  retry policy.
 
 ## Cancellation meaning
 
@@ -92,6 +96,12 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
 - Rollback replays the workflow definition against committed step results to
   re-bind compensation delegates, then executes only those delegates in reverse
   dependency order. It never re-runs forward operations.
+- Class-based compensation resolves a new implementation in a new scope for
+  every attempt. It receives the original persisted step input and committed
+  output; no state from the forward step instance survives.
+- Compensation is an explicit capability through
+  `ICompensatingWorkflowStep<TInput, TOutput>`. Enabling it for an ordinary
+  `IWorkflowStep<TInput, TOutput>` fails before the forward operation executes.
 - On success the run reaches `Compensated` (terminal). A failing compensation
   leaves the run `Failed` and claimable by a later rollback attempt; already
   completed compensations are reused.

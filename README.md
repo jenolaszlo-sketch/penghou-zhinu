@@ -152,6 +152,75 @@ public sealed record ValidatedOrder(string OrderId);
 public sealed record OrderResult(string Confirmation);
 ```
 
+### Composable class-based steps
+
+Large workflows can move substantial operations into keyed, independently
+testable step classes without moving orchestration out of `RunAsync`. The
+durable step key and implementation key remain separate:
+
+```csharp
+public static class OrderSteps
+{
+    public static readonly StepImplementationKey Submit = new("submit-order");
+}
+
+builder.Services.AddZhinuStep<SubmitOrderStep, ValidatedOrder, OrderResult>(
+    OrderSteps.Submit);
+
+public sealed class SubmitOrderStep(IOrderGateway gateway)
+    : CompensatingWorkflowStep<ValidatedOrder, OrderResult>
+{
+    public override Task<OrderResult> ExecuteAsync(
+        WorkflowStepContext context,
+        ValidatedOrder input,
+        CancellationToken cancellationToken) =>
+        gateway.SubmitAsync(input, context.IdempotencyKey, cancellationToken);
+
+    public override Task CompensateAsync(
+        WorkflowStepContext context,
+        ValidatedOrder input,
+        OrderResult output,
+        CancellationToken cancellationToken) =>
+        gateway.CancelAsync(output.Confirmation, cancellationToken);
+}
+```
+
+Invoke it from the visible workflow graph and explicitly opt into durable
+compensation:
+
+```csharp
+var submitted = await workflow.StepAsync<ValidatedOrder, OrderResult>(
+    stepKey: "initial-submit",
+    implementationKey: OrderSteps.Submit,
+    input: validated,
+    stepOptions: new StepOptions
+    {
+        Retry = new RetryPolicy { MaxAttempts = 3 }
+    },
+    cancellationToken: cancellationToken,
+    compensation: StepCompensationMode.Enabled);
+```
+
+`Penghou.Zhinu.Hosting` creates and asynchronously disposes a fresh DI scope
+for every execution and compensation attempt. Completed-step replay creates no
+scope and resolves no implementation. Step instances are ephemeral; durable
+compensation state must come from the persisted input and output, not fields.
+Scope disposal completes before Zhinu commits success, and disposal failure is
+handled as an attempt failure. Scoped lifetime is not a distributed
+transaction, so external effects still require idempotency or compensation.
+
+Use `WorkflowStep<TInput, TOutput>` for execution-only steps and
+`CompensatingWorkflowStep<TInput, TOutput>` when compensation is supported.
+Enabling compensation for an execution-only implementation fails before its
+forward operation runs. Duplicate registrations for the same implementation
+key and contract are rejected rather than resolved by registration order.
+
+Microsoft DI is optional. Other containers can implement
+`IWorkflowStepResolver` and return an `IWorkflowStepLease<TStep>` that owns one
+attempt's scope, then configure it through
+`WorkflowEngineBuilder.WithStepResolver(...)` or the resolver-aware
+`WorkflowEngine` constructor.
+
 `workflowRunId` is an optional idempotency key for starting the run. Repeating
 the same workflow, version, input, and ID returns the existing run. Reusing the
 ID with a different contract or input fails explicitly.

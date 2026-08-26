@@ -32,6 +32,8 @@ public static class ServiceCollectionExtensions
         });
         services.TryAddSingleton<IWorkflowRegistry>(provider =>
             provider.GetRequiredService<WorkflowRegistry>());
+        services.TryAddSingleton<IWorkflowStepResolver,
+            ServiceProviderWorkflowStepResolver>();
         if (!services.Any(service =>
                 service.ServiceType == typeof(IWorkflowStore) ||
                 (service.ImplementationType is not null && typeof(IWorkflowStore).IsAssignableFrom(service.ImplementationType)) ||
@@ -49,7 +51,8 @@ public static class ServiceCollectionExtensions
             serializerOptions,
             provider.GetRequiredService<TimeProvider>(),
             provider.GetService<ILogger<WorkflowEngine>>(),
-            provider.GetService<IWorkflowEventPublisher>()));
+            provider.GetService<IWorkflowEventPublisher>(),
+            provider.GetRequiredService<IWorkflowStepResolver>()));
         services.TryAddSingleton<IWorkflowRuntime>(provider =>
             provider.GetRequiredService<WorkflowEngine>());
         services.TryAddSingleton<IWorkflowClient>(provider =>
@@ -57,6 +60,33 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IWorkflowAdministration>(provider =>
             provider.GetRequiredService<WorkflowEngine>());
         services.AddHostedService<ZhinuHostedService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a keyed class-based workflow step with scoped lifetime. Zhinu
+    /// creates and asynchronously disposes a fresh scope for every execution or
+    /// compensation attempt.
+    /// </summary>
+    public static IServiceCollection AddZhinuStep<TStep, TInput, TOutput>(
+        this IServiceCollection services,
+        StepImplementationKey implementationKey)
+        where TStep : class, IWorkflowStep<TInput, TOutput>
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        implementationKey.Validate(nameof(implementationKey));
+        var contract = typeof(IWorkflowStep<TInput, TOutput>);
+        if (services.Any(service =>
+                service.IsKeyedService &&
+                service.ServiceType == contract &&
+                Equals(service.ServiceKey, implementationKey)))
+        {
+            throw new WorkflowRegistrationException(
+                $"A workflow step is already registered for key '{implementationKey}' " +
+                $"and contract '{contract.FullName}'.");
+        }
+        services.AddKeyedScoped<IWorkflowStep<TInput, TOutput>, TStep>(
+            implementationKey);
         return services;
     }
 

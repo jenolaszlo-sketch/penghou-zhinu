@@ -97,7 +97,9 @@ compensation, rollback, fencing, crash recovery, typed handles, diagnostics,
 SQLite persistence, and durable external-artifact references with producing
 step revision provenance and post-failure inspection. Operational hardening now
 also includes artifact queries and validation, unified run snapshots,
-deterministic run diagnosis, and explicit SQLite schema compatibility checks.
+deterministic run diagnosis, explicit SQLite schema compatibility checks, and
+keyed class-based workflow steps with fresh scoped resolution per execution or
+compensation attempt.
 
 Remaining foundation work:
 

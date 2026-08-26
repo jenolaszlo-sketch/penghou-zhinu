@@ -75,6 +75,11 @@ hashes, and custom artifact metadata are deliberately excluded. Newly created
 references increment `zhinu.artifacts.published`; idempotent re-publication does
 not increment it.
 
+Class-based step spans include `zhinu.step.implementation.key` and
+`zhinu.step.implementation.type` when an implementation is actually resolved.
+Replayed completed steps do not resolve an implementation and therefore do not
+emit resolution metadata.
+
 Operationally useful counters and histograms the runtime maintains:
 
 ```text

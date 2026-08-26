@@ -1,4 +1,36 @@
 #nullable enable
+abstract Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Penghou.Zhinu.WorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
+Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
+const Penghou.Zhinu.ZhinuDiagnostics.Attributes.StepImplementationKey = "zhinu.step.implementation.key" -> string!
+const Penghou.Zhinu.ZhinuDiagnostics.Attributes.StepImplementationType = "zhinu.step.implementation.type" -> string!
+override Penghou.Zhinu.StepImplementationKey.ToString() -> string!
+Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>
+Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowStepLease<TStep>
+Penghou.Zhinu.IWorkflowStepLease<TStep>.Step.get -> TStep!
+Penghou.Zhinu.IWorkflowStepResolver
+Penghou.Zhinu.IWorkflowStepResolver.ResolveAsync<TStep>(Penghou.Zhinu.StepImplementationKey implementationKey, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.IWorkflowStepLease<TStep!>!>
+Penghou.Zhinu.IWorkflowStep<TInput, TOutput>
+Penghou.Zhinu.IWorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.StepClaimRequest.ImplementationKey.get -> string?
+Penghou.Zhinu.StepClaimRequest.ImplementationKey.init -> void
+Penghou.Zhinu.StepCompensationMode
+Penghou.Zhinu.StepCompensationMode.Enabled = 1 -> Penghou.Zhinu.StepCompensationMode
+Penghou.Zhinu.StepCompensationMode.None = 0 -> Penghou.Zhinu.StepCompensationMode
+Penghou.Zhinu.StepImplementationKey
+Penghou.Zhinu.StepImplementationKey.StepImplementationKey() -> void
+Penghou.Zhinu.StepImplementationKey.StepImplementationKey(string! value) -> void
+Penghou.Zhinu.StepImplementationKey.Value.get -> string!
+Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.StepImplementationKey implementationKey, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(string! message, System.Exception! innerException) -> void
+Penghou.Zhinu.WorkflowEngine.WorkflowEngine(Penghou.Zhinu.IWorkflowStore! store, Penghou.Zhinu.IWorkflowRegistry! registry, Penghou.Zhinu.ZhinuOptions? options, System.Text.Json.JsonSerializerOptions? serializerOptions, System.TimeProvider? timeProvider, Microsoft.Extensions.Logging.ILogger<Penghou.Zhinu.WorkflowEngine!>? logger, Penghou.Zhinu.IWorkflowEventPublisher? eventPublisher, Penghou.Zhinu.IWorkflowStepResolver? workflowStepResolver) -> void
+Penghou.Zhinu.WorkflowEngineBuilder.WithStepResolver(Penghou.Zhinu.IWorkflowStepResolver! value) -> Penghou.Zhinu.WorkflowEngineBuilder!
+Penghou.Zhinu.WorkflowStep<TInput, TOutput>
+Penghou.Zhinu.WorkflowStep<TInput, TOutput>.WorkflowStep() -> void
+Penghou.Zhinu.WorkflowStepRun.ImplementationKey.get -> string?
+Penghou.Zhinu.WorkflowStepRun.ImplementationKey.init -> void
 override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
 Penghou.Zhinu.Declarative.ActivityCatalogue
 Penghou.Zhinu.Declarative.ActivityCatalogue.ActivityCatalogue() -> void

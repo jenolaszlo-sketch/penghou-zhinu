@@ -24,6 +24,7 @@ internal sealed class RunExecutionPipeline
     private readonly Action<Guid> notifyEventAppended;
     private readonly Func<Guid, CancellationToken, Task> resumeRollbackRestart;
     private readonly RunOutcomeHandler outcomeHandler;
+    private readonly IWorkflowStepResolver? workflowStepResolver;
 
     public RunExecutionPipeline(
         IWorkflowStore store,
@@ -37,7 +38,8 @@ internal sealed class RunExecutionPipeline
         ConcurrentDictionary<Guid, CancellationTokenSource> runningCancellations,
         Action<Guid> notifyEventAppended,
         Func<Guid, CancellationToken, Task> resumeRollbackRestart,
-        RunOutcomeHandler outcomeHandler)
+        RunOutcomeHandler outcomeHandler,
+        IWorkflowStepResolver? workflowStepResolver)
     {
         this.store = store;
         this.registry = registry;
@@ -51,6 +53,7 @@ internal sealed class RunExecutionPipeline
         this.notifyEventAppended = notifyEventAppended;
         this.resumeRollbackRestart = resumeRollbackRestart;
         this.outcomeHandler = outcomeHandler;
+        this.workflowStepResolver = workflowStepResolver;
     }
 
     public async Task ExecuteAsync(
@@ -148,7 +151,8 @@ internal sealed class RunExecutionPipeline
                         childId,
                         childCancellation,
                         depth + 1),
-                onEventAppended: notifyEventAppended);
+                onEventAppended: notifyEventAppended,
+                workflowStepResolver: workflowStepResolver);
             logger.LogInformation(
                 ZhinuLogEvents.RunExecuting,
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",

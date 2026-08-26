@@ -15,12 +15,14 @@ internal sealed class InsertStepCommand
             (id, workflow_run_id, step_key, status, attempt, input_json,
              input_type, input_hash, output_json, output_type, error_json,
              signal_name, created_at, started_at, completed_at, available_at,
-             lease_owner, lease_expires_at, revision, lease_generation)
+             lease_owner, lease_expires_at, revision, lease_generation,
+             implementation_key)
             VALUES
             ($id, $runId, $stepKey, $status, $attempt, $inputJson,
              $inputType, $inputHash, $outputJson, $outputType, $errorJson,
              $signalName, $createdAt, $startedAt, $completedAt, $availableAt,
-             $leaseOwner, $leaseExpiresAt, $revision, $leaseGeneration);
+             $leaseOwner, $leaseExpiresAt, $revision, $leaseGeneration,
+             $implementationKey);
             """);
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(step.Id));
         command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(step.WorkflowRunId));
@@ -52,6 +54,9 @@ internal sealed class InsertStepCommand
             SqliteStoreSupport.DbValue(SqliteStoreSupport.FormatNullable(step.LeaseExpiresAt)));
         command.Parameters.AddWithValue("$revision", step.Revision);
         command.Parameters.AddWithValue("$leaseGeneration", step.LeaseGeneration);
+        command.Parameters.AddWithValue(
+            "$implementationKey",
+            SqliteStoreSupport.DbValue(step.ImplementationKey));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 }

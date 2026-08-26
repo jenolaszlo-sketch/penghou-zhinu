@@ -36,6 +36,9 @@ public class WorkflowDefinitionException : ZhinuException
 public class WorkflowConfigurationException : ZhinuException
 {
     public WorkflowConfigurationException(string message) : base(message) { }
+
+    public WorkflowConfigurationException(string message, Exception innerException)
+        : base(message, innerException) { }
 }
 
 /// <summary>A caller-facing workflow operation exceeded its configured deadline.</summary>
