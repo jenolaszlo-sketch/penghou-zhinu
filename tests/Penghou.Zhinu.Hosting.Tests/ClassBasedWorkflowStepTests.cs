@@ -14,6 +14,10 @@ public sealed class ClassBasedWorkflowStepTests : IDisposable
     private static readonly StepImplementationKey DisposalKey = new("disposal");
     private static readonly StepImplementationKey CancellationKey = new("cancellation");
     private static readonly StepImplementationKey ExecutionOnlyKey = new("execution-only");
+    private static readonly WorkflowStepReference<string, string> PlanningReference =
+        new(PlanningKey);
+    private static readonly WorkflowStepReference<string, string> EventReference =
+        new(new("event-step"));
 
     private readonly string root = Path.Combine(
         Path.GetTempPath(),
@@ -42,6 +46,99 @@ public sealed class ClassBasedWorkflowStepTests : IDisposable
             TestContext.Current.CancellationToken);
         steps.Select(step => step.ImplementationKey)
             .Should().Equal(PlanningKey.Value, ArchitectureKey.Value);
+    }
+
+    [Fact]
+    public async Task TypedReference_BindsRegistrationAndInfersInvocationContract()
+    {
+        var services = CreateServices<TypedReferenceWorkflow, string, string>(
+            "typed-reference");
+        services.AddZhinuStep<PlanningStep>(PlanningReference);
+        await using var provider = services.BuildServiceProvider();
+
+        var result = await provider.GetRequiredService<WorkflowEngine>()
+            .RunAsync<string, string>(
+                "typed-reference",
+                "1",
+                "request",
+                cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("plan:request");
+    }
+
+    [Fact]
+    public void TypedReferenceRegistration_RejectsMismatchedImplementationContract()
+    {
+        var services = new ServiceCollection();
+        var mismatched = new WorkflowStepReference<int, string>(PlanningKey);
+
+        var action = () => services.AddZhinuStep<PlanningStep>(mismatched);
+
+        action.Should().Throw<WorkflowRegistrationException>()
+            .WithMessage("*does not implement*IWorkflowStep*");
+    }
+
+    [Fact]
+    public async Task ClassStepFanOut_IsDurableAndPreservesInputOrder()
+    {
+        var services = CreateServices<TypedFanOutWorkflow, string, string>(
+            "typed-fanout");
+        services.AddZhinuStep<PlanningStep>(PlanningReference);
+        await using var provider = services.BuildServiceProvider();
+        var engine = provider.GetRequiredService<WorkflowEngine>();
+        var workflow = provider.GetRequiredService<TypedFanOutWorkflow>();
+
+        var result = await engine.RunAsync<string, string>(
+            "typed-fanout",
+            "1",
+            "a,b,c",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("plan:a|plan:b|plan:c");
+        var steps = await engine.GetStepsAsync(
+            workflow.RunId,
+            TestContext.Current.CancellationToken);
+        steps.Select(step => step.StepKey)
+            .Should().Equal("items.0", "items.1", "items.2");
+        steps.Should().OnlyContain(step =>
+            step.ImplementationKey == PlanningKey.Value);
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task StepContextEvent_CommitsOnlyWithSuccessfulClassStep(
+        bool fail,
+        bool expected)
+    {
+        var services = CreateServices<EventWorkflow, string, string>(
+            $"step-event-{fail}");
+        services.AddSingleton(new EventProbe { Fail = fail });
+        services.AddZhinuStep<EventEmittingStep>(EventReference);
+        await using var provider = services.BuildServiceProvider();
+        var engine = provider.GetRequiredService<WorkflowEngine>();
+        var runId = await engine.StartAsync(
+            $"step-event-{fail}",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.ExecuteAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var events = await engine.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        events.Any(@event => @event.EventType == "step-progress")
+            .Should().Be(expected);
+        if (expected)
+        {
+            var progress = events.Single(@event =>
+                @event.EventType == "step-progress");
+            progress.StepKey.Should().Be("event");
+            progress.DataJson.Should().Contain("value");
+        }
     }
 
     [Fact]
@@ -323,6 +420,78 @@ public sealed class ClassBasedWorkflowStepTests : IDisposable
                 cancellationToken: cancellationToken);
             return $"{plan}|{architecture}";
         }
+    }
+
+    private sealed class TypedReferenceWorkflow : IWorkflow<string, string>
+    {
+        public Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken) =>
+            context.StepAsync(
+                "typed",
+                PlanningReference,
+                input,
+                cancellationToken: cancellationToken);
+    }
+
+    private sealed class TypedFanOutWorkflow : IWorkflow<string, string>
+    {
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var results = await context.FanOutAsync(
+                "items",
+                PlanningReference,
+                input.Split(','),
+                cancellationToken: cancellationToken);
+            return string.Join('|', results);
+        }
+    }
+
+    private sealed class EventWorkflow : IWorkflow<string, string>
+    {
+        public Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken) =>
+            context.StepAsync(
+                "event",
+                EventReference,
+                input,
+                new StepOptions
+                {
+                    Retry = new RetryPolicy { MaxAttempts = 1 }
+                },
+                cancellationToken);
+    }
+
+    private sealed class EventEmittingStep(EventProbe probe) :
+        WorkflowStep<string, string>
+    {
+        public override async Task<string> ExecuteAsync(
+            WorkflowStepContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            await context.EmitAsync(
+                "step-progress",
+                new { input },
+                cancellationToken);
+            if (probe.Fail)
+                throw new InvalidOperationException("Injected failure.");
+            return input;
+        }
+    }
+
+    private sealed class EventProbe
+    {
+        public bool Fail { get; init; }
     }
 
     private sealed class PlanningStep : CompensatingWorkflowStep<string, string>

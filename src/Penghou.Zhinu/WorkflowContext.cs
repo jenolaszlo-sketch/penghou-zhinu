@@ -214,6 +214,28 @@ public sealed class WorkflowContext
     }
 
     /// <summary>
+    /// Executes or reuses a class-based step through a shared typed reference.
+    /// Generic input and output types are inferred from the reference.
+    /// </summary>
+    public Task<TOutput> StepAsync<TInput, TOutput>(
+        string stepKey,
+        WorkflowStepReference<TInput, TOutput> step,
+        TInput input,
+        StepOptions? stepOptions = null,
+        CancellationToken cancellationToken = default,
+        StepCompensationMode compensation = StepCompensationMode.None)
+    {
+        ArgumentNullException.ThrowIfNull(step);
+        return StepAsync<TInput, TOutput>(
+            stepKey,
+            step.ImplementationKey,
+            input,
+            stepOptions,
+            cancellationToken,
+            compensation);
+    }
+
+    /// <summary>
     /// Executes or reuses a typed durable step while exposing a stable
     /// downstream idempotency key for the current attempt.
     /// </summary>
@@ -571,17 +593,29 @@ public sealed class WorkflowContext
     /// event is also forwarded after the store write (best-effort; the store
     /// remains the authoritative source of events).
     /// </summary>
-    public async Task EmitAsync<TData>(
+    public Task EmitAsync<TData>(
         string eventType,
         TData? data = default,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        EmitCoreAsync(
+            eventType,
+            data,
+            typeof(TData),
+            cancellationToken);
+
+    private async Task EmitCoreAsync(
+        string eventType,
+        object? data,
+        Type dataType,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+        ArgumentNullException.ThrowIfNull(dataType);
         if (IsRollback)
             return;
         var dataJson = data is null
             ? null
-            : JsonSerializer.Serialize(data, serializerOptions);
+            : JsonSerializer.Serialize(data, dataType, serializerOptions);
         // While a step delegate is executing, buffer the emit so it commits
         // atomically with the step (see ExecuteClaimedAsync). Outside a step the
         // event is appended immediately in its own transaction.
@@ -641,6 +675,39 @@ public sealed class WorkflowContext
             cancellationToken);
     }
 
+    /// <summary>
+    /// Executes one class-based durable step per input in parallel. The same
+    /// typed implementation reference is used for every item; durable keys are
+    /// <c>"{prefix}.{index}"</c> and results preserve input order.
+    /// </summary>
+    public Task<IReadOnlyList<TOutput>> FanOutAsync<TInput, TOutput>(
+        string stepKeyPrefix,
+        WorkflowStepReference<TInput, TOutput> step,
+        IReadOnlyList<TInput> inputs,
+        StepOptions? options = null,
+        CancellationToken cancellationToken = default,
+        StepCompensationMode compensation = StepCompensationMode.None)
+    {
+        ValidateStepKey(stepKeyPrefix);
+        ArgumentNullException.ThrowIfNull(step);
+        ArgumentNullException.ThrowIfNull(inputs);
+        if (!Enum.IsDefined(compensation))
+            throw new ArgumentOutOfRangeException(nameof(compensation));
+        if (inputs.Count == 0)
+        {
+            return Task.FromResult<IReadOnlyList<TOutput>>(
+                Array.Empty<TOutput>());
+        }
+
+        return FanOutClassStepsCoreAsync(
+            stepKeyPrefix,
+            step,
+            inputs,
+            options,
+            cancellationToken,
+            compensation);
+    }
+
     private async Task<IReadOnlyList<TOutput>> FanOutCoreAsync<TInput, TOutput>(
         string stepKeyPrefix,
         IReadOnlyList<TInput> inputs,
@@ -664,6 +731,30 @@ public sealed class WorkflowContext
         var completed = await Task.WhenAll(tasks).ConfigureAwait(false);
         completed.CopyTo(results, 0);
         return results;
+    }
+
+    private async Task<IReadOnlyList<TOutput>>
+        FanOutClassStepsCoreAsync<TInput, TOutput>(
+            string stepKeyPrefix,
+            WorkflowStepReference<TInput, TOutput> step,
+            IReadOnlyList<TInput> inputs,
+            StepOptions? options,
+            CancellationToken cancellationToken,
+            StepCompensationMode compensation)
+    {
+        var tasks = new Task<TOutput>[inputs.Count];
+        for (var index = 0; index < inputs.Count; index++)
+        {
+            tasks[index] = StepAsync(
+                $"{stepKeyPrefix}.{index}",
+                step,
+                inputs[index],
+                options,
+                cancellationToken,
+                compensation);
+        }
+
+        return await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -811,7 +902,9 @@ public sealed class WorkflowContext
                                 step.Revision,
                                 false,
                                 (artifact, token) => PublishStepArtifactAsync(
-                                    step, artifact, token)),
+                                    step, artifact, token),
+                                (eventType, data, dataType, token) => EmitCoreAsync(
+                                    eventType, data, dataType, token)),
                             executionCancellation.Token).ConfigureAwait(false);
                         var outputJson = JsonSerializer.Serialize(output, serializerOptions);
                         var committed = await store.CompleteStepWithEventsAsync(

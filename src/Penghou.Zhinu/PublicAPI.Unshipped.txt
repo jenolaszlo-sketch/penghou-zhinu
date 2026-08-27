@@ -114,6 +114,15 @@ Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.IWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
 Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowStepReference
+Penghou.Zhinu.WorkflowStepReference.ImplementationKey.get -> Penghou.Zhinu.StepImplementationKey
+Penghou.Zhinu.WorkflowStepReference.InputType.get -> System.Type!
+Penghou.Zhinu.WorkflowStepReference.OutputType.get -> System.Type!
+Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>
+Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>.WorkflowStepReference(Penghou.Zhinu.StepImplementationKey implementationKey) -> void
+Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
+Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowStepContext.EmitAsync<TData>(string! eventType, TData? data = default(TData?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
 Penghou.Zhinu.WorkflowStoreHealth

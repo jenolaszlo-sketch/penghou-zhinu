@@ -90,6 +90,42 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers an implementation against a shared typed step reference.
+    /// The implementation must implement the reference's exact input/output
+    /// contract. A fresh scoped instance is resolved for every attempt.
+    /// </summary>
+    public static IServiceCollection AddZhinuStep<TStep>(
+        this IServiceCollection services,
+        WorkflowStepReference step)
+        where TStep : class
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(step);
+        step.ImplementationKey.Validate(nameof(step));
+        var contract = typeof(IWorkflowStep<,>).MakeGenericType(
+            step.InputType,
+            step.OutputType);
+        if (!contract.IsAssignableFrom(typeof(TStep)))
+        {
+            throw new WorkflowRegistrationException(
+                $"Workflow step implementation '{typeof(TStep).FullName}' does not implement " +
+                $"'{contract.FullName}' required by '{step.ImplementationKey}'.");
+        }
+        if (services.Any(service =>
+                service.IsKeyedService &&
+                service.ServiceType == contract &&
+                Equals(service.ServiceKey, step.ImplementationKey)))
+        {
+            throw new WorkflowRegistrationException(
+                $"A workflow step is already registered for key '{step.ImplementationKey}' " +
+                $"and contract '{contract.FullName}'.");
+        }
+
+        services.AddKeyedScoped(contract, step.ImplementationKey, typeof(TStep));
+        return services;
+    }
+
     public static IServiceCollection AddZhinuWorkflow<TWorkflow, TInput, TOutput>(
         this IServiceCollection services,
         string name,

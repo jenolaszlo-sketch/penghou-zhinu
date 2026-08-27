@@ -1,2 +1,3 @@
 #nullable enable
 static Penghou.Zhinu.Hosting.ServiceCollectionExtensions.AddZhinuStep<TStep, TInput, TOutput>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Penghou.Zhinu.StepImplementationKey implementationKey) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Penghou.Zhinu.Hosting.ServiceCollectionExtensions.AddZhinuStep<TStep>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, Penghou.Zhinu.WorkflowStepReference! step) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

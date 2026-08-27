@@ -99,7 +99,10 @@ step revision provenance and post-failure inspection. Operational hardening now
 also includes artifact queries and validation, unified run snapshots,
 deterministic run diagnosis, explicit SQLite schema compatibility checks, and
 keyed class-based workflow steps with fresh scoped resolution per execution or
-compensation attempt.
+compensation attempt. Typed step references now bind implementation identity to
+input/output contracts across registration and invocation; class-based fan-out
+provides independently durable parallel items; forward step implementations can
+emit events that commit atomically with their results.
 
 Remaining foundation work:
 

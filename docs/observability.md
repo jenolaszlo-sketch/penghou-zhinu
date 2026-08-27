@@ -80,6 +80,10 @@ Class-based step spans include `zhinu.step.implementation.key` and
 Replayed completed steps do not resolve an implementation and therefore do not
 emit resolution metadata.
 
+Application events emitted through `WorkflowStepContext.EmitAsync` are durable
+workflow data, not built-in telemetry. Their event type and payload are selected
+by the application and must follow its own privacy and cardinality policy.
+
 Operationally useful counters and histograms the runtime maintains:
 
 ```text

@@ -161,20 +161,29 @@ durable step key and implementation key remain separate:
 ```csharp
 public static class OrderSteps
 {
-    public static readonly StepImplementationKey Submit = new("submit-order");
+    public static readonly WorkflowStepReference<ValidatedOrder, OrderResult>
+        Submit = new(new("submit-order"));
 }
 
-builder.Services.AddZhinuStep<SubmitOrderStep, ValidatedOrder, OrderResult>(
-    OrderSteps.Submit);
+builder.Services.AddZhinuStep<SubmitOrderStep>(OrderSteps.Submit);
 
 public sealed class SubmitOrderStep(IOrderGateway gateway)
     : CompensatingWorkflowStep<ValidatedOrder, OrderResult>
 {
-    public override Task<OrderResult> ExecuteAsync(
+    public override async Task<OrderResult> ExecuteAsync(
         WorkflowStepContext context,
         ValidatedOrder input,
-        CancellationToken cancellationToken) =>
-        gateway.SubmitAsync(input, context.IdempotencyKey, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        await context.EmitAsync(
+            "order-submission-started",
+            new { input.OrderId },
+            cancellationToken);
+        return await gateway.SubmitAsync(
+            input,
+            context.IdempotencyKey,
+            cancellationToken);
+    }
 
     public override Task CompensateAsync(
         WorkflowStepContext context,
@@ -189,9 +198,9 @@ Invoke it from the visible workflow graph and explicitly opt into durable
 compensation:
 
 ```csharp
-var submitted = await workflow.StepAsync<ValidatedOrder, OrderResult>(
+var submitted = await workflow.StepAsync(
     stepKey: "initial-submit",
-    implementationKey: OrderSteps.Submit,
+    step: OrderSteps.Submit,
     input: validated,
     stepOptions: new StepOptions
     {
@@ -200,6 +209,29 @@ var submitted = await workflow.StepAsync<ValidatedOrder, OrderResult>(
     cancellationToken: cancellationToken,
     compensation: StepCompensationMode.Enabled);
 ```
+
+The shared `WorkflowStepReference<TInput,TOutput>` binds the implementation key
+to its serialization contract. It lets invocation infer both generic types and
+lets hosting reject an implementation with the wrong contract during
+registration. The raw `StepImplementationKey` overloads remain available for
+dynamic and custom-container scenarios.
+
+Use the same reference for independently durable parallel work without manually
+constructing a `Task.WhenAll` wave:
+
+```csharp
+IReadOnlyList<OrderResult> results = await workflow.FanOutAsync(
+    "submit-orders",
+    OrderSteps.Submit,
+    validatedOrders,
+    stepOptions,
+    cancellationToken);
+```
+
+Fan-out keys are index-based (`submit-orders.0`, `.1`, and so on), so callers
+must provide a deterministic input order. Each item has its own durable result,
+retry lifecycle, scope, and optional compensation registration. Results retain
+input order.
 
 `Penghou.Zhinu.Hosting` creates and asynchronously disposes a fresh DI scope
 for every execution and compensation attempt. Completed-step replay creates no
@@ -214,6 +246,9 @@ Use `WorkflowStep<TInput, TOutput>` for execution-only steps and
 Enabling compensation for an execution-only implementation fails before its
 forward operation runs. Duplicate registrations for the same implementation
 key and contract are rejected rather than resolved by registration order.
+`WorkflowStepContext.EmitAsync` buffers an event with the forward attempt: the
+event and step result commit together, while a failed attempt publishes neither.
+Manually created and compensation contexts do not offer event emission.
 
 Microsoft DI is optional. Other containers can implement
 `IWorkflowStepResolver` and return an `IWorkflowStepLease<TStep>` that owns one

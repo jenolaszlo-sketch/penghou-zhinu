@@ -83,6 +83,16 @@ transaction); called outside a step it appends its own event in a separate
 transaction. Only the outside-a-step form is the deliberate best-effort
 exception.
 
+Class-based forward steps call `WorkflowStepContext.EmitAsync` for the same
+atomic behavior. The event is buffered until the scoped implementation and its
+scope dispose successfully; a failed attempt discards it. Event emission is not
+available from manually constructed or compensation step contexts.
+
+Class-based `FanOutAsync` uses one typed step reference and assigns durable keys
+from the stable input index. Items execute independently and results preserve
+input order. Reordering inputs changes their durable identity, so callers must
+sort or otherwise stabilize inputs before invoking fan-out.
+
 ## What fork copies
 
 A fork copies the source run's workflow contract, serialized input, output type,

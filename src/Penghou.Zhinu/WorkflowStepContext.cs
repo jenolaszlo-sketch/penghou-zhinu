@@ -5,6 +5,8 @@ public sealed record WorkflowStepContext
 {
     private readonly Func<WorkflowArtifactDescriptor, CancellationToken,
         ValueTask<WorkflowArtifactReference>>? publishArtifact;
+    private readonly Func<string, object?, Type, CancellationToken, Task>?
+        emitEvent;
 
     public WorkflowStepContext(
         Guid workflowRunId,
@@ -30,9 +32,10 @@ public sealed record WorkflowStepContext
         int revision,
         bool isCompensation,
         Func<WorkflowArtifactDescriptor, CancellationToken,
-            ValueTask<WorkflowArtifactReference>> publishArtifact)
+            ValueTask<WorkflowArtifactReference>> publishArtifact,
+        Func<string, object?, Type, CancellationToken, Task> emitEvent)
         : this(workflowRunId, stepExecutionId, stepKey, attempt, revision, isCompensation) =>
-        this.publishArtifact = publishArtifact;
+        (this.publishArtifact, this.emitEvent) = (publishArtifact, emitEvent);
 
     public Guid WorkflowRunId { get; }
     public Guid StepExecutionId { get; }
@@ -69,5 +72,25 @@ public sealed record WorkflowStepContext
                 "Artifact publication is unavailable on a manually created step context.");
         }
         return publishArtifact(artifact, cancellationToken);
+    }
+
+    /// <summary>
+    /// Emits a durable caller-visible event owned by this step attempt. The
+    /// event commits atomically with successful step completion and is
+    /// discarded when the attempt fails.
+    /// </summary>
+    public Task EmitAsync<TData>(
+        string eventType,
+        TData? data = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+        if (emitEvent is null)
+        {
+            throw new InvalidOperationException(
+                "Event emission is unavailable on a manually created step context.");
+        }
+
+        return emitEvent(eventType, data, typeof(TData), cancellationToken);
     }
 }
