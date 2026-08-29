@@ -260,6 +260,28 @@ attempt's scope, then configure it through
 the same workflow, version, input, and ID returns the existing run. Reusing the
 ID with a different contract or input fails explicitly.
 
+Administrative step restarts can also be made retry-safe. Supply a stable
+`RestartStepOptions.OperationId`—typically the caller's approval or command
+ID—and request the durable receipt:
+
+```csharp
+RestartReceipt receipt = await engine.RestartStepWithReceiptAsync(
+    runId,
+    "generate",
+    new RestartStepOptions
+    {
+        OperationId = commandId,
+        Actor = userId,
+        Reason = "Approved regenerated output"
+    },
+    cancellationToken);
+```
+
+An identical retry returns the original event sequence and generation with
+`WasApplied == false`; conflicting reuse throws
+`WorkflowOperationConflictException`. SQLite commits the restart state, event,
+and receipt atomically.
+
 ### Focused runtime interfaces
 
 Hosted applications can depend on the smallest capability surface they need:
@@ -366,7 +388,7 @@ correlation, privacy, and cardinality conventions.
 - `ZhinuTestHost` for isolated workflow integration tests;
 - `WorkflowStoreConformanceSuite` for custom durable stores;
 - reusable checks for concurrency, fencing, recovery, signals, artifacts,
-  child workflows, and transaction behavior.
+  child workflows, transaction behavior, and retry-safe administration.
 
 Store implementations must preserve the atomicity and fencing rules described
 in the [store contract](docs/store-contract.md).
@@ -379,6 +401,7 @@ The code-first runtime also supports:
 - durable delays and external signals;
 - deterministic child workflows;
 - selective step restart and previewable forks;
+- durable, idempotent administrative restart receipts;
 - compensation, rollback, and rollback-and-restart;
 - durable external-artifact references with producing-step provenance;
 - run metadata, querying, pagination, retention, and bulk operations;

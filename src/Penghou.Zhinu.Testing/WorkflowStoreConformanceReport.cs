@@ -29,7 +29,10 @@ public enum WorkflowConformanceCapability
     Children,
 
     /// <summary>Restart/rollback transitions are atomic and deterministic.</summary>
-    Transactions
+    Transactions,
+
+    /// <summary>Administrative restart retries return one durable receipt.</summary>
+    IdempotentAdministration
 }
 
 /// <summary>The outcome of one conformance capability group.</summary>

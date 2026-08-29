@@ -1,2 +1,3 @@
 #nullable enable
 Penghou.Zhinu.Sqlite.SqliteWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
+Penghou.Zhinu.Sqlite.SqliteWorkflowStore.RestartStepIdempotentlyAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.StepRestartMode mode, System.Guid operationId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.RestartReceipt!>

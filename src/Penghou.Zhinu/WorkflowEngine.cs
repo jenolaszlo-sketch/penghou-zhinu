@@ -578,6 +578,17 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflo
         RestartStepOptions options,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(options);
+        if (options.OperationId is not null)
+        {
+            var receipt = await RestartStepWithReceiptAsync(
+                workflowRunId,
+                stepKey,
+                options,
+                cancellationToken).ConfigureAwait(false);
+            return receipt.Plan;
+        }
+
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         if (runningCancellations.TryGetValue(
                 workflowRunId,
@@ -602,6 +613,64 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflo
             options.Mode,
             plan.StepsToInvalidate.Count);
         return plan;
+    }
+
+    /// <summary>
+    /// Transactionally restarts a step and returns an authoritative durable
+    /// receipt. <see cref="RestartStepOptions.OperationId"/> is required.
+    /// Repeating identical intent returns the original receipt with
+    /// <see cref="RestartReceipt.WasApplied"/> set to false. Reusing the same
+    /// operation ID for different intent throws
+    /// <see cref="WorkflowOperationConflictException"/>.
+    /// </summary>
+    public async Task<RestartReceipt> RestartStepWithReceiptAsync(
+        Guid workflowRunId,
+        string stepKey,
+        RestartStepOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (options.OperationId is null || options.OperationId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "A non-empty operation ID is required for a restart receipt.",
+                nameof(options));
+        }
+        if (store is not IIdempotentWorkflowRestartRepository repository)
+        {
+            throw new NotSupportedException(
+                $"The configured workflow store '{store.GetType().FullName}' does not support " +
+                "idempotent administrative restarts.");
+        }
+
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var receipt = await repository.RestartStepIdempotentlyAsync(
+            workflowRunId,
+            stepKey,
+            options.Mode,
+            options.OperationId.Value,
+            options.Actor,
+            options.Reason,
+            timeProvider.GetUtcNow(),
+            cancellationToken).ConfigureAwait(false);
+        if (receipt.WasApplied && runningCancellations.TryGetValue(
+                workflowRunId,
+                out var runningCancellation))
+        {
+            await runningCancellation.CancelAsync().ConfigureAwait(false);
+        }
+        logger.LogInformation(
+            ZhinuLogEvents.StepRestarted,
+            "Restart operation {OperationId} for step '{StepKey}' of workflow " +
+            "{WorkflowRunId} ({Mode}) returned {Disposition}; invalidated " +
+            "{InvalidatedCount} step(s).",
+            receipt.OperationId,
+            stepKey,
+            workflowRunId,
+            options.Mode,
+            receipt.WasApplied ? "applied" : "existing receipt",
+            receipt.Plan.StepsToInvalidate.Count);
+        return receipt;
     }
 
     /// <summary>Restarts <paramref name="stepKey"/> with dependency-aware defaults.</summary>

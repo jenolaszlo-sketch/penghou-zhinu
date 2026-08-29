@@ -6,6 +6,149 @@ public sealed class RestartStepTests : WorkflowEngineTestBase
 {
 
     [Fact]
+    public async Task RestartStepWithReceiptAsync_IdenticalRetryReturnsCommittedReceipt()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var engine = CreateEngine(workflow, "restart-receipt");
+        await engine.RunAsync<string, string>(
+            "restart-receipt",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = workflow.RunId;
+        var before = await engine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var operationId = Guid.NewGuid();
+        var options = new RestartStepOptions
+        {
+            OperationId = operationId,
+            Actor = "operator",
+            Reason = "updated requirement"
+        };
+
+        var applied = await engine.RestartStepWithReceiptAsync(
+            runId,
+            "b",
+            options,
+            TestContext.Current.CancellationToken);
+        var reopened = CreateEngine(new DependentStepsWorkflow(), "restart-receipt");
+        var replayed = await reopened.RestartStepWithReceiptAsync(
+            runId,
+            "b",
+            options,
+            TestContext.Current.CancellationToken);
+
+        applied.WasApplied.Should().BeTrue();
+        replayed.WasApplied.Should().BeFalse();
+        replayed.OperationId.Should().Be(operationId);
+        replayed.Plan.Should().BeEquivalentTo(applied.Plan);
+        replayed.Mode.Should().Be(applied.Mode);
+        replayed.LeaseGeneration.Should().Be(applied.LeaseGeneration);
+        replayed.Event.Should().BeEquivalentTo(applied.Event);
+        replayed.Actor.Should().Be("operator");
+        replayed.Reason.Should().Be("updated requirement");
+
+        var after = await reopened.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        after!.LeaseGeneration.Should().Be(before!.LeaseGeneration + 1);
+        (await reopened.GetStepsAsync(
+            runId,
+            TestContext.Current.CancellationToken))
+            .Single(step => step.StepKey == "b")
+            .Revision.Should().Be(2);
+        (await reopened.GetEventsAsync(
+            runId,
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Where(item => item.EventType == WorkflowEventTypes.StepRestarted)
+            .Should().ContainSingle()
+            .Which.Sequence.Should().Be(applied.Event.Sequence);
+        applied.Event.DataJson.Should().Contain(operationId.ToString("D"));
+    }
+
+    [Fact]
+    public async Task RestartStepWithReceiptAsync_ConflictingReuseThrowsTypedConflict()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var engine = CreateEngine(workflow, "restart-conflict");
+        await engine.RunAsync<string, string>(
+            "restart-conflict",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var operationId = Guid.NewGuid();
+        await engine.RestartStepWithReceiptAsync(
+            workflow.RunId,
+            "b",
+            new RestartStepOptions
+            {
+                OperationId = operationId,
+                Actor = "operator",
+                Reason = "first intent"
+            },
+            TestContext.Current.CancellationToken);
+
+        var conflict = await engine.Invoking(value =>
+            value.RestartStepWithReceiptAsync(
+                workflow.RunId,
+                "c",
+                new RestartStepOptions
+                {
+                    OperationId = operationId,
+                    Actor = "operator",
+                    Reason = "first intent"
+                },
+                TestContext.Current.CancellationToken))
+            .Should().ThrowAsync<WorkflowOperationConflictException>();
+
+        conflict.Which.OperationId.Should().Be(operationId);
+    }
+
+    [Fact]
+    public async Task RestartStepWithReceiptAsync_ConcurrentRetryAppliesOnce()
+    {
+        var workflow = new DependentStepsWorkflow();
+        var firstEngine = CreateEngine(workflow, "restart-concurrent-receipt");
+        await firstEngine.RunAsync<string, string>(
+            "restart-concurrent-receipt",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+        var runId = workflow.RunId;
+        var before = await firstEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        var secondEngine = CreateEngine(
+            new DependentStepsWorkflow(),
+            "restart-concurrent-receipt");
+        var options = new RestartStepOptions { OperationId = Guid.NewGuid() };
+
+        var calls = new[]
+        {
+            firstEngine.RestartStepWithReceiptAsync(
+                runId,
+                "b",
+                options,
+                TestContext.Current.CancellationToken),
+            secondEngine.RestartStepWithReceiptAsync(
+                runId,
+                "b",
+                options,
+                TestContext.Current.CancellationToken)
+        };
+        var receipts = await Task.WhenAll(calls);
+
+        receipts.Count(receipt => receipt.WasApplied).Should().Be(1);
+        receipts.Count(receipt => !receipt.WasApplied).Should().Be(1);
+        receipts.Select(receipt => receipt.Event.Sequence).Distinct().Should().ContainSingle();
+        var after = await firstEngine.GetRunAsync(
+            runId,
+            TestContext.Current.CancellationToken);
+        after!.LeaseGeneration.Should().Be(before!.LeaseGeneration + 1);
+    }
+
+    [Fact]
     public async Task RestartStepAsync_RerunsStepAndSubtreeWhileReusingPrefix()
     {
         var first = new RestartableWorkflow { SecondSuffix = "a" };

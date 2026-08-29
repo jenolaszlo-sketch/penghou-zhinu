@@ -1,4 +1,29 @@
 #nullable enable
+Penghou.Zhinu.IIdempotentWorkflowRestartRepository
+Penghou.Zhinu.IIdempotentWorkflowRestartRepository.RestartStepIdempotentlyAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.StepRestartMode mode, System.Guid operationId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.RestartReceipt!>
+Penghou.Zhinu.RestartReceipt
+Penghou.Zhinu.RestartReceipt.Actor.get -> string?
+Penghou.Zhinu.RestartReceipt.Actor.init -> void
+Penghou.Zhinu.RestartReceipt.Event.get -> Penghou.Zhinu.WorkflowEvent!
+Penghou.Zhinu.RestartReceipt.Event.init -> void
+Penghou.Zhinu.RestartReceipt.LeaseGeneration.get -> long
+Penghou.Zhinu.RestartReceipt.LeaseGeneration.init -> void
+Penghou.Zhinu.RestartReceipt.Mode.get -> Penghou.Zhinu.StepRestartMode
+Penghou.Zhinu.RestartReceipt.Mode.init -> void
+Penghou.Zhinu.RestartReceipt.OperationId.get -> System.Guid
+Penghou.Zhinu.RestartReceipt.OperationId.init -> void
+Penghou.Zhinu.RestartReceipt.Plan.get -> Penghou.Zhinu.RestartPlan!
+Penghou.Zhinu.RestartReceipt.Plan.init -> void
+Penghou.Zhinu.RestartReceipt.Reason.get -> string?
+Penghou.Zhinu.RestartReceipt.Reason.init -> void
+Penghou.Zhinu.RestartReceipt.WasApplied.get -> bool
+Penghou.Zhinu.RestartReceipt.WasApplied.init -> void
+Penghou.Zhinu.RestartStepOptions.OperationId.get -> System.Guid?
+Penghou.Zhinu.RestartStepOptions.OperationId.init -> void
+Penghou.Zhinu.WorkflowEngine.RestartStepWithReceiptAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.RestartStepOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartReceipt!>!
+Penghou.Zhinu.WorkflowOperationConflictException
+Penghou.Zhinu.WorkflowOperationConflictException.OperationId.get -> System.Guid
+Penghou.Zhinu.WorkflowOperationConflictException.WorkflowOperationConflictException(System.Guid operationId, string! message) -> void
 abstract Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Penghou.Zhinu.WorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>

@@ -25,7 +25,9 @@ public static class WorkflowStoreConformanceSuite
             (WorkflowConformanceCapability.Signals, ct => VerifySignalsAsync(fixture, ct)),
             (WorkflowConformanceCapability.Artifacts, ct => VerifyArtifactsAsync(fixture, ct)),
             (WorkflowConformanceCapability.Children, ct => VerifyChildrenAsync(fixture, ct)),
-            (WorkflowConformanceCapability.Transactions, ct => VerifyTransactionsAsync(fixture, ct))
+            (WorkflowConformanceCapability.Transactions, ct => VerifyTransactionsAsync(fixture, ct)),
+            (WorkflowConformanceCapability.IdempotentAdministration,
+                ct => VerifyIdempotentAdministrationAsync(fixture, ct))
         };
         foreach (var (capability, check) in checks)
         {
@@ -126,6 +128,105 @@ public static class WorkflowStoreConformanceSuite
         catch (WorkflowStateException)
         {
             // Expected: fencing rejected the stale write.
+        }
+    }
+
+    private static async Task VerifyIdempotentAdministrationAsync(
+        IWorkflowStoreFixture fixture,
+        CancellationToken ct)
+    {
+        if (fixture.Store is not IIdempotentWorkflowRestartRepository first)
+        {
+            throw new NotSupportedException(
+                "The store does not implement idempotent administrative restarts.");
+        }
+        var peerStore = fixture.CreatePeerStore();
+        if (peerStore is not IIdempotentWorkflowRestartRepository second)
+        {
+            throw new NotSupportedException(
+                "The peer store does not implement idempotent administrative restarts.");
+        }
+
+        var engine = CreateEngine(
+            fixture.Store,
+            Registry(("idempotent-administration", "1", new TwoStep())),
+            fixture.TimeProvider,
+            FastOptions());
+        var runId = await engine.StartAsync(
+            "idempotent-administration",
+            "1",
+            "x",
+            cancellationToken: ct).ConfigureAwait(false);
+        await engine.ExecuteAsync(runId, ct).ConfigureAwait(false);
+        await engine.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: ct).ConfigureAwait(false);
+        var before = await fixture.Store.GetRunAsync(runId, ct).ConfigureAwait(false) ??
+            throw new InvalidOperationException("The conformance run disappeared.");
+        var operationId = Guid.NewGuid();
+        var now = fixture.TimeProvider.GetUtcNow();
+        var calls = new[]
+        {
+            first.RestartStepIdempotentlyAsync(
+                runId,
+                "first",
+                StepRestartMode.Dependents,
+                operationId,
+                "conformance",
+                "retry proof",
+                now,
+                ct).AsTask(),
+            second.RestartStepIdempotentlyAsync(
+                runId,
+                "first",
+                StepRestartMode.Dependents,
+                operationId,
+                "conformance",
+                "retry proof",
+                now,
+                ct).AsTask()
+        };
+        var receipts = await Task.WhenAll(calls).ConfigureAwait(false);
+        if (receipts.Count(item => item.WasApplied) != 1 ||
+            receipts.Select(item => item.Event.Sequence).Distinct().Count() != 1)
+        {
+            throw new InvalidOperationException(
+                "Concurrent restart retries did not converge on one receipt.");
+        }
+        var after = await fixture.Store.GetRunAsync(runId, ct).ConfigureAwait(false) ??
+            throw new InvalidOperationException("The restarted run disappeared.");
+        if (after.LeaseGeneration != before.LeaseGeneration + 1)
+        {
+            throw new InvalidOperationException(
+                "An idempotent restart retry advanced the generation more than once.");
+        }
+        var restartEvents = (await fixture.Store.GetEventsAsync(
+                runId,
+                0,
+                1000,
+                ct).ConfigureAwait(false))
+            .Where(item => item.EventType == WorkflowEventTypes.StepRestarted)
+            .ToList();
+        if (restartEvents.Count != 1)
+            throw new InvalidOperationException("The retry emitted more than one restart event.");
+
+        try
+        {
+            await first.RestartStepIdempotentlyAsync(
+                runId,
+                "second",
+                StepRestartMode.Dependents,
+                operationId,
+                "conformance",
+                "retry proof",
+                now,
+                ct).ConfigureAwait(false);
+            throw new InvalidOperationException(
+                "Conflicting reuse of a restart operation ID was accepted.");
+        }
+        catch (WorkflowOperationConflictException)
+        {
+            // Expected: the operation identity is permanently bound to intent.
         }
     }
 

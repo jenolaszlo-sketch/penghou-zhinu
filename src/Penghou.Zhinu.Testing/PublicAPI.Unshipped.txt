@@ -1,1 +1,2 @@
 #nullable enable
+Penghou.Zhinu.Testing.WorkflowConformanceCapability.IdempotentAdministration = 8 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability

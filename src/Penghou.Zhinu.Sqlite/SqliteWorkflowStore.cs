@@ -15,7 +15,9 @@ namespace Penghou.Zhinu.Sqlite;
 /// delegates every operation to a domain repository that coordinates the
 /// persistence commands and queries.
 /// </summary>
-public sealed class SqliteWorkflowStore : IWorkflowStore
+public sealed class SqliteWorkflowStore :
+    IWorkflowStore,
+    IIdempotentWorkflowRestartRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -279,6 +281,27 @@ public sealed class SqliteWorkflowStore : IWorkflowStore
             reason,
             now,
             cancellationToken);
+
+    public ValueTask<RestartReceipt> RestartStepIdempotentlyAsync(
+        Guid workflowRunId,
+        string stepKey,
+        StepRestartMode mode,
+        Guid operationId,
+        string? actor,
+        string? reason,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "step.restart.idempotent",
+            () => steps.RestartStepIdempotentlyAsync(
+                workflowRunId,
+                stepKey,
+                mode,
+                operationId,
+                actor,
+                reason,
+                now,
+                cancellationToken));
 
     public ValueTask<ForkPlan> PlanForkAsync(
         Guid sourceWorkflowRunId,

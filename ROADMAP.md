@@ -103,6 +103,11 @@ compensation attempt. Typed step references now bind implementation identity to
 input/output contracts across registration and invocation; class-based fan-out
 provides independently durable parallel items; forward step implementations can
 emit events that commit atomically with their results.
+Administrative step restart now accepts a stable operation identity and returns
+an authoritative receipt. SQLite atomically commits the receipt with the
+restart event and state transition; identical concurrent or post-crash retries
+return the original receipt, while conflicting reuse is rejected. This behavior
+is part of the reusable provider conformance suite.
 
 Remaining foundation work:
 
@@ -111,6 +116,17 @@ Remaining foundation work:
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
+- Before interactive consumers ship, add an optional stable signal command ID
+  and authoritative signal receipt. Identical ambiguous retries must return the
+  original buffered/delivered signal, while reuse with different run, signal
+  name, or canonical payload must throw a typed conflict. Keep additive signal
+  semantics when no command ID is supplied and add provider conformance tests
+  for concurrency and reopen/process recovery.
+- Complete the typed administrative failure taxonomy so restart, signal,
+  cancellation, fork, rollback, and maintenance callers can distinguish
+  not-found, invalid-state, definition-unavailable, stale generation or lease,
+  idempotency conflict, timeout, cancellation, and provider failure without
+  parsing exception messages or treating every failure as an ambiguous commit.
 
 ### Runtime and API hardening checkpoint
 

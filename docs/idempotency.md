@@ -15,7 +15,8 @@ repeated call is safe.
 | `StartAsync` (with `workflowRunId`) | Idempotent / rejected | Same name+version+input → returns the existing run id. Different workflow or input for the same id → `WorkflowStateException`. |
 | `CancelAsync` | Idempotent | Cancelling an already-cancelled run is a no-op; terminal runs are untouched. |
 | `SendSignalAsync` | Creates another signal | Each call buffers a new signal. Delivery is exactly-once per signal, but sending is additive. |
-| `RestartStepAsync` | Creates another operation | Each call bumps the fencing generation and inserts a fresh revision. Repeating restarts again. To make a restart retry-safe, check the run status before re-issuing. |
+| `RestartStepAsync` (no operation id) | Creates another operation | Each call bumps the fencing generation and inserts a fresh revision. Repeating restarts again. |
+| `RestartStepAsync` / `RestartStepWithReceiptAsync` (with `RestartStepOptions.OperationId`) | Idempotent / rejected | Identical intent returns the original durable receipt and does not restart again. Reusing the operation ID with a different run, target, mode, actor, or reason throws `WorkflowOperationConflictException`. |
 | `ForkAsync` | Creates another run | Each call creates a new pending run. Supply a fixed `ForkRunOptions.WorkflowRunId` to detect duplicates (conflicting reuse is rejected). |
 | `RollbackAsync` / `RollbackToStepAsync` | Idempotent in effect | At-least-once: already-completed compensations are reused, never re-run. A rollback of an already-`Compensated` run is a no-op / rejected. |
 | `RollbackAndRestartAsync` | Resumable, not idempotent | The operation is durable and resumes after a crash; issuing a new one while one is active is arbitrated by the lease/generation. |
@@ -36,6 +37,38 @@ compensation        <run>:<step>:<revision>:compensation
 
 These keys are unchanged across retries and change only when a restart creates a
 new revision.
+
+## Administrative restart receipts
+
+Use a caller-generated, stable operation ID whenever a restart command might be
+retried after an ambiguous response:
+
+```csharp
+var receipt = await engine.RestartStepWithReceiptAsync(
+    runId,
+    "generate",
+    new RestartStepOptions
+    {
+        OperationId = approvalId,
+        Mode = StepRestartMode.Dependents,
+        Actor = userId,
+        Reason = "Approved revised implementation"
+    },
+    cancellationToken);
+```
+
+The SQLite provider commits the generation bump, pending step revisions,
+`step-restarted` event, and operation receipt in one transaction. The receipt
+contains the durable event sequence and applied generation. `WasApplied` is true
+for the committing call and false when an identical retry reads the existing
+receipt. Consumers can therefore mirror the event to another audit store with
+at-least-once delivery and use the operation ID or event sequence for
+deduplication.
+
+Providers implement this contract through
+`IIdempotentWorkflowRestartRepository`. The reusable store conformance suite
+checks concurrent retry, conflict detection, generation stability, and single
+event publication.
 
 ## What is not guaranteed
 
