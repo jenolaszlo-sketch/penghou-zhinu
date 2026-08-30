@@ -20,6 +20,17 @@ public interface IWorkflowClient
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>Optional application capability for retry-safe external signals.</summary>
+public interface IIdempotentWorkflowClient
+{
+    Task<SignalSendReceipt> SendSignalWithReceiptAsync(
+        Guid workflowRunId,
+        string signalName,
+        SignalSendOptions options,
+        object? data = null,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>Capabilities that mutate or administer existing workflow runs.</summary>
 public interface IWorkflowAdministration
 {

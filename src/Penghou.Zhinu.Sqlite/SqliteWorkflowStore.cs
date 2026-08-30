@@ -17,7 +17,8 @@ namespace Penghou.Zhinu.Sqlite;
 /// </summary>
 public sealed class SqliteWorkflowStore :
     IWorkflowStore,
-    IIdempotentWorkflowRestartRepository
+    IIdempotentWorkflowRestartRepository,
+    IIdempotentWorkflowSignalRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -550,6 +551,23 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "signal.send",
             () => signals.SendSignalAsync(workflowRunId, signalName, dataJson, cancellationToken));
+
+    public ValueTask<SignalSendReceipt> SendSignalIdempotentlyAsync(
+        Guid workflowRunId,
+        string signalName,
+        string? dataJson,
+        Guid signalId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "signal.send.idempotent",
+            () => signals.SendSignalIdempotentlyAsync(
+                workflowRunId,
+                signalName,
+                dataJson,
+                signalId,
+                now,
+                cancellationToken));
 
     public ValueTask<SignalDelivery?> TryDeliverSignalAsync(
         Guid stepId,

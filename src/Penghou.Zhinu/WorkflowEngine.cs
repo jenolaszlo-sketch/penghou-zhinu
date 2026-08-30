@@ -15,7 +15,8 @@ namespace Penghou.Zhinu;
 /// Runs registered workflows against an explicit durable store. The engine is
 /// embedded and does not require a server, scheduler, or message broker.
 /// </summary>
-public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflowAdministration, IAsyncDisposable
+public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
+    IIdempotentWorkflowClient, IWorkflowAdministration, IAsyncDisposable
 {
     private readonly IWorkflowStore store;
     private readonly IWorkflowRegistry registry;
@@ -974,6 +975,66 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient, IWorkflo
             "Buffered signal '{SignalName}' for workflow {WorkflowRunId}.",
             signalName,
             workflowRunId);
+    }
+
+    /// <summary>
+    /// Transactionally buffers a signal and returns its authoritative durable
+    /// receipt. Repeating identical intent returns the original receipt with
+    /// <see cref="SignalSendReceipt.WasBuffered"/> set to false. Reusing the
+    /// signal ID for different intent throws
+    /// <see cref="WorkflowOperationConflictException"/>.
+    /// </summary>
+    public async Task<SignalSendReceipt> SendSignalWithReceiptAsync(
+        Guid workflowRunId,
+        string signalName,
+        SignalSendOptions options,
+        object? data = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
+        ArgumentNullException.ThrowIfNull(options);
+        if (options.SignalId == Guid.Empty)
+            throw new ArgumentException("A non-empty signal ID is required.", nameof(options));
+        if (store is not IIdempotentWorkflowSignalRepository repository)
+        {
+            throw new NotSupportedException(
+                $"The configured workflow store '{store.GetType().FullName}' does not support " +
+                "idempotent signal sends.");
+        }
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var dataJson = data is null
+            ? null
+            : JsonSerializer.Serialize(data, serializerOptions);
+        var receipt = await repository.SendSignalIdempotentlyAsync(
+            workflowRunId,
+            signalName,
+            dataJson,
+            options.SignalId,
+            timeProvider.GetUtcNow(),
+            cancellationToken).ConfigureAwait(false);
+        if (receipt.WasBuffered)
+            ZhinuDiagnostics.SignalsBufferedCounter.Add(1);
+        logger.LogInformation(
+            ZhinuLogEvents.SignalBuffered,
+            "Signal {SignalId} ('{SignalName}') for workflow {WorkflowRunId} returned {Disposition}.",
+            receipt.SignalId,
+            signalName,
+            workflowRunId,
+            receipt.WasBuffered ? "buffered" : "existing receipt");
+        return receipt;
+    }
+
+    /// <summary>Transactionally buffers a typed signal with a durable receipt.</summary>
+    public Task<SignalSendReceipt> SendSignalWithReceiptAsync<TPayload>(
+        Guid workflowRunId,
+        SignalDefinition<TPayload> signal,
+        SignalSendOptions options,
+        TPayload? data = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(signal);
+        return SendSignalWithReceiptAsync(
+            workflowRunId, signal.Name, options, data, cancellationToken);
     }
 
     /// <summary>

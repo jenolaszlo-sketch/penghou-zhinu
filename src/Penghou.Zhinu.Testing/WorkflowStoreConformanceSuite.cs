@@ -270,6 +270,50 @@ public static class WorkflowStoreConformanceSuite
         var delivered = events.Count(e => e.EventType == WorkflowEventTypes.SignalDelivered);
         if (delivered != 1)
             throw new InvalidOperationException($"Signal delivered {delivered} times (expected exactly once).");
+        if (fixture.Store is IIdempotentWorkflowSignalRepository idempotent)
+        {
+            if (fixture.CreatePeerStore() is not IIdempotentWorkflowSignalRepository peer)
+            {
+                throw new NotSupportedException(
+                    "The peer store does not implement idempotent signal sends.");
+            }
+            var signalId = Guid.NewGuid();
+            var now = fixture.TimeProvider.GetUtcNow();
+            var concurrent = await Task.WhenAll(
+                idempotent.SendSignalIdempotentlyAsync(
+                    runId, "audit", "\"same\"", signalId, now, ct).AsTask(),
+                peer.SendSignalIdempotentlyAsync(
+                    runId, "audit", "\"same\"", signalId, now, ct).AsTask())
+                .ConfigureAwait(false);
+            if (concurrent.Count(item => item.WasBuffered) != 1 ||
+                concurrent.Select(item => item.Event.Sequence).Distinct().Count() != 1)
+            {
+                throw new InvalidOperationException(
+                    "Concurrent signal retries did not converge on one receipt.");
+            }
+            var reopened = fixture.CreatePeerStore();
+            if (reopened is not IIdempotentWorkflowSignalRepository afterReopen)
+                throw new NotSupportedException("The reopened store lost signal receipt support.");
+            var replay = await afterReopen.SendSignalIdempotentlyAsync(
+                runId, "audit", "\"same\"", signalId, now.AddMinutes(1), ct)
+                .ConfigureAwait(false);
+            if (replay.WasBuffered ||
+                replay.Event.Sequence != concurrent[0].Event.Sequence)
+            {
+                throw new InvalidOperationException(
+                    "Signal receipt was not reusable after reopening the provider.");
+            }
+            try
+            {
+                await idempotent.SendSignalIdempotentlyAsync(
+                    runId, "audit", "\"different\"", signalId, now, ct);
+                throw new InvalidOperationException(
+                    "Conflicting signal identity reuse was accepted.");
+            }
+            catch (WorkflowOperationConflictException)
+            {
+            }
+        }
     }
 
     private static async Task VerifyArtifactsAsync(IWorkflowStoreFixture fixture, CancellationToken ct)

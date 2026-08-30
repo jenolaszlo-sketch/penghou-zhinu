@@ -282,6 +282,24 @@ An identical retry returns the original event sequence and generation with
 `WorkflowOperationConflictException`. SQLite commits the restart state, event,
 and receipt atomically.
 
+External signals support the same safe ambiguous-retry pattern without changing
+the existing additive API:
+
+```csharp
+SignalSendReceipt receipt = await engine.SendSignalWithReceiptAsync(
+    runId,
+    "approval",
+    new SignalSendOptions { SignalId = responseId },
+    approvedPayload,
+    cancellationToken);
+```
+
+The caller keeps `responseId` stable across retries. SQLite atomically commits
+the inbox row, `signal-sent` event, and durable receipt. Identical retries return
+the original event with `WasBuffered == false`; reuse with another run, signal
+name, or canonical JSON payload throws `WorkflowOperationConflictException`.
+The receipt remains available after the inbox row is purged.
+
 ### Focused runtime interfaces
 
 Hosted applications can depend on the smallest capability surface they need:
@@ -289,9 +307,10 @@ Hosted applications can depend on the smallest capability surface they need:
 - `IWorkflowRuntime` starts and executes work and is suitable for workers or
   external schedulers;
 - `IWorkflowClient` queries runs, waits for completion, and sends signals;
+- `IIdempotentWorkflowClient` sends retry-safe signals with durable receipts;
 - `IWorkflowAdministration` performs administrative cancellation.
 
-All three resolve to the same `WorkflowEngine` singleton when using `AddZhinu`.
+All four resolve to the same `WorkflowEngine` singleton when using `AddZhinu`.
 The concrete engine remains available for typed handles and advanced inspection
 or recovery operations. Caller-facing wait and signal deadlines throw
 `WorkflowTimeoutException`; duplicate workflow or activity identities throw

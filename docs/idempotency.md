@@ -15,6 +15,7 @@ repeated call is safe.
 | `StartAsync` (with `workflowRunId`) | Idempotent / rejected | Same name+version+input → returns the existing run id. Different workflow or input for the same id → `WorkflowStateException`. |
 | `CancelAsync` | Idempotent | Cancelling an already-cancelled run is a no-op; terminal runs are untouched. |
 | `SendSignalAsync` | Creates another signal | Each call buffers a new signal. Delivery is exactly-once per signal, but sending is additive. |
+| `SendSignalWithReceiptAsync` | Idempotent / rejected | Identical run, name, and canonical JSON payload under one `SignalId` return the original durable receipt. Conflicting reuse throws `WorkflowOperationConflictException`. |
 | `RestartStepAsync` (no operation id) | Creates another operation | Each call bumps the fencing generation and inserts a fresh revision. Repeating restarts again. |
 | `RestartStepAsync` / `RestartStepWithReceiptAsync` (with `RestartStepOptions.OperationId`) | Idempotent / rejected | Identical intent returns the original durable receipt and does not restart again. Reusing the operation ID with a different run, target, mode, actor, or reason throws `WorkflowOperationConflictException`. |
 | `ForkAsync` | Creates another run | Each call creates a new pending run. Supply a fixed `ForkRunOptions.WorkflowRunId` to detect duplicates (conflicting reuse is rejected). |
@@ -70,10 +71,38 @@ Providers implement this contract through
 checks concurrent retry, conflict detection, generation stability, and single
 event publication.
 
+## Idempotent signal receipts
+
+Use a stable signal identity for user responses or other commands that may be
+retried after an ambiguous network result:
+
+```csharp
+var receipt = await engine.SendSignalWithReceiptAsync(
+    runId,
+    "approval",
+    new SignalSendOptions { SignalId = responseId },
+    response,
+    cancellationToken);
+```
+
+SQLite commits the signal inbox row, `signal-sent` event, and operation receipt
+in one transaction. `WasBuffered` is true only for the call that committed the
+signal. An identical retry returns the original event sequence with
+`WasBuffered == false`, including after the signal was consumed and its inbox
+row was purged. The durable operation receipt therefore remains the authority
+for whether the send committed.
+
+Conflict identity includes the workflow run, ordinal signal name, and canonical
+JSON payload. Object-property order and insignificant whitespace do not change
+the payload identity; array order remains significant. Reuse for different
+intent throws `WorkflowOperationConflictException`. Providers advertise this
+optional capability through `IIdempotentWorkflowSignalRepository`, and hosted
+applications can depend on `IIdempotentWorkflowClient`.
+
 ## What is not guaranteed
 
-- `SendSignalAsync` is not deduplicated: two calls with the same payload are two
-  signals. Use a `SignalDefinition<TPayload>` and rely on the run's wait step to
-  consume exactly one.
+- The original `SendSignalAsync` deliberately remains additive: two calls with
+  the same payload are two signals. Use `SendSignalWithReceiptAsync` when the
+  caller is retrying one logical command.
 - Bulk operations (`CancelManyAsync`) are applied independently and may
   partially succeed; the result reports per-item failures.

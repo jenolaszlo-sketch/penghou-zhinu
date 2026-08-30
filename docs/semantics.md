@@ -71,6 +71,7 @@ rather than only implied by code.
 | Step failure + retry schedule + event | one transaction |
 | Run completion / failure / cancellation + event | one transaction |
 | Signal buffer + `signal-sent` event | one transaction |
+| Idempotent signal buffer + `signal-sent` event + receipt | one transaction |
 | Signal delivery + step completion + `signal-delivered` event | one transaction |
 | Artifact publish + `artifact-published` event | one transaction |
 | Restart (generation bump + run reset + new revisions + event) | one transaction |

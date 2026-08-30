@@ -68,6 +68,18 @@ public sealed class WorkflowHandle<TOutput>
         CancellationToken cancellationToken = default) =>
         engine.SendSignalAsync(WorkflowRunId, signal, data, cancellationToken);
 
+    public Task<SignalSendReceipt> SendSignalWithReceiptAsync(
+        string signalName, SignalSendOptions options, object? data = null,
+        CancellationToken cancellationToken = default) =>
+        engine.SendSignalWithReceiptAsync(
+            WorkflowRunId, signalName, options, data, cancellationToken);
+
+    public Task<SignalSendReceipt> SendSignalWithReceiptAsync<TPayload>(
+        SignalDefinition<TPayload> signal, SignalSendOptions options,
+        TPayload? data = default, CancellationToken cancellationToken = default) =>
+        engine.SendSignalWithReceiptAsync(
+            WorkflowRunId, signal, options, data, cancellationToken);
+
     public Task<IReadOnlyList<WorkflowSignalRecord>> GetSignalsAsync(
         SignalQuery? query = null, CancellationToken cancellationToken = default) =>
         engine.GetSignalsAsync(WorkflowRunId, query, cancellationToken);

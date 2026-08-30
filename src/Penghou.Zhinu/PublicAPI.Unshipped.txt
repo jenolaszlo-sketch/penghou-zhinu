@@ -1,4 +1,27 @@
 #nullable enable
+Penghou.Zhinu.IIdempotentWorkflowClient
+Penghou.Zhinu.IIdempotentWorkflowClient.SendSignalWithReceiptAsync(System.Guid workflowRunId, string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.IIdempotentWorkflowSignalRepository
+Penghou.Zhinu.IIdempotentWorkflowSignalRepository.SendSignalIdempotentlyAsync(System.Guid workflowRunId, string! signalName, string? dataJson, System.Guid signalId, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.SignalSendReceipt!>
+Penghou.Zhinu.SignalSendOptions
+Penghou.Zhinu.SignalSendOptions.SignalId.get -> System.Guid
+Penghou.Zhinu.SignalSendOptions.SignalId.init -> void
+Penghou.Zhinu.SignalSendOptions.SignalSendOptions() -> void
+Penghou.Zhinu.SignalSendReceipt
+Penghou.Zhinu.SignalSendReceipt.Event.get -> Penghou.Zhinu.WorkflowEvent!
+Penghou.Zhinu.SignalSendReceipt.Event.init -> void
+Penghou.Zhinu.SignalSendReceipt.SignalId.get -> System.Guid
+Penghou.Zhinu.SignalSendReceipt.SignalId.init -> void
+Penghou.Zhinu.SignalSendReceipt.SignalName.get -> string!
+Penghou.Zhinu.SignalSendReceipt.SignalName.init -> void
+Penghou.Zhinu.SignalSendReceipt.WasBuffered.get -> bool
+Penghou.Zhinu.SignalSendReceipt.WasBuffered.init -> void
+Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.init -> void
+Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync(System.Guid workflowRunId, string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync<TPayload>(System.Guid workflowRunId, Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync(string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync<TPayload>(Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
 Penghou.Zhinu.IIdempotentWorkflowRestartRepository
 Penghou.Zhinu.IIdempotentWorkflowRestartRepository.RestartStepIdempotentlyAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.StepRestartMode mode, System.Guid operationId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.RestartReceipt!>
 Penghou.Zhinu.RestartReceipt

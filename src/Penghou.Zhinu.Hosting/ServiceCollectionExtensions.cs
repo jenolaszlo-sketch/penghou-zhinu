@@ -57,6 +57,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<WorkflowEngine>());
         services.TryAddSingleton<IWorkflowClient>(provider =>
             provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IIdempotentWorkflowClient>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
         services.TryAddSingleton<IWorkflowAdministration>(provider =>
             provider.GetRequiredService<WorkflowEngine>());
         services.AddHostedService<ZhinuHostedService>();

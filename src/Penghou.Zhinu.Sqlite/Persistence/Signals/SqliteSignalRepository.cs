@@ -8,6 +8,7 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Signals;
 /// <summary>Coordinates signal buffering and delivery to waiting steps.</summary>
 internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
 {
+    private const string SignalSendOperationType = "signal-send";
     private readonly IZhinuSqliteDatabase factory;
     private readonly GetRunStatusQuery getRunStatus = new();
     private readonly InsertSignalCommand insertSignal = new();
@@ -47,6 +48,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
         await insertSignal.ExecuteAsync(
             connection,
             transaction,
+            Guid.NewGuid(),
             workflowRunId,
             signalName,
             dataJson,
@@ -65,6 +67,97 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
                 SqliteStoreSupport.SerializerOptions),
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask<SignalSendReceipt> SendSignalIdempotentlyAsync(
+        Guid workflowRunId,
+        string signalName,
+        string? dataJson,
+        Guid signalId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        if (workflowRunId == Guid.Empty)
+            throw new ArgumentException("Workflow ID must not be empty.", nameof(workflowRunId));
+        if (signalId == Guid.Empty)
+            throw new ArgumentException("Signal ID must not be empty.", nameof(signalId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(signalName);
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+
+        var existing = await GetOperationAsync(
+            connection, transaction, signalId, cancellationToken).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            var receipt = ReadReceipt(
+                existing, workflowRunId, signalName, dataJson);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return receipt with { WasBuffered = false };
+        }
+
+        var runStatus = await getRunStatus.ExecuteAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (runStatus is null)
+        {
+            throw new WorkflowNotFoundException(
+                $"Workflow '{workflowRunId:D}' does not exist.");
+        }
+        await insertSignal.ExecuteAsync(
+            connection,
+            transaction,
+            signalId,
+            workflowRunId,
+            signalName,
+            dataJson,
+            now,
+            cancellationToken).ConfigureAwait(false);
+        var signalEvent = await insertEvent.ExecuteAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            null,
+            WorkflowEventTypes.SignalSent,
+            now,
+            null,
+            JsonSerializer.Serialize(
+                new { signalId, signalName, data = dataJson },
+                SqliteStoreSupport.SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        var payload = new SignalSendOperationPayload
+        {
+            SignalName = signalName,
+            PayloadIdentity = SignalPayloadIdentity.Compute(dataJson),
+            Event = signalEvent
+        };
+        await using (var command = SqliteStoreSupport.CreateCommand(
+            connection,
+            transaction,
+            """
+            INSERT INTO workflow_run_operations
+            (operation_id, workflow_run_id, operation_type, status, payload_json,
+             created_at, updated_at, completed_at)
+            VALUES
+            ($operationId, $runId, $operationType, $status, $payloadJson,
+             $now, $now, $now);
+            """))
+        {
+            command.Parameters.AddWithValue("$operationId", SqliteStoreSupport.Format(signalId));
+            command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(workflowRunId));
+            command.Parameters.AddWithValue("$operationType", SignalSendOperationType);
+            command.Parameters.AddWithValue("$status", (int)WorkflowOperationStatus.Completed);
+            command.Parameters.AddWithValue(
+                "$payloadJson",
+                JsonSerializer.Serialize(payload, SqliteStoreSupport.SerializerOptions));
+            command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(now));
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return CreateReceipt(signalId, workflowRunId, payload, wasBuffered: true);
     }
 
     public async ValueTask<SignalDelivery?> TryDeliverSignalAsync(
@@ -146,7 +239,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             now,
             step.Attempt,
             JsonSerializer.Serialize(
-                new { signalName = effectiveName, data = dataJson },
+                new { signalId, signalName = effectiveName, data = dataJson },
                 SqliteStoreSupport.SerializerOptions),
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -250,5 +343,97 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
         cmd.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(id));
         var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
         return val is null or DBNull ? null : SqliteStoreSupport.ParseTimestamp((string)val);
+    }
+
+    private static async ValueTask<WorkflowRunOperation?> GetOperationAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid operationId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(
+            connection,
+            transaction,
+            $"""
+            SELECT {SqliteStoreSupport.OperationColumns}
+            FROM workflow_run_operations
+            WHERE operation_id = $operationId
+            LIMIT 1;
+            """);
+        command.Parameters.AddWithValue("$operationId", SqliteStoreSupport.Format(operationId));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? SqliteStoreSupport.ReadOperation(reader)
+            : null;
+    }
+
+    private static SignalSendReceipt ReadReceipt(
+        WorkflowRunOperation operation,
+        Guid workflowRunId,
+        string signalName,
+        string? dataJson)
+    {
+        if (operation.WorkflowRunId != workflowRunId ||
+            !string.Equals(operation.OperationType, SignalSendOperationType, StringComparison.Ordinal))
+        {
+            throw SignalConflict(operation.OperationId);
+        }
+        if (operation.Status != WorkflowOperationStatus.Completed ||
+            operation.PayloadJson is null)
+        {
+            throw new WorkflowStateException(
+                $"Signal operation '{operation.OperationId:D}' has no completed receipt.");
+        }
+        SignalSendOperationPayload payload;
+        try
+        {
+            payload = JsonSerializer.Deserialize<SignalSendOperationPayload>(
+                operation.PayloadJson,
+                SqliteStoreSupport.SerializerOptions) ??
+                throw new JsonException("The signal receipt payload was null.");
+        }
+        catch (JsonException exception)
+        {
+            throw new WorkflowStateException(
+                $"Signal operation '{operation.OperationId:D}' has an invalid receipt: " +
+                exception.Message);
+        }
+        if (!string.Equals(payload.SignalName, signalName, StringComparison.Ordinal) ||
+            !string.Equals(
+                payload.PayloadIdentity,
+                SignalPayloadIdentity.Compute(dataJson),
+                StringComparison.Ordinal))
+        {
+            throw SignalConflict(operation.OperationId);
+        }
+        return CreateReceipt(operation.OperationId, workflowRunId, payload, wasBuffered: false);
+    }
+
+    private static SignalSendReceipt CreateReceipt(
+        Guid signalId,
+        Guid workflowRunId,
+        SignalSendOperationPayload payload,
+        bool wasBuffered) => new()
+        {
+            SignalId = signalId,
+            WorkflowRunId = workflowRunId,
+            SignalName = payload.SignalName,
+            Event = payload.Event,
+            WasBuffered = wasBuffered
+        };
+
+    private static WorkflowOperationConflictException SignalConflict(Guid signalId) =>
+        new(
+            signalId,
+            $"Signal ID '{signalId:D}' was already used for different intent.");
+
+    private sealed record SignalSendOperationPayload
+    {
+        public required string SignalName { get; init; }
+
+        public required string PayloadIdentity { get; init; }
+
+        public required WorkflowEvent Event { get; init; }
     }
 }

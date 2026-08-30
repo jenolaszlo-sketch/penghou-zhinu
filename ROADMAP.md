@@ -108,20 +108,34 @@ an authoritative receipt. SQLite atomically commits the receipt with the
 restart event and state transition; identical concurrent or post-crash retries
 return the original receipt, while conflicting reuse is rejected. This behavior
 is part of the reusable provider conformance suite.
+Idempotent external signal send is also complete: callers may supply a stable
+signal identity and receive an authoritative receipt. SQLite commits the inbox
+row, `signal-sent` event, and receipt atomically; identical concurrent,
+post-reopen, and post-purge retries reuse that receipt, while different run,
+name, or canonical JSON payload reuse is rejected. Additive `SendSignalAsync`
+semantics remain available when each call intentionally represents a new
+signal, and optional-provider conformance covers receipt and conflict behavior.
 
 Remaining foundation work:
 
+- Complete a compatibility-API retirement pass before the package release after
+  `0.1.0-preview.11`.
+  Inventory every public member retained only for preview compatibility, mark it
+  `[Obsolete]` with a concrete replacement and diagnostic ID, migrate Zhinu's
+  own callers and tests, and list the planned removal version in the release
+  notes. The initial review must cover `StepRestartMode.CreationOrder`, the
+  non-receipt restart overloads, and the legacy
+  `IWorkflowStepRepository.RestartStepAsync` provider contract. Do not deprecate
+  deliberately supported non-idempotent behavior merely because it predates
+  receipts; classify that behavior explicitly. Since current consumers are
+  controlled, use the next development cycle to apply the obsolete markers,
+  migrate those consumers, and remove confirmed compatibility-only APIs before
+  cutting `0.1.0-preview.12`.
 - Expand store conformance tests beyond round-trip smoke checks.
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
-- Before interactive consumers ship, add an optional stable signal command ID
-  and authoritative signal receipt. Identical ambiguous retries must return the
-  original buffered/delivered signal, while reuse with different run, signal
-  name, or canonical payload must throw a typed conflict. Keep additive signal
-  semantics when no command ID is supplied and add provider conformance tests
-  for concurrency and reopen/process recovery.
 - Complete the typed administrative failure taxonomy so restart, signal,
   cancellation, fork, rollback, and maintenance callers can distinguish
   not-found, invalid-state, definition-unavailable, stale generation or lease,

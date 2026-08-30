@@ -7,6 +7,7 @@ internal sealed class InsertSignalCommand
     public async ValueTask ExecuteAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
+        Guid signalId,
         Guid workflowRunId,
         string signalName,
         string? dataJson,
@@ -18,7 +19,7 @@ internal sealed class InsertSignalCommand
             (id, workflow_run_id, signal_name, data_json, created_at)
             VALUES ($id, $runId, $name, $dataJson, $now);
             """);
-        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(Guid.NewGuid()));
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(signalId));
         command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(workflowRunId));
         command.Parameters.AddWithValue("$name", signalName);
         command.Parameters.AddWithValue("$dataJson", SqliteStoreSupport.DbValue(dataJson));
