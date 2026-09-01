@@ -233,6 +233,50 @@ must provide a deterministic input order. Each item has its own durable result,
 retry lifecycle, scope, and optional compensation registration. Results retain
 input order.
 
+Use `LoopAsync` when later work depends on state produced by the previous
+iteration. This is intentionally different from independent fan-out:
+
+```csharp
+ReviewState final = await workflow.LoopAsync(
+    "refinement",
+    initialState,
+    state => state.Score < 0.90,
+    async (iteration, ct) =>
+    {
+        Review review = await iteration.StepAsync(
+            "review",
+            iteration.State.Draft,
+            (draft, step, token) => reviewer.ReviewAsync(
+                draft,
+                step.IdempotencyKey,
+                token),
+            cancellationToken: ct);
+
+        ReviewState nextState = iteration.State with
+        {
+            Draft = review.RevisedDraft,
+            Score = review.Score
+        };
+
+        return review.Approved
+            ? iteration.Break(nextState)
+            : iteration.Continue(nextState);
+    },
+    new LoopOptions(maxIterations: 10),
+    cancellationToken);
+```
+
+Conditions are evaluated before the body. Every successful body explicitly
+returns either `Continue(nextState)` or `Break(finalState)`. Break commits the
+final state and completes normally without another condition evaluation.
+Completed body steps and committed control outcomes survive replay. Restarting
+a body step with dependent invalidation preserves earlier iterations and reruns
+that and later iterations. If the condition remains true after the configured
+maximum, the workflow fails with `LoopLimitExceededException` and records
+durable limit evidence. Perform body work and create outcomes through the
+supplied iteration context so Zhinu can preserve dependencies and reject
+cross-scope control.
+
 `Penghou.Zhinu.Hosting` creates and asynchronously disposes a fresh DI scope
 for every execution and compensation attempt. Completed-step replay creates no
 scope and resolves no implementation. Step instances are ephemeral; durable

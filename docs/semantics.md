@@ -94,6 +94,73 @@ from the stable input index. Items execute independently and results preserve
 input order. Reordering inputs changes their durable identity, so callers must
 sort or otherwise stabilize inputs before invoking fan-out.
 
+## Durable state loops
+
+`WorkflowContext.LoopAsync` is sequential state-dependent repetition. It is
+not an alias for `FanOutAsync`: iteration `n + 1` consumes the state committed
+by iteration `n`, while fan-out items are independent siblings.
+
+The continuation condition is evaluated before each body execution. Its result
+is a durable step whose input binds the typed state and configured maximum
+iteration count. A true decision permits that iteration's body. A false
+decision commits the final loop result under the caller's logical loop key.
+
+Body operations must use the supplied `WorkflowLoopIteration<TState>` surface.
+Zhinu gives each operation a stable key containing the loop identity, one-based
+iteration number, and body-step name. Each body step depends on that
+iteration's condition decision. A successful body returns a scoped
+`LoopBodyOutcome<TState>` created with `Continue(nextState)` or
+`Break(finalState)`. The iteration commit depends on every body step used
+through that surface and atomically persists both the selected disposition and
+typed state. The following condition depends on a continue commit. A break
+commit instead completes the loop normally without evaluating another
+condition. These edges make dependency-aware restart preserve earlier
+iterations while invalidating the selected operation, its state transition,
+all later iterations, the loop result, and downstream work.
+
+The iteration boundary uses the ordinary fenced step-completion transaction.
+State output, step completion, the `loop-iteration-committed` event, and any
+events emitted by that commit operation are atomic. A stale worker cannot
+advance the loop after lease or generation loss. A crash before the commit
+replays the same iteration and reuses completed body steps. Before entering a
+body, Zhinu checks for an already completed iteration commit; a crash after the
+boundary therefore reuses its state and continue/break disposition without
+re-entering the body delegate.
+
+Outcomes belong to the exact iteration context that created them. Returning an
+outcome created by another iteration or loop is rejected as workflow state
+corruption, even when both scopes use the same state type. Exceptions,
+cancellation, and retry remain Zhinu's failure mechanisms; failure is not a
+successful loop-control outcome. Nested loops require parent-scoped durable
+identity and are not supported by the initial unscoped loop API.
+
+Worker interruption before an iteration commit leaves no committed loop
+transition. Recovery reuses any completed body steps and commits the outcome
+once. Interruption after the commit reuses its state and disposition without
+re-entering the body. Because the event is committed in the same transaction,
+there is exactly one `loop-iteration-committed` event for the surviving step
+revision. A worker whose run generation has been replaced cannot commit either
+the disposition or its evidence. Compensation replay is intentionally
+different: it re-enters body declarations to rebind compensation delegates,
+but each forward step still returns its persisted result.
+
+After the maximum number of bodies has committed, Zhinu evaluates the condition
+once more. False completes normally. True commits one replay-safe
+`loop-limit-exceeded` event and fails with `LoopLimitExceededException`; the
+last state is never silently returned as success.
+
+Loop and body names use only ASCII letters, digits, `_`, `-`, and `.`, with a
+maximum length of 128 characters. Zhinu reserves `$loop/` for generated
+condition, body, commit, and limit step keys. The caller's loop key is also the
+durable final-result step key, making it the dependency target for work after
+the loop.
+
+Code-first condition delegates must be deterministic and side-effect-free.
+Code implementation compatibility remains the workflow host's responsibility;
+compiled adapters such as Fuwen additionally bind condition and loop semantics
+into their definition fingerprint. Large loop state should use immutable
+artifact references rather than embedding artifact bytes in workflow state.
+
 ## What fork copies
 
 A fork copies the source run's workflow contract, serialized input, output type,

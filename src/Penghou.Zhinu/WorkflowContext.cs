@@ -10,7 +10,7 @@ namespace Penghou.Zhinu;
 /// workflow method is invoked again; committed steps return stored results
 /// without invoking their delegates.
 /// </summary>
-public sealed class WorkflowContext
+public sealed partial class WorkflowContext
 {
     private static readonly string DelayOutputType =
         SerializationIdentity.TypeId(typeof(DurableDelayMarker));

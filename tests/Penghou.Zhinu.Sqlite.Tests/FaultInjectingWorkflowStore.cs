@@ -30,6 +30,10 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     private readonly IWorkflowStore inner;
     private readonly Dictionary<string, int> armedFaults = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ArmedInterruption> armedInterruptions =
+        new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ArmedCallback> armedCallbacks =
+        new(StringComparer.Ordinal);
 
     public FaultInjectingWorkflowStore(IWorkflowStore inner)
     {
@@ -44,11 +48,73 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
         armedFaults[faultPoint] = count;
     }
 
+    /// <summary>
+    /// Cancels the supplied execution token and throws cancellation on the
+    /// selected hit. This models a worker interruption without converting the
+    /// run into a durable workflow failure.
+    /// </summary>
+    public void ArmInterruption(
+        string faultPoint,
+        CancellationTokenSource cancellation,
+        int count = 1)
+    {
+        ArgumentNullException.ThrowIfNull(cancellation);
+        if (count < 1)
+            throw new ArgumentOutOfRangeException(nameof(count));
+        armedInterruptions[faultPoint] = new ArmedInterruption(
+            count,
+            cancellation);
+    }
+
+    /// <summary>Invokes a deterministic callback on the selected boundary hit.</summary>
+    public void ArmCallback(string faultPoint, Action callback, int count = 1)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        if (count < 1)
+            throw new ArgumentOutOfRangeException(nameof(count));
+        armedCallbacks[faultPoint] = new ArmedCallback(count, callback);
+    }
+
     /// <summary>Removes all armed faults.</summary>
-    public void Reset() => armedFaults.Clear();
+    public void Reset()
+    {
+        armedFaults.Clear();
+        armedInterruptions.Clear();
+        armedCallbacks.Clear();
+    }
 
     private void FaultBefore(string faultPoint)
     {
+        if (armedCallbacks.TryGetValue(faultPoint, out var callback))
+        {
+            if (callback.Remaining <= 1)
+            {
+                armedCallbacks.Remove(faultPoint);
+                callback.Callback();
+            }
+            else
+            {
+                armedCallbacks[faultPoint] = callback with
+                {
+                    Remaining = callback.Remaining - 1
+                };
+            }
+        }
+        if (armedInterruptions.TryGetValue(faultPoint, out var interruption))
+        {
+            if (interruption.Remaining <= 1)
+            {
+                armedInterruptions.Remove(faultPoint);
+                interruption.Cancellation.Cancel();
+                throw new OperationCanceledException(
+                    $"Interrupted worker at '{faultPoint}'.",
+                    interruption.Cancellation.Token);
+            }
+            armedInterruptions[faultPoint] = interruption with
+            {
+                Remaining = interruption.Remaining - 1
+            };
+        }
         if (!armedFaults.TryGetValue(faultPoint, out var remaining))
             return;
         if (remaining <= 1)
@@ -58,6 +124,12 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
         if (remaining == 1)
             throw new FaultInjectedException(faultPoint);
     }
+
+    private sealed record ArmedInterruption(
+        int Remaining,
+        CancellationTokenSource Cancellation);
+
+    private sealed record ArmedCallback(int Remaining, Action Callback);
 
     private async ValueTask<T> FaultAfter<T>(string faultPoint, ValueTask<T> action)
     {

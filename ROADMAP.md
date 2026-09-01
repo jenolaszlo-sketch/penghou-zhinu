@@ -136,6 +136,10 @@ Remaining foundation work:
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
+- Add a first-class durable state-loop primitive after the current runtime/API
+  hardening batch. Keep independent keyed collection work on `FanOutAsync`;
+  state-dependent sequential repetition has different persistence,
+  invalidation, and recovery semantics.
 - Complete the typed administrative failure taxonomy so restart, signal,
   cancellation, fork, rollback, and maintenance callers can distinguish
   not-found, invalid-state, definition-unavailable, stale generation or lease,
@@ -197,6 +201,207 @@ Exit criteria:
 - Store and runtime invariants have executable conformance coverage.
 - Recovery tests cover every durable operation phase.
 - The runtime is dependable without any AI-specific packages.
+
+### Durable state-loop checkpoint
+
+Status: **first executable slice complete; failure-window hardening active**.
+
+Implemented in the first slice:
+
+- `WorkflowContext.LoopAsync<TState>` with an explicit positive maximum and a
+  deterministic precondition contract;
+- one-based runtime iteration identity exposed through a typed iteration
+  context, iteration-scoped body steps, and an iteration-local dependency
+  helper;
+- durable condition decisions that bind typed state and the configured maximum;
+- fenced state commits built on the existing atomic step/event transaction;
+- dependency chains that preserve earlier iterations and invalidate the
+  selected/later iterations, final result, and downstream work;
+- replay-safe iteration-committed, loop-completed, and limit-exceeded evidence;
+- scoped typed `Continue(nextState)` and `Break(finalState)` outcomes persisted
+  with the iteration commit, including replay that does not re-enter a body
+  after its disposition has committed;
+- cross-scope outcome rejection and early-break restart/replay coverage;
+- rollback replay that deliberately re-enters loop bodies to rebind their
+  compensation delegates while reusing all committed forward results;
+- deterministic worker-interruption coverage before a body-step commit, before
+  and after a continue commit, and after a break commit, proving one logical
+  iteration commit and no body re-entry after a committed disposition;
+- stale-generation coverage proving a replaced worker cannot commit an
+  iteration or its event, followed by successful recovery under the new
+  generation;
+- condition-failure restart, transient body retry, terminal body-failure
+  restart, and interrupted-compensation recovery with a stable idempotency key;
+- typed `LoopLimitExceededException`, multi-target SQLite integration tests,
+  and public API baseline coverage.
+
+This slice deliberately adds no loop table or provider interface. Existing
+step revisions, dependencies, events, and fenced completion already form the
+provider-neutral persistence primitive and keep SQLite replaceable. Introduce
+new store contracts only if the remaining crash/concurrency tests demonstrate
+an invariant that cannot be expressed atomically through those primitives.
+
+Still required before the checkpoint is complete:
+
+- an OS-level subprocess termination test immediately before and after the
+  state-commit boundary to corroborate the deterministic interruption suite;
+- explicit host-requested cancellation tests distinguishing resumable worker
+  interruption from durable run cancellation;
+- diagnostics/query helpers that summarize loop progress without requiring
+  callers to parse generated step keys;
+- lexically scoped nested-loop identity that includes the parent loop instance
+  and parent iteration without relying on concatenated public string keys;
+- design of optional deadline/budget limits;
+- provider-conformance coverage for the composed loop behavior.
+
+Implement durable state-dependent repetition as a first-class Zhinu runtime
+construct before a public authoring DSL depends on it. Ordinary C# `for`,
+`foreach`, and `while` statements are not durable loop declarations: they do
+not expose a committed iteration boundary, loop-carried state, or an
+unambiguous runtime iteration identity.
+
+Keep two execution models distinct:
+
+- `LoopAsync` represents sequential repetition where iteration `n + 1`
+  consumes committed state produced by iteration `n`.
+- `FanOutAsync` remains authoritative for independent keyed collection items,
+  parallel sibling execution, per-item restart, and deterministic aggregation.
+  The two constructs may share typed-key and identity utilities without being
+  one persistence primitive.
+
+#### Explicit loop-control outcomes
+
+Evolve the body contract from an implicit next-state return to a closed,
+typed `LoopBodyOutcome<TState>` with two normal outcomes:
+
+- `Continue(nextState)` commits the current iteration's next immutable state
+  and requests evaluation of the precondition for the following iteration.
+- `Break(finalState)` commits the supplied final state, completes the current
+  iteration, and then completes the loop normally without another condition
+  evaluation or body execution.
+
+`Continue` is the ordinary successful outcome, not equivalent to the C#
+`continue` statement. An early return of `Continue` may skip later body code,
+but already completed durable body steps remain part of the iteration and are
+reused on replay. `Break` is not failure, cancellation, workflow return, or
+process termination. It is a durable transition scoped only to the current
+loop.
+
+Do not add `Failure` as a normal union case. Exceptions, cancellation, retry,
+and durable workflow failure remain authoritative so callers cannot accidentally
+turn failed work into a successful loop-control result. The iteration context
+should construct normal outcomes through APIs such as `Continue(nextState)` and
+`Break(finalState)`; callers must not mutate hidden loop state or depend on
+captured mutable variables.
+
+Both outcomes must preserve the existing commit invariant. Their chosen state,
+iteration disposition, and evidence must be durably bound at a fenced commit
+boundary. A crash after that boundary must reuse the outcome rather than invoke
+the body again. Completion may remain a following idempotent durable step if
+failure-window tests prove that the composed transition is unambiguous and
+recoverable; a new provider transaction is required only if composition cannot
+provide that guarantee.
+
+#### Nested loops and lexical scope
+
+Nested loops are supported only after loop identity becomes structurally
+scoped. Each nested runtime instance must include typed internal identity for:
+
+- structural node path;
+- loop instance;
+- parent loop scope and parent iteration;
+- its own one-based iteration number;
+- body node path and revision.
+
+Do not expose concatenated strings as the semantic identity contract. Stable
+serialized keys may still be derived internally, but query, restart, and
+adapter APIs should operate on typed identities. In particular, the current
+unscoped `context.LoopAsync("inner", ...)` shape must not be treated as safe
+nesting when called by multiple outer iterations because it could alias one
+inner instance across those iterations.
+
+Loop control is lexical. `Break` or `Continue` applies only to the loop context
+that created the outcome. An inner loop cannot directly break or continue an
+outer loop. The inner loop must complete and return a value; the outer body can
+then explicitly choose its own `Break` or `Continue` outcome. Initially, do not
+support labels, non-local control, or passing an outer loop-control outcome from
+inside an inner body.
+
+Every loop body is a closed structured region. Generic graph references may
+not jump into a body, jump out of it, cross between nested scopes, or emulate
+loop control with arbitrary edges.
+
+Fuwen must lower `continue with { ... }` and `break with { ... }` to these same
+observable Zhinu outcomes. Unqualified DSL control targets the innermost
+lexical loop. Fuwen should initially reject labeled or non-local break and
+continue constructs and preserve structured loop regions in `WorkflowPlan`.
+
+The initial state-loop contract must define:
+
+- stable structural loop identity distinct from typed runtime iteration
+  identity and body-step identity;
+- a typed initial state, immutable canonical state revisions, state schema and
+  content hash, and artifact references rather than embedded large payloads;
+- precondition evaluation over committed state, with a future explicitly named
+  postcondition construct rather than ambiguous condition timing;
+- declared body inputs, state transition, final result, and closed region
+  boundaries that forbid jumps into or out of internal body steps;
+- at least one host-enforceable positive iteration bound, deadline, budget, or
+  explicitly permitted durable-suspension rule, with host policy allowed to
+  tighten but never expand source limits;
+- distinct typed outcomes for false-condition completion, limit exhaustion,
+  explicit body break, timeout, budget exhaustion, condition failure, body
+  failure, and cancellation;
+- stable downstream operation keys containing the loop instance, iteration,
+  body step, and revision so retries do not duplicate external effects;
+- iteration diagnostics exposing current iteration, committed state revision,
+  configured limits, termination reason, and pending body position.
+
+The iteration boundary is committed only when required body steps have
+completed and the next immutable state revision is ready. Advancing the loop
+cursor, committing that state revision, marking the iteration complete, and
+emitting its event must occur in one fenced store transaction. A stale worker
+must not advance the loop after lease loss. External effects retain the normal
+effectively-once/at-least-once boundary and use the stable operation key for
+downstream deduplication.
+
+Recovery and restart semantics must guarantee:
+
+- process loss before the iteration commit resumes the same logical iteration
+  and reuses its already committed body steps;
+- process loss after the commit observes the new state and never increments
+  the logical iteration twice;
+- restarting iteration `n` preserves valid earlier iterations and invalidates
+  iteration `n`, every later iteration, the loop result, and downstream work;
+- restarting a body step invalidates that iteration's state transition and all
+  later derived work;
+- changing the loop condition, bounds, state contract, body structure, or
+  result binding changes definition identity and follows explicit
+  compatibility rules.
+
+Control-outcome and nesting tests must additionally prove:
+
+- `Continue` commits exactly one next-state revision before condition
+  evaluation resumes;
+- `Break` commits its final state, completes normally, and never evaluates a
+  later condition or body;
+- replay after either outcome reuses the committed disposition;
+- restarting the producing body step invalidates its outcome, current
+  iteration commit, loop completion, and later derived work;
+- an inner break affects only its inner loop, while outer termination requires
+  an explicit decision by the outer body;
+- identities for the same nested structural loop in different outer
+  iterations cannot collide.
+
+Code-first delegates cannot be assumed to be portable or fingerprintable.
+Zhinu therefore requires stable names and explicit durable values while the
+host remains responsible for code-version compatibility. Fuwen supplies a
+fully compiled, fingerprinted declaration through its adapter later.
+
+Acceptance requires provider conformance and process-loss tests before the
+body, after each body step, while evaluating the condition, immediately before
+the fenced iteration commit, and immediately after it. Tests must prove that a
+resumed run neither skips nor duplicates a committed logical iteration.
 
 ## Phase 1 — Declarative workflow artifacts
 
@@ -291,18 +496,15 @@ Exit criteria:
 
 ### Bounded-loop design checkpoint
 
-Loops remain a roadmap item, not part of the current linear declarative
-vertical. Before implementation, define and test:
+Loops remain outside the current linear declarative vertical. Declarative and
+Fuwen adapters must consume the durable state-loop contract defined in Phase 0
+rather than implement repetition through generic graph backedges. Before the
+declarative surface is exposed, additionally define and test:
 
-- a statically declared maximum iteration count and deterministic termination
-  behavior;
-- durable iteration identity so step keys cannot collide across iterations;
-- whether the current iteration counter is explicit persisted workflow state,
-  derived from committed iteration records, or represented by another durable
-  primitive;
-- restart behavior at every boundary: before the body, during the body, after
-  body completion, and while evaluating the continuation condition;
-- retry semantics that cannot increment the logical iteration twice;
+- canonical serialization of structured loop declarations and closed body
+  regions without serializer `$id`/`$ref` cycles or backward control edges;
+- mapping of structural Fuwen identities to typed Zhinu loop, iteration, and
+  body-step identities;
 - fingerprint and compatibility behavior when loop bounds or conditions change;
 - diagnostics exposing current iteration, configured limit, termination reason,
   and exhausted-loop failures;
@@ -622,8 +824,9 @@ Before beginning natural-language compilation:
 1. Write two hand-authored `WorkflowArtifact` examples.
 2. Define the minimal IR and its canonical JSON representation.
 3. Define activity identity, versioning, schemas, and trust levels.
-4. Specify bounded-loop durability, iteration identity, limits, and counter-state
-   ownership before implementing loops.
+4. Implement and prove the code-first durable state-loop primitive, including
+   iteration identity, fenced state commits, restart invalidation, limits, and
+   process-loss tests, before adding loop syntax to an authoring DSL.
 5. Implement graph, type, and mandatory-gate validation.
 6. Prototype revision-bound build and test evidence.
 7. Integrate one restricted coding activity executor.

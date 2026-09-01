@@ -1,85 +1,15 @@
 #nullable enable
-Penghou.Zhinu.IIdempotentWorkflowClient
-Penghou.Zhinu.IIdempotentWorkflowClient.SendSignalWithReceiptAsync(System.Guid workflowRunId, string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
-Penghou.Zhinu.IIdempotentWorkflowSignalRepository
-Penghou.Zhinu.IIdempotentWorkflowSignalRepository.SendSignalIdempotentlyAsync(System.Guid workflowRunId, string! signalName, string? dataJson, System.Guid signalId, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.SignalSendReceipt!>
-Penghou.Zhinu.SignalSendOptions
-Penghou.Zhinu.SignalSendOptions.SignalId.get -> System.Guid
-Penghou.Zhinu.SignalSendOptions.SignalId.init -> void
-Penghou.Zhinu.SignalSendOptions.SignalSendOptions() -> void
-Penghou.Zhinu.SignalSendReceipt
-Penghou.Zhinu.SignalSendReceipt.Event.get -> Penghou.Zhinu.WorkflowEvent!
-Penghou.Zhinu.SignalSendReceipt.Event.init -> void
-Penghou.Zhinu.SignalSendReceipt.SignalId.get -> System.Guid
-Penghou.Zhinu.SignalSendReceipt.SignalId.init -> void
-Penghou.Zhinu.SignalSendReceipt.SignalName.get -> string!
-Penghou.Zhinu.SignalSendReceipt.SignalName.init -> void
-Penghou.Zhinu.SignalSendReceipt.WasBuffered.get -> bool
-Penghou.Zhinu.SignalSendReceipt.WasBuffered.init -> void
-Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.get -> System.Guid
-Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.init -> void
-Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync(System.Guid workflowRunId, string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
-Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync<TPayload>(System.Guid workflowRunId, Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
-Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync(string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
-Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync<TPayload>(Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
-Penghou.Zhinu.IIdempotentWorkflowRestartRepository
-Penghou.Zhinu.IIdempotentWorkflowRestartRepository.RestartStepIdempotentlyAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.StepRestartMode mode, System.Guid operationId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.RestartReceipt!>
-Penghou.Zhinu.RestartReceipt
-Penghou.Zhinu.RestartReceipt.Actor.get -> string?
-Penghou.Zhinu.RestartReceipt.Actor.init -> void
-Penghou.Zhinu.RestartReceipt.Event.get -> Penghou.Zhinu.WorkflowEvent!
-Penghou.Zhinu.RestartReceipt.Event.init -> void
-Penghou.Zhinu.RestartReceipt.LeaseGeneration.get -> long
-Penghou.Zhinu.RestartReceipt.LeaseGeneration.init -> void
-Penghou.Zhinu.RestartReceipt.Mode.get -> Penghou.Zhinu.StepRestartMode
-Penghou.Zhinu.RestartReceipt.Mode.init -> void
-Penghou.Zhinu.RestartReceipt.OperationId.get -> System.Guid
-Penghou.Zhinu.RestartReceipt.OperationId.init -> void
-Penghou.Zhinu.RestartReceipt.Plan.get -> Penghou.Zhinu.RestartPlan!
-Penghou.Zhinu.RestartReceipt.Plan.init -> void
-Penghou.Zhinu.RestartReceipt.Reason.get -> string?
-Penghou.Zhinu.RestartReceipt.Reason.init -> void
-Penghou.Zhinu.RestartReceipt.WasApplied.get -> bool
-Penghou.Zhinu.RestartReceipt.WasApplied.init -> void
-Penghou.Zhinu.RestartStepOptions.OperationId.get -> System.Guid?
-Penghou.Zhinu.RestartStepOptions.OperationId.init -> void
-Penghou.Zhinu.WorkflowEngine.RestartStepWithReceiptAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.RestartStepOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartReceipt!>!
-Penghou.Zhinu.WorkflowOperationConflictException
-Penghou.Zhinu.WorkflowOperationConflictException.OperationId.get -> System.Guid
-Penghou.Zhinu.WorkflowOperationConflictException.WorkflowOperationConflictException(System.Guid operationId, string! message) -> void
 abstract Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Penghou.Zhinu.WorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
-Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
-Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
+const Penghou.Zhinu.WorkflowEventTypes.LoopCompleted = "loop-completed" -> string!
+const Penghou.Zhinu.WorkflowEventTypes.LoopIterationCommitted = "loop-iteration-committed" -> string!
+const Penghou.Zhinu.WorkflowEventTypes.LoopLimitExceeded = "loop-limit-exceeded" -> string!
 const Penghou.Zhinu.ZhinuDiagnostics.Attributes.StepImplementationKey = "zhinu.step.implementation.key" -> string!
 const Penghou.Zhinu.ZhinuDiagnostics.Attributes.StepImplementationType = "zhinu.step.implementation.type" -> string!
-override Penghou.Zhinu.StepImplementationKey.ToString() -> string!
-Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>
-Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Penghou.Zhinu.IWorkflowStepLease<TStep>
-Penghou.Zhinu.IWorkflowStepLease<TStep>.Step.get -> TStep!
-Penghou.Zhinu.IWorkflowStepResolver
-Penghou.Zhinu.IWorkflowStepResolver.ResolveAsync<TStep>(Penghou.Zhinu.StepImplementationKey implementationKey, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.IWorkflowStepLease<TStep!>!>
-Penghou.Zhinu.IWorkflowStep<TInput, TOutput>
-Penghou.Zhinu.IWorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
-Penghou.Zhinu.StepClaimRequest.ImplementationKey.get -> string?
-Penghou.Zhinu.StepClaimRequest.ImplementationKey.init -> void
-Penghou.Zhinu.StepCompensationMode
-Penghou.Zhinu.StepCompensationMode.Enabled = 1 -> Penghou.Zhinu.StepCompensationMode
-Penghou.Zhinu.StepCompensationMode.None = 0 -> Penghou.Zhinu.StepCompensationMode
-Penghou.Zhinu.StepImplementationKey
-Penghou.Zhinu.StepImplementationKey.StepImplementationKey() -> void
-Penghou.Zhinu.StepImplementationKey.StepImplementationKey(string! value) -> void
-Penghou.Zhinu.StepImplementationKey.Value.get -> string!
-Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.StepImplementationKey implementationKey, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
-Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(string! message, System.Exception! innerException) -> void
-Penghou.Zhinu.WorkflowEngine.WorkflowEngine(Penghou.Zhinu.IWorkflowStore! store, Penghou.Zhinu.IWorkflowRegistry! registry, Penghou.Zhinu.ZhinuOptions? options, System.Text.Json.JsonSerializerOptions? serializerOptions, System.TimeProvider? timeProvider, Microsoft.Extensions.Logging.ILogger<Penghou.Zhinu.WorkflowEngine!>? logger, Penghou.Zhinu.IWorkflowEventPublisher? eventPublisher, Penghou.Zhinu.IWorkflowStepResolver? workflowStepResolver) -> void
-Penghou.Zhinu.WorkflowEngineBuilder.WithStepResolver(Penghou.Zhinu.IWorkflowStepResolver! value) -> Penghou.Zhinu.WorkflowEngineBuilder!
-Penghou.Zhinu.WorkflowStep<TInput, TOutput>
-Penghou.Zhinu.WorkflowStep<TInput, TOutput>.WorkflowStep() -> void
-Penghou.Zhinu.WorkflowStepRun.ImplementationKey.get -> string?
-Penghou.Zhinu.WorkflowStepRun.ImplementationKey.init -> void
 override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
+override Penghou.Zhinu.StepImplementationKey.ToString() -> string!
+Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
+Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue
 Penghou.Zhinu.Declarative.ActivityCatalogue.ActivityCatalogue() -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
@@ -138,6 +68,11 @@ Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.Id.get -> string!
 Penghou.Zhinu.Declarative.DeclarativeWorkflowStep.Id.init -> void
 Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>
 Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>.ExecuteAsync(TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.Declarative.IActivityCatalogue
+Penghou.Zhinu.Declarative.IActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
+Penghou.Zhinu.Declarative.IActivityCatalogue.ListDescriptors() -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.ActivityDescriptor!>!
+Penghou.Zhinu.Declarative.IActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation) -> void
+Penghou.Zhinu.Declarative.IActivityCatalogue.TryGetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference, out Penghou.Zhinu.Declarative.ActivityDescriptor! descriptor) -> bool
 Penghou.Zhinu.Declarative.WorkflowCompilationResult
 Penghou.Zhinu.Declarative.WorkflowCompilationResult.Compiled.get -> Penghou.Zhinu.Declarative.CompiledWorkflowDefinition?
 Penghou.Zhinu.Declarative.WorkflowCompilationResult.Compiled.init -> void
@@ -157,22 +92,131 @@ Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.StepId.init -> void
 Penghou.Zhinu.Declarative.WorkflowValidationSeverity
 Penghou.Zhinu.Declarative.WorkflowValidationSeverity.Error = 0 -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
 Penghou.Zhinu.Declarative.WorkflowValidationSeverity.Warning = 1 -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
+Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>
+Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IIdempotentWorkflowClient
+Penghou.Zhinu.IIdempotentWorkflowClient.SendSignalWithReceiptAsync(System.Guid workflowRunId, string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.IIdempotentWorkflowRestartRepository
+Penghou.Zhinu.IIdempotentWorkflowRestartRepository.RestartStepIdempotentlyAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.StepRestartMode mode, System.Guid operationId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.RestartReceipt!>
+Penghou.Zhinu.IIdempotentWorkflowSignalRepository
+Penghou.Zhinu.IIdempotentWorkflowSignalRepository.SendSignalIdempotentlyAsync(System.Guid workflowRunId, string! signalName, string? dataJson, System.Guid signalId, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.SignalSendReceipt!>
+Penghou.Zhinu.IWorkflowAdministration
+Penghou.Zhinu.IWorkflowAdministration.CancelAsync(System.Guid workflowRunId, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowClient
+Penghou.Zhinu.IWorkflowClient.GetRunAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRun?>!
+Penghou.Zhinu.IWorkflowClient.SendSignalAsync(System.Guid workflowRunId, string! signalName, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowClient.WaitForCompletionAsync<TOutput>(System.Guid workflowRunId, System.DateTimeOffset? deadline = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.IWorkflowRuntime
+Penghou.Zhinu.IWorkflowRuntime.ExecuteAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowRuntime.RunAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+Penghou.Zhinu.IWorkflowRuntime.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
+Penghou.Zhinu.IWorkflowStep<TInput, TOutput>
+Penghou.Zhinu.IWorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.IWorkflowStepLease<TStep>
+Penghou.Zhinu.IWorkflowStepLease<TStep>.Step.get -> TStep!
+Penghou.Zhinu.IWorkflowStepResolver
+Penghou.Zhinu.IWorkflowStepResolver.ResolveAsync<TStep>(Penghou.Zhinu.StepImplementationKey implementationKey, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.IWorkflowStepLease<TStep!>!>
 Penghou.Zhinu.IWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
+Penghou.Zhinu.LoopBodyOutcome<TState>
+Penghou.Zhinu.LoopBodyOutcome<TState>.Kind.get -> Penghou.Zhinu.LoopBodyOutcomeKind
+Penghou.Zhinu.LoopBodyOutcome<TState>.State.get -> TState
+Penghou.Zhinu.LoopBodyOutcomeKind
+Penghou.Zhinu.LoopBodyOutcomeKind.Break = 1 -> Penghou.Zhinu.LoopBodyOutcomeKind
+Penghou.Zhinu.LoopBodyOutcomeKind.Continue = 0 -> Penghou.Zhinu.LoopBodyOutcomeKind
+Penghou.Zhinu.LoopLimitExceededException
+Penghou.Zhinu.LoopLimitExceededException.LoopKey.get -> string!
+Penghou.Zhinu.LoopLimitExceededException.LoopLimitExceededException(string! loopKey, int maxIterations) -> void
+Penghou.Zhinu.LoopLimitExceededException.MaxIterations.get -> int
+Penghou.Zhinu.LoopOptions
+Penghou.Zhinu.LoopOptions.LoopOptions(int maxIterations) -> void
+Penghou.Zhinu.LoopOptions.MaxIterations.get -> int
+Penghou.Zhinu.RestartReceipt
+Penghou.Zhinu.RestartReceipt.Actor.get -> string?
+Penghou.Zhinu.RestartReceipt.Actor.init -> void
+Penghou.Zhinu.RestartReceipt.Event.get -> Penghou.Zhinu.WorkflowEvent!
+Penghou.Zhinu.RestartReceipt.Event.init -> void
+Penghou.Zhinu.RestartReceipt.LeaseGeneration.get -> long
+Penghou.Zhinu.RestartReceipt.LeaseGeneration.init -> void
+Penghou.Zhinu.RestartReceipt.Mode.get -> Penghou.Zhinu.StepRestartMode
+Penghou.Zhinu.RestartReceipt.Mode.init -> void
+Penghou.Zhinu.RestartReceipt.OperationId.get -> System.Guid
+Penghou.Zhinu.RestartReceipt.OperationId.init -> void
+Penghou.Zhinu.RestartReceipt.Plan.get -> Penghou.Zhinu.RestartPlan!
+Penghou.Zhinu.RestartReceipt.Plan.init -> void
+Penghou.Zhinu.RestartReceipt.Reason.get -> string?
+Penghou.Zhinu.RestartReceipt.Reason.init -> void
+Penghou.Zhinu.RestartReceipt.WasApplied.get -> bool
+Penghou.Zhinu.RestartReceipt.WasApplied.init -> void
+Penghou.Zhinu.RestartStepOptions.OperationId.get -> System.Guid?
+Penghou.Zhinu.RestartStepOptions.OperationId.init -> void
+Penghou.Zhinu.SignalSendOptions
+Penghou.Zhinu.SignalSendOptions.SignalId.get -> System.Guid
+Penghou.Zhinu.SignalSendOptions.SignalId.init -> void
+Penghou.Zhinu.SignalSendOptions.SignalSendOptions() -> void
+Penghou.Zhinu.SignalSendReceipt
+Penghou.Zhinu.SignalSendReceipt.Event.get -> Penghou.Zhinu.WorkflowEvent!
+Penghou.Zhinu.SignalSendReceipt.Event.init -> void
+Penghou.Zhinu.SignalSendReceipt.SignalId.get -> System.Guid
+Penghou.Zhinu.SignalSendReceipt.SignalId.init -> void
+Penghou.Zhinu.SignalSendReceipt.SignalName.get -> string!
+Penghou.Zhinu.SignalSendReceipt.SignalName.init -> void
+Penghou.Zhinu.SignalSendReceipt.WasBuffered.get -> bool
+Penghou.Zhinu.SignalSendReceipt.WasBuffered.init -> void
+Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.init -> void
+Penghou.Zhinu.StepClaimRequest.ImplementationKey.get -> string?
+Penghou.Zhinu.StepClaimRequest.ImplementationKey.init -> void
+Penghou.Zhinu.StepCompensationMode
+Penghou.Zhinu.StepCompensationMode.Enabled = 1 -> Penghou.Zhinu.StepCompensationMode
+Penghou.Zhinu.StepCompensationMode.None = 0 -> Penghou.Zhinu.StepCompensationMode
+Penghou.Zhinu.StepImplementationKey
+Penghou.Zhinu.StepImplementationKey.StepImplementationKey() -> void
+Penghou.Zhinu.StepImplementationKey.StepImplementationKey(string! value) -> void
+Penghou.Zhinu.StepImplementationKey.Value.get -> string!
+Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(string! message, System.Exception! innerException) -> void
+Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
+Penghou.Zhinu.WorkflowContext.LoopAsync<TState>(string! loopKey, TState initialState, System.Func<TState, bool>! continueWhile, System.Func<Penghou.Zhinu.WorkflowLoopIteration<TState>!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Penghou.Zhinu.LoopBodyOutcome<TState>!>!>! body, Penghou.Zhinu.LoopOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TState>!
+Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.StepImplementationKey implementationKey, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowEngine.RestartStepWithReceiptAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.RestartStepOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartReceipt!>!
+Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync(System.Guid workflowRunId, string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync<TPayload>(System.Guid workflowRunId, Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowEngine.WorkflowEngine(Penghou.Zhinu.IWorkflowStore! store, Penghou.Zhinu.IWorkflowRegistry! registry, Penghou.Zhinu.ZhinuOptions? options, System.Text.Json.JsonSerializerOptions? serializerOptions, System.TimeProvider? timeProvider, Microsoft.Extensions.Logging.ILogger<Penghou.Zhinu.WorkflowEngine!>? logger, Penghou.Zhinu.IWorkflowEventPublisher? eventPublisher, Penghou.Zhinu.IWorkflowStepResolver? workflowStepResolver) -> void
+Penghou.Zhinu.WorkflowEngineBuilder.WithStepResolver(Penghou.Zhinu.IWorkflowStepResolver! value) -> Penghou.Zhinu.WorkflowEngineBuilder!
+Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync(string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync<TPayload>(Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>
+Penghou.Zhinu.WorkflowLoopIteration<TState>.Break(TState finalState) -> Penghou.Zhinu.LoopBodyOutcome<TState>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.Continue(TState nextState) -> Penghou.Zhinu.LoopBodyOutcome<TState>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.DependsOn(params string![]! stepNames) -> System.IDisposable!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.Iteration.get -> int
+Penghou.Zhinu.WorkflowLoopIteration<TState>.LoopKey.get -> string!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.State.get -> TState
+Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TInput, TOutput>(string! stepName, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TInput, TOutput>(string! stepName, TInput input, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), System.Func<TOutput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? compensation = null) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TOutput>(string! stepName, System.Func<Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), System.Func<TOutput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? compensation = null) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowOperationConflictException
+Penghou.Zhinu.WorkflowOperationConflictException.OperationId.get -> System.Guid
+Penghou.Zhinu.WorkflowOperationConflictException.WorkflowOperationConflictException(System.Guid operationId, string! message) -> void
 Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowRegistrationException
+Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
+Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
+Penghou.Zhinu.WorkflowStep<TInput, TOutput>
+Penghou.Zhinu.WorkflowStep<TInput, TOutput>.WorkflowStep() -> void
+Penghou.Zhinu.WorkflowStepContext.EmitAsync<TData>(string! eventType, TData? data = default(TData?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.WorkflowStepReference
 Penghou.Zhinu.WorkflowStepReference.ImplementationKey.get -> Penghou.Zhinu.StepImplementationKey
 Penghou.Zhinu.WorkflowStepReference.InputType.get -> System.Type!
 Penghou.Zhinu.WorkflowStepReference.OutputType.get -> System.Type!
 Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>
 Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>.WorkflowStepReference(Penghou.Zhinu.StepImplementationKey implementationKey) -> void
-Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
-Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
-Penghou.Zhinu.WorkflowStepContext.EmitAsync<TData>(string! eventType, TData? data = default(TData?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
-Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
+Penghou.Zhinu.WorkflowStepRun.ImplementationKey.get -> string?
+Penghou.Zhinu.WorkflowStepRun.ImplementationKey.init -> void
 Penghou.Zhinu.WorkflowStoreHealth
 Penghou.Zhinu.WorkflowStoreHealth.Detail.get -> string?
 Penghou.Zhinu.WorkflowStoreHealth.Detail.init -> void
@@ -184,23 +228,6 @@ Penghou.Zhinu.WorkflowStoreHealth.StoreName.get -> string?
 Penghou.Zhinu.WorkflowStoreHealth.StoreName.init -> void
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.get -> bool?
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.init -> void
-Penghou.Zhinu.Declarative.IActivityCatalogue
-Penghou.Zhinu.Declarative.IActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
-Penghou.Zhinu.Declarative.IActivityCatalogue.ListDescriptors() -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.ActivityDescriptor!>!
-Penghou.Zhinu.Declarative.IActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation) -> void
-Penghou.Zhinu.Declarative.IActivityCatalogue.TryGetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference, out Penghou.Zhinu.Declarative.ActivityDescriptor! descriptor) -> bool
-Penghou.Zhinu.IWorkflowAdministration
-Penghou.Zhinu.IWorkflowAdministration.CancelAsync(System.Guid workflowRunId, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Penghou.Zhinu.IWorkflowClient
-Penghou.Zhinu.IWorkflowClient.GetRunAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRun?>!
-Penghou.Zhinu.IWorkflowClient.SendSignalAsync(System.Guid workflowRunId, string! signalName, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Penghou.Zhinu.IWorkflowClient.WaitForCompletionAsync<TOutput>(System.Guid workflowRunId, System.DateTimeOffset? deadline = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
-Penghou.Zhinu.IWorkflowRuntime
-Penghou.Zhinu.IWorkflowRuntime.ExecuteAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Penghou.Zhinu.IWorkflowRuntime.RunAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
-Penghou.Zhinu.IWorkflowRuntime.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
-Penghou.Zhinu.WorkflowRegistrationException
-Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
 Penghou.Zhinu.WorkflowTimeoutException
 Penghou.Zhinu.WorkflowTimeoutException.WorkflowTimeoutException(string! message) -> void
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan
