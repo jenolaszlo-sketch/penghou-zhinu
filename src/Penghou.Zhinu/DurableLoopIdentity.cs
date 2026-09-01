@@ -102,6 +102,9 @@ internal readonly record struct DurableLoopIterationIdentity(
 
 internal static class DurableLoopStepKeys
 {
+    public static string Limits(DurableLoopScope scope) =>
+        DurableLoopScope.ValidateEncodedKey($"{scope.StepKeyPrefix}/limits");
+
     public static string Condition(DurableLoopIterationIdentity iteration) =>
         DurableLoopScope.ValidateEncodedKey(
             $"{iteration.StepKeyPrefix}/condition");

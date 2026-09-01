@@ -1205,6 +1205,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             WorkflowRunId = workflowRunId,
             Loop = loop,
             Iterations = iterations,
+            LimitsStep = steps.SingleOrDefault(step =>
+                step.StepKey == DurableLoopStepKeys.Limits(scope)),
             LimitStep = steps.SingleOrDefault(step =>
                 step.StepKey == DurableLoopStepKeys.Limit(scope)),
             FinalStep = steps.SingleOrDefault(step =>

@@ -19,6 +19,8 @@ public sealed class DurableLoopAdministrationTests : WorkflowEngineTestBase
         target.BodyStepName.Should().Be("advance");
         target.DisplayPath.Should().Be("outer[2].inner[3].body.advance");
         target.DisplayPath.Should().NotContain("$loop/");
+        inner.LimitsStep.Kind.Should().Be(WorkflowLoopStepKind.Limits);
+        inner.LimitsStep.DisplayPath.Should().Be("outer[2].inner.limits");
     }
 
     [Fact]

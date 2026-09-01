@@ -51,21 +51,41 @@ public sealed partial class WorkflowContext
                 options.MaxLoopNestingDepth);
         }
 
+        IReadOnlyList<WorkflowStepRun> existingSteps = IsRollback
+            ? replaySteps!.Values.ToArray()
+            : await store.GetStepsAsync(
+                WorkflowRunId,
+                cancellationToken).ConfigureAwait(false);
         IReadOnlyDictionary<string, WorkflowStepRun> completedSteps = IsRollback
             ? new Dictionary<string, WorkflowStepRun>(StringComparer.Ordinal)
-            : (await store.GetStepsAsync(
-                    WorkflowRunId,
-                    cancellationToken)
-                .ConfigureAwait(false))
+            : existingSteps
                 .Where(step => step.Status == StepStatus.Completed)
                 .ToDictionary(step => step.StepKey, StringComparer.Ordinal);
+        var resolvedLimits = await ResolveLoopLimitsAsync(
+            scope,
+            loopOptions,
+            existingSteps.SingleOrDefault(step =>
+                step.StepKey == DurableLoopStepKeys.Limits(scope)),
+            entryDependencyStepKey,
+            cancellationToken).ConfigureAwait(false);
+        var loopEntryDependency = resolvedLimits.EffectiveDeadline is not null
+            ? DurableLoopStepKeys.Limits(scope)
+            : entryDependencyStepKey;
         var state = initialState;
         string? previousCommitStepKey = null;
         for (var iterationNumber = 1; ; iterationNumber++)
         {
             var iteration = scope.Iteration(iterationNumber);
             var conditionStepKey = DurableLoopStepKeys.Condition(iteration);
-            var conditionDependency = previousCommitStepKey ?? entryDependencyStepKey;
+            var conditionDependency = previousCommitStepKey ?? loopEntryDependency;
+            if (!completedSteps.ContainsKey(conditionStepKey))
+            {
+                await EnsureTimeLimitNotExceededAsync(
+                    scope,
+                    resolvedLimits,
+                    conditionDependency,
+                    cancellationToken).ConfigureAwait(false);
+            }
             var conditionOptions = conditionDependency is null
                 ? null
                 : new StepOptions { DependsOn = [conditionDependency] };
@@ -89,23 +109,16 @@ public sealed partial class WorkflowContext
 
             if (iterationNumber > loopOptions.MaxIterations)
             {
-                var limitStepKey = DurableLoopStepKeys.Limit(scope);
-                await StepAsync(
-                    limitStepKey,
-                    loopOptions.MaxIterations,
-                    async (limit, step, token) =>
-                    {
-                        await step.EmitAsync(
-                            WorkflowEventTypes.LoopLimitExceeded,
-                            new LoopLimitExceededEvent(scope.DisplayPath, limit),
-                            token).ConfigureAwait(false);
-                        return limit;
-                    },
-                    new StepOptions { DependsOn = [conditionStepKey] },
+                await FailLoopLimitAsync(
+                    scope,
+                    new LoopLimitExceededEvent(
+                        scope.DisplayPath,
+                        LoopLimitKind.IterationCount,
+                        loopOptions.MaxIterations,
+                        null,
+                        null),
+                    [conditionStepKey],
                     cancellationToken).ConfigureAwait(false);
-                throw new LoopLimitExceededException(
-                    scope.DisplayPath,
-                    loopOptions.MaxIterations);
             }
 
             var commitStepKey = DurableLoopStepKeys.Commit(iteration);
@@ -129,6 +142,12 @@ public sealed partial class WorkflowContext
                 continue;
             }
 
+            await EnsureTimeLimitNotExceededAsync(
+                scope,
+                resolvedLimits,
+                conditionStepKey,
+                cancellationToken).ConfigureAwait(false);
+
             var loopIteration = new WorkflowLoopIteration<TState>(
                 this,
                 iteration,
@@ -146,6 +165,11 @@ public sealed partial class WorkflowContext
             {
                 conditionStepKey
             };
+            await EnsureTimeLimitNotExceededAsync(
+                scope,
+                resolvedLimits,
+                commitDependencies,
+                cancellationToken).ConfigureAwait(false);
             var committedOutcome = await StepAsync(
                 commitStepKey,
                 pendingCommit,
@@ -175,6 +199,155 @@ public sealed partial class WorkflowContext
                     cancellationToken).ConfigureAwait(false);
             }
         }
+    }
+
+    private async Task<ResolvedLoopLimits> ResolveLoopLimitsAsync(
+        DurableLoopScope scope,
+        LoopOptions loopOptions,
+        WorkflowStepRun? existingLimitsStep,
+        string? entryDependencyStepKey,
+        CancellationToken cancellationToken)
+    {
+        if (loopOptions.Deadline is null && loopOptions.TimeBudget is null)
+            return ResolvedLoopLimits.None;
+
+        var configured = new ConfiguredLoopLimits(
+            loopOptions.MaxIterations,
+            loopOptions.Deadline,
+            loopOptions.TimeBudget);
+        var resolution = new LoopLimitResolution(
+            configured,
+            timeProvider.GetUtcNow());
+        if (existingLimitsStep is not null &&
+            existingLimitsStep.Status != StepStatus.Pending)
+        {
+            var storedResolution = Deserialize<LoopLimitResolution>(
+                existingLimitsStep.InputJson,
+                SerializationIdentity.TypeId(typeof(LoopLimitResolution)));
+            if (storedResolution.Configuration != configured)
+            {
+                throw new WorkflowStateException(
+                    $"Loop '{scope.DisplayPath}' limit configuration changed after its durable boundary was established.");
+            }
+            resolution = storedResolution;
+        }
+        var stepOptions = entryDependencyStepKey is null
+            ? null
+            : new StepOptions { DependsOn = [entryDependencyStepKey] };
+        return await StepAsync(
+            DurableLoopStepKeys.Limits(scope),
+            resolution,
+            (value, _, _) => Task.FromResult(ResolveLoopLimits(value)),
+            stepOptions,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static ResolvedLoopLimits ResolveLoopLimits(LoopLimitResolution resolution)
+    {
+        var configured = resolution.Configuration;
+        DateTimeOffset? effectiveDeadline = configured.Deadline;
+        var limitKind = configured.Deadline is null
+            ? (LoopLimitKind?)null
+            : LoopLimitKind.Deadline;
+        if (configured.TimeBudget is { } timeBudget)
+        {
+            DateTimeOffset budgetDeadline;
+            try
+            {
+                budgetDeadline = resolution.BudgetStartedAt.Add(timeBudget);
+            }
+            catch (ArgumentOutOfRangeException exception)
+            {
+                throw new WorkflowConfigurationException(
+                    "The durable loop time budget exceeds the supported timestamp range.",
+                    exception);
+            }
+
+            if (effectiveDeadline is null || budgetDeadline < effectiveDeadline)
+            {
+                effectiveDeadline = budgetDeadline;
+                limitKind = LoopLimitKind.TimeBudget;
+            }
+        }
+
+        return new ResolvedLoopLimits(
+            effectiveDeadline,
+            limitKind,
+            limitKind == LoopLimitKind.TimeBudget ? configured.TimeBudget : null);
+    }
+
+    private Task EnsureTimeLimitNotExceededAsync(
+        DurableLoopScope scope,
+        ResolvedLoopLimits limits,
+        string? dependencyStepKey,
+        CancellationToken cancellationToken) =>
+        EnsureTimeLimitNotExceededAsync(
+            scope,
+            limits,
+            dependencyStepKey is null ? [] : [dependencyStepKey],
+            cancellationToken);
+
+    private async Task EnsureTimeLimitNotExceededAsync(
+        DurableLoopScope scope,
+        ResolvedLoopLimits limits,
+        IReadOnlyCollection<string> dependencyStepKeys,
+        CancellationToken cancellationToken)
+    {
+        // Rollback replay reconstructs already committed forward work only so
+        // compensation delegates can be rebound. A wall-clock limit that
+        // expires afterward must not prevent recovery of that prior work.
+        if (IsRollback)
+            return;
+
+        if (limits.EffectiveDeadline is not { } deadline ||
+            timeProvider.GetUtcNow() <= deadline)
+        {
+            return;
+        }
+
+        await FailLoopLimitAsync(
+            scope,
+            new LoopLimitExceededEvent(
+                scope.DisplayPath,
+                limits.LimitKind!.Value,
+                null,
+                deadline,
+                limits.TimeBudget),
+            dependencyStepKeys,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task FailLoopLimitAsync(
+        DurableLoopScope scope,
+        LoopLimitExceededEvent evidence,
+        IReadOnlyCollection<string> dependencyStepKeys,
+        CancellationToken cancellationToken)
+    {
+        await StepAsync(
+            DurableLoopStepKeys.Limit(scope),
+            evidence,
+            async (value, step, token) =>
+            {
+                await step.EmitAsync(
+                    WorkflowEventTypes.LoopLimitExceeded,
+                    value,
+                    token).ConfigureAwait(false);
+                return value;
+            },
+            dependencyStepKeys.Count == 0
+                ? null
+                : new StepOptions { DependsOn = dependencyStepKeys },
+            cancellationToken).ConfigureAwait(false);
+
+        throw evidence.LimitKind == LoopLimitKind.IterationCount
+            ? new LoopLimitExceededException(
+                evidence.LoopPath,
+                evidence.MaxIterations!.Value)
+            : new LoopLimitExceededException(
+                evidence.LoopPath,
+                evidence.LimitKind,
+                evidence.Deadline!.Value,
+                evidence.TimeBudget);
     }
 
     private Task<TState> CompleteLoopAsync<TState>(
@@ -215,9 +388,29 @@ public sealed partial class WorkflowContext
         int Iterations,
         LoopCompletionReason Reason);
 
+    private sealed record ConfiguredLoopLimits(
+        int MaxIterations,
+        DateTimeOffset? Deadline,
+        TimeSpan? TimeBudget);
+
+    private sealed record LoopLimitResolution(
+        ConfiguredLoopLimits Configuration,
+        DateTimeOffset BudgetStartedAt);
+
+    private sealed record ResolvedLoopLimits(
+        DateTimeOffset? EffectiveDeadline,
+        LoopLimitKind? LimitKind,
+        TimeSpan? TimeBudget)
+    {
+        public static ResolvedLoopLimits None { get; } = new(null, null, null);
+    }
+
     private sealed record LoopLimitExceededEvent(
         string LoopPath,
-        int MaxIterations);
+        LoopLimitKind LimitKind,
+        int? MaxIterations,
+        DateTimeOffset? Deadline,
+        TimeSpan? TimeBudget);
 
     private sealed record LoopConditionInput<TState>(TState State, int MaxIterations);
 

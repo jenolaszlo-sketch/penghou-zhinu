@@ -262,7 +262,11 @@ ReviewState final = await workflow.LoopAsync(
             ? iteration.Break(nextState)
             : iteration.Continue(nextState);
     },
-    new LoopOptions(maxIterations: 10),
+    new LoopOptions(maxIterations: 10)
+    {
+        TimeBudget = TimeSpan.FromMinutes(15),
+        Deadline = reviewWindowClosesAt
+    },
     cancellationToken);
 ```
 
@@ -273,9 +277,15 @@ Completed body steps and committed control outcomes survive replay. Restarting
 a body step with dependent invalidation preserves earlier iterations and reruns
 that and later iterations. If the condition remains true after the configured
 maximum, the workflow fails with `LoopLimitExceededException` and records
-durable limit evidence. Perform body work and create outcomes through the
-supplied iteration context so Zhinu can preserve dependencies and reject
-cross-scope control.
+durable limit evidence. An optional `Deadline` is absolute. An optional
+`TimeBudget` is wall-clock time measured from the loop's first durable entry;
+Zhinu persists the resolved boundary, so a worker restart does not grant a new
+budget. When both are supplied, the earlier boundary wins. Limits are checked
+before uncommitted condition/body work and again before the iteration commit.
+They do not forcibly interrupt user code already running; use a step
+`ExecutionTimeout` when an individual attempt must be bounded. Perform body
+work and create outcomes through the supplied iteration context so Zhinu can
+preserve dependencies and reject cross-scope control.
 
 Create a nested loop through its owning outer iteration:
 

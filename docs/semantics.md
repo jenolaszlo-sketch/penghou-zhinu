@@ -175,9 +175,28 @@ once more. False completes normally. True commits one replay-safe
 `loop-limit-exceeded` event and fails with `LoopLimitExceededException`; the
 last state is never silently returned as success.
 
+`LoopOptions.Deadline` adds an absolute wall-clock boundary.
+`LoopOptions.TimeBudget` adds a relative wall-clock budget beginning at the
+loop's first durable entry. When either is configured, Zhinu resolves and
+commits the effective absolute boundary in the loop's `limits` step. Replay and
+ordinary worker recovery reuse that value instead of starting the budget again.
+When both are present, the earlier boundary is authoritative.
+
+Time limits are enforced before an uncommitted condition or body begins and
+again before its iteration state is committed. Already committed iterations
+are reconstructed before the limit is applied to new work. Exceeding a time
+limit commits the same replay-safe `loop-limit-exceeded` evidence and fails with
+`LoopLimitExceededException`, whose `LimitKind` distinguishes iteration count,
+deadline, and time budget. The budget includes durable waits and worker
+downtime; it is elapsed wall-clock time, not CPU time. It does not kill a body
+delegate already executing. Use step `ExecutionTimeout` to cooperatively bound
+an individual attempt. Explicitly restarting the loop's `LimitsStep` is an
+administrative reset of the relative budget and invalidates its dependents;
+ordinary resume never resets it.
+
 Loop and body names use only ASCII letters, digits, `_`, `-`, and `.`, with a
 maximum length of 128 characters. Zhinu reserves `$loop/` for generated
-condition, body, commit, limit, and nested-scope step keys. Root callers retain
+limits, condition, body, commit, limit, and nested-scope step keys. Root callers retain
 their logical loop key as the durable final-result step. Nested final keys are
 derived from their parent iteration. Typed identities are authoritative inside
 the runtime; encoded keys are bounded to 4,096 characters and remain a
@@ -187,7 +206,8 @@ Administrative callers construct `WorkflowLoopReference` values from the same
 stable structural names used by workflow code. Selecting a parent iteration and
 calling `NestedLoop` reproduces lexical nested identity without exposing the
 encoded key. Iteration references select condition, named body, and commit
-boundaries; loop references select final and limit boundaries. These references
+boundaries; loop references select resolved-limits, failure-limit, and final
+boundaries. These references
 feed loop progress, restart preview, restart, and idempotent restart-receipt
 operations. The existing step repository remains authoritative, so typed loop
 administration adds no parallel state or provider contract.

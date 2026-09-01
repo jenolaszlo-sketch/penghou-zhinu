@@ -208,7 +208,8 @@ Status: **executable, recovery-hardened, and operationally inspectable**.
 
 Implemented in the first slice:
 
-- `WorkflowContext.LoopAsync<TState>` with an explicit positive maximum and a
+- `WorkflowContext.LoopAsync<TState>` with an explicit positive maximum,
+  optional absolute deadline and durable relative wall-clock budget, and a
   deterministic precondition contract;
 - one-based runtime iteration identity exposed through a typed iteration
   context, iteration-scoped body steps, and an iteration-local dependency
@@ -247,6 +248,10 @@ Implemented in the first slice:
   typed run handle, without requiring callers to construct encoded step keys;
 - typed `LoopLimitExceededException`, multi-target SQLite integration tests,
   and public API baseline coverage.
+- a persisted resolved-limits boundary that chooses the earlier deadline or
+  time budget once, survives worker interruption without renewal, fences state
+  commits after expiry, emits typed replay-safe evidence, and is exposed through
+  loop progress and administration references;
 
 This slice deliberately adds no loop table or provider interface. Existing
 step revisions, dependencies, events, and fenced completion already form the
@@ -258,7 +263,6 @@ Still required before the checkpoint is complete:
 
 - an OS-level subprocess termination test immediately before and after the
   state-commit boundary to corroborate the deterministic interruption suite;
-- design of optional deadline/budget limits;
 - provider-conformance coverage for the composed loop behavior.
 
 Implement durable state-dependent repetition as a first-class Zhinu runtime

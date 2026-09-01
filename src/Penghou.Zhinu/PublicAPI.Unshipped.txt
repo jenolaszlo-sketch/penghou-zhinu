@@ -132,12 +132,24 @@ Penghou.Zhinu.LoopNestingLimitExceededException.LoopNestingLimitExceededExceptio
 Penghou.Zhinu.LoopNestingLimitExceededException.LoopPath.get -> string!
 Penghou.Zhinu.LoopNestingLimitExceededException.MaximumDepth.get -> int
 Penghou.Zhinu.LoopLimitExceededException
+Penghou.Zhinu.LoopLimitExceededException.Deadline.get -> System.DateTimeOffset?
+Penghou.Zhinu.LoopLimitExceededException.LimitKind.get -> Penghou.Zhinu.LoopLimitKind
 Penghou.Zhinu.LoopLimitExceededException.LoopKey.get -> string!
+Penghou.Zhinu.LoopLimitExceededException.LoopLimitExceededException(string! loopKey, Penghou.Zhinu.LoopLimitKind limitKind, System.DateTimeOffset deadline, System.TimeSpan? timeBudget = null) -> void
 Penghou.Zhinu.LoopLimitExceededException.LoopLimitExceededException(string! loopKey, int maxIterations) -> void
-Penghou.Zhinu.LoopLimitExceededException.MaxIterations.get -> int
+Penghou.Zhinu.LoopLimitExceededException.MaxIterations.get -> int?
+Penghou.Zhinu.LoopLimitExceededException.TimeBudget.get -> System.TimeSpan?
+Penghou.Zhinu.LoopLimitKind
+Penghou.Zhinu.LoopLimitKind.Deadline = 1 -> Penghou.Zhinu.LoopLimitKind
+Penghou.Zhinu.LoopLimitKind.IterationCount = 0 -> Penghou.Zhinu.LoopLimitKind
+Penghou.Zhinu.LoopLimitKind.TimeBudget = 2 -> Penghou.Zhinu.LoopLimitKind
 Penghou.Zhinu.LoopOptions
+Penghou.Zhinu.LoopOptions.Deadline.get -> System.DateTimeOffset?
+Penghou.Zhinu.LoopOptions.Deadline.init -> void
 Penghou.Zhinu.LoopOptions.LoopOptions(int maxIterations) -> void
 Penghou.Zhinu.LoopOptions.MaxIterations.get -> int
+Penghou.Zhinu.LoopOptions.TimeBudget.get -> System.TimeSpan?
+Penghou.Zhinu.LoopOptions.TimeBudget.init -> void
 Penghou.Zhinu.RestartReceipt
 Penghou.Zhinu.RestartReceipt.Actor.get -> string?
 Penghou.Zhinu.RestartReceipt.Actor.init -> void
@@ -282,6 +294,8 @@ Penghou.Zhinu.WorkflowLoopProgress.Iterations.get -> System.Collections.Generic.
 Penghou.Zhinu.WorkflowLoopProgress.Iterations.init -> void
 Penghou.Zhinu.WorkflowLoopProgress.LimitStep.get -> Penghou.Zhinu.WorkflowStepRun?
 Penghou.Zhinu.WorkflowLoopProgress.LimitStep.init -> void
+Penghou.Zhinu.WorkflowLoopProgress.LimitsStep.get -> Penghou.Zhinu.WorkflowStepRun?
+Penghou.Zhinu.WorkflowLoopProgress.LimitsStep.init -> void
 Penghou.Zhinu.WorkflowLoopProgress.Loop.get -> Penghou.Zhinu.WorkflowLoopReference!
 Penghou.Zhinu.WorkflowLoopProgress.Loop.init -> void
 Penghou.Zhinu.WorkflowLoopProgress.WorkflowRunId.get -> System.Guid
@@ -292,6 +306,7 @@ Penghou.Zhinu.WorkflowLoopReference.DisplayPath.get -> string!
 Penghou.Zhinu.WorkflowLoopReference.FinalStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
 Penghou.Zhinu.WorkflowLoopReference.Iteration(int number) -> Penghou.Zhinu.WorkflowLoopIterationReference!
 Penghou.Zhinu.WorkflowLoopReference.LimitStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
+Penghou.Zhinu.WorkflowLoopReference.LimitsStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
 Penghou.Zhinu.WorkflowLoopReference.Name.get -> string!
 Penghou.Zhinu.WorkflowLoopReference.ParentIteration.get -> Penghou.Zhinu.WorkflowLoopIterationReference?
 Penghou.Zhinu.WorkflowLoopStepKind
@@ -300,6 +315,7 @@ Penghou.Zhinu.WorkflowLoopStepKind.Commit = 2 -> Penghou.Zhinu.WorkflowLoopStepK
 Penghou.Zhinu.WorkflowLoopStepKind.Condition = 0 -> Penghou.Zhinu.WorkflowLoopStepKind
 Penghou.Zhinu.WorkflowLoopStepKind.Final = 4 -> Penghou.Zhinu.WorkflowLoopStepKind
 Penghou.Zhinu.WorkflowLoopStepKind.Limit = 3 -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepKind.Limits = 5 -> Penghou.Zhinu.WorkflowLoopStepKind
 Penghou.Zhinu.WorkflowLoopStepReference
 Penghou.Zhinu.WorkflowLoopStepReference.BodyStepName.get -> string?
 Penghou.Zhinu.WorkflowLoopStepReference.DisplayPath.get -> string!

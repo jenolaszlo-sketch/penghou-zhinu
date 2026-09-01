@@ -44,6 +44,10 @@ public sealed record WorkflowLoopReference
     public WorkflowLoopStepReference LimitStep =>
         WorkflowLoopStepReference.Limit(this);
 
+    /// <summary>Selects the resolved deadline and budget boundary.</summary>
+    public WorkflowLoopStepReference LimitsStep =>
+        WorkflowLoopStepReference.Limits(this);
+
     internal DurableLoopScope ToDurableScope()
     {
         if (ParentIteration is null)
@@ -102,7 +106,8 @@ public enum WorkflowLoopStepKind
     Body,
     Commit,
     Limit,
-    Final
+    Final,
+    Limits
 }
 
 /// <summary>
@@ -138,6 +143,7 @@ public sealed record WorkflowLoopStepReference
         WorkflowLoopStepKind.Commit => $"{Iteration!.DisplayPath}.commit",
         WorkflowLoopStepKind.Limit => $"{Loop.DisplayPath}.limit",
         WorkflowLoopStepKind.Final => $"{Loop.DisplayPath}.final",
+        WorkflowLoopStepKind.Limits => $"{Loop.DisplayPath}.limits",
         _ => throw new WorkflowStateException($"Unknown loop step kind '{Kind}'.")
     };
 
@@ -156,6 +162,7 @@ public sealed record WorkflowLoopStepReference
                     DurableLoopStepKeys.Commit(scope.Iteration(Iteration!.Number)),
                 WorkflowLoopStepKind.Limit => DurableLoopStepKeys.Limit(scope),
                 WorkflowLoopStepKind.Final => scope.FinalStepKey,
+                WorkflowLoopStepKind.Limits => DurableLoopStepKeys.Limits(scope),
                 _ => throw new WorkflowStateException($"Unknown loop step kind '{Kind}'.")
             };
         }
@@ -179,6 +186,9 @@ public sealed record WorkflowLoopStepReference
 
     internal static WorkflowLoopStepReference Limit(WorkflowLoopReference loop) =>
         new(loop, null, WorkflowLoopStepKind.Limit, null);
+
+    internal static WorkflowLoopStepReference Limits(WorkflowLoopReference loop) =>
+        new(loop, null, WorkflowLoopStepKind.Limits, null);
 
     internal static WorkflowLoopStepReference Final(WorkflowLoopReference loop) =>
         new(loop, null, WorkflowLoopStepKind.Final, null);

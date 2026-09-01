@@ -37,6 +37,8 @@ public sealed record WorkflowLoopProgress
 
     public IReadOnlyList<WorkflowLoopIterationProgress> Iterations { get; init; } = [];
 
+    public WorkflowStepRun? LimitsStep { get; init; }
+
     public WorkflowStepRun? LimitStep { get; init; }
 
     public WorkflowStepRun? FinalStep { get; init; }
@@ -45,7 +47,8 @@ public sealed record WorkflowLoopProgress
         Iterations.Count == 0 ? null : Iterations[^1];
 
     public bool HasStarted =>
-        Iterations.Count != 0 || LimitStep is not null || FinalStep is not null;
+        LimitsStep is not null || Iterations.Count != 0 ||
+        LimitStep is not null || FinalStep is not null;
 
     public bool IsCompleted => FinalStep?.Status == StepStatus.Completed;
 }
