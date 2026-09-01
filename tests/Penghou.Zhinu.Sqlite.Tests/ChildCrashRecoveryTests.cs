@@ -39,10 +39,22 @@ public sealed class ChildCrashRecoveryTests : WorkflowEngineTestBase
         var exec = engine.ExecuteAsync(runId, cts.Token);
         await WaitUntilAsync(() => HasStepStatusAsync(engine, runId, "child:wait", StepStatus.Running, cts.Token), cts.Token);
         await engine.CancelAsync(runId, TestContext.Current.CancellationToken);
-        try { await exec; } catch { }
+        await exec;
         var store = CreateStore();
         var childRuns = await store.GetRunSubtreeAsync(runId, 5, TestContext.Current.CancellationToken);
-        childRuns.Should().Contain(r => r.Status == WorkflowStatus.Cancelled || r.Status == WorkflowStatus.Running || r.Status == WorkflowStatus.Failed);
+        childRuns.Should().HaveCount(2)
+            .And.OnlyContain(run => run.Status == WorkflowStatus.Cancelled);
+        foreach (var run in childRuns)
+        {
+            var events = await store.GetEventsAsync(
+                run.Id,
+                0,
+                100,
+                TestContext.Current.CancellationToken);
+            events.Count(item =>
+                item.EventType == WorkflowEventTypes.WorkflowCancelled)
+                .Should().Be(1);
+        }
     }
 
     [Fact]

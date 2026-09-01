@@ -227,6 +227,10 @@ Implemented in the first slice:
 - deterministic worker-interruption coverage before a body-step commit, before
   and after a continue commit, and after a break commit, proving one logical
   iteration commit and no body re-entry after a committed disposition;
+- explicit cancellation coverage distinguishing resumable execution-token
+  interruption from durable `CancelAsync`, including immediate lease release,
+  committed-iteration reuse, cancellation-resistant delegate fencing,
+  idempotent evidence, and parent/child terminal propagation;
 - stale-generation coverage proving a replaced worker cannot commit an
   iteration or its event, followed by successful recovery under the new
   generation;
@@ -254,8 +258,6 @@ Still required before the checkpoint is complete:
 
 - an OS-level subprocess termination test immediately before and after the
   state-commit boundary to corroborate the deterministic interruption suite;
-- explicit host-requested cancellation tests distinguishing resumable worker
-  interruption from durable run cancellation;
 - design of optional deadline/budget limits;
 - provider-conformance coverage for the composed loop behavior.
 

@@ -422,6 +422,14 @@ or recovery operations. Caller-facing wait and signal deadlines throw
 `WorkflowTimeoutException`; duplicate workflow or activity identities throw
 `WorkflowRegistrationException`.
 
+Cancellation has two deliberately different meanings. Cancelling the token
+passed to `ExecuteAsync` stops the current worker attempt and releases its lease;
+the durable run remains `Running` and can resume elsewhere. `CancelAsync` records
+terminal user or administrative intent, cancels the current run generation and
+its child subtree, and fences late completion even if in-process user code
+ignores cancellation. See [execution semantics](docs/semantics.md) for the full
+contract.
+
 ## Delivery guarantee
 
 Zhinu provides:

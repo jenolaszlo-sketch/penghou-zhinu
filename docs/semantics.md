@@ -46,13 +46,27 @@ rather than only implied by code.
 
 ## Cancellation meaning
 
-- `CancelAsync` persists a `Cancelled` run and best-effort signals any local
-  execution holding that run. Running work is asked to stop cooperatively via
-  the cancellation token; it is not killed.
-- Cancelling propagates to the run's child subtree.
-- A run claimed after cancellation is not executed. Cancellation is distinct
-  from caller `CancellationToken`: cancelling a `WaitAsync`/`ExecuteAsync` call
-  does not cancel the workflow; use `CancelAsync` for that.
+- Cancelling the token passed to `ExecuteAsync` interrupts only that execution
+  attempt. Zhinu releases its run lease and leaves the run `Running`, so another
+  worker can resume it. Committed steps and loop iterations are reused; work
+  interrupted before its commit remains uncommitted and may execute again.
+- Cancelling a `WaitAsync` token stops only the caller's wait. It does not alter
+  the durable run.
+- `CancelAsync` is the durable, terminal operation. It atomically persists the
+  run as `Cancelled`, cancels its current-generation unfinished steps, clears
+  the run lease, and records one `workflow-cancelled` event. Repeating the same
+  cancellation is idempotent.
+- `CancelAsync` also best-effort signals any local execution holding the run and
+  propagates cancellation to the run's child subtree. Cooperative code should
+  stop when its token is cancelled, but cancellation does not kill a thread or
+  process.
+- Persisted cancellation is authoritative even when user code ignores its
+  token: step-status, lease, and generation fences prevent that stale delegate
+  from committing a late result. A cancelled run cannot be resumed by calling
+  `ExecuteAsync` again.
+
+Use an execution token for host shutdown or worker handoff. Use `CancelAsync`
+when a user or administrator intends to terminate the durable workflow.
 
 ## Workflow version disappears
 
