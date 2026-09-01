@@ -14,18 +14,42 @@ public sealed partial class WorkflowContext
     /// <see cref="WorkflowLoopIteration{TState}"/>. Independent collection work
     /// belongs in <see cref="FanOutAsync{TInput,TOutput}(string,IReadOnlyList{TInput},Func{TInput,WorkflowStepContext,CancellationToken,Task{TOutput}},StepOptions?,CancellationToken)"/>.
     /// </remarks>
-    public async Task<TState> LoopAsync<TState>(
+    public Task<TState> LoopAsync<TState>(
         string loopKey,
         TState initialState,
         Func<TState, bool> continueWhile,
         Func<WorkflowLoopIteration<TState>, CancellationToken, Task<LoopBodyOutcome<TState>>> body,
         LoopOptions options,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        LoopCoreAsync(
+            DurableLoopScope.Root(loopKey),
+            initialState,
+            continueWhile,
+            body,
+            options,
+            entryDependencyStepKey: null,
+            cancellationToken);
+
+    internal async Task<TState> LoopCoreAsync<TState>(
+        DurableLoopScope scope,
+        TState initialState,
+        Func<TState, bool> continueWhile,
+        Func<WorkflowLoopIteration<TState>, CancellationToken, Task<LoopBodyOutcome<TState>>> body,
+        LoopOptions loopOptions,
+        string? entryDependencyStepKey,
+        CancellationToken cancellationToken)
     {
-        DurableLoopIdentity.ValidateName(loopKey, nameof(loopKey));
+        ArgumentNullException.ThrowIfNull(scope);
         ArgumentNullException.ThrowIfNull(continueWhile);
         ArgumentNullException.ThrowIfNull(body);
-        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(loopOptions);
+        if (scope.Depth > options.MaxLoopNestingDepth)
+        {
+            throw new LoopNestingLimitExceededException(
+                scope.DisplayPath,
+                scope.Depth,
+                options.MaxLoopNestingDepth);
+        }
 
         IReadOnlyDictionary<string, WorkflowStepRun> completedSteps = IsRollback
             ? new Dictionary<string, WorkflowStepRun>(StringComparer.Ordinal)
@@ -37,15 +61,17 @@ public sealed partial class WorkflowContext
                 .ToDictionary(step => step.StepKey, StringComparer.Ordinal);
         var state = initialState;
         string? previousCommitStepKey = null;
-        for (var iteration = 1; ; iteration++)
+        for (var iterationNumber = 1; ; iterationNumber++)
         {
-            var conditionStepKey = DurableLoopIdentity.ConditionStep(loopKey, iteration);
-            var conditionOptions = previousCommitStepKey is null
+            var iteration = scope.Iteration(iterationNumber);
+            var conditionStepKey = DurableLoopStepKeys.Condition(iteration);
+            var conditionDependency = previousCommitStepKey ?? entryDependencyStepKey;
+            var conditionOptions = conditionDependency is null
                 ? null
-                : new StepOptions { DependsOn = [previousCommitStepKey] };
+                : new StepOptions { DependsOn = [conditionDependency] };
             var shouldContinue = await StepAsync(
                 conditionStepKey,
-                new LoopConditionInput<TState>(state, options.MaxIterations),
+                new LoopConditionInput<TState>(state, loopOptions.MaxIterations),
                 (value, _) => Task.FromResult(continueWhile(value.State)),
                 conditionOptions,
                 cancellationToken).ConfigureAwait(false);
@@ -53,34 +79,36 @@ public sealed partial class WorkflowContext
             if (!shouldContinue)
             {
                 return await CompleteLoopAsync(
-                    loopKey,
+                    scope,
                     state,
-                    iteration - 1,
+                    iterationNumber - 1,
                     LoopCompletionReason.ConditionFalse,
                     conditionStepKey,
                     cancellationToken).ConfigureAwait(false);
             }
 
-            if (iteration > options.MaxIterations)
+            if (iterationNumber > loopOptions.MaxIterations)
             {
-                var limitStepKey = DurableLoopIdentity.LimitStep(loopKey);
+                var limitStepKey = DurableLoopStepKeys.Limit(scope);
                 await StepAsync(
                     limitStepKey,
-                    options.MaxIterations,
+                    loopOptions.MaxIterations,
                     async (limit, step, token) =>
                     {
                         await step.EmitAsync(
                             WorkflowEventTypes.LoopLimitExceeded,
-                            new LoopLimitExceededEvent(loopKey, limit),
+                            new LoopLimitExceededEvent(scope.DisplayPath, limit),
                             token).ConfigureAwait(false);
                         return limit;
                     },
                     new StepOptions { DependsOn = [conditionStepKey] },
                     cancellationToken).ConfigureAwait(false);
-                throw new LoopLimitExceededException(loopKey, options.MaxIterations);
+                throw new LoopLimitExceededException(
+                    scope.DisplayPath,
+                    loopOptions.MaxIterations);
             }
 
-            var commitStepKey = DurableLoopIdentity.CommitStep(loopKey, iteration);
+            var commitStepKey = DurableLoopStepKeys.Commit(iteration);
             if (completedSteps.TryGetValue(commitStepKey, out var completedCommit))
             {
                 var committed = Deserialize<LoopCommittedOutcome<TState>>(
@@ -91,9 +119,9 @@ public sealed partial class WorkflowContext
                 if (committed.Kind == LoopBodyOutcomeKind.Break)
                 {
                     return await CompleteLoopAsync(
-                        loopKey,
+                        scope,
                         state,
-                        iteration,
+                        iterationNumber,
                         LoopCompletionReason.Break,
                         commitStepKey,
                         cancellationToken).ConfigureAwait(false);
@@ -103,7 +131,6 @@ public sealed partial class WorkflowContext
 
             var loopIteration = new WorkflowLoopIteration<TState>(
                 this,
-                loopKey,
                 iteration,
                 state,
                 conditionStepKey);
@@ -127,8 +154,8 @@ public sealed partial class WorkflowContext
                     await step.EmitAsync(
                         WorkflowEventTypes.LoopIterationCommitted,
                         new LoopIterationCommittedEvent(
-                            loopKey,
-                            iteration,
+                            scope.DisplayPath,
+                            iterationNumber,
                             value.Kind),
                         token).ConfigureAwait(false);
                     return value;
@@ -140,9 +167,9 @@ public sealed partial class WorkflowContext
             if (committedOutcome.Kind == LoopBodyOutcomeKind.Break)
             {
                 return await CompleteLoopAsync(
-                    loopKey,
+                    scope,
                     state,
-                    iteration,
+                    iterationNumber,
                     LoopCompletionReason.Break,
                     commitStepKey,
                     cancellationToken).ConfigureAwait(false);
@@ -151,20 +178,23 @@ public sealed partial class WorkflowContext
     }
 
     private Task<TState> CompleteLoopAsync<TState>(
-        string loopKey,
+        DurableLoopScope scope,
         TState state,
         int iterations,
         LoopCompletionReason reason,
         string dependencyStepKey,
         CancellationToken cancellationToken) =>
         StepAsync(
-            loopKey,
+            scope.FinalStepKey,
             state,
             async (value, step, token) =>
             {
                 await step.EmitAsync(
                     WorkflowEventTypes.LoopCompleted,
-                    new LoopCompletedEvent(loopKey, iterations, reason),
+                    new LoopCompletedEvent(
+                        scope.DisplayPath,
+                        iterations,
+                        reason),
                     token).ConfigureAwait(false);
                 return value;
             },
@@ -176,16 +206,18 @@ public sealed partial class WorkflowContext
         TState State);
 
     private sealed record LoopIterationCommittedEvent(
-        string LoopKey,
+        string LoopPath,
         int Iteration,
         LoopBodyOutcomeKind Kind);
 
     private sealed record LoopCompletedEvent(
-        string LoopKey,
+        string LoopPath,
         int Iterations,
         LoopCompletionReason Reason);
 
-    private sealed record LoopLimitExceededEvent(string LoopKey, int MaxIterations);
+    private sealed record LoopLimitExceededEvent(
+        string LoopPath,
+        int MaxIterations);
 
     private sealed record LoopConditionInput<TState>(TState State, int MaxIterations);
 
@@ -193,43 +225,5 @@ public sealed partial class WorkflowContext
     {
         ConditionFalse,
         Break
-    }
-}
-
-internal static class DurableLoopIdentity
-{
-    private const int MaximumNameLength = 128;
-
-    public static string ConditionStep(string loopKey, int iteration) =>
-        $"$loop/{loopKey}/{iteration}/condition";
-
-    public static string BodyStep(string loopKey, int iteration, string stepName) =>
-        $"$loop/{loopKey}/{iteration}/body/{stepName}";
-
-    public static string CommitStep(string loopKey, int iteration) =>
-        $"$loop/{loopKey}/{iteration}/commit";
-
-    public static string LimitStep(string loopKey) => $"$loop/{loopKey}/limit";
-
-    public static void ValidateName(string value, string parameterName)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
-        if (value.Length > MaximumNameLength)
-        {
-            throw new ArgumentException(
-                $"Durable loop names cannot exceed {MaximumNameLength} characters.",
-                parameterName);
-        }
-        foreach (var character in value)
-        {
-            if (char.IsAsciiLetterOrDigit(character) ||
-                character is '_' or '-' or '.')
-            {
-                continue;
-            }
-            throw new ArgumentException(
-                "Durable loop names may contain only ASCII letters, digits, '_', '-', and '.'.",
-                parameterName);
-        }
     }
 }

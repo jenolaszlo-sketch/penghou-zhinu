@@ -35,6 +35,41 @@ public sealed class WorkflowHandle<TOutput>
         CancellationToken cancellationToken = default) =>
         engine.GetStepsAsync(WorkflowRunId, cancellationToken);
 
+    public Task<WorkflowLoopProgress?> GetLoopProgressAsync(
+        WorkflowLoopReference loop,
+        CancellationToken cancellationToken = default) =>
+        engine.GetLoopProgressAsync(WorkflowRunId, loop, cancellationToken);
+
+    public Task<RestartPlan> PlanLoopRestartAsync(
+        WorkflowLoopStepReference target,
+        StepRestartMode mode = StepRestartMode.Dependents,
+        CancellationToken cancellationToken = default) =>
+        engine.PlanLoopRestartAsync(
+            WorkflowRunId,
+            target,
+            mode,
+            cancellationToken);
+
+    public Task<RestartPlan> RestartLoopStepAsync(
+        WorkflowLoopStepReference target,
+        RestartStepOptions? options = null,
+        CancellationToken cancellationToken = default) =>
+        engine.RestartLoopStepAsync(
+            WorkflowRunId,
+            target,
+            options,
+            cancellationToken);
+
+    public Task<RestartReceipt> RestartLoopStepWithReceiptAsync(
+        WorkflowLoopStepReference target,
+        RestartStepOptions options,
+        CancellationToken cancellationToken = default) =>
+        engine.RestartLoopStepWithReceiptAsync(
+            WorkflowRunId,
+            target,
+            options,
+            cancellationToken);
+
     public Task<WorkflowRunProgress?> GetRunProgressAsync(
         RunProgressOptions? options = null,
         CancellationToken cancellationToken = default) =>

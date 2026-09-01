@@ -10,6 +10,7 @@ namespace Penghou.Zhinu;
 public sealed class WorkflowLoopIteration<TState>
 {
     private readonly WorkflowContext workflow;
+    private readonly DurableLoopIterationIdentity identity;
     private readonly string conditionStepKey;
     private readonly object controlScope = new();
     private readonly ConcurrentDictionary<string, byte> bodyStepKeys =
@@ -17,22 +18,20 @@ public sealed class WorkflowLoopIteration<TState>
 
     internal WorkflowLoopIteration(
         WorkflowContext workflow,
-        string loopKey,
-        int iteration,
+        DurableLoopIterationIdentity identity,
         TState state,
         string conditionStepKey)
     {
         this.workflow = workflow;
+        this.identity = identity;
         this.conditionStepKey = conditionStepKey;
-        LoopKey = loopKey;
-        Iteration = iteration;
         State = state;
     }
 
-    public string LoopKey { get; }
+    public string LoopKey => identity.Scope.Name;
 
     /// <summary>The one-based logical iteration number.</summary>
-    public int Iteration { get; }
+    public int Iteration => identity.Number;
 
     /// <summary>The immutable state committed by the previous iteration.</summary>
     public TState State { get; }
@@ -52,6 +51,31 @@ public sealed class WorkflowLoopIteration<TState>
         new(controlScope, LoopBodyOutcomeKind.Break, finalState);
 
     /// <summary>
+    /// Executes a durable nested loop owned by this outer iteration. Nested
+    /// identity includes the parent loop instance and iteration, so repeated
+    /// inner names cannot collide across outer iterations.
+    /// </summary>
+    public Task<TNestedState> LoopAsync<TNestedState>(
+        string loopKey,
+        TNestedState initialState,
+        Func<TNestedState, bool> continueWhile,
+        Func<WorkflowLoopIteration<TNestedState>, CancellationToken, Task<LoopBodyOutcome<TNestedState>>> body,
+        LoopOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        var nestedScope = identity.Scope.Nest(identity, loopKey);
+        bodyStepKeys.TryAdd(nestedScope.FinalStepKey, 0);
+        return workflow.LoopCoreAsync(
+            nestedScope,
+            initialState,
+            continueWhile,
+            body,
+            options,
+            conditionStepKey,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Declares iteration-local dependencies for steps created until the
     /// returned scope is disposed. Names are resolved within this iteration.
     /// </summary>
@@ -61,10 +85,9 @@ public sealed class WorkflowLoopIteration<TState>
         var stepKeys = new string[stepNames.Length];
         for (var index = 0; index < stepNames.Length; index++)
         {
-            DurableLoopIdentity.ValidateName(stepNames[index], nameof(stepNames));
-            stepKeys[index] = DurableLoopIdentity.BodyStep(
-                LoopKey,
-                Iteration,
+            DurableLoopScope.ValidateName(stepNames[index], nameof(stepNames));
+            stepKeys[index] = DurableLoopStepKeys.Body(
+                identity,
                 stepNames[index]);
         }
         return workflow.DependsOn(stepKeys);
@@ -152,8 +175,8 @@ public sealed class WorkflowLoopIteration<TState>
 
     private string RegisterStep(string stepName)
     {
-        DurableLoopIdentity.ValidateName(stepName, nameof(stepName));
-        var stepKey = DurableLoopIdentity.BodyStep(LoopKey, Iteration, stepName);
+        DurableLoopScope.ValidateName(stepName, nameof(stepName));
+        var stepKey = DurableLoopStepKeys.Body(identity, stepName);
         bodyStepKeys.TryAdd(stepKey, 0);
         return stepKey;
     }

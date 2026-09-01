@@ -528,6 +528,24 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     }
 
     /// <summary>
+    /// Previews the dependency-aware effect of restarting a semantic loop
+    /// boundary without exposing its provider storage key.
+    /// </summary>
+    public Task<RestartPlan> PlanLoopRestartAsync(
+        Guid workflowRunId,
+        WorkflowLoopStepReference target,
+        StepRestartMode mode = StepRestartMode.Dependents,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        return PlanRestartAsync(
+            workflowRunId,
+            target.StepKey,
+            mode,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Returns the durable compensations registered for a run, one per step
     /// revision, in creation order. Each row records the committed forward
     /// result it would undo and its own lifecycle status; compensations are
@@ -672,6 +690,43 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             receipt.WasApplied ? "applied" : "existing receipt",
             receipt.Plan.StepsToInvalidate.Count);
         return receipt;
+    }
+
+    /// <summary>
+    /// Restarts a semantic loop boundary without requiring callers to construct
+    /// an encoded step key. An operation ID in <paramref name="options"/>
+    /// retains the ordinary retry-safe restart semantics.
+    /// </summary>
+    public Task<RestartPlan> RestartLoopStepAsync(
+        Guid workflowRunId,
+        WorkflowLoopStepReference target,
+        RestartStepOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        return RestartStepAsync(
+            workflowRunId,
+            target.StepKey,
+            options ?? new RestartStepOptions(),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Restarts a semantic loop boundary and returns its authoritative durable
+    /// receipt. <see cref="RestartStepOptions.OperationId"/> is required.
+    /// </summary>
+    public Task<RestartReceipt> RestartLoopStepWithReceiptAsync(
+        Guid workflowRunId,
+        WorkflowLoopStepReference target,
+        RestartStepOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        return RestartStepWithReceiptAsync(
+            workflowRunId,
+            target.StepKey,
+            options,
+            cancellationToken);
     }
 
     /// <summary>Restarts <paramref name="stepKey"/> with dependency-aware defaults.</summary>
@@ -1079,6 +1134,82 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         return await store.GetStepsAsync(workflowRunId, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Groups the current durable steps of one root or nested loop by semantic
+    /// iteration boundaries. Returns null only when the workflow run does not
+    /// exist; a loop not reached yet returns an empty snapshot.
+    /// </summary>
+    public async Task<WorkflowLoopProgress?> GetLoopProgressAsync(
+        Guid workflowRunId,
+        WorkflowLoopReference loop,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(loop);
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        if (await store.GetRunAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false) is null)
+        {
+            return null;
+        }
+
+        var steps = await store.GetStepsAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+        var scope = loop.ToDurableScope();
+        var prefix = $"{scope.StepKeyPrefix}/";
+        var groups = new SortedDictionary<int, LoopProgressBuilder>();
+
+        foreach (var step in steps)
+        {
+            if (!step.StepKey.StartsWith(prefix, StringComparison.Ordinal))
+                continue;
+
+            var remainder = step.StepKey[prefix.Length..];
+            var segments = remainder.Split('/');
+            if (segments.Length < 2 ||
+                !int.TryParse(segments[0], out var iterationNumber) ||
+                iterationNumber < 1)
+            {
+                continue;
+            }
+
+            if (!groups.TryGetValue(iterationNumber, out var group))
+            {
+                group = new LoopProgressBuilder();
+                groups.Add(iterationNumber, group);
+            }
+
+            if (segments.Length == 2 && segments[1] == "condition")
+                group.Condition = step;
+            else if (segments.Length == 2 && segments[1] == "commit")
+                group.Commit = step;
+            else if (segments.Length == 3 && segments[1] == "body")
+                group.Body.Add(step);
+        }
+
+        var iterations = groups.Select(pair =>
+            new WorkflowLoopIterationProgress
+            {
+                Iteration = loop.Iteration(pair.Key),
+                ConditionStep = pair.Value.Condition,
+                BodySteps = pair.Value.Body
+                    .OrderBy(step => step.StepKey, StringComparer.Ordinal)
+                    .ToArray(),
+                CommitStep = pair.Value.Commit,
+                Outcome = TryReadLoopOutcome(pair.Value.Commit)
+            }).ToArray();
+
+        return new WorkflowLoopProgress
+        {
+            WorkflowRunId = workflowRunId,
+            Loop = loop,
+            Iterations = iterations,
+            LimitStep = steps.SingleOrDefault(step =>
+                step.StepKey == DurableLoopStepKeys.Limit(scope)),
+            FinalStep = steps.SingleOrDefault(step =>
+                step.StepKey == scope.FinalStepKey)
+        };
     }
 
     /// <summary>
@@ -1641,6 +1772,53 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         ObjectDisposedException.ThrowIf(disposed != 0, this);
 
     internal int SubscriptionChannelCount => eventChannels.Count;
+
+    private sealed class LoopProgressBuilder
+    {
+        public WorkflowStepRun? Condition { get; set; }
+
+        public List<WorkflowStepRun> Body { get; } = [];
+
+        public WorkflowStepRun? Commit { get; set; }
+    }
+
+    private static LoopBodyOutcomeKind? TryReadLoopOutcome(WorkflowStepRun? commit)
+    {
+        if (commit?.Status != StepStatus.Completed || commit.OutputJson is null)
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(commit.OutputJson);
+            var kind = document.RootElement
+                .EnumerateObject()
+                .FirstOrDefault(property =>
+                    string.Equals(property.Name, "kind", StringComparison.OrdinalIgnoreCase))
+                .Value;
+            if (kind.ValueKind == JsonValueKind.String &&
+                Enum.TryParse<LoopBodyOutcomeKind>(
+                    kind.GetString(),
+                    ignoreCase: true,
+                    out var named) &&
+                Enum.IsDefined(named))
+            {
+                return named;
+            }
+            if (kind.ValueKind == JsonValueKind.Number &&
+                kind.TryGetInt32(out var numeric) &&
+                Enum.IsDefined(typeof(LoopBodyOutcomeKind), numeric))
+            {
+                return (LoopBodyOutcomeKind)numeric;
+            }
+        }
+        catch (JsonException)
+        {
+            // The raw durable row remains available to diagnostics. Progress
+            // projection must not hide the rest of a run because one payload
+            // is malformed or uses an unknown future representation.
+        }
+        return null;
+    }
 
     private static JsonSerializerOptions CreateSerializerOptions() =>
         ZhinuJsonDefaults.CreateDefault();

@@ -204,7 +204,7 @@ Exit criteria:
 
 ### Durable state-loop checkpoint
 
-Status: **first executable slice complete; failure-window hardening active**.
+Status: **executable, recovery-hardened, and operationally inspectable**.
 
 Implemented in the first slice:
 
@@ -232,6 +232,15 @@ Implemented in the first slice:
   generation;
 - condition-failure restart, transient body retry, terminal body-failure
   restart, and interrupted-compensation recovery with a stable idempotency key;
+- typed internal root, nested-scope, and iteration identities with deterministic
+  storage-key derivation and a 4,096-character encoded-key guard;
+- lexical nested loops through `WorkflowLoopIteration.LoopAsync`, including
+  parent-iteration ownership, collision isolation, transitive restart behavior,
+  non-local control rejection, replay, and `MaxLoopNestingDepth` enforcement;
+- public value-stable `WorkflowLoopReference`, iteration, and semantic boundary
+  references for root and nested loops; grouped progress snapshots plus typed
+  restart preview, restart, and idempotent receipt APIs on both the engine and
+  typed run handle, without requiring callers to construct encoded step keys;
 - typed `LoopLimitExceededException`, multi-target SQLite integration tests,
   and public API baseline coverage.
 
@@ -247,10 +256,6 @@ Still required before the checkpoint is complete:
   state-commit boundary to corroborate the deterministic interruption suite;
 - explicit host-requested cancellation tests distinguishing resumable worker
   interruption from durable run cancellation;
-- diagnostics/query helpers that summarize loop progress without requiring
-  callers to parse generated step keys;
-- lexically scoped nested-loop identity that includes the parent loop instance
-  and parent iteration without relying on concatenated public string keys;
 - design of optional deadline/budget limits;
 - provider-conformance coverage for the composed loop behavior.
 
@@ -304,8 +309,8 @@ provide that guarantee.
 
 #### Nested loops and lexical scope
 
-Nested loops are supported only after loop identity becomes structurally
-scoped. Each nested runtime instance must include typed internal identity for:
+Nested loops use structurally scoped typed internal identity. Each nested
+runtime instance includes:
 
 - structural node path;
 - loop instance;
@@ -313,12 +318,11 @@ scoped. Each nested runtime instance must include typed internal identity for:
 - its own one-based iteration number;
 - body node path and revision.
 
-Do not expose concatenated strings as the semantic identity contract. Stable
-serialized keys may still be derived internally, but query, restart, and
-adapter APIs should operate on typed identities. In particular, the current
-unscoped `context.LoopAsync("inner", ...)` shape must not be treated as safe
-nesting when called by multiple outer iterations because it could alias one
-inner instance across those iterations.
+Nested loops are created through the owning iteration's `LoopAsync` method,
+not by calling unscoped `WorkflowContext.LoopAsync` from inside a body. Stable
+serialized keys are derived internally from the typed scope and parent
+iteration. Public query, restart, and adapter APIs should ultimately operate on
+typed identities rather than make callers construct those encoded keys.
 
 Loop control is lexical. `Break` or `Continue` applies only to the loop context
 that created the outcome. An inner loop cannot directly break or continue an

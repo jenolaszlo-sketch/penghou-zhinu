@@ -126,6 +126,11 @@ Penghou.Zhinu.LoopBodyOutcome<TState>.State.get -> TState
 Penghou.Zhinu.LoopBodyOutcomeKind
 Penghou.Zhinu.LoopBodyOutcomeKind.Break = 1 -> Penghou.Zhinu.LoopBodyOutcomeKind
 Penghou.Zhinu.LoopBodyOutcomeKind.Continue = 0 -> Penghou.Zhinu.LoopBodyOutcomeKind
+Penghou.Zhinu.LoopNestingLimitExceededException
+Penghou.Zhinu.LoopNestingLimitExceededException.Depth.get -> int
+Penghou.Zhinu.LoopNestingLimitExceededException.LoopNestingLimitExceededException(string! loopPath, int depth, int maximumDepth) -> void
+Penghou.Zhinu.LoopNestingLimitExceededException.LoopPath.get -> string!
+Penghou.Zhinu.LoopNestingLimitExceededException.MaximumDepth.get -> int
 Penghou.Zhinu.LoopLimitExceededException
 Penghou.Zhinu.LoopLimitExceededException.LoopKey.get -> string!
 Penghou.Zhinu.LoopLimitExceededException.LoopLimitExceededException(string! loopKey, int maxIterations) -> void
@@ -194,6 +199,7 @@ Penghou.Zhinu.WorkflowLoopIteration<TState>.Continue(TState nextState) -> Pengho
 Penghou.Zhinu.WorkflowLoopIteration<TState>.DependsOn(params string![]! stepNames) -> System.IDisposable!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.Iteration.get -> int
 Penghou.Zhinu.WorkflowLoopIteration<TState>.LoopKey.get -> string!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.LoopAsync<TNestedState>(string! loopKey, TNestedState initialState, System.Func<TNestedState, bool>! continueWhile, System.Func<Penghou.Zhinu.WorkflowLoopIteration<TNestedState>!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Penghou.Zhinu.LoopBodyOutcome<TNestedState>!>!>! body, Penghou.Zhinu.LoopOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TNestedState>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.State.get -> TState
 Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TInput, TOutput>(string! stepName, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TInput, TOutput>(string! stepName, TInput input, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), System.Func<TOutput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? compensation = null) -> System.Threading.Tasks.Task<TOutput>!
@@ -206,6 +212,8 @@ Penghou.Zhinu.WorkflowRegistrationException
 Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
+Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.get -> int
+Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.set -> void
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>.WorkflowStep() -> void
 Penghou.Zhinu.WorkflowStepContext.EmitAsync<TData>(string! eventType, TData? data = default(TData?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -234,3 +242,68 @@ Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.set -> void
 static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!
 static Penghou.Zhinu.Declarative.WorkflowCompiler.Compile(Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.Declarative.WorkflowCompilationResult!
+Penghou.Zhinu.WorkflowEngine.GetLoopProgressAsync(System.Guid workflowRunId, Penghou.Zhinu.WorkflowLoopReference! loop, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowLoopProgress?>!
+Penghou.Zhinu.WorkflowEngine.PlanLoopRestartAsync(System.Guid workflowRunId, Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.StepRestartMode mode = Penghou.Zhinu.StepRestartMode.Dependents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
+Penghou.Zhinu.WorkflowEngine.RestartLoopStepAsync(System.Guid workflowRunId, Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
+Penghou.Zhinu.WorkflowEngine.RestartLoopStepWithReceiptAsync(System.Guid workflowRunId, Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartReceipt!>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.GetLoopProgressAsync(Penghou.Zhinu.WorkflowLoopReference! loop, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowLoopProgress?>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.PlanLoopRestartAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.StepRestartMode mode = Penghou.Zhinu.StepRestartMode.Dependents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.RestartLoopStepAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
+Penghou.Zhinu.WorkflowHandle<TOutput>.RestartLoopStepWithReceiptAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartReceipt!>!
+Penghou.Zhinu.WorkflowLoopIterationProgress
+Penghou.Zhinu.WorkflowLoopIterationProgress.BodySteps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowStepRun!>!
+Penghou.Zhinu.WorkflowLoopIterationProgress.BodySteps.init -> void
+Penghou.Zhinu.WorkflowLoopIterationProgress.CommitStep.get -> Penghou.Zhinu.WorkflowStepRun?
+Penghou.Zhinu.WorkflowLoopIterationProgress.CommitStep.init -> void
+Penghou.Zhinu.WorkflowLoopIterationProgress.ConditionStep.get -> Penghou.Zhinu.WorkflowStepRun?
+Penghou.Zhinu.WorkflowLoopIterationProgress.ConditionStep.init -> void
+Penghou.Zhinu.WorkflowLoopIterationProgress.Error.get -> Penghou.Zhinu.WorkflowError?
+Penghou.Zhinu.WorkflowLoopIterationProgress.IsCommitted.get -> bool
+Penghou.Zhinu.WorkflowLoopIterationProgress.Iteration.get -> Penghou.Zhinu.WorkflowLoopIterationReference!
+Penghou.Zhinu.WorkflowLoopIterationProgress.Iteration.init -> void
+Penghou.Zhinu.WorkflowLoopIterationProgress.Outcome.get -> Penghou.Zhinu.LoopBodyOutcomeKind?
+Penghou.Zhinu.WorkflowLoopIterationProgress.Outcome.init -> void
+Penghou.Zhinu.WorkflowLoopIterationProgress.WasEntered.get -> bool
+Penghou.Zhinu.WorkflowLoopIterationReference
+Penghou.Zhinu.WorkflowLoopIterationReference.BodyStep(string! name) -> Penghou.Zhinu.WorkflowLoopStepReference!
+Penghou.Zhinu.WorkflowLoopIterationReference.CommitStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
+Penghou.Zhinu.WorkflowLoopIterationReference.ConditionStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
+Penghou.Zhinu.WorkflowLoopIterationReference.DisplayPath.get -> string!
+Penghou.Zhinu.WorkflowLoopIterationReference.Loop.get -> Penghou.Zhinu.WorkflowLoopReference!
+Penghou.Zhinu.WorkflowLoopIterationReference.NestedLoop(string! name) -> Penghou.Zhinu.WorkflowLoopReference!
+Penghou.Zhinu.WorkflowLoopIterationReference.Number.get -> int
+Penghou.Zhinu.WorkflowLoopProgress
+Penghou.Zhinu.WorkflowLoopProgress.CurrentIteration.get -> Penghou.Zhinu.WorkflowLoopIterationProgress?
+Penghou.Zhinu.WorkflowLoopProgress.FinalStep.get -> Penghou.Zhinu.WorkflowStepRun?
+Penghou.Zhinu.WorkflowLoopProgress.FinalStep.init -> void
+Penghou.Zhinu.WorkflowLoopProgress.HasStarted.get -> bool
+Penghou.Zhinu.WorkflowLoopProgress.IsCompleted.get -> bool
+Penghou.Zhinu.WorkflowLoopProgress.Iterations.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowLoopIterationProgress!>!
+Penghou.Zhinu.WorkflowLoopProgress.Iterations.init -> void
+Penghou.Zhinu.WorkflowLoopProgress.LimitStep.get -> Penghou.Zhinu.WorkflowStepRun?
+Penghou.Zhinu.WorkflowLoopProgress.LimitStep.init -> void
+Penghou.Zhinu.WorkflowLoopProgress.Loop.get -> Penghou.Zhinu.WorkflowLoopReference!
+Penghou.Zhinu.WorkflowLoopProgress.Loop.init -> void
+Penghou.Zhinu.WorkflowLoopProgress.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowLoopProgress.WorkflowRunId.init -> void
+Penghou.Zhinu.WorkflowLoopReference
+Penghou.Zhinu.WorkflowLoopReference.Depth.get -> int
+Penghou.Zhinu.WorkflowLoopReference.DisplayPath.get -> string!
+Penghou.Zhinu.WorkflowLoopReference.FinalStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
+Penghou.Zhinu.WorkflowLoopReference.Iteration(int number) -> Penghou.Zhinu.WorkflowLoopIterationReference!
+Penghou.Zhinu.WorkflowLoopReference.LimitStep.get -> Penghou.Zhinu.WorkflowLoopStepReference!
+Penghou.Zhinu.WorkflowLoopReference.Name.get -> string!
+Penghou.Zhinu.WorkflowLoopReference.ParentIteration.get -> Penghou.Zhinu.WorkflowLoopIterationReference?
+Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepKind.Body = 1 -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepKind.Commit = 2 -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepKind.Condition = 0 -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepKind.Final = 4 -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepKind.Limit = 3 -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepReference
+Penghou.Zhinu.WorkflowLoopStepReference.BodyStepName.get -> string?
+Penghou.Zhinu.WorkflowLoopStepReference.DisplayPath.get -> string!
+Penghou.Zhinu.WorkflowLoopStepReference.Iteration.get -> Penghou.Zhinu.WorkflowLoopIterationReference?
+Penghou.Zhinu.WorkflowLoopStepReference.Kind.get -> Penghou.Zhinu.WorkflowLoopStepKind
+Penghou.Zhinu.WorkflowLoopStepReference.Loop.get -> Penghou.Zhinu.WorkflowLoopReference!
+static Penghou.Zhinu.WorkflowLoopReference.Root(string! name) -> Penghou.Zhinu.WorkflowLoopReference!

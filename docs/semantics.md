@@ -132,7 +132,19 @@ outcome created by another iteration or loop is rejected as workflow state
 corruption, even when both scopes use the same state type. Exceptions,
 cancellation, and retry remain Zhinu's failure mechanisms; failure is not a
 successful loop-control outcome. Nested loops require parent-scoped durable
-identity and are not supported by the initial unscoped loop API.
+identity and are created through the owning iteration's `LoopAsync` method.
+Calling root `WorkflowContext.LoopAsync` from inside a body is not a nested-loop
+declaration and does not receive parent ownership.
+
+Nested identity includes the parent scope and its one-based iteration. The
+same inner name can therefore be used in separate outer iterations without
+colliding. The nested loop's first condition depends on the owning outer
+condition, and its final result becomes a dependency of the outer iteration
+commit. Restarting inner work invalidates the containing outer transition and
+later derived work; restarting only an outer commit preserves and reuses its
+completed inner result. Inner `Break` and `Continue` outcomes are lexical and
+cannot control the outer loop. Hosts bound lexical depth with
+`ZhinuOptions.MaxLoopNestingDepth`.
 
 Worker interruption before an iteration commit leaves no committed loop
 transition. Recovery reuses any completed body steps and commits the outcome
@@ -151,9 +163,29 @@ last state is never silently returned as success.
 
 Loop and body names use only ASCII letters, digits, `_`, `-`, and `.`, with a
 maximum length of 128 characters. Zhinu reserves `$loop/` for generated
-condition, body, commit, and limit step keys. The caller's loop key is also the
-durable final-result step key, making it the dependency target for work after
-the loop.
+condition, body, commit, limit, and nested-scope step keys. Root callers retain
+their logical loop key as the durable final-result step. Nested final keys are
+derived from their parent iteration. Typed identities are authoritative inside
+the runtime; encoded keys are bounded to 4,096 characters and remain a
+persistence detail.
+
+Administrative callers construct `WorkflowLoopReference` values from the same
+stable structural names used by workflow code. Selecting a parent iteration and
+calling `NestedLoop` reproduces lexical nested identity without exposing the
+encoded key. Iteration references select condition, named body, and commit
+boundaries; loop references select final and limit boundaries. These references
+feed loop progress, restart preview, restart, and idempotent restart-receipt
+operations. The existing step repository remains authoritative, so typed loop
+administration adds no parallel state or provider contract.
+
+`GetLoopProgressAsync` groups only the selected loop's direct boundaries. A
+nested loop is inspected separately through its own reference. Every observed
+condition number appears as an iteration entry; when the final condition is
+false, that entry has no body or commit. Completed commits expose their lexical
+`Continue` or `Break` outcome without deserializing the loop's typed state, and
+each iteration summarizes its first durable error. The snapshot returns null
+only when the workflow run is absent. An existing run that has not reached the
+selected loop returns a non-null snapshot with `HasStarted == false`.
 
 Code-first condition delegates must be deterministic and side-effect-free.
 Code implementation compatibility remains the workflow host's responsibility;

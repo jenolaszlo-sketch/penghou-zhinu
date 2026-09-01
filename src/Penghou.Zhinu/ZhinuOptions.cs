@@ -29,6 +29,9 @@ public sealed class ZhinuOptions
     /// </summary>
     public int MaxNestingDepth { get; set; } = 16;
 
+    /// <summary>Maximum lexical depth of durable state loops, including the root loop.</summary>
+    public int MaxLoopNestingDepth { get; set; } = 16;
+
     private readonly List<IWorkflowArtifactValidator> artifactValidators = [];
 
     /// <summary>
@@ -59,7 +62,8 @@ public sealed class ZhinuOptions
             ShutdownTimeout = ShutdownTimeout,
             LeaseRecoveryInterval = LeaseRecoveryInterval,
             ScanBatchSize = ScanBatchSize,
-            MaxNestingDepth = MaxNestingDepth
+            MaxNestingDepth = MaxNestingDepth,
+            MaxLoopNestingDepth = MaxLoopNestingDepth
         };
         foreach (var v in artifactValidators) clone.artifactValidators.Add(v);
         return clone;
@@ -86,6 +90,8 @@ public sealed class ZhinuOptions
             throw new ArgumentOutOfRangeException(nameof(ScanBatchSize));
         if (MaxNestingDepth < 1)
             throw new ArgumentOutOfRangeException(nameof(MaxNestingDepth));
+        if (MaxLoopNestingDepth < 1)
+            throw new ArgumentOutOfRangeException(nameof(MaxLoopNestingDepth));
         if (artifactValidators.Any(validator => validator is null))
             throw new ArgumentException("Artifact validators must not contain null.", nameof(ArtifactValidators));
     }

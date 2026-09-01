@@ -277,6 +277,68 @@ durable limit evidence. Perform body work and create outcomes through the
 supplied iteration context so Zhinu can preserve dependencies and reject
 cross-scope control.
 
+Create a nested loop through its owning outer iteration:
+
+```csharp
+ReviewState innerResult = await outer.LoopAsync(
+    "inner-review",
+    innerInitialState,
+    state => !state.Approved,
+    async (inner, ct) =>
+    {
+        ReviewState next = await inner.StepAsync(
+            "review",
+            inner.State,
+            ReviewAsync,
+            cancellationToken: ct);
+        return next.Approved
+            ? inner.Break(next)
+            : inner.Continue(next);
+    },
+    new LoopOptions(maxIterations: 5),
+    cancellationToken);
+```
+
+The nested identity includes the outer loop and iteration. Inner loops with the
+same name in different outer iterations therefore cannot collide. Inner loop
+control is lexical: complete the inner loop and let the outer body explicitly
+decide whether its own outcome should continue or break. Configure lexical
+depth with `ZhinuOptions.MaxLoopNestingDepth`.
+
+Inspect or selectively restart loop work through semantic references; callers
+do not need to construct Zhinu's encoded persistence keys:
+
+```csharp
+WorkflowLoopReference outer = WorkflowLoopReference.Root("refinement");
+WorkflowLoopReference inner = outer.Iteration(2).NestedLoop("inner-review");
+
+WorkflowLoopProgress? progress = await handle.GetLoopProgressAsync(
+    inner,
+    cancellationToken);
+
+WorkflowLoopStepReference target = inner.Iteration(1).BodyStep("review");
+RestartPlan preview = await handle.PlanLoopRestartAsync(
+    target,
+    cancellationToken: cancellationToken);
+
+RestartReceipt receipt = await handle.RestartLoopStepWithReceiptAsync(
+    target,
+    new RestartStepOptions
+    {
+        OperationId = commandId,
+        Actor = "operator",
+        Reason = "review evidence changed"
+    },
+    cancellationToken);
+```
+
+Progress groups current condition, body, and commit rows by one-based loop
+iteration, summarizes committed `Continue`/`Break` outcomes and failures, and
+exposes final/limit boundaries. A final false condition may be the current
+observed iteration even though its body was never entered. Restart preview
+remains non-mutating, while a stable operation ID makes the eventual restart
+safe to retry after an ambiguous client failure.
+
 `Penghou.Zhinu.Hosting` creates and asynchronously disposes a fresh DI scope
 for every execution and compensation attempt. Completed-step replay creates no
 scope and resolves no implementation. Step instances are ephemeral; durable
