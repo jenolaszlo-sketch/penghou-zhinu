@@ -100,6 +100,8 @@ Penghou.Zhinu.IIdempotentWorkflowRestartRepository
 Penghou.Zhinu.IIdempotentWorkflowRestartRepository.RestartStepIdempotentlyAsync(System.Guid workflowRunId, string! stepKey, Penghou.Zhinu.StepRestartMode mode, System.Guid operationId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.RestartReceipt!>
 Penghou.Zhinu.IIdempotentWorkflowSignalRepository
 Penghou.Zhinu.IIdempotentWorkflowSignalRepository.SendSignalIdempotentlyAsync(System.Guid workflowRunId, string! signalName, string? dataJson, System.Guid signalId, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.SignalSendReceipt!>
+Penghou.Zhinu.IAuditedWorkflowCancellationRepository
+Penghou.Zhinu.IAuditedWorkflowCancellationRepository.CancelRunAsync(System.Guid workflowRunId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Penghou.Zhinu.IWorkflowAdministration
 Penghou.Zhinu.IWorkflowAdministration.CancelAsync(System.Guid workflowRunId, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.IWorkflowClient

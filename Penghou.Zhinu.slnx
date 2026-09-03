@@ -15,6 +15,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Penghou.Zhinu.Tests/Penghou.Zhinu.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Sqlite.Tests/Penghou.Zhinu.Sqlite.Tests.csproj" />
+    <Project Path="tests/Penghou.Zhinu.Sqlite.ProcessProbe/Penghou.Zhinu.Sqlite.ProcessProbe.csproj" />
     <Project Path="tests/Penghou.Zhinu.Agents.Tests/Penghou.Zhinu.Agents.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Hosting.Tests/Penghou.Zhinu.Hosting.Tests.csproj" />
     <Project Path="tests/Penghou.Zhinu.Hosting.AspNetCore.Tests/Penghou.Zhinu.Hosting.AspNetCore.Tests.csproj" />

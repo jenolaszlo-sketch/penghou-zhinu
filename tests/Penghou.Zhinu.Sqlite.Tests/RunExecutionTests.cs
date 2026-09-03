@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Text.Json;
 
 namespace Penghou.Zhinu.Sqlite.Tests;
 
@@ -183,6 +184,32 @@ public sealed class RunExecutionTests : WorkflowEngineTestBase
             runId,
             TestContext.Current.CancellationToken))!.Status.Should().Be(WorkflowStatus.Cancelled);
         workflow.FirstCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CancelAsync_PersistsAuditFieldsInCancellationEvent()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "cancel-audit");
+        var runId = await engine.StartAsync(
+            "cancel-audit",
+            "1",
+            "value",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await engine.CancelAsync(
+            runId,
+            "operator-1",
+            "superseded",
+            TestContext.Current.CancellationToken);
+
+        var cancellation = (await engine.GetEventsAsync(
+                runId,
+                cancellationToken: TestContext.Current.CancellationToken))
+            .Single(item => item.EventType == WorkflowEventTypes.WorkflowCancelled);
+        using var data = JsonDocument.Parse(cancellation.DataJson!);
+        data.RootElement.GetProperty("actor").GetString().Should().Be("operator-1");
+        data.RootElement.GetProperty("reason").GetString().Should().Be("superseded");
     }
 
     [Fact]

@@ -32,7 +32,10 @@ public enum WorkflowConformanceCapability
     Transactions,
 
     /// <summary>Administrative restart retries return one durable receipt.</summary>
-    IdempotentAdministration
+    IdempotentAdministration,
+
+    /// <summary>Composed durable loops preserve nested state and boundaries.</summary>
+    Loops
 }
 
 /// <summary>The outcome of one conformance capability group.</summary>

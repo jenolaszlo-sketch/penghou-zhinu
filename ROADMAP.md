@@ -133,8 +133,11 @@ Remaining foundation work:
   cutting `0.1.0-preview.12`.
   Progress: `StepRestartMode.CreationOrder` now carries diagnostic
   `ZHINUOBS001`, documents its replacements and removal window, and retains
-  narrowly suppressed compatibility tests. The restart overload and provider
-  contract review remains open.
+  narrowly suppressed compatibility tests. The non-receipt restart overload
+  and `IWorkflowStepRepository.RestartStepAsync` provider contract were
+  audited and intentionally remain supported: both represent explicitly
+  non-idempotent behavior needed by providers without the optional receipt
+  capability, so deprecating them would misclassify a supported operation.
 - Expand store conformance tests beyond round-trip smoke checks.
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
 - Publish benchmark methodology and baseline results.
@@ -259,11 +262,12 @@ provider-neutral persistence primitive and keep SQLite replaceable. Introduce
 new store contracts only if the remaining crash/concurrency tests demonstrate
 an invariant that cannot be expressed atomically through those primitives.
 
-Still required before the checkpoint is complete:
+The remaining checkpoint work is complete for `0.1.0-preview.12`:
 
-- an OS-level subprocess termination test immediately before and after the
-  state-commit boundary to corroborate the deterministic interruption suite;
-- provider-conformance coverage for the composed loop behavior.
+- an OS-level subprocess termination test now exercises process loss immediately
+  before and after the state-commit boundary and verifies exactly-once recovery;
+- provider-conformance coverage now exercises composed outer and nested
+  `LoopAsync` state, body steps, and durable boundary events.
 
 Implement durable state-dependent repetition as a first-class Zhinu runtime
 construct before a public authoring DSL depends on it. Ordinary C# `for`,

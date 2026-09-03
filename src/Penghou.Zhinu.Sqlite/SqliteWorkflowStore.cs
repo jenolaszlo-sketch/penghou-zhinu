@@ -18,7 +18,8 @@ namespace Penghou.Zhinu.Sqlite;
 public sealed class SqliteWorkflowStore :
     IWorkflowStore,
     IIdempotentWorkflowRestartRepository,
-    IIdempotentWorkflowSignalRepository
+    IIdempotentWorkflowSignalRepository,
+    IAuditedWorkflowCancellationRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -148,6 +149,21 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "run.cancel",
             () => workflows.CancelRunAsync(workflowRunId, now, cancellationToken));
+
+    public ValueTask CancelRunAsync(
+        Guid workflowRunId,
+        string? actor,
+        string? reason,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "run.cancel",
+            () => workflows.CancelRunAsync(
+                workflowRunId,
+                actor,
+                reason,
+                now,
+                cancellationToken));
 
     public ValueTask<int> PurgeRunsAsync(
         DateTimeOffset olderThan,

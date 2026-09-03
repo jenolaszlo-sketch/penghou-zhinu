@@ -34,6 +34,8 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
         new(StringComparer.Ordinal);
     private readonly Dictionary<string, ArmedCallback> armedCallbacks =
         new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> armedProcessTerminationMarkers =
+        new(StringComparer.Ordinal);
 
     public FaultInjectingWorkflowStore(IWorkflowStore inner)
     {
@@ -75,12 +77,20 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
         armedCallbacks[faultPoint] = new ArmedCallback(count, callback);
     }
 
+    /// <summary>Terminates the process when a completion carries the supplied output marker.</summary>
+    public void ArmProcessTerminationAtOutput(string faultPoint, string outputMarker)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputMarker);
+        armedProcessTerminationMarkers[faultPoint] = outputMarker;
+    }
+
     /// <summary>Removes all armed faults.</summary>
     public void Reset()
     {
         armedFaults.Clear();
         armedInterruptions.Clear();
         armedCallbacks.Clear();
+        armedProcessTerminationMarkers.Clear();
     }
 
     private void FaultBefore(string faultPoint)
@@ -131,11 +141,32 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     private sealed record ArmedCallback(int Remaining, Action Callback);
 
-    private async ValueTask<T> FaultAfter<T>(string faultPoint, ValueTask<T> action)
+    private async ValueTask<T> FaultAfter<T>(
+        string faultPoint,
+        ValueTask<T> action,
+        string? outputJson = null)
     {
         var result = await action.ConfigureAwait(false);
+        if (outputJson is not null &&
+            armedProcessTerminationMarkers.TryGetValue(faultPoint, out var marker) &&
+            outputJson.Contains(marker, StringComparison.OrdinalIgnoreCase))
+        {
+            armedProcessTerminationMarkers.Remove(faultPoint);
+            Environment.FailFast($"Process terminated at injected boundary '{faultPoint}'.");
+        }
         FaultBefore(faultPoint);
         return result;
+    }
+
+    private void TerminateIfOutputArmed(string faultPoint, string? outputJson)
+    {
+        if (outputJson is not null &&
+            armedProcessTerminationMarkers.TryGetValue(faultPoint, out var marker) &&
+            outputJson.Contains(marker, StringComparison.OrdinalIgnoreCase))
+        {
+            armedProcessTerminationMarkers.Remove(faultPoint);
+            Environment.FailFast($"Process terminated at injected boundary '{faultPoint}'.");
+        }
     }
 
     private async ValueTask FaultAfter(string faultPoint, ValueTask action)
@@ -191,8 +222,9 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     public ValueTask<IReadOnlyList<WorkflowEvent>> CompleteStepWithEventsAsync(Guid stepId, string ownerId, string? outputJson, DateTimeOffset now, IReadOnlyList<PendingWorkflowEvent>? events, CancellationToken ct = default)
     {
+        TerminateIfOutputArmed(BeforeStepCompletionCommit, outputJson);
         FaultBefore(BeforeStepCompletionCommit);
-        return FaultAfter(AfterStepCompletionCommit, inner.CompleteStepWithEventsAsync(stepId, ownerId, outputJson, now, events, ct));
+        return FaultAfter(AfterStepCompletionCommit, inner.CompleteStepWithEventsAsync(stepId, ownerId, outputJson, now, events, ct), outputJson);
     }
 
     public ValueTask FailStepAsync(Guid stepId, string ownerId, WorkflowError error, DateTimeOffset? retryAt, DateTimeOffset now, CancellationToken ct = default) => inner.FailStepAsync(stepId, ownerId, error, retryAt, now, ct);

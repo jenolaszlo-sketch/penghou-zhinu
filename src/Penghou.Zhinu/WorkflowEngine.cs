@@ -339,9 +339,10 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var previous = await store.GetRunAsync(workflowRunId, cancellationToken)
             .ConfigureAwait(false);
-        await store.CancelRunAsync(
+        await CancelRunDurablyAsync(
             workflowRunId,
-            timeProvider.GetUtcNow(),
+            actor,
+            reason,
             cancellationToken).ConfigureAwait(false);
         if (previous?.Status != WorkflowStatus.Cancelled)
         {
@@ -370,7 +371,11 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                 if (child.Status is WorkflowStatus.Completed or WorkflowStatus.Failed
                     or WorkflowStatus.Cancelled or WorkflowStatus.Compensated)
                     continue;
-                await store.CancelRunAsync(child.Id, timeProvider.GetUtcNow(), cancellationToken)
+                await CancelRunDurablyAsync(
+                    child.Id,
+                    actor,
+                    reason,
+                    cancellationToken)
                     .ConfigureAwait(false);
                 NotifyEventAppended(child.Id);
                 if (runningCancellations.TryGetValue(child.Id, out var childCancellation))
@@ -385,6 +390,25 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         {
             await runningCancellation.CancelAsync().ConfigureAwait(false);
         }
+    }
+
+    private ValueTask CancelRunDurablyAsync(
+        Guid workflowRunId,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken)
+    {
+        return store is IAuditedWorkflowCancellationRepository audited
+            ? audited.CancelRunAsync(
+                workflowRunId,
+                actor,
+                reason,
+                timeProvider.GetUtcNow(),
+                cancellationToken)
+            : store.CancelRunAsync(
+                workflowRunId,
+                timeProvider.GetUtcNow(),
+                cancellationToken);
     }
 
     public async Task<WorkflowRun?> GetRunAsync(

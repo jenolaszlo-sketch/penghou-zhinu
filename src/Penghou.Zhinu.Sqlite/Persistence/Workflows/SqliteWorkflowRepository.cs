@@ -207,6 +207,19 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         Guid workflowRunId,
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
+        => await CancelRunAsync(
+            workflowRunId,
+            actor: null,
+            reason: null,
+            now,
+            cancellationToken).ConfigureAwait(false);
+
+    public async ValueTask CancelRunAsync(
+        Guid workflowRunId,
+        string? actor,
+        string? reason,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
     {
         await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken)
@@ -245,7 +258,9 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
             WorkflowEventTypes.WorkflowCancelled,
             now,
             null,
-            null,
+            actor is null && reason is null
+                ? null
+                : JsonSerializer.Serialize(new { actor, reason }),
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }

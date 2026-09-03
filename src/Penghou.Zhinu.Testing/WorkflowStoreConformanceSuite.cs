@@ -27,7 +27,9 @@ public static class WorkflowStoreConformanceSuite
             (WorkflowConformanceCapability.Children, ct => VerifyChildrenAsync(fixture, ct)),
             (WorkflowConformanceCapability.Transactions, ct => VerifyTransactionsAsync(fixture, ct)),
             (WorkflowConformanceCapability.IdempotentAdministration,
-                ct => VerifyIdempotentAdministrationAsync(fixture, ct))
+                ct => VerifyIdempotentAdministrationAsync(fixture, ct)),
+            (WorkflowConformanceCapability.Loops,
+                ct => VerifyLoopsAsync(fixture, ct))
         };
         foreach (var (capability, check) in checks)
         {
@@ -227,6 +229,49 @@ public static class WorkflowStoreConformanceSuite
         catch (WorkflowOperationConflictException)
         {
             // Expected: the operation identity is permanently bound to intent.
+        }
+    }
+
+    private static async Task VerifyLoopsAsync(
+        IWorkflowStoreFixture fixture,
+        CancellationToken ct)
+    {
+        var workflow = new ComposedLoopWorkflow();
+        var engine = CreateEngine(
+            fixture.Store,
+            Registry(("loops", "1", workflow)),
+            fixture.TimeProvider,
+            FastOptions());
+        var runId = await engine.StartAsync("loops", "1", "x", cancellationToken: ct)
+            .ConfigureAwait(false);
+        await engine.ExecuteAsync(runId, ct).ConfigureAwait(false);
+        var result = await engine.WaitForCompletionAsync<string>(runId, cancellationToken: ct)
+            .ConfigureAwait(false);
+
+        if (result != "2" || workflow.OuterBodyCalls != 2 || workflow.InnerBodyCalls != 4)
+        {
+            throw new InvalidOperationException(
+                $"Composed loop returned {result} with {workflow.OuterBodyCalls} outer and " +
+                $"{workflow.InnerBodyCalls} inner body calls; expected 2, 2, and 4.");
+        }
+
+        var steps = await engine.GetStepsAsync(runId, ct).ConfigureAwait(false);
+        if (!steps.Any(step => step.StepKey == "$loop/outer/1/body/seed") ||
+            !steps.Any(step => step.StepKey == "$loop/outer/1/loop/inner/1/commit") ||
+            !steps.Any(step => step.StepKey == "$loop/outer/2/loop/inner/2/body/increment") ||
+            steps.Any(step => step.Status != StepStatus.Completed))
+        {
+            throw new InvalidOperationException(
+                "The provider did not durably compose outer and nested loop steps.");
+        }
+
+        var events = await engine.GetEventsAsync(runId, cancellationToken: ct)
+            .ConfigureAwait(false);
+        if (events.Count(item => item.EventType == WorkflowEventTypes.LoopIterationCommitted) != 6 ||
+            events.Count(item => item.EventType == WorkflowEventTypes.LoopCompleted) != 3)
+        {
+            throw new InvalidOperationException(
+                "The provider did not persist one boundary event per composed loop transition.");
         }
     }
 
@@ -431,6 +476,52 @@ public static class WorkflowStoreConformanceSuite
     {
         public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken ct) =>
             await context.StepAsync("child-step", input, (v, _) => Task.FromResult($"child:{v}"), cancellationToken: ct);
+    }
+
+    private sealed class ComposedLoopWorkflow : IWorkflow<string, string>
+    {
+        public int OuterBodyCalls;
+        public int InnerBodyCalls;
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken ct)
+        {
+            var result = await context.LoopAsync(
+                "outer",
+                0,
+                state => state < 2,
+                async (outer, token) =>
+                {
+                    Interlocked.Increment(ref OuterBodyCalls);
+                    var next = await outer.StepAsync(
+                        "seed",
+                        outer.State,
+                        (state, _, _) => Task.FromResult(state + 1),
+                        cancellationToken: token).ConfigureAwait(false);
+                    var inner = await outer.LoopAsync(
+                        "inner",
+                        0,
+                        state => state < 2,
+                        async (iteration, innerToken) =>
+                        {
+                            Interlocked.Increment(ref InnerBodyCalls);
+                            var incremented = await iteration.StepAsync(
+                                "increment",
+                                iteration.State,
+                                (state, _, _) => Task.FromResult(state + 1),
+                                cancellationToken: innerToken).ConfigureAwait(false);
+                            return iteration.Continue(incremented);
+                        },
+                        new LoopOptions(maxIterations: 2),
+                        token).ConfigureAwait(false);
+                    return outer.Continue(inner == 2 ? next : outer.State);
+                },
+                new LoopOptions(maxIterations: 2),
+                ct).ConfigureAwait(false);
+            return result.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
     }
 
     private sealed class RollbackWorkflow : IWorkflow<string, string>

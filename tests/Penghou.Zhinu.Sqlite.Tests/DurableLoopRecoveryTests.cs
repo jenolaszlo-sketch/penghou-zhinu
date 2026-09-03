@@ -1,9 +1,88 @@
 using FluentAssertions;
+using System.Diagnostics;
 
 namespace Penghou.Zhinu.Sqlite.Tests;
 
 public sealed class DurableLoopRecoveryTests : WorkflowEngineTestBase
 {
+    [Theory]
+    [InlineData("before", 1)]
+    [InlineData("after", 0)]
+    public async Task ProcessTermination_AroundStateCommit_ResumesExactlyOnce(
+        string mode,
+        int expectedBodyCallsAfterRecovery)
+    {
+        var databasePath = Path.Combine(root, $"process-{mode}.db");
+        var runIdPath = Path.Combine(root, $"process-{mode}.run");
+        var processStart = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        var processProbeAssemblyPath = GetProcessProbeAssemblyPath();
+        File.Exists(processProbeAssemblyPath).Should().BeTrue(processProbeAssemblyPath);
+        processStart.ArgumentList.Add(processProbeAssemblyPath);
+        processStart.ArgumentList.Add("--zhinu-loop-probe");
+        processStart.ArgumentList.Add(databasePath);
+        processStart.ArgumentList.Add(runIdPath);
+        processStart.ArgumentList.Add(mode);
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(
+            TestContext.Current.CancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+        using var process = Process.Start(processStart);
+        process.Should().NotBeNull();
+        await WaitUntilAsync(
+            () => Task.FromResult(File.Exists(runIdPath)),
+            timeout.Token);
+        await process!.WaitForExitAsync(timeout.Token);
+        process.ExitCode.Should().NotBe(0);
+
+        var runId = Guid.Parse(await File.ReadAllTextAsync(runIdPath, timeout.Token));
+        var store = new SqliteWorkflowStore(
+            new ZhinuSqliteOptions
+            {
+                DatabasePath = databasePath,
+                BusyTimeout = TimeSpan.FromSeconds(5),
+                Pooling = false
+            });
+        var crashedRun = await store.GetRunAsync(runId, timeout.Token);
+        crashedRun.Should().NotBeNull();
+        crashedRun!.LeaseExpiresAt.Should().NotBeNull();
+        var leaseDelay = crashedRun.LeaseExpiresAt!.Value - DateTimeOffset.UtcNow;
+        if (leaseDelay > TimeSpan.Zero)
+            await Task.Delay(leaseDelay + TimeSpan.FromMilliseconds(50), timeout.Token);
+        await store.RecoverExpiredLeasesAsync(
+            DateTimeOffset.UtcNow,
+            timeout.Token);
+        var workflow = new ProcessRecoveryLoopWorkflow();
+        var recovery = new WorkflowEngine(
+            store,
+            new WorkflowRegistry().Register(
+                "process-loop-boundary",
+                "1",
+                workflow),
+            new ZhinuOptions
+            {
+                PollInterval = TimeSpan.FromMilliseconds(10),
+                LeaseDuration = TimeSpan.FromSeconds(2),
+                LeaseRenewalInterval = TimeSpan.FromMilliseconds(600)
+            });
+        await recovery.ExecuteAsync(runId, timeout.Token);
+        var result = await recovery.WaitForCompletionAsync<string>(
+            runId,
+            cancellationToken: timeout.Token);
+
+        result.Should().Be("1");
+        workflow.BodyCalls.Should().Be(expectedBodyCallsAfterRecovery);
+        var events = await recovery.GetEventsAsync(
+            runId,
+            cancellationToken: timeout.Token);
+        events.Count(item => item.EventType == WorkflowEventTypes.LoopIterationCommitted)
+            .Should().Be(1);
+    }
+
     [Fact]
     public async Task BodyStep_InterruptedBeforeCommit_RerunsWithoutAdvancingLoop()
     {
@@ -437,5 +516,50 @@ public sealed class DurableLoopRecoveryTests : WorkflowEngineTestBase
                 cancellationToken);
             return $"{input}:{result}";
         }
+    }
+
+    private sealed class ProcessRecoveryLoopWorkflow : IWorkflow<string, string>
+    {
+        public int BodyCalls;
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            var result = await context.LoopAsync(
+                "state",
+                0,
+                state => state < 1,
+                async (iteration, token) =>
+                {
+                    Interlocked.Increment(ref BodyCalls);
+                    var next = await iteration.StepAsync(
+                        "increment",
+                        iteration.State,
+                        (state, _, _) => Task.FromResult(state + 1),
+                        cancellationToken: token);
+                    return iteration.Continue(next);
+                },
+                new LoopOptions(maxIterations: 2),
+                cancellationToken);
+            return result.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+    private static string GetProcessProbeAssemblyPath()
+    {
+        var testOutput = new DirectoryInfo(AppContext.BaseDirectory);
+        var targetFramework = testOutput.Name;
+        var configuration = testOutput.Parent?.Name ?? "Debug";
+        var testsRoot = testOutput.Parent?.Parent?.Parent?.Parent?.FullName ??
+            throw new InvalidOperationException("Could not resolve the test output root.");
+        return Path.Combine(
+            testsRoot,
+            "Penghou.Zhinu.Sqlite.ProcessProbe",
+            "bin",
+            configuration,
+            targetFramework,
+            "Penghou.Zhinu.Sqlite.ProcessProbe.dll");
     }
 }
