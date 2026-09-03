@@ -187,6 +187,35 @@ public sealed class RollbackTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task RollbackAsync_CompensationTimeout_PersistsTypedFailure()
+    {
+        var forward = new TimeoutCompensationWorkflow(blockCompensation: false);
+        var engine = CreateEngine(forward, "rollback-timeout");
+        await engine.RunAsync<string, string>(
+            "rollback-timeout",
+            "1",
+            "x",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        var rollback = new TimeoutCompensationWorkflow(blockCompensation: true);
+        var rollbackEngine = CreateEngine(rollback, "rollback-timeout");
+        Func<Task> action = () => rollbackEngine.RollbackAsync(
+            forward.RunId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await action.Should().ThrowAsync<RollbackFailedException>();
+        var compensations = await rollbackEngine.GetCompensationsAsync(
+            forward.RunId,
+            TestContext.Current.CancellationToken);
+        compensations.Should().ContainSingle();
+        var compensation = compensations.Single();
+        compensation.Status.Should().Be(CompensationStatus.Failed);
+        compensation.Error!.Type.Should().Be(
+            typeof(WorkflowTimeoutException).FullName);
+        compensation.Error.Message.Should().Contain("execution timeout");
+    }
+
+    [Fact]
     public async Task RollbackToStepAsync_AfterStep_CompensatesOnlyDependents()
     {
         var forward = new RollbackWorkflow();
@@ -479,5 +508,33 @@ public sealed class RollbackTests : WorkflowEngineTestBase
             runId,
             TestContext.Current.CancellationToken))!.Status
             .Should().Be(WorkflowStatus.Pending);
+    }
+
+    private sealed class TimeoutCompensationWorkflow(bool blockCompensation)
+        : IWorkflow<string, string>
+    {
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            return await context.StepAsync(
+                "reserve",
+                input,
+                (value, _) => Task.FromResult($"reserved:{value}"),
+                new StepOptions
+                {
+                    ExecutionTimeout = TimeSpan.FromMilliseconds(25)
+                },
+                cancellationToken,
+                compensation: async (_, _, token) =>
+                {
+                    if (blockCompensation)
+                        await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                });
+        }
     }
 }

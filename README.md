@@ -432,6 +432,10 @@ or recovery operations. Caller-facing wait and signal deadlines throw
 `WorkflowTimeoutException`; duplicate workflow or activity identities throw
 `WorkflowRegistrationException`.
 
+Run deadlines and step or compensation execution timeouts also persist
+`WorkflowTimeoutException` as their durable failure type, allowing diagnostics
+and recovery tools to classify time-bound failures without parsing messages.
+
 Cancellation has two deliberately different meanings. Cancelling the token
 passed to `ExecuteAsync` stops the current worker attempt and releases its lease;
 the durable run remains `Running` and can resume elsewhere. `CancelAsync` records

@@ -584,8 +584,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     /// <see cref="StepRestartMode.Dependents"/> (default) invalidates the step
     /// and its transitive durable dependents while reusing unrelated branches;
     /// <see cref="StepRestartMode.StepOnly"/> invalidates just the step;
-    /// <see cref="StepRestartMode.CreationOrder"/> preserves the legacy
-    /// creation-order behavior. Previous step revisions are preserved, the run
+    /// Obsolete <see cref="StepRestartMode.CreationOrder"/> preserves the legacy
+    /// creation-order behavior for preview compatibility (ZHINUOBS001). Previous step revisions are preserved, the run
     /// is reset to <see cref="WorkflowStatus.Pending"/>, and the run's fencing
     /// generation is bumped so stale workers can no longer commit. If this
     /// process is currently executing the run, its execution is cancelled

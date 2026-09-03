@@ -131,15 +131,15 @@ Remaining foundation work:
   controlled, use the next development cycle to apply the obsolete markers,
   migrate those consumers, and remove confirmed compatibility-only APIs before
   cutting `0.1.0-preview.12`.
+  Progress: `StepRestartMode.CreationOrder` now carries diagnostic
+  `ZHINUOBS001`, documents its replacements and removal window, and retains
+  narrowly suppressed compatibility tests. The restart overload and provider
+  contract review remains open.
 - Expand store conformance tests beyond round-trip smoke checks.
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
-- Add a first-class durable state-loop primitive after the current runtime/API
-  hardening batch. Keep independent keyed collection work on `FanOutAsync`;
-  state-dependent sequential repetition has different persistence,
-  invalidation, and recovery semantics.
 - Complete the typed administrative failure taxonomy so restart, signal,
   cancellation, fork, rollback, and maintenance callers can distinguish
   not-found, invalid-state, definition-unavailable, stale generation or lease,
@@ -178,9 +178,9 @@ coherent batches rather than as isolated access-modifier changes:
 - Remove the exact-page extra query from run enumeration and cancel or reuse
   losing subscription poll timers so idle subscribers do not create needless
   store work or short-lived timer churn.
-- Complete the public exception taxonomy with typed workflow timeout and
-  duplicate-registration/configuration failures; do not leak ambiguous raw BCL
-  exceptions from normal workflow operations.
+- Complete the remaining public exception taxonomy. Typed workflow timeout and
+  duplicate-registration/configuration failures are implemented; normal
+  workflow operations must not leak other ambiguous raw BCL exceptions.
 - Bring `ZhinuTestHost` cleanup, clock injection, and store configurability to
   parity with the hardened test fixtures, including Windows file-lock retries.
 - Add an optional deep health probe for operational checks that must detect

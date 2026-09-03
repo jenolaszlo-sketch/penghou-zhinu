@@ -95,7 +95,7 @@ internal sealed class RunExecutionPipeline
                 workflowRunId,
                 ownerId,
                 WorkflowError.FromException(
-                    new TimeoutException(
+                    new WorkflowTimeoutException(
                         $"Workflow '{workflowRunId:D}' exceeded its deadline of {deadline:O}."),
                     now),
                 now,

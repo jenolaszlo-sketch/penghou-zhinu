@@ -201,7 +201,7 @@ internal sealed class CompensationExecutor
                 timeoutCancellation?.IsCancellationRequested == true &&
                 !cancellationToken.IsCancellationRequested)
             {
-                var timeout = new TimeoutException(
+                var timeout = new WorkflowTimeoutException(
                     $"Compensation for step '{claim.StepKey}' exceeded its execution timeout.");
                 var retryAt = ScheduleRetry(claim, retryPolicy);
                 await RecordFailureAsync(

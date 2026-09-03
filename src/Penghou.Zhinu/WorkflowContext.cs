@@ -948,7 +948,7 @@ public sealed partial class WorkflowContext
                     timeoutCancellation?.IsCancellationRequested == true &&
                     !cancellationToken.IsCancellationRequested)
                 {
-                    var timeout = new TimeoutException(
+                    var timeout = new WorkflowTimeoutException(
                         $"Workflow step '{step.StepKey}' exceeded its execution timeout.");
                     step = await RecordFailureAsync(
                         step, timeout, configured.Retry, outputType, cancellationToken)

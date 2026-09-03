@@ -357,11 +357,13 @@ public sealed class RestartStepTests : WorkflowEngineTestBase
             "x",
             cancellationToken: TestContext.Current.CancellationToken);
 
+#pragma warning disable ZHINUOBS001 // Intentional coverage of the retained compatibility mode.
         var plan = await engine.RestartStepAsync(
             workflow.RunId,
             "b",
             new RestartStepOptions { Mode = StepRestartMode.CreationOrder },
             cancellationToken: TestContext.Current.CancellationToken);
+#pragma warning restore ZHINUOBS001
 
         plan.StepsToInvalidate.Select(item => item.StepKey)
             .Should().Equal("b", "d", "e");

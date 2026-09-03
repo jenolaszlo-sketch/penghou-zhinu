@@ -1349,8 +1349,10 @@ internal sealed class SqliteStepRepository :
                 {
                     new(stepKey, RestartReason.Requested)
                 },
+#pragma warning disable ZHINUOBS001 // Compatibility mode retained until after 0.1.0-preview.12.
             StepRestartMode.CreationOrder =>
                 ResolveCreationOrder(steps, target),
+#pragma warning restore ZHINUOBS001
             StepRestartMode.Dependents =>
                 await ResolveDependentsAsync(
                     connection,

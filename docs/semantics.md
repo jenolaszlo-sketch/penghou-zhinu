@@ -253,12 +253,13 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
 ## What the deadline applies to
 
 - A run-level `Deadline` bounds the whole run: a run claimed after its deadline
-  fails with a timeout instead of executing.
+  fails with a persisted `WorkflowTimeoutException` instead of executing.
 - A child's effective deadline is the earlier of the parent's deadline and the
   explicit `ChildRunOptions.Deadline`, so a child cannot outlive its parent.
 - `WaitForCompletionAsync`'s deadline is caller-side only; it bounds how long the
   caller waits, not the run.
-- Step-level `ExecutionTimeout` bounds a single step attempt.
+- Step-level `ExecutionTimeout` bounds a single step attempt and its registered
+  compensation attempt. Exhaustion is persisted as `WorkflowTimeoutException`.
 
 ## Dependency topology
 

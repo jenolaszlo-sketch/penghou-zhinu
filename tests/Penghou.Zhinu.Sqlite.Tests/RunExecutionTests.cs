@@ -252,7 +252,7 @@ public sealed class RunExecutionTests : WorkflowEngineTestBase
             runId,
             TestContext.Current.CancellationToken)).Single();
         step.Status.Should().Be(StepStatus.Failed);
-        step.Error!.Type.Should().Be(typeof(TimeoutException).FullName);
+        step.Error!.Type.Should().Be(typeof(WorkflowTimeoutException).FullName);
     }
 
     [Fact]
@@ -293,7 +293,7 @@ public sealed class RunExecutionTests : WorkflowEngineTestBase
             runId,
             TestContext.Current.CancellationToken);
         run!.Status.Should().Be(WorkflowStatus.Failed);
-        run.Error!.Type.Should().Be(typeof(TimeoutException).FullName);
+        run.Error!.Type.Should().Be(typeof(WorkflowTimeoutException).FullName);
         workflow.FirstCalls.Should().Be(0);
     }
 

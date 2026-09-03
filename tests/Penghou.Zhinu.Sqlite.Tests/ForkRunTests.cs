@@ -87,11 +87,13 @@ public sealed class ForkRunTests : WorkflowEngineTestBase
             "x",
             cancellationToken: TestContext.Current.CancellationToken);
 
+#pragma warning disable ZHINUOBS001 // Intentional coverage of the retained compatibility mode.
         var preview = await engine.PlanForkAsync(
             sourceWorkflow.RunId,
             "b",
             StepRestartMode.CreationOrder,
             TestContext.Current.CancellationToken);
+#pragma warning restore ZHINUOBS001
 
         preview.StepsToReuse.Should().Equal("a", "c");
         preview.StepsToReexecute.Select(item => item.StepKey)
