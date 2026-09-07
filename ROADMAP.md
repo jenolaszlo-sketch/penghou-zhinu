@@ -10,15 +10,29 @@ The central principle is:
 > The workflow owns the process. Models perform bounded cognitive work inside
 > it.
 
-Prompts express intent. A compiler may translate that intent into a workflow
-artifact, but Zhinu validates the artifact and the runtime enforces its legal
-transitions, capabilities, evidence requirements, retries, and recovery.
+Prompts express intent. Fuwen may translate that intent into an immutable,
+semantically admitted plan. Zhinu verifies the exact plan/admission identity at
+activation and enforces runtime transitions, capabilities, evidence
+requirements, retries, fencing, and recovery.
 
 The target lifecycle is:
 
 ```text
 Intent → Compile → Validate → Approve → Execute → Enforce → Audit
 ```
+
+For adaptive AI work, planning may repeat while execution remains
+deterministic:
+
+```text
+AI / checkpoint -> Accept | Retry | Replan -> Fuwen immutable plan
+                                            -> Zhinu durable generation
+                                            -> Hongxian evidence
+```
+
+Zhinu never lets an AI mutate a running graph. It activates admitted immutable
+plans, owns exactly one forward-progressing generation for a logical workflow
+instance, and makes every transition durable and mechanically explainable.
 
 Zhinu must remain independently useful as a code-first durable workflow engine.
 AI authoring, model providers, and product-specific harnesses belong in adjacent
@@ -28,9 +42,10 @@ packages and applications.
 
 ### Zhinu owns
 
-- Workflow artifact and intermediate-representation contracts
+- Code-first workflow contracts and the runtime activation contract for
+  externally compiled plans
 - Activity registration and discovery
-- Structural, type, policy, and capability validation
+- Runtime plan-identity checks and capability enforcement at activity boundaries
 - Durable execution and state transitions
 - Capability enforcement at activity boundaries
 - Evidence, provenance, and artifact-revision tracking
@@ -39,7 +54,9 @@ packages and applications.
 
 ### Adjacent packages own
 
-- Natural-language methodology compilation
+- Fuwen syntax, canonical workflow IR, type checking, semantic admission,
+  immutable plan revisions, and plan comparison
+- Natural-language or AI-assisted plan proposal
 - Model-provider integrations
 - Tolerant repair of malformed model output
 - Coding-agent tools and workspace adapters
@@ -48,9 +65,9 @@ packages and applications.
 Conceptually:
 
 ```text
-Methodology compiler
+Fuwen compiler and host admission
         ↓
-Validated WorkflowArtifact
+Immutable admitted plan
         ↓
 Penghou.Zhinu runtime
         ↓
@@ -79,6 +96,94 @@ Product harness such as Solo
    evidence record should be explainable after execution.
 8. **No silent policy weakening.** Compilers and repair loops may correct syntax
    but may not remove or relax requirements merely to produce a valid artifact.
+
+## Adaptive workflow evolution
+
+Workflow evolution is a new execution capability built from immutable plans,
+not live graph surgery. It complements ordinary retry and selective restart:
+
+- **Retry** repeats inadequate work under the same plan semantics.
+- **Restart** invalidates selected durable work within one run/generation.
+- **Replan** activates a different admitted Fuwen plan revision for the same
+  logical workflow instance.
+
+Do not overload `WorkflowRun.LeaseGeneration`. It is the fencing token for
+workers within one run. Workflow evolution needs distinct durable identities:
+
+```text
+WorkflowInstanceId
+  -> ExecutionGenerationId / ordinal
+       -> Fuwen PlanRevisionId + execution fingerprint
+       -> Zhinu WorkflowRunId
+```
+
+Only one execution generation may own forward progression. Preparing and
+evaluating a candidate plan can occur without changing that owner. Cutover must
+atomically fence the old generation and establish the new active generation in
+Zhinu's authoritative store. Cross-store evidence uses outbox/forward
+reconciliation; it must not weaken this single-store ownership invariant.
+
+The initial evolution milestone is:
+
+1. Persist workflow-instance identity separately from run identity, plus an
+   immutable generation record bound to an admitted Fuwen revision and
+   execution fingerprint.
+2. Add pause as "schedule no new work", quiescence, resume-before-cutover, and
+   durable supersession. A superseded generation never becomes active again.
+3. Fence late completion: retain its result and provenance, but never schedule
+   successors in the superseded generation.
+4. Accept a bounded Fuwen semantic comparison and calculate a transition
+   preview covering unchanged/new/removed/changed nodes, running work, candidate
+   reuse, revalidation, invalidation, and cancellation impact.
+5. Extend immutable artifact production provenance with the effective inputs
+   and producer semantics needed for deterministic reuse evaluation. Reuse
+   creates a new consumption/attachment decision; it never rewrites original
+   producer provenance.
+6. Distinguish artifact invalidation from evidence/validation invalidation so
+   stricter acceptance criteria can revalidate expensive existing artifacts.
+7. Atomically activate the new generation with its reuse/invalidation map and
+   leave failed pre-cutover candidates resumable on the current generation.
+8. Add a typed checkpoint disposition such as `Accept`, `Retry`, or `Replan`.
+   `Replan` requests external planning; Zhinu does not invoke an AI planner.
+9. Preserve compensation independently. Returning to an earlier plan creates a
+   later generation and never erases or rewinds execution history.
+
+Initial safety limits should include maximum generations/replans, cumulative
+cost or work budget, wall-clock duration, maximum invalidated work, and an
+approval threshold. Rich interruption modes (`Complete`, `CancelAndRestart`,
+`CheckpointAndResume`, `DetachAndReattach`), rollback lineage, branch selection,
+and autonomous AI replanning follow only after the atomic cutover and reuse
+invariants are proven.
+
+The transition state model must distinguish preparation from authority:
+
+```text
+current:   Active -> Quiescing -> Superseded
+candidate: Created -> Prepared -> Active | Rejected
+```
+
+A committed transition record identifies the sole progression owner after a
+crash. Failure before cutover may resume the current generation; failure after
+cutover recovers the new owner and never infers authority from partially
+completed external side effects.
+
+Compatibility work must compose with existing primitives:
+
+- keyed loop iterations and fan-out items reuse at the smallest safe durable
+  identity instead of invalidating every sibling;
+- child workflows use explicit retain/complete/cancel/supersede/reattach policy
+  rather than inheriting parent supersession as implicit cancellation;
+- durable waits and signals continue only when their exact identity and
+  contract remain compatible with the new plan;
+- external batch jobs may outlive their originating generation through a fenced
+  durable operation handle, while late results remain evidence/artifacts and
+  cannot advance obsolete control flow.
+
+Acceptance coverage must include inserting prerequisite work, changing only
+acceptance criteria, preserving an unaffected parallel branch, rejecting a
+candidate and resuming before cutover, persisting a late old-generation result
+without progression, completing an external job during pause, and returning to
+an earlier plan lineage through a new generation without erasing newer history.
 
 ## Terminology
 
@@ -116,10 +221,39 @@ name, or canonical JSON payload reuse is rejected. Additive `SendSignalAsync`
 semantics remain available when each call intentionally represents a new
 signal, and optional-provider conformance covers receipt and conflict behavior.
 
+The reusable Marang integration audit confirms that existing waits, idempotent
+signal-send receipts, selective restart, artifact references, run/step identity,
+and cancellation/recovery are sufficient for Marang's in-memory and contract
+work. Durable integration remains blocked on the following reusable store
+guarantees; these are upstream runtime capabilities, not Marang-specific
+workflow policy:
+
+- Fence signal delivery and consumption by the current step revision, run
+  generation, and lease owner in the same transaction that marks the signal
+  consumed and completes the step. The current delivery surface accepts an
+  owner but the SQLite completion update is keyed only by step ID, so a stale
+  worker can consume a signal into an old revision. Add concurrent stale-worker
+  tests covering restart, lease loss, and late signal arrival.
+- Fence artifact publication from stale step executions by current producer
+  revision, run generation, and lease owner. Preserve historical references,
+  but reject a publication from an obsolete execution before it can become the
+  run's latest artifact. Add process-loss/restart race tests, including lookup
+  of the latest revision and publication-event atomicity.
+- Add a safe generic external-operation handle seam. It must persist and look up
+  an operation handle with workflow run, step execution/revision, attempt or
+  idempotency identity, owner/generation fencing, lifecycle status, and recovery
+  intent. Include crash tests before and after the external call and ambiguous
+  retry tests. `WorkflowRunOperation` is currently reserved for maintenance and
+  signal receipts and is not sufficient as a generic externally linked handle.
+
+Until these guarantees exist, Marang may use the existing capabilities for
+contract validation, in-memory orchestration, and non-durable planning, but a
+durable Marang adapter must not claim recovery-safe external integration.
+
 Remaining foundation work:
 
-- Complete a compatibility-API retirement pass before the package release after
-  `0.1.0-preview.11`.
+- Complete a compatibility-API retirement pass before the next package release
+  after `0.1.0-preview.12`.
   Inventory every public member retained only for preview compatibility, mark it
   `[Obsolete]` with a concrete replacement and diagnostic ID, migrate Zhinu's
   own callers and tests, and list the planned removal version in the release
@@ -130,7 +264,7 @@ Remaining foundation work:
   receipts; classify that behavior explicitly. Since current consumers are
   controlled, use the next development cycle to apply the obsolete markers,
   migrate those consumers, and remove confirmed compatibility-only APIs before
-  cutting `0.1.0-preview.12`.
+  cutting the next preview package.
   Progress: `StepRestartMode.CreationOrder` now carries diagnostic
   `ZHINUOBS001`, documents its replacements and removal window, and retains
   narrowly suppressed compatibility tests. The non-receipt restart overload
@@ -140,6 +274,9 @@ Remaining foundation work:
   capability, so deprecating them would misclassify a supported operation.
 - Expand store conformance tests beyond round-trip smoke checks.
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
+- Extend store conformance with stale-worker signal-consumption fencing,
+  stale artifact-publication fencing, and generic external-operation handle
+  persistence/recovery scenarios described above.
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
@@ -417,10 +554,17 @@ body, after each body step, while evaluating the condition, immediately before
 the fenced iteration commit, and immediately after it. Tests must prove that a
 resumed run neither skips nor duplicates a committed logical iteration.
 
-## Phase 1 — Declarative workflow artifacts
+## Phase 1 — Declarative plan activation adapter
 
-Build a bounded, versioned workflow intermediate representation that can be
-authored without generating arbitrary C#.
+**Ownership correction:** this section predates Fuwen. Canonical workflow IR,
+source authoring, type/graph validation, compiler diagnostics, plan revisions,
+and semantic comparison now belong to Fuwen. Preserve the requirements below
+as historical input, but implement in Zhinu only the activation adapter,
+admission-identity verification, deterministic mapping to durable steps, and
+runtime inspection/recovery behavior.
+
+Consume a bounded, versioned Fuwen plan without generating arbitrary C# or
+duplicating Fuwen's compiler contracts.
 
 Initial grammar:
 
@@ -528,7 +672,12 @@ declarative surface is exposed, additionally define and test:
 Acceptance requires process-loss tests at every loop boundary and proof that a
 resumed run neither skips nor duplicates a committed logical iteration.
 
-## Phase 2 — Activity catalogue and type system
+## Phase 2 — Runtime activity registration and enforcement metadata
+
+Fuwen owns the trusted compiler catalogue and type checking. Zhinu owns the
+runtime registrations and enforceable capability/resource surfaces to which an
+admitted descriptor resolves. A bridge must prove exact descriptor identity;
+neither side may silently substitute the other's catalogue entry.
 
 Create a machine-readable catalogue from registered activities.
 
@@ -577,7 +726,12 @@ Exit criteria:
 - Every transition is type-compatible or has an explicit transformation.
 - Runtime capabilities derive from the selected descriptor, not model output.
 
-## Phase 3 — Policy validator and diagnostics
+## Phase 3 — Runtime policy enforcement and diagnostics
+
+Fuwen owns static semantic admission and counterexample diagnostics. Zhinu owns
+runtime policy enforcement, admission-receipt verification, capability checks,
+freshness decisions based on durable state, and diagnostics for rejected
+runtime transitions. Do not rebuild a second static workflow compiler here.
 
 Implement deterministic policies over graphs, capabilities, types, evidence,
 and provenance.
@@ -749,7 +903,12 @@ Exit criteria:
 - The harness can resume after process loss without duplicating committed work.
 - At least three real repositories complete representative tasks successfully.
 
-## Phase 7 — Methodology compiler
+## Phase 7 — AI-assisted plan proposal integration
+
+**Ownership correction:** Fuwen owns methodology/source compilation and plan
+comparison. Zhinu may expose bounded evidence and transition-preview inputs to
+that external planning loop, then activate only a separately admitted immutable
+revision. It never repairs or approves model-authored plans itself.
 
 Compile natural-language methodologies only after the IR and validator are
 stable through hand-authored use.
@@ -845,10 +1004,16 @@ Before beginning natural-language compilation:
 6. Prototype revision-bound build and test evidence.
 7. Integrate one restricted coding activity executor.
 8. Exercise the design through Solo before expanding the grammar.
+9. After Fuwen admission and current stale-worker/external-operation hardening,
+   implement workflow-instance and execution-generation persistence as the
+   first workflow-evolution slice; do not begin with automatic AI replanning.
 
 ## Explicit non-goals for the first compiled-workflow release
 
 - Arbitrary dynamic graph mutation
+- AI-authored live mutation of an active run or automatic plan activation
+- Treating lease fencing generation as workflow-plan generation
+- Rewriting artifact provenance when prior work is reused
 - General-purpose scripting as the primary authoring model
 - Claims of formal verification for semantic quality
 - Trusting activity metadata as a security boundary
