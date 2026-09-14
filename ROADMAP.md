@@ -945,6 +945,32 @@ Exit criteria:
 - Ambiguous or contradictory requirements stop for clarification.
 - Repair cannot silently delete, weaken, or downgrade a policy.
 
+## Experience-evidence export boundary
+
+Zhinu remains the deterministic execution authority. Hongxian may project its
+durable facts into historical experience, but Zhinu does not interpret runs,
+rank models, or learn workflow policy.
+
+- [ ] Ensure immutable run/generation/plan-revision and structural/runtime
+  activity identities are available to evidence adapters.
+- [ ] Expose typed lifecycle, attempt, retry, signal/checkpoint, compensation,
+  mutation/cutover, artifact, validation, timing, and terminal-outcome receipts
+  with the authoritative revision and fencing identity that permitted commit.
+- [ ] Carry opaque executor, actor, model-invocation, context-snapshot, and
+  external-operation references without adding model-provider semantics to
+  core.
+- [ ] Provide bounded ordered export/cursor semantics suitable for a
+  forward-only Hongxian outbox adapter, including late results from superseded
+  generations and explicit projection lag.
+- [ ] Prove adapters can rebuild a mechanical execution view without treating
+  diagnostic events as replay authority or copying provider payloads into
+  workflow state.
+
+Non-goals are retrospective interpretation, model reputation, context
+selection, procedural learning, or automatic plan mutation. Those belong to
+Hongxian projections, Cangjie/Marang context surfaces, Fuwen proposals, and
+host policy respectively.
+
 ## Phase 8 — Operations and ecosystem
 
 Deliver production-quality operation around compiled workflows.
