@@ -791,6 +791,11 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     /// outside the selected restart boundary are copied as reusable results;
     /// the selected step, its invalidated dependents, and incomplete steps run
     /// normally under the new identity. The source run is never modified.
+    /// When <see cref="ForkRunOptions.TargetWorkflowName"/> or
+    /// <see cref="ForkRunOptions.TargetWorkflowVersion"/> is set, the new run
+    /// binds to that definition instead, migrating completed work across
+    /// versions; reuse stays keyed by step identity (key, implementation,
+    /// input) and the input/output contract must be equal.
     /// </summary>
     public async Task<Guid> ForkAsync(
         Guid sourceWorkflowRunId,
@@ -801,6 +806,12 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         ThrowIfDisposed();
         ArgumentException.ThrowIfNullOrWhiteSpace(targetStepKey);
         options ??= new ForkRunOptions();
+        if (options.TargetWorkflowName is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(
+                options.TargetWorkflowName, nameof(options));
+        if (options.TargetWorkflowVersion is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(
+                options.TargetWorkflowVersion, nameof(options));
         await leaseRecovery.EnsureInitializedAsync(cancellationToken)
             .ConfigureAwait(false);
         var source = await store.GetRunAsync(sourceWorkflowRunId, cancellationToken)
@@ -814,13 +825,26 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             throw new WorkflowStateException(
                 "The source run's serialized contract does not match the registered workflow.");
         }
+        var targetName = options.TargetWorkflowName ?? source.WorkflowName;
+        var targetVersion = options.TargetWorkflowVersion ?? source.WorkflowVersion;
+        var targetRegistration = ReferenceEquals(targetName, source.WorkflowName) &&
+            ReferenceEquals(targetVersion, source.WorkflowVersion)
+            ? registration
+            : registry.Get(targetName, targetVersion);
+        if (source.InputType != SerializationIdentity.TypeId(targetRegistration.InputType) ||
+            source.OutputType != SerializationIdentity.TypeId(targetRegistration.OutputType))
+        {
+            throw new WorkflowStateException(
+                $"The target workflow '{targetName}' version '{targetVersion}' does not preserve " +
+                "the source run's input/output contract; versioned mutation requires an equal contract.");
+        }
         var id = options.WorkflowRunId ?? Guid.NewGuid();
         var now = timeProvider.GetUtcNow();
         var newRun = new WorkflowRun
         {
             Id = id,
-            WorkflowName = source.WorkflowName,
-            WorkflowVersion = source.WorkflowVersion,
+            WorkflowName = targetName,
+            WorkflowVersion = targetVersion,
             Status = WorkflowStatus.Pending,
             InputJson = source.InputJson,
             InputType = source.InputType,
@@ -829,7 +853,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             UpdatedAt = now,
             Deadline = options.Deadline,
             MetadataJson = source.MetadataJson,
-            DefinitionFingerprint = source.DefinitionFingerprint,
+            DefinitionFingerprint = targetRegistration.DefinitionFingerprint,
             SourceRunId = sourceWorkflowRunId,
             TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                 .ToHexString()

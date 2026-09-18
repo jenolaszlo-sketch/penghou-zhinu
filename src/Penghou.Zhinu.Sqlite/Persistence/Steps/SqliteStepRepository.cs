@@ -1212,17 +1212,36 @@ internal sealed class SqliteStepRepository :
         StepRestartMode mode,
         CancellationToken cancellationToken)
     {
-        var restart = await ResolveRestartPlanAsync(
+        // Mutation extension point: when the target step does not exist in
+        // the source run (it is new in the destination definition), no
+        // source step is invalidated and every completed source step is a
+        // reuse candidate. The classic restart path still rejects unknown
+        // steps; only fork previews and fork creation take this branch.
+        var target = await getStep.ExecuteAsync(
             connection,
             transaction,
             sourceWorkflowRunId,
             targetStepKey,
-            mode,
             cancellationToken).ConfigureAwait(false);
-        var invalidated = restart.StepsToInvalidate.ToDictionary(
-            step => step.StepKey,
-            step => step.Reason,
-            StringComparer.Ordinal);
+        Dictionary<string, RestartReason> invalidated;
+        if (target is null)
+        {
+            invalidated = new Dictionary<string, RestartReason>(StringComparer.Ordinal);
+        }
+        else
+        {
+            var restart = await ResolveRestartPlanAsync(
+                connection,
+                transaction,
+                sourceWorkflowRunId,
+                targetStepKey,
+                mode,
+                cancellationToken).ConfigureAwait(false);
+            invalidated = restart.StepsToInvalidate.ToDictionary(
+                step => step.StepKey,
+                step => step.Reason,
+                StringComparer.Ordinal);
+        }
         var steps = await getCurrentSteps.ExecuteAsync(
             connection,
             transaction,
@@ -1299,15 +1318,17 @@ internal sealed class SqliteStepRepository :
         WorkflowRun source,
         WorkflowRun destination)
     {
+        // Versioned mutation binds the destination to a different workflow
+        // name/version than the source; the engine guarantees the target
+        // registration preserves the input/output contract. The store still
+        // requires a pending destination with equal input value and types.
         if (destination.Status != WorkflowStatus.Pending ||
-            destination.WorkflowName != source.WorkflowName ||
-            destination.WorkflowVersion != source.WorkflowVersion ||
             destination.InputType != source.InputType ||
             destination.InputJson != source.InputJson ||
             destination.OutputType != source.OutputType)
         {
             throw new WorkflowStateException(
-                "A fork must preserve the source workflow, version, input, and output contract.");
+                "A fork must preserve the source input value and the input/output contract.");
         }
     }
 

@@ -17,4 +17,19 @@ public sealed class ForkRunOptions
 
     /// <summary>Why the fork was initiated, recorded in the durable fork event.</summary>
     public string? Reason { get; init; }
+
+    /// <summary>
+    /// Optional target workflow name for versioned mutation. Defaults to the
+    /// source run's workflow name. Reused steps are matched by step identity
+    /// (key, implementation, input); the input/output contract must be equal.
+    /// </summary>
+    public string? TargetWorkflowName { get; init; }
+
+    /// <summary>
+    /// Optional target workflow version for versioned mutation. Defaults to
+    /// the source run's version. Allows a completed run to migrate to a new
+    /// definition (e.g. planning v1 to implementation v2) while preserving
+    /// completed steps and their lineage.
+    /// </summary>
+    public string? TargetWorkflowVersion { get; init; }
 }
