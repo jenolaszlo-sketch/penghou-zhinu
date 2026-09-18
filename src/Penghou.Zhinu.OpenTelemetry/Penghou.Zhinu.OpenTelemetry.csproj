@@ -26,7 +26,7 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
   </ItemGroup>
 </Project>
