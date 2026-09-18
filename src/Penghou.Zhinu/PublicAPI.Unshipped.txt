@@ -3,6 +3,8 @@ Penghou.Zhinu.ForkRunOptions.TargetWorkflowName.get -> string?
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowName.init -> void
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowVersion.get -> string?
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowVersion.init -> void
+Penghou.Zhinu.StepClaimRequest.AllowSupersede.get -> bool
+Penghou.Zhinu.StepClaimRequest.AllowSupersede.init -> void
 abstract Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Penghou.Zhinu.WorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
 const Penghou.Zhinu.WorkflowEventTypes.LoopCompleted = "loop-completed" -> string!

@@ -169,6 +169,22 @@ internal sealed class SqliteStepRepository :
             return new StepClaimResult(StepClaimDisposition.Acquired, created);
         }
 
+        if (existing.Status == StepStatus.Completed &&
+            !ContractMatches(existing, request) &&
+            request.AllowSupersede)
+        {
+            // A forked run inherited this completed step from its source. The
+            // destination definition supplied a different input, so the
+            // inherited revision is obsolete: keep it as history and claim a
+            // fresh pending revision that re-runs under the new contract.
+            existing = await InsertSupersedingRevisionAsync(
+                connection,
+                transaction,
+                existing,
+                request,
+                runGeneration,
+                cancellationToken).ConfigureAwait(false);
+        }
         ValidateStepContract(existing, request);
         if (existing.Status == StepStatus.Completed)
         {
@@ -1968,6 +1984,18 @@ internal sealed class SqliteStepRepository :
         WorkflowStepRun existing,
         StepClaimRequest request)
     {
+        if (!ContractMatches(existing, request))
+        {
+            throw new WorkflowStateException(
+                $"Step key '{request.StepKey}' was reused with an incompatible input or result contract, " +
+                "or with a different implementation key.");
+        }
+    }
+
+    private static bool ContractMatches(
+        WorkflowStepRun existing,
+        StepClaimRequest request)
+    {
         // A Pending revision was created by a restart or fork and has not
         // committed anything: its input value is re-derived on execution (for
         // example a child:wait step whose input is the child id produced by a
@@ -1976,18 +2004,42 @@ internal sealed class SqliteStepRepository :
         // keep the durable-reuse contract on the value hash.
         var valueHashMatches = existing.Status == StepStatus.Pending ||
             string.Equals(existing.InputHash, request.InputHash, StringComparison.Ordinal);
-        if (!string.Equals(existing.InputType, request.InputType, StringComparison.Ordinal) ||
-            !valueHashMatches ||
-            !string.Equals(existing.OutputType, request.OutputType, StringComparison.Ordinal) ||
-            !string.Equals(
+        return string.Equals(existing.InputType, request.InputType, StringComparison.Ordinal) &&
+            valueHashMatches &&
+            string.Equals(existing.OutputType, request.OutputType, StringComparison.Ordinal) &&
+            string.Equals(
                 existing.ImplementationKey,
                 request.ImplementationKey,
-                StringComparison.Ordinal))
+                StringComparison.Ordinal);
+    }
+
+    private async ValueTask<WorkflowStepRun> InsertSupersedingRevisionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        WorkflowStepRun existing,
+        StepClaimRequest request,
+        long leaseGeneration,
+        CancellationToken cancellationToken)
+    {
+        var superseding = new WorkflowStepRun
         {
-            throw new WorkflowStateException(
-                $"Step key '{request.StepKey}' was reused with an incompatible input or result contract, " +
-                "or with a different implementation key.");
-        }
+            Id = Guid.NewGuid(),
+            WorkflowRunId = existing.WorkflowRunId,
+            StepKey = existing.StepKey,
+            ImplementationKey = request.ImplementationKey,
+            Status = StepStatus.Pending,
+            Attempt = 0,
+            CreatedAt = request.Now,
+            InputJson = request.InputJson,
+            InputType = request.InputType,
+            InputHash = request.InputHash,
+            OutputType = request.OutputType,
+            Revision = existing.Revision + 1,
+            LeaseGeneration = leaseGeneration
+        };
+        await insertStep.ExecuteAsync(connection, transaction, superseding, cancellationToken)
+            .ConfigureAwait(false);
+        return superseding;
     }
 
     private static WorkflowStepRun CancelledPlaceholder(StepClaimRequest request) =>

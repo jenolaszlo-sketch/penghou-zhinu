@@ -44,4 +44,14 @@ public sealed record StepClaimRequest
     /// completion, and marks it skipped on terminal forward failure.
     /// </summary>
     public CompensationMetadata? Compensation { get; init; }
+
+    /// <summary>
+    /// Allows a completed step whose input contract changed to be superseded by
+    /// a fresh revision instead of failing the reuse contract. The engine sets
+    /// this only for forked runs, where a step inherited from the source run
+    /// may legitimately be re-run because the destination definition supplies
+    /// different inputs (cross-version mutation). The previous revision is kept
+    /// as history. Defaults to false, preserving strict durable reuse.
+    /// </summary>
+    public bool AllowSupersede { get; init; }
 }

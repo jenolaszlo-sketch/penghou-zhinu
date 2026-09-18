@@ -25,6 +25,7 @@ public sealed partial class WorkflowContext
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
     private readonly Action<Guid>? onEventAppended;
     private readonly IWorkflowStepResolver workflowStepResolver;
+    private readonly bool allowStepSupersede;
     private readonly StepLockManager stepLocks = new();
     private readonly DependencyTracker dependencies = new();
     private readonly ChildRunCoordinator childRuns;
@@ -49,9 +50,11 @@ public sealed partial class WorkflowContext
         IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps = null,
         IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null,
         Action<Guid>? onEventAppended = null,
-        IWorkflowStepResolver? workflowStepResolver = null)
+        IWorkflowStepResolver? workflowStepResolver = null,
+        bool allowStepSupersede = false)
     {
         WorkflowRunId = workflowRunId;
+        this.allowStepSupersede = allowStepSupersede;
         this.store = store;
         this.ownerId = ownerId;
         this.options = options;
@@ -308,8 +311,11 @@ public sealed partial class WorkflowContext
                     if (WorkflowDependencyValidator.HasCycle(combined))
                         throw new WorkflowStateException($"Adding dependencies for step '{stepKey}' would create a cycle.");
                     var steps = await store.GetStepsAsync(WorkflowRunId, linkedCancellation.Token).ConfigureAwait(false);
-                    if (steps.Any(s => s.StepKey == stepKey && s.Status == StepStatus.Completed))
+                    if (!allowStepSupersede &&
+                        steps.Any(s => s.StepKey == stepKey && s.Status == StepStatus.Completed))
+                    {
                         throw new WorkflowStateException($"Cannot add dependencies for step '{stepKey}' after it has completed.");
+                    }
                 }
             }
             while (true)
@@ -1061,7 +1067,8 @@ public sealed partial class WorkflowContext
                 LeaseExpiresAt = now + options.LeaseDuration,
                 LeaseGeneration = leaseGeneration,
                 DependsOn = dependencies,
-                Compensation = compensation
+                Compensation = compensation,
+                AllowSupersede = allowStepSupersede
             },
             cancellationToken);
     }

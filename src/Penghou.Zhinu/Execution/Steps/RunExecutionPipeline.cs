@@ -152,7 +152,8 @@ internal sealed class RunExecutionPipeline
                         childCancellation,
                         depth + 1),
                 onEventAppended: notifyEventAppended,
-                workflowStepResolver: workflowStepResolver);
+                workflowStepResolver: workflowStepResolver,
+                allowStepSupersede: run.SourceRunId is not null);
             logger.LogInformation(
                 ZhinuLogEvents.RunExecuting,
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",

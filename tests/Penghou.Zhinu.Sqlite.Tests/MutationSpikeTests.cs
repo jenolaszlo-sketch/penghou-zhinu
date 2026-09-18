@@ -65,6 +65,53 @@ public sealed class MutationSpikeTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task ForkToVersion_AtNewNode_ReRunsChangedCompletedDownstreamStep()
+    {
+        var v1 = new PrefixWorkflow();
+        var v2 = new PrefixPlusWorkflow();
+        var registry = new WorkflowRegistry()
+            .Register("mutate-downstream", "1", v1)
+            .Register("mutate-downstream", "2", v2);
+        var engine = CreateEngine(registry);
+        var sourceResult = await engine.RunAsync<string, string>(
+            "mutate-downstream",
+            "1",
+            "goal",
+            cancellationToken: TestContext.Current.CancellationToken);
+        sourceResult.Should().Be("F(A(goal))");
+        var source = (await engine.GetRunAsync(v1.RunId, TestContext.Current.CancellationToken))!;
+
+        var migratedId = await engine.ForkAsync(
+            source.Id,
+            "exec-b",
+            new ForkRunOptions
+            {
+                TargetWorkflowVersion = "2",
+                Actor = "spike",
+                Reason = "insert exec-b before the changed terminal step",
+            },
+            TestContext.Current.CancellationToken);
+
+        var migrateEngine = CreateEngine(registry);
+        await migrateEngine.ExecuteAsync(migratedId, TestContext.Current.CancellationToken);
+        var result = await migrateEngine.WaitForCompletionAsync<string>(
+            migratedId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().Be("F(B(A(goal)))");
+        v1.ACalls.Should().Be(1);
+        v1.FinishCalls.Should().Be(1);
+        v2.ACalls.Should().Be(0);
+        v2.BCalls.Should().Be(1);
+        v2.FinishCalls.Should().Be(1);
+
+        var progress = await migrateEngine.GetRunProgressAsync(
+            migratedId,
+            cancellationToken: TestContext.Current.CancellationToken);
+        progress!.SourceRun!.Id.Should().Be(source.Id);
+    }
+
+    [Fact]
     public async Task ForkToVersion_RejectsContractChange()
     {
         var v1 = new PlanOnlyWorkflow();
@@ -89,6 +136,90 @@ public sealed class MutationSpikeTests : WorkflowEngineTestBase
         await act.Should().ThrowAsync<WorkflowStateException>();
         var unchanged = await engine.GetRunAsync(source.Id, TestContext.Current.CancellationToken);
         unchanged!.Status.Should().Be(WorkflowStatus.Completed);
+    }
+
+    private sealed class PrefixWorkflow : IWorkflow<string, string>
+    {
+        public int ACalls;
+        public int FinishCalls;
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            var a = await context.StepAsync(
+                "plan-a",
+                input,
+                (value, _) =>
+                {
+                    ACalls++;
+                    return Task.FromResult($"A({value})");
+                },
+                cancellationToken: cancellationToken);
+            using (context.DependsOn("plan-a"))
+            {
+                return await context.StepAsync(
+                    "finish",
+                    a,
+                    (value, _) =>
+                    {
+                        FinishCalls++;
+                        return Task.FromResult($"F({value})");
+                    },
+                    cancellationToken: cancellationToken);
+            }
+        }
+    }
+
+    private sealed class PrefixPlusWorkflow : IWorkflow<string, string>
+    {
+        public int ACalls;
+        public int BCalls;
+        public int FinishCalls;
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            var a = await context.StepAsync(
+                "plan-a",
+                input,
+                (value, _) =>
+                {
+                    ACalls++;
+                    return Task.FromResult($"A({value})");
+                },
+                cancellationToken: cancellationToken);
+            string b;
+            using (context.DependsOn("plan-a"))
+            {
+                b = await context.StepAsync(
+                    "exec-b",
+                    a,
+                    (value, _) =>
+                    {
+                        BCalls++;
+                        return Task.FromResult($"B({value})");
+                    },
+                    cancellationToken: cancellationToken);
+            }
+            using (context.DependsOn("exec-b"))
+            {
+                return await context.StepAsync(
+                    "finish",
+                    b,
+                    (value, _) =>
+                    {
+                        FinishCalls++;
+                        return Task.FromResult($"F({value})");
+                    },
+                    cancellationToken: cancellationToken);
+            }
+        }
     }
 
     private sealed class PlanOnlyIntWorkflow : IWorkflow<string, int>

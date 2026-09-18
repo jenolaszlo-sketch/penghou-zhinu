@@ -795,7 +795,10 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     /// <see cref="ForkRunOptions.TargetWorkflowVersion"/> is set, the new run
     /// binds to that definition instead, migrating completed work across
     /// versions; reuse stays keyed by step identity (key, implementation,
-    /// input) and the input/output contract must be equal.
+    /// input) and the input/output contract must be equal. A completed step
+    /// inherited from the source whose input differs in the destination
+    /// definition is superseded by a fresh revision and re-runs under the new
+    /// contract instead of failing the run.
     /// </summary>
     public async Task<Guid> ForkAsync(
         Guid sourceWorkflowRunId,
