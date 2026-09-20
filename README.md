@@ -416,6 +416,43 @@ the original event with `WasBuffered == false`; reuse with another run, signal
 name, or canonical JSON payload throws `WorkflowOperationConflictException`.
 The receipt remains available after the inbox row is purged.
 
+### Forking and workflow evolution
+
+A fork creates a new pending run from committed work in an existing run. The
+source remains unchanged. The selected step, its invalidated dependents, and
+incomplete work execute under the new run identity; eligible completed steps
+outside that boundary are copied with lineage.
+
+```csharp
+WorkflowHandle<OrderResult> evolved =
+    await engine.ForkHandleAsync<OrderResult>(
+        sourceRunId,
+        targetStepKey: "generate",
+        new ForkRunOptions
+        {
+            Mode = StepRestartMode.Dependents,
+            WorkflowRunId = forkRequestId,
+            TargetWorkflowName = "process-order",
+            TargetWorkflowVersion = "2",
+            Actor = userId,
+            Reason = "Apply the approved planning revision"
+        },
+        cancellationToken);
+```
+
+Omit `TargetWorkflowName` and `TargetWorkflowVersion` to fork within the
+source definition. Setting them performs a forward migration to a registered
+workflow definition with the same serialized input/output contract. Completed
+work is reusable only when the step key, implementation key, and input still
+match. If a destination definition changes the input to an inherited completed
+step, Zhinu supersedes that generation and reruns the step instead of failing
+the new run or silently reusing stale output.
+
+`PlanForkAsync` previews the restart boundary without creating a run.
+`WorkflowRunProgress.SourceRunId` and retained ancestor lineage expose where
+the fork came from. New deadlines are explicit; source deadlines are not
+inherited.
+
 ### Focused runtime interfaces
 
 Hosted applications can depend on the smallest capability surface they need:
@@ -612,4 +649,6 @@ validation.
 
 ## License
 
-[MIT](LICENSE)
+[Apache-2.0](LICENSE)
+
+Copyright (c) 2026 Jenő Konrád László
