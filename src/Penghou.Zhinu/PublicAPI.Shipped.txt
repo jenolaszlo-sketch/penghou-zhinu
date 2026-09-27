@@ -464,8 +464,10 @@ Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimDisposition.Acquired = 0 -> Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimDisposition.Busy = 3 -> Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimDisposition.Cancelled = 5 -> Penghou.Zhinu.StepClaimDisposition
+Penghou.Zhinu.StepClaimDisposition.Deferred = 6 -> Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimDisposition.Failed = 4 -> Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimDisposition.Reused = 1 -> Penghou.Zhinu.StepClaimDisposition
+Penghou.Zhinu.StepClaimDisposition.Superseded = 7 -> Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimDisposition.Waiting = 2 -> Penghou.Zhinu.StepClaimDisposition
 Penghou.Zhinu.StepClaimRequest
 Penghou.Zhinu.StepClaimRequest.Compensation.get -> Penghou.Zhinu.CompensationMetadata?

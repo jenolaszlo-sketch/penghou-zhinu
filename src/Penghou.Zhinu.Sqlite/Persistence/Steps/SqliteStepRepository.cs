@@ -45,6 +45,7 @@ internal sealed class SqliteStepRepository :
     private readonly FailCompensationCommand failCompensation = new();
     private readonly GetRunStatusQuery getRunStatus = new();
     private readonly GetRunLeaseGenerationQuery getRunLeaseGeneration = new();
+    private readonly GetBoundGenerationStatusQuery getBoundGenerationStatus = new();
     private readonly GetStepQuery getStep = new();
     private readonly GetStepByIdQuery getStepById = new();
     private readonly GetCurrentStepsQuery getCurrentSteps = new();
@@ -111,6 +112,27 @@ internal sealed class SqliteStepRepository :
             throw new LeaseLostException(
                 $"Workflow '{request.WorkflowRunId:D}' lease generation {request.LeaseGeneration} " +
                 $"no longer matches the current generation {runGeneration}.");
+        }
+        var boundGeneration = await getBoundGenerationStatus.ExecuteAsync(
+            connection,
+            transaction,
+            request.WorkflowRunId,
+            cancellationToken).ConfigureAwait(false);
+        if (boundGeneration is not null &&
+            boundGeneration != (int)WorkflowGenerationStatus.Active)
+        {
+            // The run is bound to a quiescing or superseded execution
+            // generation: schedule no new work. Quiescing resumes via polling;
+            // superseded ownership never returns.
+            var deferred = boundGeneration == (int)WorkflowGenerationStatus.Quiescing;
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            return new StepClaimResult(
+                deferred
+                    ? StepClaimDisposition.Deferred
+                    : StepClaimDisposition.Superseded,
+                UnscheduledPlaceholder(
+                    request,
+                    deferred ? StepStatus.Waiting : StepStatus.Cancelled));
         }
         var existing = await getStep.ExecuteAsync(
             connection,
@@ -2020,13 +2042,17 @@ internal sealed class SqliteStepRepository :
     }
 
     private static WorkflowStepRun CancelledPlaceholder(StepClaimRequest request) =>
+        UnscheduledPlaceholder(request, StepStatus.Cancelled);
+
+    private static WorkflowStepRun UnscheduledPlaceholder(
+        StepClaimRequest request, StepStatus status) =>
         new()
         {
             Id = Guid.Empty,
             WorkflowRunId = request.WorkflowRunId,
             StepKey = request.StepKey,
             ImplementationKey = request.ImplementationKey,
-            Status = StepStatus.Cancelled,
+            Status = status,
             Attempt = 0,
             CreatedAt = request.Now,
             OutputType = request.OutputType

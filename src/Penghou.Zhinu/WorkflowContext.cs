@@ -346,6 +346,16 @@ public sealed partial class WorkflowContext
                             timeProvider,
                             linkedCancellation.Token).ConfigureAwait(false);
                         continue;
+                    case StepClaimDisposition.Deferred:
+                        await Task.Delay(
+                            options.PollInterval,
+                            timeProvider,
+                            linkedCancellation.Token).ConfigureAwait(false);
+                        continue;
+                    case StepClaimDisposition.Superseded:
+                        throw new WorkflowStateException(
+                            $"Cannot schedule step '{stepKey}': its execution generation " +
+                            "no longer owns forward progression.");
                     case StepClaimDisposition.Failed:
                         throw new WorkflowStepFailedException(
                             stepKey,
@@ -447,6 +457,18 @@ public sealed partial class WorkflowContext
                         stepKey,
                         claim.Step.Error ?? UnknownFailure(stepKey));
                 }
+                if (claim.Disposition == StepClaimDisposition.Deferred)
+                {
+                    await Task.Delay(
+                        options.PollInterval,
+                        timeProvider,
+                        linkedCancellation.Token).ConfigureAwait(false);
+                    continue;
+                }
+                if (claim.Disposition == StepClaimDisposition.Superseded)
+                    throw new WorkflowStateException(
+                        $"Cannot schedule delay '{stepKey}': its execution generation " +
+                        "no longer owns forward progression.");
 
                 var now = timeProvider.GetUtcNow();
                 var availableAt = now + delay;
@@ -538,11 +560,16 @@ public sealed partial class WorkflowContext
                     case StepClaimDisposition.Reused:
                         return Deserialize<T>(claim.Step.OutputJson, outputType);
                     case StepClaimDisposition.Busy:
+                    case StepClaimDisposition.Deferred:
                         await Task.Delay(
                             options.PollInterval,
                             timeProvider,
                             linkedCancellation.Token).ConfigureAwait(false);
                         continue;
+                    case StepClaimDisposition.Superseded:
+                        throw new WorkflowStateException(
+                            $"Cannot wait for signal '{signalName}': its execution generation " +
+                            "no longer owns forward progression.");
                     case StepClaimDisposition.Cancelled:
                         throw new OperationCanceledException(
                             $"Workflow step '{stepKey}' was cancelled.",
@@ -988,6 +1015,14 @@ public sealed partial class WorkflowContext
                 {
                     if (claim.Disposition == StepClaimDisposition.Reused)
                         return Deserialize<TOutput>(claim.Step.OutputJson, outputType);
+                    if (claim.Disposition == StepClaimDisposition.Deferred)
+                    {
+                        await Task.Delay(
+                            options.PollInterval,
+                            timeProvider,
+                            cancellationToken).ConfigureAwait(false);
+                        continue;
+                    }
                     throw new WorkflowStateException(
                         $"Retry for step '{step.StepKey}' could not be acquired.");
                 }
