@@ -100,7 +100,8 @@ internal sealed class CompensationExecutor
             replaySteps: steps,
             rollbackCompensations: byKey,
             onEventAppended: notifyEventAppended,
-            workflowStepResolver: workflowStepResolver);
+            workflowStepResolver: workflowStepResolver,
+            registry: registry);
         await registration!.ExecuteAsync(
             context,
             run.InputJson ?? "null",

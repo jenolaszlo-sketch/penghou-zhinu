@@ -153,7 +153,8 @@ internal sealed class RunExecutionPipeline
                         depth + 1),
                 onEventAppended: notifyEventAppended,
                 workflowStepResolver: workflowStepResolver,
-                allowStepSupersede: run.SourceRunId is not null);
+                allowStepSupersede: run.SourceRunId is not null,
+                registry: registry);
             logger.LogInformation(
                 ZhinuLogEvents.RunExecuting,
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",

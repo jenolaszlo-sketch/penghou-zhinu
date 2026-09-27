@@ -47,6 +47,7 @@ public sealed partial class WorkflowContext
         CancellationToken workflowCancellationToken,
         IWorkflowEventPublisher? eventPublisher = null,
         Func<Guid, CancellationToken, Task>? executeChildRun = null,
+        IWorkflowRegistry? registry = null,
         IReadOnlyDictionary<string, WorkflowStepRun>? replaySteps = null,
         IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null,
         Action<Guid>? onEventAppended = null,
@@ -74,7 +75,8 @@ public sealed partial class WorkflowContext
             this.options,
             this.serializerOptions,
             this.timeProvider,
-            executeChildRun);
+            executeChildRun,
+            registry);
     }
 
     public Guid WorkflowRunId { get; }

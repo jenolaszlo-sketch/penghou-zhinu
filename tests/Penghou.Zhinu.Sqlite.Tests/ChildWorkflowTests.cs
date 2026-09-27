@@ -1,4 +1,6 @@
 using FluentAssertions;
+using Penghou.Zhinu.Declarative;
+using System.Text.Json;
 
 namespace Penghou.Zhinu.Sqlite.Tests;
 
@@ -194,5 +196,128 @@ public sealed class ChildWorkflowTests : WorkflowEngineTestBase
             new RunQuery { WorkflowName = "child" },
             cancellationToken: TestContext.Current.CancellationToken))
             .Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task ChildRun_PinsDefinitionFingerprint()
+    {
+        var (registry, compiled) = ChainDefinition("a", "b");
+        registry.Register("parent", "1", new FingerprintParentWorkflow());
+        await using var engine = CreateEngine(registry);
+        var id = await engine.StartAsync(
+            "parent",
+            "1",
+            JsonSerializer.SerializeToElement("x"),
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(id, TestContext.Current.CancellationToken);
+        var child = (await engine.GetRunsAsync(
+            new RunQuery(),
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Single(r => r.ParentRunId == id);
+        child.DefinitionFingerprint.Should().Be(compiled.Fingerprint);
+    }
+
+    private static (WorkflowRegistry, CompiledWorkflowDefinition) ChainDefinition(
+        string first, string last)
+    {
+        var catalogue = new ActivityCatalogue();
+        catalogue.Register(new ActivityReference("append", "1"), new AppendActivity());
+        var compiled = WorkflowCompiler.Compile(new DeclarativeWorkflowDefinition
+        {
+            Name = "chain",
+            Version = "1",
+            Steps = [
+                new() { Id = first, Activity = new("append", "1") },
+                new() { Id = last, Activity = new("append", "1"), DependsOn = [first] }]
+        }, catalogue).Compiled!;
+        return (new WorkflowRegistry().RegisterDeclarative(compiled, catalogue), compiled);
+    }
+
+    private sealed class AppendActivity : IActivity<string, string>
+    {
+        public Task<string> ExecuteAsync(string input, CancellationToken cancellationToken) =>
+            Task.FromResult(input + "!");
+    }
+
+    private sealed class FingerprintParentWorkflow : IWorkflow<JsonElement, JsonElement>
+    {
+        public Task<JsonElement> RunAsync(
+            WorkflowContext context, JsonElement input, CancellationToken cancellationToken) =>
+            context.StartChildAsync<JsonElement, JsonElement>(
+                "child", "chain", "1", input, cancellationToken);
+    }
+
+    [Fact]
+    public async Task ChildRun_RejectsChangedDefinitionBeforeNewActivity()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var store = CreateStore();
+        var childId = await StartWaitingParentAsync(store, ct);
+
+        await using (var swapped = new WorkflowEngine(
+            store,
+            new WorkflowRegistry()
+                .Register("parent", "1", new SignalChildParentWorkflow())
+                .Register("waiting-child", "1", new WaitingChildWorkflow("child-v2"))))
+        {
+            await swapped.ExecuteAsync(childId, ct);
+        }
+
+        var child = (await store.GetRunAsync(childId, ct))!;
+        child.Status.Should().Be(WorkflowStatus.Failed);
+        child.Error.Should().NotBeNull();
+        child.Error!.Message.Should().Contain("fingerprint");
+    }
+
+    private static async Task<Guid> StartWaitingParentAsync(SqliteWorkflowStore store, CancellationToken ct)
+    {
+        var engine = new WorkflowEngine(
+            store,
+            new WorkflowRegistry()
+                .Register("parent", "1", new SignalChildParentWorkflow())
+                .Register("waiting-child", "1", new WaitingChildWorkflow("child-v1")));
+        var id = await engine.StartAsync("parent", "1", "x", cancellationToken: ct);
+        var execution = engine.ExecuteAsync(id, ct);
+        try
+        {
+            return await WaitForChildAsync(store, id, ct);
+        }
+        finally
+        {
+            await engine.DisposeAsync();
+            try { await execution; } catch (OperationCanceledException) { }
+        }
+    }
+
+    private static async Task<Guid> WaitForChildAsync(
+        SqliteWorkflowStore store, Guid parentId, CancellationToken ct)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(10);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            var children = await store.GetRunsAsync(new RunQuery(), ct);
+            var child = children.SingleOrDefault(r => r.ParentRunId == parentId);
+            if (child is not null)
+                return child.Id;
+            await Task.Delay(10, ct);
+        }
+        throw new TimeoutException("Child run was not admitted.");
+    }
+
+    private sealed class SignalChildParentWorkflow : IWorkflow<string, string>
+    {
+        public Task<string> RunAsync(
+            WorkflowContext context, string input, CancellationToken cancellationToken) =>
+            context.StartChildAsync<string, string>(
+                "kid", "waiting-child", "1", input, cancellationToken);
+    }
+
+    private sealed class WaitingChildWorkflow(string fingerprint) : IWorkflow<string, string>, IWorkflowFingerprint
+    {
+        public string Fingerprint => fingerprint;
+
+        public Task<string> RunAsync(
+            WorkflowContext context, string input, CancellationToken cancellationToken) =>
+            context.WaitForSignalAsync<string>("hold", "go", cancellationToken: cancellationToken);
     }
 }

@@ -14,19 +14,22 @@ internal sealed class ChildRunCoordinator
     private readonly JsonSerializerOptions serializerOptions;
     private readonly TimeProvider timeProvider;
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
+    private readonly IWorkflowRegistry? registry;
 
     public ChildRunCoordinator(
         IWorkflowStore store,
         ZhinuOptions options,
         JsonSerializerOptions serializerOptions,
         TimeProvider timeProvider,
-        Func<Guid, CancellationToken, Task>? executeChildRun)
+        Func<Guid, CancellationToken, Task>? executeChildRun,
+        IWorkflowRegistry? registry = null)
     {
         this.store = store;
         this.options = options;
         this.serializerOptions = serializerOptions;
         this.timeProvider = timeProvider;
         this.executeChildRun = executeChildRun;
+        this.registry = registry;
     }
 
     public async Task<Guid> CreateChildRunAsync(
@@ -52,6 +55,8 @@ internal sealed class ChildRunCoordinator
         var existing = await store.GetRunAsync(
             childId,
             cancellationToken).ConfigureAwait(false);
+        var registration = ResolveRegistration(request);
+        ValidateContract(request, registration, stepKey);
         if (existing is not null)
         {
             if (!string.Equals(existing.WorkflowName, request.WorkflowName, StringComparison.Ordinal) ||
@@ -64,6 +69,26 @@ internal sealed class ChildRunCoordinator
                 throw new WorkflowStateException(
                     $"Child workflow step '{stepKey}' is already associated with a different workflow or input.");
             }
+            if (existing.DefinitionFingerprint is not null &&
+                !string.Equals(
+                    existing.DefinitionFingerprint,
+                    registration.DefinitionFingerprint,
+                    StringComparison.Ordinal))
+            {
+                throw new WorkflowSerializationException(
+                    $"Registered definition for child workflow '{request.WorkflowName}' version " +
+                    $"'{request.WorkflowVersion}' fingerprint does not match the admitted run's " +
+                    $"recorded fingerprint '{existing.DefinitionFingerprint}'.");
+            }
+            // Legacy runs admitted without a fingerprint cannot prove their
+            // definition; they replay as-is and are not restamped.
+            await InitialGenerationBinding.EnsureAsync(
+                store,
+                childId,
+                registration.DefinitionFingerprint,
+                request.WorkflowName,
+                request.WorkflowVersion,
+                cancellationToken).ConfigureAwait(false);
             return childId;
         }
         var now = timeProvider.GetUtcNow();
@@ -84,10 +109,41 @@ internal sealed class ChildRunCoordinator
                 ParentRunId = parentRunId,
                 Deadline = deadline,
                 MetadataJson = metadataJson,
+                DefinitionFingerprint = registration.DefinitionFingerprint,
                 TraceId = parent.TraceId
             },
             cancellationToken).ConfigureAwait(false);
+        await InitialGenerationBinding.BindAsync(
+            store,
+            childId,
+            registration.DefinitionFingerprint,
+            request.WorkflowName,
+            request.WorkflowVersion,
+            cancellationToken).ConfigureAwait(false);
         return childId;
+    }
+
+    private IWorkflowRegistration ResolveRegistration(ChildStartRequest request) =>
+        registry?.TryGet(request.WorkflowName, request.WorkflowVersion, out var registration) == true
+            ? registration!
+            : throw new WorkflowDefinitionUnavailableException(
+                request.WorkflowName,
+                request.WorkflowVersion);
+
+    private static void ValidateContract(
+        ChildStartRequest request, IWorkflowRegistration registration, string stepKey)
+    {
+        if (!string.Equals(
+                request.InputType,
+                SerializationIdentity.TypeId(registration.InputType),
+                StringComparison.Ordinal) ||
+            !string.Equals(
+                request.OutputType,
+                SerializationIdentity.TypeId(registration.OutputType),
+                StringComparison.Ordinal))
+            throw new WorkflowSerializationException(
+                $"Child workflow step '{stepKey}' contract does not match registered workflow " +
+                $"'{request.WorkflowName}' version '{request.WorkflowVersion}'.");
     }
 
     private async Task<int> GetRunDepthAsync(
