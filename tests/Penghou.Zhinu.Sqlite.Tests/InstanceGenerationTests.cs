@@ -50,6 +50,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
             instance.InstanceId, runId, "plan-2", "fp-2", first.GenerationId, ct);
         second.Ordinal.Should().Be(2);
         await repository.PrepareGenerationAsync(second.GenerationId, ct);
+        await repository.PauseGenerationAsync(first.GenerationId, ct);
         var active = await repository.ActivateGenerationAsync(
             second.GenerationId, first.GenerationId, ct);
 
@@ -102,11 +103,12 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
             instance.InstanceId, runId, "plan-X", "fp-X", first.GenerationId, ct);
         await repository.PrepareGenerationAsync(rival.GenerationId, ct);
 
+        await repository.PauseGenerationAsync(first.GenerationId, ct);
         await repository.ActivateGenerationAsync(second.GenerationId, first.GenerationId, ct);
         var act = () => repository.ActivateGenerationAsync(
             rival.GenerationId, first.GenerationId, ct).AsTask();
 
-        // The predecessor is no longer active, so the rival cannot win.
+        // The predecessor is superseded, no longer quiescing, so the rival cannot win.
         await act.Should().ThrowAsync<WorkflowStateException>();
         (await repository.GetActiveGenerationAsync(instance.InstanceId, ct))!
             .GenerationId.Should().Be(second.GenerationId);
@@ -146,6 +148,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
         var second = await repository.CreateGenerationAsync(
             instance.InstanceId, runId, "plan-2", "fp-2", first.GenerationId, ct);
         await repository.PrepareGenerationAsync(second.GenerationId, ct);
+        await repository.PauseGenerationAsync(first.GenerationId, ct);
         await repository.ActivateGenerationAsync(second.GenerationId, first.GenerationId, ct);
 
         var act = () => repository.ActivateGenerationAsync(

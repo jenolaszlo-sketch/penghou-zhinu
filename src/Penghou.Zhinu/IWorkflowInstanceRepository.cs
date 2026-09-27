@@ -37,7 +37,11 @@ public interface IWorkflowInstanceRepository
         Guid generationId,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Finds the active generation of an instance, if any.</summary>
+    /// <summary>
+    /// Finds the generation that owns forward progression for an instance, if
+    /// any. Both active and quiescing generations own progression; a paused
+    /// owner still owns while it schedules no new work.
+    /// </summary>
     ValueTask<WorkflowGeneration?> GetActiveGenerationAsync(
         Guid instanceId,
         CancellationToken cancellationToken = default);
@@ -56,11 +60,30 @@ public interface IWorkflowInstanceRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Atomically supersedes the expected active predecessor (or nothing for
-    /// a first generation) and activates the prepared candidate. Any other
-    /// state fails closed; a superseded generation never becomes active
-    /// again. Failed pre-cutover candidates stay resumable on the current
-    /// generation via <see cref="RejectGenerationAsync"/>.
+    /// Pauses the active generation: it keeps progression ownership but
+    /// schedules no new work. Only an active generation pauses; anything else
+    /// fails with <see cref="WorkflowStateException"/>.
+    /// </summary>
+    ValueTask<WorkflowGeneration> PauseGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resumes a quiescing generation to active before cutover. Only a
+    /// quiescing generation resumes; superseded generations never reactivate.
+    /// </summary>
+    ValueTask<WorkflowGeneration> ResumeGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atomically supersedes the expected quiesced predecessor (or nothing for
+    /// a first generation) and activates the prepared candidate. The current
+    /// generation must pause before cutover, so any other predecessor state
+    /// fails closed; a superseded generation never becomes active again.
+    /// Failed pre-cutover candidates stay resumable on the current generation
+    /// via <see cref="RejectGenerationAsync"/> followed by
+    /// <see cref="ResumeGenerationAsync"/>.
     /// </summary>
     ValueTask<WorkflowGeneration> ActivateGenerationAsync(
         Guid generationId,

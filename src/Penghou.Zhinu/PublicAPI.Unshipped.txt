@@ -163,7 +163,9 @@ Penghou.Zhinu.IWorkflowInstanceRepository.GetGenerationAsync(System.Guid generat
 Penghou.Zhinu.IWorkflowInstanceRepository.GetInstanceAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowInstance?>
 Penghou.Zhinu.IWorkflowInstanceRepository.ListGenerationsAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGeneration!>!>
 Penghou.Zhinu.IWorkflowInstanceRepository.PrepareGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.PauseGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.RejectGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.ResumeGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.IWorkflowRuntime
 Penghou.Zhinu.IWorkflowRuntime.ExecuteAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -330,6 +332,7 @@ Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowGenerationStatus.Active = 2 -> Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowGenerationStatus.Created = 0 -> Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowGenerationStatus.Prepared = 1 -> Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGenerationStatus.Quiescing = 5 -> Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowGenerationStatus.Rejected = 4 -> Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowGenerationStatus.Superseded = 3 -> Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowHandle<TOutput>.GetLoopProgressAsync(Penghou.Zhinu.WorkflowLoopReference! loop, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowLoopProgress?>!

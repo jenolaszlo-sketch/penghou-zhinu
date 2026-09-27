@@ -12,7 +12,13 @@ public enum WorkflowGenerationStatus
     /// <summary>A newer generation owns forward progression.</summary>
     Superseded = 3,
     /// <summary>The candidate was rejected and never became active.</summary>
-    Rejected = 4
+    Rejected = 4,
+    /// <summary>
+    /// The owner is paused: it retains progression ownership but schedules no
+    /// new work. A quiescing generation resumes to active or is superseded at
+    /// cutover; it never reactivates from superseded.
+    /// </summary>
+    Quiescing = 5
 }
 
 /// <summary>Stable identity for one logical workflow across replans.</summary>

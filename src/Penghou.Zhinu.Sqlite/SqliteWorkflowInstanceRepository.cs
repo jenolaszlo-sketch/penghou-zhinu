@@ -154,10 +154,11 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
             .ConfigureAwait(false);
         await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
             SELECT {Columns} FROM workflow_generations
-            WHERE instance_id = $instance AND status = $active;
+            WHERE instance_id = $instance AND status IN ($active, $quiescing);
             """);
         command.Parameters.AddWithValue("$instance", SqliteStoreSupport.Format(instanceId));
         command.Parameters.AddWithValue("$active", (int)WorkflowGenerationStatus.Active);
+        command.Parameters.AddWithValue("$quiescing", (int)WorkflowGenerationStatus.Quiescing);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken)
             .ConfigureAwait(false);
         return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
@@ -219,6 +220,69 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
     }
 
     /// <inheritdoc />
+    public async ValueTask<WorkflowGeneration> PauseGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default)
+    {
+        await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await database.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        _ = await ReadAsync(connection, transaction, generationId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
+                $"Generation '{generationId:D}' does not exist.");
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_generations
+            SET status = $quiescing
+            WHERE generation_id = $id AND status = $active;
+            """);
+        command.Parameters.AddWithValue("$quiescing", (int)WorkflowGenerationStatus.Quiescing);
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(generationId));
+        command.Parameters.AddWithValue("$active", (int)WorkflowGenerationStatus.Active);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw new WorkflowStateException(
+                $"Generation '{generationId:D}' is not active; only the active generation pauses.");
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return (await GetGenerationAsync(generationId, cancellationToken).ConfigureAwait(false))!;
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<WorkflowGeneration> ResumeGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default)
+    {
+        await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await database.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        _ = await ReadAsync(connection, transaction, generationId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
+                $"Generation '{generationId:D}' does not exist.");
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_generations
+            SET status = $active
+            WHERE generation_id = $id AND status = $quiescing;
+            """);
+        command.Parameters.AddWithValue("$active", (int)WorkflowGenerationStatus.Active);
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(generationId));
+        command.Parameters.AddWithValue("$quiescing", (int)WorkflowGenerationStatus.Quiescing);
+        if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw new WorkflowStateException(
+                $"Generation '{generationId:D}' is not quiescing; only a quiescing generation " +
+                "resumes, and superseded generations never reactivate.");
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return (await GetGenerationAsync(generationId, cancellationToken).ConfigureAwait(false))!;
+    }
+
+    /// <inheritdoc />
     public async ValueTask<WorkflowGeneration> ActivateGenerationAsync(
         Guid generationId,
         Guid? expectedPredecessorGenerationId,
@@ -264,7 +328,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
                 UPDATE workflow_generations
                 SET status = $superseded, superseded_at = $now
                 WHERE generation_id = $id AND instance_id = $instance
-                    AND status = $active;
+                    AND status = $quiescing;
                 """);
             supersede.Parameters.AddWithValue(
                 "$superseded", (int)WorkflowGenerationStatus.Superseded);
@@ -273,13 +337,13 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
                 "$id", SqliteStoreSupport.Format(expectedPredecessorGenerationId.Value));
             supersede.Parameters.AddWithValue(
                 "$instance", SqliteStoreSupport.Format(candidate.InstanceId));
-            supersede.Parameters.AddWithValue("$active", (int)WorkflowGenerationStatus.Active);
+            supersede.Parameters.AddWithValue("$quiescing", (int)WorkflowGenerationStatus.Quiescing);
             if (await supersede.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
             {
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 throw new WorkflowStateException(
                     $"Expected predecessor '{expectedPredecessorGenerationId:D}' is not the " +
-                    "active generation; activation refused.");
+                    "quiescing generation; pause the current generation before cutover.");
             }
         }
 
@@ -414,10 +478,11 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
     {
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             SELECT {Columns} FROM workflow_generations
-            WHERE instance_id = $instance AND status = $active;
+            WHERE instance_id = $instance AND status IN ($active, $quiescing);
             """);
         command.Parameters.AddWithValue("$instance", SqliteStoreSupport.Format(instanceId));
         command.Parameters.AddWithValue("$active", (int)WorkflowGenerationStatus.Active);
+        command.Parameters.AddWithValue("$quiescing", (int)WorkflowGenerationStatus.Quiescing);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken)
             .ConfigureAwait(false);
         return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)

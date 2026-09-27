@@ -137,8 +137,16 @@ integration remain open):
    crash-safe resume at every intermediate state
    (`InstanceGenerationTests`). Plan revision and fingerprint stay opaque
    strings; Zhinu takes no Fuwen dependency.
-2. Add pause as "schedule no new work", quiescence, resume-before-cutover, and
-   durable supersession. A superseded generation never becomes active again.
+ 2. Add pause as "schedule no new work", quiescence, resume-before-cutover, and
+    durable supersession. A superseded generation never becomes active again.
+    **Done 2026-09-27 (store level):** `WorkflowGenerationStatus.Quiescing`
+    with `PauseGenerationAsync` (active owner keeps ownership, schedules no
+    new work) and `ResumeGenerationAsync` (quiescing back to active).
+    Cutover requires a quiesced predecessor, enforced atomically in
+    `ActivateGenerationAsync`; the single-owner index covers active plus
+    quiescing. Reject-then-resume covers "rejecting a candidate and resuming
+    before cutover" (`GenerationPauseTests`); engine enforcement of "schedule
+    no new work" follows with engine consumption of the seams.
 3. Fence late completion: retain its result and provenance, but never schedule
    successors in the superseded generation.
 4. Accept a bounded Fuwen semantic comparison and calculate a transition

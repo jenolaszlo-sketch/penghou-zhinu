@@ -438,7 +438,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             created_at TEXT NOT NULL,
             activated_at TEXT NULL,
             superseded_at TEXT NULL,
-            CHECK (status BETWEEN 0 AND 4),
+            CHECK (status BETWEEN 0 AND 5),
             CHECK (ordinal >= 1),
             FOREIGN KEY(instance_id) REFERENCES workflow_instances(instance_id) ON DELETE CASCADE,
             FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
@@ -447,6 +447,6 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             ON workflow_generations(instance_id, ordinal);
         CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_generations_active
             ON workflow_generations(instance_id)
-            WHERE status = 2;
+            WHERE status IN (2, 5);
         """;
 }

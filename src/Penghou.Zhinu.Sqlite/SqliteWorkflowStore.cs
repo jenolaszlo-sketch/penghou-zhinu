@@ -337,6 +337,20 @@ public sealed class SqliteWorkflowStore :
             () => instances.ActivateGenerationAsync(
                 generationId, expectedPredecessorGenerationId, cancellationToken));
 
+    public ValueTask<WorkflowGeneration> PauseGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.pause",
+            () => instances.PauseGenerationAsync(generationId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration> ResumeGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.resume",
+            () => instances.ResumeGenerationAsync(generationId, cancellationToken));
+
     public ValueTask<WorkflowGeneration> RejectGenerationAsync(
         Guid generationId,
         CancellationToken cancellationToken = default) =>
