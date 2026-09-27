@@ -198,27 +198,38 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
         var now = timeProvider.GetUtcNow();
         var fingerprint = registration.DefinitionFingerprint;
-        await store.CreateRunAsync(
-            new WorkflowRun
-            {
-                Id = id,
-                WorkflowName = workflowName,
-                WorkflowVersion = workflowVersion,
-                Status = WorkflowStatus.Pending,
-                CreatedAt = now,
-                UpdatedAt = now,
-                InputJson = inputJson,
-                InputType = SerializationIdentity.TypeId(registration.InputType),
-                OutputType = SerializationIdentity.TypeId(registration.OutputType),
-                Deadline = deadline,
-                MetadataJson = metadata is null
-                    ? null
-                    : JsonSerializer.Serialize(metadata, serializerOptions),
-                DefinitionFingerprint = fingerprint,
-                TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
-                    .ToHexString()
-            },
-            cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await store.CreateRunAsync(
+                new WorkflowRun
+                {
+                    Id = id,
+                    WorkflowName = workflowName,
+                    WorkflowVersion = workflowVersion,
+                    Status = WorkflowStatus.Pending,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    InputJson = inputJson,
+                    InputType = SerializationIdentity.TypeId(registration.InputType),
+                    OutputType = SerializationIdentity.TypeId(registration.OutputType),
+                    Deadline = deadline,
+                    MetadataJson = metadata is null
+                        ? null
+                        : JsonSerializer.Serialize(metadata, serializerOptions),
+                    DefinitionFingerprint = fingerprint,
+                    TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
+                        .ToHexString()
+                },
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (WorkflowConcurrencyException) when (workflowRunId is not null)
+        {
+            // A concurrent identical start won the creation race. Converge on
+            // the admitted record instead of failing the retry.
+            return await StartAsync(
+                workflowName, workflowVersion, input, workflowRunId,
+                deadline, metadata, cancellationToken).ConfigureAwait(false);
+        }
         await BindFirstGenerationAsync(
             id,
             fingerprint,
@@ -266,7 +277,12 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
 
     /// <summary>
     /// Heals runs created without a generation binding (legacy runs, or a
-    /// crash between run creation and binding on an idempotent retry).
+    /// crash between run creation and binding on an idempotent retry), and
+    /// completes an interrupted initial admission. A partial generation is
+    /// only recovered when it is unmistakably initial admission: the sole
+    /// generation of its instance, ordinal one, no predecessor, and a plan
+    /// revision matching this definition. Anything else (review candidates,
+    /// foreign lineage) fails explicitly instead of being promoted.
     /// </summary>
     private async Task EnsureGenerationBindingAsync(
         Guid workflowRunId,
@@ -275,11 +291,61 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         string workflowVersion,
         CancellationToken cancellationToken)
     {
-        if (await store.GetGenerationByRunAsync(workflowRunId, cancellationToken)
-            .ConfigureAwait(false) is null)
+        var bound = await store.GetGenerationByRunAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+        if (bound is null)
+        {
             await BindFirstGenerationAsync(
                 workflowRunId, planRevision, workflowName, workflowVersion,
                 cancellationToken).ConfigureAwait(false);
+            return;
+        }
+        if (bound.Status is WorkflowGenerationStatus.Active or WorkflowGenerationStatus.Quiescing)
+            return;
+        if (!await IsInterruptedInitialAdmissionAsync(bound, planRevision, cancellationToken)
+            .ConfigureAwait(false))
+            throw new WorkflowStateException(
+                $"Workflow run '{workflowRunId:D}' has a prepared generation that is not an " +
+                "interrupted initial admission; StartAsync does not promote review candidates. " +
+                "Resolve it explicitly before retrying.");
+        var admitted = bound.Status == WorkflowGenerationStatus.Created
+            ? await store.PrepareGenerationAsync(bound.GenerationId, cancellationToken)
+                .ConfigureAwait(false)
+            : bound;
+        try
+        {
+            await store.ActivateGenerationAsync(admitted.GenerationId, null, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (WorkflowStateException)
+        {
+            // Lost the activation race: converge when a concurrent identical
+            // retry finished it, otherwise surface the conflict.
+            var current = await store.GetGenerationByRunAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false);
+            if (current?.GenerationId != admitted.GenerationId ||
+                current.Status is not (WorkflowGenerationStatus.Active or WorkflowGenerationStatus.Quiescing))
+                throw;
+        }
+    }
+
+    /// <summary>
+    /// An interrupted initial admission is the sole generation of its
+    /// instance, ordinal one, predecessorless, and bound to this definition's
+    /// plan revision. The generation row itself is the admission record.
+    /// </summary>
+    private async Task<bool> IsInterruptedInitialAdmissionAsync(
+        WorkflowGeneration bound,
+        string? planRevision,
+        CancellationToken cancellationToken)
+    {
+        if (bound.PredecessorGenerationId is not null || bound.Ordinal != 1)
+            return false;
+        if (!string.Equals(bound.PlanRevision, planRevision, StringComparison.Ordinal))
+            return false;
+        var siblings = await store.ListGenerationsAsync(bound.InstanceId, cancellationToken)
+            .ConfigureAwait(false);
+        return siblings.Count == 1;
     }
 
     /// <summary>Starts a run and returns a typed durable handle.</summary>

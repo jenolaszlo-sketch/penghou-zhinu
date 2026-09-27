@@ -113,6 +113,144 @@ public sealed class RunGenerationBindingTests : WorkflowEngineTestBase
         after.Status.Should().Be(WorkflowGenerationStatus.Active);
     }
 
+    [Fact]
+    public async Task StartRetry_HealsPreparedFirstGeneration()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var store = PeerStore();
+        await store.InitializeAsync(ct);
+        var registry = new WorkflowRegistry().Register("echo", "1", new EchoWorkflow());
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await store.CreateRunAsync(
+            new WorkflowRun
+            {
+                Id = id,
+                WorkflowName = "echo",
+                WorkflowVersion = "1",
+                Status = WorkflowStatus.Pending,
+                CreatedAt = now,
+                UpdatedAt = now,
+                InputJson = "\"x\"",
+                InputType = SerializationIdentity.TypeId(typeof(string)),
+                OutputType = SerializationIdentity.TypeId(typeof(string))
+            },
+            ct);
+        var instance = await store.CreateInstanceAsync(null, ct);
+        var generation = await store.CreateGenerationAsync(
+            instance.InstanceId, id, null, null, null, ct);
+        await store.PrepareGenerationAsync(generation.GenerationId, ct);
+        await using var engine = new WorkflowEngine(store, registry);
+
+        await engine.StartAsync("echo", "1", "x", workflowRunId: id, cancellationToken: ct);
+
+        (await store.GetGenerationByRunAsync(id, ct))!
+            .Status.Should().Be(WorkflowGenerationStatus.Active);
+    }
+
+    private sealed class EchoWorkflow : IWorkflow<string, string>
+    {
+        public Task<string> RunAsync(
+            WorkflowContext context, string input, CancellationToken cancellationToken) =>
+            context.StepAsync("echo", _ => Task.FromResult(input), cancellationToken: cancellationToken);
+    }
+
+    [Fact]
+    public async Task StartRetry_HealsCreatedFirstGeneration()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var store = PeerStore();
+        await store.InitializeAsync(ct);
+        var registry = new WorkflowRegistry().Register("echo", "1", new EchoWorkflow());
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await store.CreateRunAsync(
+            new WorkflowRun
+            {
+                Id = id,
+                WorkflowName = "echo",
+                WorkflowVersion = "1",
+                Status = WorkflowStatus.Pending,
+                CreatedAt = now,
+                UpdatedAt = now,
+                InputJson = "\"x\"",
+                InputType = SerializationIdentity.TypeId(typeof(string)),
+                OutputType = SerializationIdentity.TypeId(typeof(string))
+            },
+            ct);
+        var instance = await store.CreateInstanceAsync(null, ct);
+        await store.CreateGenerationAsync(instance.InstanceId, id, null, null, null, ct);
+        await using var engine = new WorkflowEngine(store, registry);
+
+        await engine.StartAsync("echo", "1", "x", workflowRunId: id, cancellationToken: ct);
+
+        (await store.GetGenerationByRunAsync(id, ct))!
+            .Status.Should().Be(WorkflowGenerationStatus.Active);
+    }
+
+    [Fact]
+    public async Task StartRetry_DoesNotPromoteReviewCandidate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var store = PeerStore();
+        await store.InitializeAsync(ct);
+        var registry = new WorkflowRegistry().Register("echo", "1", new EchoWorkflow());
+        await using var engine = new WorkflowEngine(store, registry);
+        var id = await engine.StartAsync("echo", "1", "x", cancellationToken: ct);
+        var first = (await store.GetGenerationByRunAsync(id, ct))!;
+        var candidate = await store.CreateGenerationAsync(
+            first.InstanceId, id, "plan-review", "fp-review", first.GenerationId, ct);
+        await store.PrepareGenerationAsync(candidate.GenerationId, ct);
+
+        var act = () => engine.StartAsync(
+            "echo", "1", "x", workflowRunId: id, cancellationToken: ct);
+
+        await act.Should().ThrowAsync<WorkflowStateException>();
+        (await store.GetGenerationAsync(first.GenerationId, ct))!
+            .Status.Should().Be(WorkflowGenerationStatus.Active);
+        (await store.GetGenerationAsync(candidate.GenerationId, ct))!
+            .Status.Should().Be(WorkflowGenerationStatus.Prepared);
+    }
+
+    [Fact]
+    public async Task ConcurrentIdenticalStarts_ConvergeOnOneBinding()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var store = PeerStore();
+        await store.InitializeAsync(ct);
+        var registry = new WorkflowRegistry().Register("echo", "1", new EchoWorkflow());
+        await using var engine = new WorkflowEngine(store, registry);
+        var id = Guid.NewGuid();
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+            engine.StartAsync("echo", "1", "x", workflowRunId: id, cancellationToken: ct)));
+
+        results.Should().OnlyContain(returned => returned == id);
+        var binding = (await store.GetGenerationByRunAsync(id, ct))!;
+        binding.Status.Should().Be(WorkflowGenerationStatus.Active);
+        (await store.ListGenerationsAsync(binding.InstanceId, ct))
+            .Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task StartRetry_PreservesTerminalRunStatus()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var engine = CreateEngine(new EchoWorkflow(), "binding-terminal");
+        var store = PeerStore();
+        var runId = await engine.StartAsync("binding-terminal", "1", "x", cancellationToken: ct);
+        await engine.ExecuteAsync(runId, ct);
+        await engine.WaitForCompletionAsync<string>(runId, cancellationToken: ct);
+
+        var again = await engine.StartAsync(
+            "binding-terminal", "1", "x", workflowRunId: runId, cancellationToken: ct);
+
+        again.Should().Be(runId);
+        (await store.GetRunAsync(runId, ct))!.Status.Should().Be(WorkflowStatus.Completed);
+        (await store.GetGenerationByRunAsync(runId, ct))!
+            .Status.Should().Be(WorkflowGenerationStatus.Active);
+    }
+
     private SqliteWorkflowStore PeerStore() =>
         new(new ZhinuSqliteOptions
         {

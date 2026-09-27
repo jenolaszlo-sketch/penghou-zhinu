@@ -35,8 +35,20 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
-        await insertRun.ExecuteAsync(connection, transaction, run, cancellationToken)
-            .ConfigureAwait(false);
+        try
+        {
+            await insertRun.ExecuteAsync(connection, transaction, run, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (SqliteException exception) when (exception.SqliteExtendedErrorCode == 1555)
+        {
+            // SQLITE_CONSTRAINT_PRIMARYKEY: another worker won the creation
+            // race for this run ID. The engine reconciles identical retries
+            // against the admitted record.
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw new WorkflowConcurrencyException(
+                $"Workflow run '{run.Id:D}' already exists.");
+        }
         await insertEvent.ExecuteAsync(
             connection,
             transaction,
