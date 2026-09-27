@@ -298,6 +298,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             metadata_json TEXT NULL,
             producer_step_key TEXT NULL,
             producer_step_revision INTEGER NULL,
+            effective_inputs_hash TEXT NULL,
+            producer_semantics TEXT NULL,
             created_at TEXT NOT NULL,
             UNIQUE(workflow_run_id, name, revision),
             CHECK (revision >= 1),

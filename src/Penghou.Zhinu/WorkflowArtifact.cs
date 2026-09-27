@@ -28,6 +28,19 @@ public sealed record WorkflowArtifactReference
     public IReadOnlyDictionary<string, string>? Metadata { get; init; }
     public string? ProducerStepKey { get; init; }
     public int? ProducerStepRevision { get; init; }
+    /// <summary>
+    /// Fingerprint of the effective inputs the producing step revision ran
+    /// with, bound by the store from the fenced producer row at publication.
+    /// Null for run-scoped publications and producers without recorded inputs.
+    /// </summary>
+    public string? EffectiveInputsHash { get; init; }
+    /// <summary>
+    /// Semantic identity of the producer implementation (the producing step
+    /// revision's implementation key), bound by the store at publication.
+    /// Null for run-scoped publications and producers without an
+    /// implementation key.
+    /// </summary>
+    public string? ProducerSemantics { get; init; }
     public required DateTimeOffset CreatedAt { get; init; }
 }
 

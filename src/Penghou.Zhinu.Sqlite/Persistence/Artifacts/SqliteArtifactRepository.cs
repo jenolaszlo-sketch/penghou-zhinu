@@ -12,7 +12,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
     private const string Columns = """
         id, workflow_run_id, name, revision, artifact_type, artifact_version,
         location, content_hash, metadata_json, producer_step_key,
-        producer_step_revision, created_at
+        producer_step_revision, effective_inputs_hash, producer_semantics,
+        created_at
         """;
 
     public async ValueTask<ArtifactPublicationResult> PublishArtifactAsync(
@@ -26,8 +27,11 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
 
+        string? effectiveInputsHash = null;
+        string? producerSemantics = null;
         if (request.StepExecutionId is { } stepId)
-            await VerifyProducerAsync(connection, transaction, request, stepId, cancellationToken)
+            (effectiveInputsHash, producerSemantics) = await VerifyProducerAsync(
+                connection, transaction, request, stepId, cancellationToken)
                 .ConfigureAwait(false);
 
         var metadataJson = SerializeMetadata(request.Artifact.Metadata);
@@ -62,6 +66,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             Metadata = SnapshotMetadata(request.Artifact.Metadata),
             ProducerStepKey = request.ProducerStepKey,
             ProducerStepRevision = request.ProducerStepRevision,
+            EffectiveInputsHash = effectiveInputsHash,
+            ProducerSemantics = producerSemantics,
             CreatedAt = request.Now
         };
         await InsertAsync(connection, transaction, result, metadataJson, cancellationToken)
@@ -226,7 +232,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             : null;
     }
 
-    private static async ValueTask VerifyProducerAsync(
+    private static async ValueTask<(string? EffectiveInputsHash, string? ProducerSemantics)>
+        VerifyProducerAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
         ArtifactPublicationRequest request,
@@ -234,7 +241,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         CancellationToken cancellationToken)
     {
         await using var producerCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
-            SELECT revision, lease_owner, lease_generation FROM workflow_steps
+            SELECT revision, lease_owner, lease_generation, input_hash, implementation_key
+            FROM workflow_steps
             WHERE id = $id AND workflow_run_id = $run AND step_key = $key
                 AND revision = $revision;
             """);
@@ -245,6 +253,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         int revision;
         string? leaseOwner;
         long leaseGeneration;
+        string? effectiveInputsHash;
+        string? producerSemantics;
         await using (var producerReader = await producerCommand.ExecuteReaderAsync(cancellationToken)
             .ConfigureAwait(false))
         {
@@ -253,6 +263,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             revision = producerReader.GetInt32(0);
             leaseOwner = producerReader.IsDBNull(1) ? null : producerReader.GetString(1);
             leaseGeneration = producerReader.GetInt64(2);
+            effectiveInputsHash = producerReader.IsDBNull(3) ? null : producerReader.GetString(3);
+            producerSemantics = producerReader.IsDBNull(4) ? null : producerReader.GetString(4);
         }
 
         await using var currentCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
@@ -295,6 +307,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
                 $"Artifact producer step '{request.ProducerStepKey}' is not leased to this worker; " +
                 "publication refused.");
         }
+
+        return (effectiveInputsHash, producerSemantics);
     }
 
     private static async ValueTask<WorkflowArtifactReference?> GetInPublicationScopeAsync(
@@ -352,10 +366,12 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
             INSERT INTO workflow_artifacts
                 (id, workflow_run_id, name, revision, artifact_type, artifact_version,
                  location, content_hash, metadata_json, producer_step_key,
-                 producer_step_revision, created_at)
+                 producer_step_revision, effective_inputs_hash, producer_semantics,
+                 created_at)
             VALUES
                 ($id, $run, $name, $revision, $type, $version, $location, $hash,
-                 $metadata, $stepKey, $stepRevision, $createdAt);
+                 $metadata, $stepKey, $stepRevision, $inputsHash, $semantics,
+                 $createdAt);
             """);
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(artifact.Id));
         command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(artifact.WorkflowRunId));
@@ -368,6 +384,8 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         command.Parameters.AddWithValue("$metadata", SqliteStoreSupport.DbValue(metadataJson));
         command.Parameters.AddWithValue("$stepKey", SqliteStoreSupport.DbValue(artifact.ProducerStepKey));
         command.Parameters.AddWithValue("$stepRevision", artifact.ProducerStepRevision ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$inputsHash", SqliteStoreSupport.DbValue(artifact.EffectiveInputsHash));
+        command.Parameters.AddWithValue("$semantics", SqliteStoreSupport.DbValue(artifact.ProducerSemantics));
         command.Parameters.AddWithValue("$createdAt", SqliteStoreSupport.FormatTimestamp(artifact.CreatedAt));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -385,7 +403,9 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         Metadata = DeserializeMetadata(SqliteStoreSupport.GetNullableString(reader, 8)),
         ProducerStepKey = SqliteStoreSupport.GetNullableString(reader, 9),
         ProducerStepRevision = reader.IsDBNull(10) ? null : reader.GetInt32(10),
-        CreatedAt = SqliteStoreSupport.ParseTimestamp(reader.GetString(11))
+        EffectiveInputsHash = SqliteStoreSupport.GetNullableString(reader, 11),
+        ProducerSemantics = SqliteStoreSupport.GetNullableString(reader, 12),
+        CreatedAt = SqliteStoreSupport.ParseTimestamp(reader.GetString(13))
     };
 
     private static bool Equivalent(

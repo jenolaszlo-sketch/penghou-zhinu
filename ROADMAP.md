@@ -152,10 +152,17 @@ integration remain open):
 4. Accept a bounded Fuwen semantic comparison and calculate a transition
    preview covering unchanged/new/removed/changed nodes, running work, candidate
    reuse, revalidation, invalidation, and cancellation impact.
-5. Extend immutable artifact production provenance with the effective inputs
-   and producer semantics needed for deterministic reuse evaluation. Reuse
-   creates a new consumption/attachment decision; it never rewrites original
-   producer provenance.
+ 5. Extend immutable artifact production provenance with the effective inputs
+    and producer semantics needed for deterministic reuse evaluation. Reuse
+    creates a new consumption/attachment decision; it never rewrites original
+    producer provenance.
+    **Done 2026-09-27:** `WorkflowArtifactReference` carries
+    `EffectiveInputsHash` (producing step revision's input hash) and
+    `ProducerSemantics` (its implementation key), bound by the store from the
+    fenced producer row inside the publication transaction — Zhinu-owned, no
+    producer trust needed. Null for run-scoped publications. Schema 4 to 5
+    (preview policy: recreate, no migration). Covered by
+    `ArtifactProvenanceTests` including revision-following across restart.
 6. Distinguish artifact invalidation from evidence/validation invalidation so
    stricter acceptance criteria can revalidate expensive existing artifacts.
 7. Atomically activate the new generation with its reuse/invalidation map and

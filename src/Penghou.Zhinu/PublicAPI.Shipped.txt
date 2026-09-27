@@ -523,6 +523,8 @@ Penghou.Zhinu.WorkflowArtifactReference.ContentHash.get -> string?
 Penghou.Zhinu.WorkflowArtifactReference.ContentHash.init -> void
 Penghou.Zhinu.WorkflowArtifactReference.CreatedAt.get -> System.DateTimeOffset
 Penghou.Zhinu.WorkflowArtifactReference.CreatedAt.init -> void
+Penghou.Zhinu.WorkflowArtifactReference.EffectiveInputsHash.get -> string?
+Penghou.Zhinu.WorkflowArtifactReference.EffectiveInputsHash.init -> void
 Penghou.Zhinu.WorkflowArtifactReference.Id.get -> System.Guid
 Penghou.Zhinu.WorkflowArtifactReference.Id.init -> void
 Penghou.Zhinu.WorkflowArtifactReference.Location.get -> string!
@@ -535,6 +537,8 @@ Penghou.Zhinu.WorkflowArtifactReference.ProducerStepKey.get -> string?
 Penghou.Zhinu.WorkflowArtifactReference.ProducerStepKey.init -> void
 Penghou.Zhinu.WorkflowArtifactReference.ProducerStepRevision.get -> int?
 Penghou.Zhinu.WorkflowArtifactReference.ProducerStepRevision.init -> void
+Penghou.Zhinu.WorkflowArtifactReference.ProducerSemantics.get -> string?
+Penghou.Zhinu.WorkflowArtifactReference.ProducerSemantics.init -> void
 Penghou.Zhinu.WorkflowArtifactReference.Revision.get -> int
 Penghou.Zhinu.WorkflowArtifactReference.Revision.init -> void
 Penghou.Zhinu.WorkflowArtifactReference.WorkflowRunId.get -> System.Guid
