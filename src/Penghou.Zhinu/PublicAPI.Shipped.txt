@@ -1,6 +1,7 @@
 #nullable enable
 const Penghou.Zhinu.WorkflowEventTypes.ArtifactPublished = "artifact-published" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.ArtifactInvalidated = "artifact-invalidated" -> string!
+const Penghou.Zhinu.WorkflowEventTypes.StepCompletionRefused = "step-completion-refused" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.CompensationCompleted = "compensation-completed" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.CompensationFailed = "compensation-failed" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.CompensationStarted = "compensation-started" -> string!

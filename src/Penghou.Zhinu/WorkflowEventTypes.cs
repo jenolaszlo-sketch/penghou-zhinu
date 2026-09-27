@@ -27,6 +27,7 @@ public static class WorkflowEventTypes
     public const string WorkflowRestarted = "workflow-restarted";
     public const string ArtifactPublished = "artifact-published";
     public const string ArtifactInvalidated = "artifact-invalidated";
+    public const string StepCompletionRefused = "step-completion-refused";
     public const string LoopIterationCommitted = "loop-iteration-committed";
     public const string LoopCompleted = "loop-completed";
     public const string LoopLimitExceeded = "loop-limit-exceeded";

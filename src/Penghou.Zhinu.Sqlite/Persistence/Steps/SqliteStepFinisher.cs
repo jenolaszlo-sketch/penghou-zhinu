@@ -54,6 +54,21 @@ internal sealed class SqliteStepFinisher
             now,
             cancellationToken).ConfigureAwait(false) != 1)
         {
+            if (status == StepStatus.Completed)
+                await insertEvent.ExecuteAsync(
+                    connection,
+                    transaction,
+                    step.WorkflowRunId,
+                    step.StepKey,
+                    WorkflowEventTypes.StepCompletionRefused,
+                    now,
+                    step.Attempt,
+                    JsonSerializer.Serialize(
+                        new LateCompletionEvidence(
+                            outputJson, ownerId, step.Attempt, step.Revision),
+                        SqliteStoreSupport.SerializerOptions),
+                    cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             throw new WorkflowStateException("Step transition requires an owned running lease.");
         }
         if (status == StepStatus.Completed)
@@ -100,4 +115,14 @@ internal sealed class SqliteStepFinisher
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return committed;
     }
+
+    /// <summary>
+    /// Durable evidence of a refused late completion: the output that would
+    /// otherwise vanish, plus the provenance identifying who produced it.
+    /// </summary>
+    private sealed record LateCompletionEvidence(
+        string? OutputJson,
+        string OwnerId,
+        int Attempt,
+        int StepRevision);
 }

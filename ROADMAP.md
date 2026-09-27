@@ -147,8 +147,17 @@ integration remain open):
     quiescing. Reject-then-resume covers "rejecting a candidate and resuming
     before cutover" (`GenerationPauseTests`); engine enforcement of "schedule
     no new work" follows with engine consumption of the seams.
-3. Fence late completion: retain its result and provenance, but never schedule
-   successors in the superseded generation.
+ 3. Fence late completion: retain its result and provenance, but never schedule
+    successors in the superseded generation.
+    **Partial 2026-09-27:** refused late step completions now retain result
+    plus provenance as a durable `step-completion-refused` event committed
+    atomically with the refusal (`LateCompletionEvidenceTests`) — the throw
+    still advances nothing. Successor scheduling in superseded generations is
+    fenced today at run level (lease-generation mismatch refuses claims and
+    completions); generation-aware claim gating needs engine run-to-generation
+    binding plus a non-failing claim disposition (a throwing guard would fail
+    paused workflows, violating pause semantics), so it rides with engine
+    consumption.
 4. Accept a bounded Fuwen semantic comparison and calculate a transition
    preview covering unchanged/new/removed/changed nodes, running work, candidate
    reuse, revalidation, invalidation, and cancellation impact.
