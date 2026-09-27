@@ -903,101 +903,143 @@ public sealed partial class WorkflowContext
         ZhinuDiagnostics.StepsExecutedCounter.Add(1);
         try
         {
+            var owned = true;
             while (true)
             {
+                if (!owned)
+                {
+                    // Re-acquire after backoff: only a fresh Acquired step may
+                    // enter the delegate. Waiting dispositions poll without
+                    // holding attempt renewal; terminal ones keep retry behavior.
+                    while (true)
+                    {
+                        var reclaim = await ClaimAsync(
+                            step.StepKey, step.InputJson, step.InputType, step.InputHash,
+                            outputType, dependencies, compensation,
+                            step.ImplementationKey, cancellationToken)
+                            .ConfigureAwait(false);
+                        if (reclaim.Disposition == StepClaimDisposition.Acquired)
+                        {
+                            step = reclaim.Step;
+                            break;
+                        }
+                        if (reclaim.Disposition == StepClaimDisposition.Reused)
+                            return Deserialize<TOutput>(reclaim.Step.OutputJson, outputType);
+                        if (reclaim.Disposition is StepClaimDisposition.Deferred
+                            or StepClaimDisposition.Waiting
+                            or StepClaimDisposition.Busy)
+                        {
+                            await Task.Delay(
+                                options.PollInterval,
+                                timeProvider,
+                                cancellationToken).ConfigureAwait(false);
+                            continue;
+                        }
+                        throw new WorkflowStateException(
+                            $"Retry for step '{step.StepKey}' could not be acquired.");
+                    }
+                }
+                owned = false;
                 activity?.SetTag(ZhinuDiagnostics.Attributes.StepAttempt, step.Attempt);
-                using var timeoutCancellation = configured.ExecutionTimeout is null
+                var completed = false;
+                TOutput? completedOutput = default;
+                using (var timeoutCancellation = configured.ExecutionTimeout is null
                     ? null
-                    : new CancellationTokenSource(configured.ExecutionTimeout.Value, timeProvider);
-                using var executionCancellation = timeoutCancellation is null
+                    : new CancellationTokenSource(configured.ExecutionTimeout.Value, timeProvider))
+                using (var executionCancellation = timeoutCancellation is null
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                    : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellation.Token);
-                await using var renewal = new LeaseRenewal(
+                    : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellation.Token))
+                await using (var renewal = new LeaseRenewal(
                     timeProvider,
                     options.LeaseRenewalInterval,
                     token => store.RenewStepLeaseAsync(
                         step.Id,
                         ownerId,
                         timeProvider.GetUtcNow() + options.LeaseDuration,
-                        token));
-                try
+                        token)))
                 {
-                    var buffer = new List<PendingWorkflowEvent>();
-                    PendingStepEmits.Value = buffer;
                     try
                     {
-                        var output = await operation(
-                            input,
-                            new WorkflowStepContext(
-                                WorkflowRunId,
-                                step.Id,
-                                step.StepKey,
-                                step.Attempt,
-                                step.Revision,
-                                false,
-                                (artifact, token) => PublishStepArtifactAsync(
-                                    step, artifact, token),
-                                (eventType, data, dataType, token) => EmitCoreAsync(
-                                    eventType, data, dataType, token)),
-                            executionCancellation.Token).ConfigureAwait(false);
-                        var outputJson = JsonSerializer.Serialize(output, serializerOptions);
-                        var committed = await store.CompleteStepWithEventsAsync(
-                            step.Id,
-                            ownerId,
-                            outputJson,
-                            timeProvider.GetUtcNow(),
-                            buffer.Count == 0 ? null : buffer,
-                            cancellationToken).ConfigureAwait(false);
-                        // Forward events emitted inside the step now that they are
-                        // durably committed with it (the leading step-completed event
-                        // is not part of the emit stream).
-                        onEventAppended?.Invoke(WorkflowRunId);
-                        if (eventPublisher is not null)
+                        var buffer = new List<PendingWorkflowEvent>();
+                        PendingStepEmits.Value = buffer;
+                        try
                         {
-                            foreach (var @event in committed.Skip(1))
+                            var output = await operation(
+                                input,
+                                new WorkflowStepContext(
+                                    WorkflowRunId,
+                                    step.Id,
+                                    step.StepKey,
+                                    step.Attempt,
+                                    step.Revision,
+                                    false,
+                                    (artifact, token) => PublishStepArtifactAsync(
+                                        step, artifact, token),
+                                    (eventType, data, dataType, token) => EmitCoreAsync(
+                                        eventType, data, dataType, token)),
+                                executionCancellation.Token).ConfigureAwait(false);
+                            var outputJson = JsonSerializer.Serialize(output, serializerOptions);
+                            var committed = await store.CompleteStepWithEventsAsync(
+                                step.Id,
+                                ownerId,
+                                outputJson,
+                                timeProvider.GetUtcNow(),
+                                buffer.Count == 0 ? null : buffer,
+                                cancellationToken).ConfigureAwait(false);
+                            // Forward events emitted inside the step now that they are
+                            // durably committed with it (the leading step-completed event
+                            // is not part of the emit stream).
+                            onEventAppended?.Invoke(WorkflowRunId);
+                            if (eventPublisher is not null)
                             {
-                                try
+                                foreach (var @event in committed.Skip(1))
                                 {
-                                    await eventPublisher.PublishAsync(
-                                        @event,
-                                        cancellationToken).ConfigureAwait(false);
-                                }
-                                catch (Exception exception)
-                                {
-                                    throw new WorkflowEventPublisherException(
-                                        "A registered event publisher failed to forward a committed event.",
-                                        exception);
+                                    try
+                                    {
+                                        await eventPublisher.PublishAsync(
+                                            @event,
+                                            cancellationToken).ConfigureAwait(false);
+                                    }
+                                    catch (Exception exception)
+                                    {
+                                        throw new WorkflowEventPublisherException(
+                                            "A registered event publisher failed to forward a committed event.",
+                                            exception);
+                                    }
                                 }
                             }
+                            activity?.SetStatus(ActivityStatusCode.Ok);
+                            completed = true;
+                            completedOutput = output;
                         }
-                        activity?.SetStatus(ActivityStatusCode.Ok);
-                        return output;
+                        finally
+                        {
+                            PendingStepEmits.Value = null;
+                        }
                     }
-                    finally
+                    catch (OperationCanceledException) when (
+                        timeoutCancellation?.IsCancellationRequested == true &&
+                        !cancellationToken.IsCancellationRequested)
                     {
-                        PendingStepEmits.Value = null;
+                        var timeout = new WorkflowTimeoutException(
+                            $"Workflow step '{step.StepKey}' exceeded its execution timeout.");
+                        step = await RecordFailureAsync(
+                            step, timeout, configured.Retry, outputType, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        throw;
+                    }
+                    catch (Exception exception)
+                    {
+                        step = await RecordFailureAsync(
+                            step, exception, configured.Retry, outputType, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
-                catch (OperationCanceledException) when (
-                    timeoutCancellation?.IsCancellationRequested == true &&
-                    !cancellationToken.IsCancellationRequested)
-                {
-                    var timeout = new WorkflowTimeoutException(
-                        $"Workflow step '{step.StepKey}' exceeded its execution timeout.");
-                    step = await RecordFailureAsync(
-                        step, timeout, configured.Retry, outputType, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    throw;
-                }
-                catch (Exception exception)
-                {
-                    step = await RecordFailureAsync(
-                        step, exception, configured.Retry, outputType, cancellationToken)
-                        .ConfigureAwait(false);
-                }
+                if (completed)
+                    return completedOutput!;
 
                 if (step.Status == StepStatus.Failed)
                 {
@@ -1006,27 +1048,6 @@ public sealed partial class WorkflowContext
                         step.StepKey, step.Error ?? UnknownFailure(step.StepKey));
                 }
                 await WaitUntilAsync(step.AvailableAt, cancellationToken).ConfigureAwait(false);
-                var claim = await ClaimAsync(
-                    step.StepKey, step.InputJson, step.InputType, step.InputHash,
-                    outputType, dependencies, compensation,
-                    step.ImplementationKey, cancellationToken)
-                    .ConfigureAwait(false);
-                if (claim.Disposition != StepClaimDisposition.Acquired)
-                {
-                    if (claim.Disposition == StepClaimDisposition.Reused)
-                        return Deserialize<TOutput>(claim.Step.OutputJson, outputType);
-                    if (claim.Disposition == StepClaimDisposition.Deferred)
-                    {
-                        await Task.Delay(
-                            options.PollInterval,
-                            timeProvider,
-                            cancellationToken).ConfigureAwait(false);
-                        continue;
-                    }
-                    throw new WorkflowStateException(
-                        $"Retry for step '{step.StepKey}' could not be acquired.");
-                }
-                step = claim.Step;
             }
         }
         catch (Exception exception)

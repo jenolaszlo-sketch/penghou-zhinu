@@ -135,6 +135,174 @@ public sealed class GenerationSchedulingGuardTests : WorkflowEngineTestBase
             ct);
     }
 
+    [Fact]
+    public async Task PausedGeneration_DoesNotExecuteRetry()
+    {
+        var workflow = new RetryWhilePausedWorkflow();
+        var store = PeerStore();
+        await using var engine = new WorkflowEngine(
+            store,
+            new WorkflowRegistry().Register("retry", "1", workflow),
+            new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+        var id = await engine.StartAsync("retry", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var execution = engine.ExecuteAsync(id, stop.Token);
+        try
+        {
+            while (!(await engine.GetStepsAsync(id, stop.Token)).Any(s => s.Status == StepStatus.Waiting))
+                await Task.Delay(10, stop.Token);
+            var generation = (await store.GetGenerationByRunAsync(id, stop.Token))!;
+            await store.PauseGenerationAsync(generation.GenerationId, stop.Token);
+            await Task.Delay(1000, stop.Token);
+            workflow.Calls.Should().Be(1, "a paused generation must not start a second attempt");
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            await execution;
+        }
+    }
+
+    private sealed class RetryWhilePausedWorkflow : IWorkflow<string, string>
+    {
+        public int Calls;
+
+        public Task<string> RunAsync(
+            WorkflowContext context, string input, CancellationToken cancellationToken) =>
+            context.StepAsync(
+                "retry",
+                input,
+                async (_, ct) =>
+                {
+                    if (Interlocked.Increment(ref Calls) == 1)
+                        throw new InvalidOperationException("transient");
+                    await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                    return input;
+                },
+                new StepOptions { Retry = new RetryPolicy { MaxAttempts = 2, InitialDelay = TimeSpan.FromMilliseconds(400) } },
+                cancellationToken);
+    }
+
+    [Fact]
+    public async Task PausedRetry_ResumesWithFreshClaimAndCommits()
+    {
+        var workflow = new FlakyWorkflow();
+        var store = PeerStore();
+        await using var engine = new WorkflowEngine(
+            store,
+            new WorkflowRegistry().Register("retry-resume", "1", workflow),
+            new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+        var id = await engine.StartAsync(
+            "retry-resume", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var execution = engine.ExecuteAsync(id, stop.Token);
+        try
+        {
+            while (!(await engine.GetStepsAsync(id, stop.Token)).Any(s => s.Status == StepStatus.Waiting))
+                await Task.Delay(10, stop.Token);
+            var generation = (await store.GetGenerationByRunAsync(id, stop.Token))!;
+            await store.PauseGenerationAsync(generation.GenerationId, stop.Token);
+            await Task.Delay(750, stop.Token);
+            workflow.Calls.Should().Be(1, "no second attempt may start while paused");
+            await store.ResumeGenerationAsync(generation.GenerationId, stop.Token);
+            var result = await engine.WaitForCompletionAsync<string>(id, cancellationToken: stop.Token);
+            await execution;
+            result.Should().Be("recovered:x");
+            workflow.Calls.Should().Be(2, "exactly one additional attempt starts after resume");
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            await execution;
+        }
+    }
+
+    [Fact]
+    public async Task SupersedeWhileDeferred_StopsWithoutNewInvocation()
+    {
+        var workflow = new FlakyWorkflow();
+        var store = PeerStore();
+        await using var engine = new WorkflowEngine(
+            store,
+            new WorkflowRegistry().Register("retry-supersede", "1", workflow),
+            new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+        var id = await engine.StartAsync(
+            "retry-supersede", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var execution = engine.ExecuteAsync(id, stop.Token);
+        try
+        {
+            while (!(await engine.GetStepsAsync(id, stop.Token)).Any(s => s.Status == StepStatus.Waiting))
+                await Task.Delay(10, stop.Token);
+            var first = (await store.GetGenerationByRunAsync(id, stop.Token))!;
+            var run2 = await engine.StartAsync(
+                "retry-supersede", "1", "y", cancellationToken: stop.Token);
+            var candidate = await store.CreateGenerationAsync(
+                first.InstanceId, run2, "plan-2", "fp-2", first.GenerationId, stop.Token);
+            await store.PrepareGenerationAsync(candidate.GenerationId, stop.Token);
+            await store.PauseGenerationAsync(first.GenerationId, stop.Token);
+            await store.ActivateGenerationAsync(candidate.GenerationId, first.GenerationId, stop.Token);
+            await execution;
+            workflow.Calls.Should().Be(1, "no subsequent invocation from the old execution");
+            (await store.GetRunAsync(id, stop.Token))!.Status.Should().Be(WorkflowStatus.Failed);
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            await execution;
+        }
+    }
+
+    [Fact]
+    public async Task CancelWhileDeferred_ExitsPromptly()
+    {
+        var workflow = new RetryWhilePausedWorkflow();
+        var store = PeerStore();
+        await using var engine = new WorkflowEngine(
+            store,
+            new WorkflowRegistry().Register("retry-cancel", "1", workflow),
+            new ZhinuOptions { PollInterval = TimeSpan.FromMilliseconds(10) });
+        var id = await engine.StartAsync(
+            "retry-cancel", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        using var stop = new CancellationTokenSource();
+        var execution = engine.ExecuteAsync(id, stop.Token);
+        try
+        {
+            while (!(await engine.GetStepsAsync(id, stop.Token)).Any(s => s.Status == StepStatus.Waiting))
+                await Task.Delay(10, stop.Token);
+            var generation = (await store.GetGenerationByRunAsync(id, stop.Token))!;
+            await store.PauseGenerationAsync(generation.GenerationId, stop.Token);
+            await Task.Delay(500, stop.Token);
+            await stop.CancelAsync();
+            await execution;
+        }
+        finally
+        {
+            await stop.CancelAsync();
+            try { await execution; } catch (OperationCanceledException) { }
+        }
+        workflow.Calls.Should().Be(1, "cancellation must not start new attempts");
+    }
+
+    private sealed class FlakyWorkflow : IWorkflow<string, string>
+    {
+        public int Calls;
+
+        public Task<string> RunAsync(
+            WorkflowContext context, string input, CancellationToken cancellationToken) =>
+            context.StepAsync(
+                "flaky",
+                input,
+                (_, _) =>
+                {
+                    if (Interlocked.Increment(ref Calls) == 1)
+                        throw new InvalidOperationException("transient");
+                    return Task.FromResult($"recovered:{input}");
+                },
+                new StepOptions { Retry = new RetryPolicy { MaxAttempts = 2, InitialDelay = TimeSpan.FromMilliseconds(400) } },
+                cancellationToken);
+    }
+
     private SqliteWorkflowStore PeerStore() =>
         new(new ZhinuSqliteOptions
         {
