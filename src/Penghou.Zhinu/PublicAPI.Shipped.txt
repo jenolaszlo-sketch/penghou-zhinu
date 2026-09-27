@@ -594,11 +594,13 @@ Penghou.Zhinu.WorkflowDefinitionException.WorkflowDefinitionException(string! me
 Penghou.Zhinu.WorkflowDefinitionUnavailableException
 Penghou.Zhinu.WorkflowDefinitionUnavailableException.WorkflowDefinitionUnavailableException(string! name, string! version) -> void
 Penghou.Zhinu.WorkflowEngine
+Penghou.Zhinu.WorkflowEngine.AdmitAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
 Penghou.Zhinu.WorkflowEngine.CancelAsync(System.Guid workflowRunId, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.WorkflowEngine.CancelAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.WorkflowEngine.CancelManyAsync(Penghou.Zhinu.RunQuery! query, string? actor = null, string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.BulkOperationResult!>!
 Penghou.Zhinu.WorkflowEngine.DiagnoseAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RunDiagnosis?>!
 Penghou.Zhinu.WorkflowEngine.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.WorkflowEngine.DrainAdmittedAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.WorkflowEngine.EnumerateArtifactsAsync(System.Guid workflowRunId, Penghou.Zhinu.ArtifactQuery? query = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Penghou.Zhinu.WorkflowArtifactReference!>!
 Penghou.Zhinu.WorkflowEngine.EnumerateEventsAsync(System.Guid workflowRunId, long afterSequence = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Penghou.Zhinu.WorkflowEvent!>!
 Penghou.Zhinu.WorkflowEngine.EnumerateRunsAsync(Penghou.Zhinu.RunQuery! query, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Penghou.Zhinu.WorkflowRun!>!

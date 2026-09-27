@@ -3,6 +3,12 @@ namespace Penghou.Zhinu;
 /// <summary>Controls embedded workflow execution and polling behavior.</summary>
 public sealed class ZhinuOptions
 {
+    /// <summary>
+    /// Bounds top-level runs admitted into hosted execution at once. This
+    /// limits concurrently owned hosted executions, not inline child runs or
+    /// direct <c>ExecuteAsync</c> calls, which observe their own leases and
+    /// budgets.
+    /// </summary>
     public int MaxConcurrentWorkflows { get; set; } = 4;
 
     public TimeSpan LeaseDuration { get; set; } = TimeSpan.FromSeconds(30);

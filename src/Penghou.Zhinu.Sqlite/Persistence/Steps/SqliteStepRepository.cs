@@ -119,11 +119,14 @@ internal sealed class SqliteStepRepository :
             request.WorkflowRunId,
             cancellationToken).ConfigureAwait(false);
         if (boundGeneration is not null &&
-            boundGeneration != (int)WorkflowGenerationStatus.Active)
+            boundGeneration != (int)WorkflowGenerationStatus.Active &&
+            boundGeneration != (int)WorkflowGenerationStatus.Created &&
+            boundGeneration != (int)WorkflowGenerationStatus.Prepared)
         {
             // The run is bound to a quiescing or superseded execution
             // generation: schedule no new work. Quiescing resumes via polling;
-            // superseded ownership never returns.
+            // superseded ownership never returns. Created/prepared bindings
+            // are admission in flight and schedule normally.
             var deferred = boundGeneration == (int)WorkflowGenerationStatus.Quiescing;
             ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
             return new StepClaimResult(

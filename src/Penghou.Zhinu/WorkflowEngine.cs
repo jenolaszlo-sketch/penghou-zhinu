@@ -143,7 +143,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             this.timeProvider,
             leaseRecovery,
             (workflowRunId, cancellationToken) =>
-                ExecuteAsync(workflowRunId, cancellationToken));
+                ExecuteAsync(workflowRunId, cancellationToken),
+            this.logger);
     }
 
     /// <summary>Creates a pending durable run without waiting for its execution.</summary>
@@ -376,6 +377,33 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     {
         ThrowIfDisposed();
         return await scanner.RunAvailableAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Admits runnable runs into locally owned execution without awaiting
+    /// their completion, filling free hosted capacity. Returns the newly
+    /// admitted count; zero means nothing runnable or no free capacity, in
+    /// which case the caller should poll again later. Intended for hosted
+    /// dispatch loops; direct callers that need completion should use
+    /// <see cref="RunAvailableAsync"/>.
+    /// </summary>
+    public Task<int> AdmitAvailableAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        return scanner.AdmitAvailableAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Waits for locally owned admitted executions to finish, for example at
+    /// hosted shutdown. Cancellation ends the wait, not the executions; their
+    /// failures remain observable through the usual run state and logging.
+    /// </summary>
+    public Task DrainAdmittedAsync(
+        CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        return scanner.DrainAdmittedAsync(cancellationToken);
     }
 
     /// <summary>Persists cancellation and signals an active local execution.</summary>

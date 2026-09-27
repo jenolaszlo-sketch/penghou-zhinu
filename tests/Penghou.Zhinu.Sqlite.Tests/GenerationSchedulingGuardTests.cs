@@ -72,6 +72,24 @@ public sealed class GenerationSchedulingGuardTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task InFlightAdmission_DoesNotFenceClaims()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var engine = CreateEngine(new SignalWorkflow(), "claim-guard-admission");
+        var store = PeerStore();
+        var template = await engine.StartAsync(
+            "claim-guard-admission", "1", "x", cancellationToken: ct);
+        var source = (await store.GetRunAsync(template, ct))!;
+        var runId = Guid.NewGuid();
+        await store.CreateRunAsync(source with { Id = runId }, ct);
+        var instance = await store.CreateInstanceAsync(null, ct);
+        await store.CreateGenerationAsync(instance.InstanceId, runId, "plan-1", "fp-1", null, ct);
+
+        (await ClaimAsync(store, runId, "s1", ct)).Disposition
+            .Should().Be(StepClaimDisposition.Acquired);
+    }
+
+    [Fact]
     public async Task PausedExecution_ResumesAndCompletes()
     {
         var ct = TestContext.Current.CancellationToken;
