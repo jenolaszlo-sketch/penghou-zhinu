@@ -11,6 +11,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
     private const string SignalSendOperationType = "signal-send";
     private readonly IZhinuSqliteDatabase factory;
     private readonly GetRunStatusQuery getRunStatus = new();
+    private readonly GetRunLeaseGenerationQuery getRunLeaseGeneration = new();
     private readonly InsertSignalCommand insertSignal = new();
     private readonly InsertEventCommand insertEvent = new();
     private readonly GetStepByIdQuery getStepById = new();
@@ -163,6 +164,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
     public async ValueTask<SignalDelivery?> TryDeliverSignalAsync(
         Guid stepId,
         string ownerId,
+        long leaseGeneration,
         string signalName,
         DateTimeOffset now,
         CancellationToken cancellationToken = default)
@@ -191,6 +193,15 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
         }
         if (step.Status is not (StepStatus.Waiting or StepStatus.Running))
             return null;
+        await RejectStaleStepAsync(
+                connection,
+                transaction,
+                step,
+                ownerId,
+                leaseGeneration,
+                now,
+                cancellationToken)
+            .ConfigureAwait(false);
         var effectiveName = step.SignalName ?? signalName;
         var (signalId, dataJson) = await getUndeliveredSignal.ExecuteAsync(
             connection,
@@ -222,14 +233,22 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return null;
         }
-        await completeStepWithSignal.ExecuteAsync(
-            connection,
-            transaction,
-            stepId,
-            dataJson,
-            effectiveName,
-            now,
-            cancellationToken).ConfigureAwait(false);
+        if (await completeStepWithSignal.ExecuteAsync(
+                connection,
+                transaction,
+                stepId,
+                step.Revision,
+                ownerId,
+                dataJson,
+                effectiveName,
+                now,
+                cancellationToken).ConfigureAwait(false) != 1)
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw new LeaseLostException(
+                $"Step '{step.StepKey}' changed underneath delivery; the completion was fenced.");
+        }
         await insertEvent.ExecuteAsync(
             connection,
             transaction,
@@ -244,6 +263,59 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return new SignalDelivery(dataJson);
+    }
+
+    private async ValueTask RejectStaleStepAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        WorkflowStepRun step,
+        string ownerId,
+        long leaseGeneration,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        await using var revisionCommand = SqliteStoreSupport.CreateCommand(
+            connection,
+            transaction,
+            """
+            SELECT COALESCE(MAX(revision), 0) FROM workflow_steps
+            WHERE workflow_run_id = $run AND step_key = $key;
+            """);
+        revisionCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(step.WorkflowRunId));
+        revisionCommand.Parameters.AddWithValue("$key", step.StepKey);
+        var currentRevision = Convert.ToInt32(
+            await revisionCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture);
+        if (currentRevision != step.Revision)
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            throw new LeaseLostException(
+                $"Step '{step.StepKey}' revision {step.Revision} is superseded by revision " +
+                $"{currentRevision}; delivery refused.");
+        }
+
+        var runGeneration = await getRunLeaseGeneration.ExecuteAsync(
+            connection, transaction, step.WorkflowRunId, cancellationToken).ConfigureAwait(false);
+        if (runGeneration != leaseGeneration)
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            throw new LeaseLostException(
+                $"Caller generation {leaseGeneration} no longer matches run generation " +
+                $"{runGeneration}; delivery refused.");
+        }
+
+        // Waiting steps do not renew leases, so only a live rival owner
+        // fences delivery; unowned or lapsed leases proceed to the fenced
+        // completion update below.
+        if (step.LeaseOwner is not null &&
+            !string.Equals(step.LeaseOwner, ownerId, StringComparison.Ordinal) &&
+            step.LeaseExpiresAt is not null &&
+            step.LeaseExpiresAt > now)
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            throw new LeaseLostException(
+                $"Step '{step.StepKey}' is leased to another worker; delivery refused.");
+        }
     }
 
     public async ValueTask<IReadOnlyList<WorkflowSignalRecord>> ListSignalsAsync(

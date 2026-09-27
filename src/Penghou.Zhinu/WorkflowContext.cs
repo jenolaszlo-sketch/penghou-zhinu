@@ -557,6 +557,7 @@ public sealed partial class WorkflowContext
                             var delivery = await store.TryDeliverSignalAsync(
                                 claim.Step.Id,
                                 ownerId,
+                                leaseGeneration,
                                 signalName,
                                 timeProvider.GetUtcNow(),
                                 linkedCancellation.Token).ConfigureAwait(false);

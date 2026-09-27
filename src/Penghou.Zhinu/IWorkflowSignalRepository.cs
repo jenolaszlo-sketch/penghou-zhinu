@@ -17,10 +17,15 @@ public interface IWorkflowSignalRepository
     /// <paramref name="signalName"/>. Returns the delivered payload, or null when
     /// no signal is available yet (the step stays waiting). Freshly claimed
     /// steps are first transitioned to <see cref="StepStatus.Waiting"/>.
+    /// Delivery is fenced by the step's current revision, the caller's run
+    /// generation, and lease ownership: stale, superseded, or disowned callers
+    /// fail with <see cref="LeaseLostException"/> instead of consuming a
+    /// signal into obsolete work.
     /// </summary>
     ValueTask<SignalDelivery?> TryDeliverSignalAsync(
         Guid stepId,
         string ownerId,
+        long leaseGeneration,
         string signalName,
         DateTimeOffset now,
         CancellationToken cancellationToken = default);

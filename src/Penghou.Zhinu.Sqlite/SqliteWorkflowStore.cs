@@ -588,10 +588,11 @@ public sealed class SqliteWorkflowStore :
     public ValueTask<SignalDelivery?> TryDeliverSignalAsync(
         Guid stepId,
         string ownerId,
+        long leaseGeneration,
         string signalName,
         DateTimeOffset now,
         CancellationToken cancellationToken = default) =>
-        signals.TryDeliverSignalAsync(stepId, ownerId, signalName, now, cancellationToken);
+        signals.TryDeliverSignalAsync(stepId, ownerId, leaseGeneration, signalName, now, cancellationToken);
 
     public ValueTask<IReadOnlyList<WorkflowSignalRecord>> ListSignalsAsync(
         Guid workflowRunId,

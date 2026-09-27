@@ -230,10 +230,13 @@ workflow policy:
 
 - Fence signal delivery and consumption by the current step revision, run
   generation, and lease owner in the same transaction that marks the signal
-  consumed and completes the step. The current delivery surface accepts an
-  owner but the SQLite completion update is keyed only by step ID, so a stale
-  worker can consume a signal into an old revision. Add concurrent stale-worker
-  tests covering restart, lease loss, and late signal arrival.
+  consumed and completes the step. **Done 2026-09-27:** `TryDeliverSignalAsync`
+  takes the caller generation and fences on current revision, caller-vs-run
+  generation, and live rival ownership, with a fenced completion update and
+  `LeaseLostException` diagnostics (`StaleWorkerSignalFencingTests` covers
+  restart, rival owner, stale generation, and late-signal arrival; waiting
+  steps intentionally do not renew leases, so only a live rival owner
+  fences).
 - Fence artifact publication from stale step executions by current producer
   revision, run generation, and lease owner. Preserve historical references,
   but reject a publication from an obsolete execution before it can become the
@@ -274,9 +277,9 @@ Remaining foundation work:
   capability, so deprecating them would misclassify a supported operation.
 - Expand store conformance tests beyond round-trip smoke checks.
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
-- Extend store conformance with stale-worker signal-consumption fencing,
-  stale artifact-publication fencing, and generic external-operation handle
-  persistence/recovery scenarios described above.
+- Extend store conformance with stale artifact-publication fencing and
+  generic external-operation handle persistence/recovery scenarios described
+  above (signal-consumption fencing is done; see above).
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.
@@ -1057,3 +1060,61 @@ Before beginning natural-language compilation:
 - Reduction in skipped build, test, review, and approval stages
 - Time required for a developer to author and diagnose a compiled workflow
 - Adoption of Zhinu for useful non-AI workflows as well as AI workflows
+
+## V2 — Evidence-driven workflow evolution (deferred)
+
+Status: **future work after V1; not a current release gate**. Added 2026-09-26.
+V2.1/V2.2/V2.3 name cross-project delivery stages, not package or IR versions.
+Existing near-term priorities and completed work retain their current status.
+
+Architecture and shared acceptance gates: [reviewed V2 specification](../Penghou.Guihua/docs/evidence-driven-workflow-evolution-v2.md).
+Cross-repository links assume sibling checkouts.
+
+### V2.1 — Outcome evidence and repair authority
+
+- [ ] Extend the existing experience-evidence export boundary with versioned,
+  idempotent references to exact plan revisions, execution/node generations,
+  attempts, artifacts, evaluator decisions and transition receipts. Keep
+  completed/failed execution facts separate from acceptance and supersession;
+  do not replace `StepStatus` with a mixed outcome enum.
+- [ ] Compose the existing restart/fork primitives with the separately planned
+  workflow-instance/generation cutover contract. A fork alone does not establish
+  one active progression owner. Preserve old attempts and fence late results.
+- [ ] Preview and commit reuse, output invalidation and validation-only reruns
+  against exact source/candidate revisions and artifact provenance. Cover
+  control/effect dependencies, keyed items, child work and unknown dependency
+  coverage; invalidation never implies compensation.
+- [ ] Keep recovery pinned to its admitted definition. Historical inspection
+  must execute nothing; repair/re-optimization requires explicit new admission
+  and activation. Idempotent transition commands must reject stale previews.
+- [ ] Export owning-store receipts through a durable cursor/outbox with forward
+  reconciliation to Hongxian; neither projections nor evaluator claims become
+  authoritative runtime state.
+
+Gate: completed-but-rejected work is replaced through one fenced transition,
+true dependents rerun, an independent branch is reused, and crashes before/after
+cutover plus late completion preserve the sole progression owner.
+
+### V2.2 — Durable comparative execution support
+
+- [ ] Supply generic durable identity, candidate isolation boundaries,
+  host-enforced cumulative reservations/accounting, and one committed selection
+  receipt for admitted experiment workflows. Scheduling/evaluation/selection
+  can initially use ordinary durable steps; no strategy ranking enters core.
+- [ ] Preserve partial, failed, cancelled and losing candidate evidence; reconcile
+  accepted external handles before retry. Enforce supported limits across
+  candidates, evaluators, retries and replans without resetting budgets.
+- [ ] Reject unsupported effect/budget contracts; begin with isolated pure or
+  read-only candidates and a separate authorized external commit.
+
+Gate: recovery does not repeat accepted work or choose a second winner, and
+parallel starts/cancellation cannot silently evade aggregate allowances.
+
+### V2.3 and later — Explainable execution inputs
+
+- [ ] Retain the pinned evidence/decision references that caused a selected plan
+  or route, exposing why work was reused, skipped or invalidated without querying
+  live preferences during recovery.
+
+Historical ranking, dead-end policy, topology learning and knowledge promotion
+remain outside Zhinu.

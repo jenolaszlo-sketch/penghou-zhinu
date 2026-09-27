@@ -290,7 +290,7 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     public ValueTask SendSignalAsync(Guid workflowRunId, string signalName, string? dataJson, CancellationToken ct = default) => inner.SendSignalAsync(workflowRunId, signalName, dataJson, ct);
 
-    public ValueTask<SignalDelivery?> TryDeliverSignalAsync(Guid stepId, string ownerId, string signalName, DateTimeOffset now, CancellationToken ct = default) => inner.TryDeliverSignalAsync(stepId, ownerId, signalName, now, ct);
+    public ValueTask<SignalDelivery?> TryDeliverSignalAsync(Guid stepId, string ownerId, long leaseGeneration, string signalName, DateTimeOffset now, CancellationToken ct = default) => inner.TryDeliverSignalAsync(stepId, ownerId, leaseGeneration, signalName, now, ct);
 
     public ValueTask<IReadOnlyList<WorkflowSignalRecord>> ListSignalsAsync(Guid workflowRunId, SignalQuery query, CancellationToken ct = default) => inner.ListSignalsAsync(workflowRunId, query, ct);
 
@@ -332,3 +332,4 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     public ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(Guid workflowRunId, string name, CancellationToken ct = default) => inner.GetLatestArtifactAsync(workflowRunId, name, ct);
 }
+
