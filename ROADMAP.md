@@ -171,8 +171,15 @@ integration remain open):
     append-only audit and never transition the generation; acting on them
     (explicit activate, new candidate, external planning) stays with the
     caller (`GenerationDispositionTests`).
-9. Preserve compensation independently. Returning to an earlier plan creates a
-   later generation and never erases or rewinds execution history.
+ 9. Preserve compensation independently. Returning to an earlier plan creates a
+    later generation and never erases or rewinds execution history.
+    **Done 2026-09-27:** plan-return acceptance locked by
+    `GenerationPlanReturnTests` — reverting to an earlier plan revision
+    creates a dense later ordinal with predecessor linkage while all prior
+    generations and their dispositions stay listed and auditable. Compensation
+    independence holds structurally (restart/rollback paths contain no
+    compensation deletes; the only skip is terminal step failure) and is
+    covered by `CompensationTests.StepAsync_CompensatedStepRestart_CreatesCompensationForNewRevision`.
 
 Initial safety limits should include maximum generations/replans, cumulative
 cost or work budget, wall-clock duration, maximum invalidated work, and an
