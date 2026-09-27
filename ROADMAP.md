@@ -123,11 +123,20 @@ atomically fence the old generation and establish the new active generation in
 Zhinu's authoritative store. Cross-store evidence uses outbox/forward
 reconciliation; it must not weaken this single-store ownership invariant.
 
-The initial evolution milestone is:
+The initial evolution milestone is (**first slice landed 2026-09-27:**
+instance/generation persistence with atomic activation; pause, quiescence,
+transition preview, reuse/invalidation maps, dispositions, and compensation
+integration remain open):
 
 1. Persist workflow-instance identity separately from run identity, plus an
    immutable generation record bound to an admitted Fuwen revision and
-   execution fingerprint.
+   execution fingerprint. **Done 2026-09-27:** `IWorkflowInstanceRepository`
+   with `SqliteWorkflowInstanceRepository`; dense ordinals, single active
+   owner backed by a partial unique index, supersession that never
+   reactivates, rejection that leaves the current generation resumable, and
+   crash-safe resume at every intermediate state
+   (`InstanceGenerationTests`). Plan revision and fingerprint stay opaque
+   strings; Zhinu takes no Fuwen dependency.
 2. Add pause as "schedule no new work", quiescence, resume-before-cutover, and
    durable supersession. A superseded generation never becomes active again.
 3. Fence late completion: retain its result and provenance, but never schedule
@@ -143,6 +152,9 @@ The initial evolution milestone is:
    stricter acceptance criteria can revalidate expensive existing artifacts.
 7. Atomically activate the new generation with its reuse/invalidation map and
    leave failed pre-cutover candidates resumable on the current generation.
+   **Activation core done 2026-09-27** (single-transaction supersede plus
+   establish with predecessor linkage checks); reuse/invalidation maps ride
+   with the transition preview (item 4).
 8. Add a typed checkpoint disposition such as `Accept`, `Retry`, or `Replan`.
    `Replan` requests external planning; Zhinu does not invoke an AI planner.
 9. Preserve compensation independently. Returning to an earlier plan creates a

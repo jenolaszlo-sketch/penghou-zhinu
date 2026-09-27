@@ -154,6 +154,16 @@ Penghou.Zhinu.IWorkflowExternalOperationRepository.ListAsync(System.Guid workflo
 Penghou.Zhinu.IWorkflowExternalOperationRepository.RegisterAsync(Penghou.Zhinu.ExternalOperationRegistration! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
+Penghou.Zhinu.IWorkflowInstanceRepository
+Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.CreateGenerationAsync(System.Guid instanceId, System.Guid workflowRunId, string? planRevision, string? executionFingerprint, System.Guid? predecessorGenerationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.CreateInstanceAsync(string? metadataJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowInstance!>
+Penghou.Zhinu.IWorkflowInstanceRepository.GetActiveGenerationAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration?>
+Penghou.Zhinu.IWorkflowInstanceRepository.GetGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration?>
+Penghou.Zhinu.IWorkflowInstanceRepository.GetInstanceAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowInstance?>
+Penghou.Zhinu.IWorkflowInstanceRepository.ListGenerationsAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGeneration!>!>
+Penghou.Zhinu.IWorkflowInstanceRepository.PrepareGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.RejectGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.IWorkflowRuntime
 Penghou.Zhinu.IWorkflowRuntime.ExecuteAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -293,12 +303,48 @@ Penghou.Zhinu.WorkflowExternalOperation.UpdatedAt.get -> System.DateTimeOffset
 Penghou.Zhinu.WorkflowExternalOperation.UpdatedAt.init -> void
 Penghou.Zhinu.WorkflowExternalOperation.WorkflowRunId.get -> System.Guid
 Penghou.Zhinu.WorkflowExternalOperation.WorkflowRunId.init -> void
+Penghou.Zhinu.WorkflowGeneration
+Penghou.Zhinu.WorkflowGeneration.ActivatedAt.get -> System.DateTimeOffset?
+Penghou.Zhinu.WorkflowGeneration.ActivatedAt.init -> void
+Penghou.Zhinu.WorkflowGeneration.CreatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowGeneration.CreatedAt.init -> void
+Penghou.Zhinu.WorkflowGeneration.ExecutionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowGeneration.ExecutionFingerprint.init -> void
+Penghou.Zhinu.WorkflowGeneration.GenerationId.get -> System.Guid
+Penghou.Zhinu.WorkflowGeneration.GenerationId.init -> void
+Penghou.Zhinu.WorkflowGeneration.InstanceId.get -> System.Guid
+Penghou.Zhinu.WorkflowGeneration.InstanceId.init -> void
+Penghou.Zhinu.WorkflowGeneration.Ordinal.get -> long
+Penghou.Zhinu.WorkflowGeneration.Ordinal.init -> void
+Penghou.Zhinu.WorkflowGeneration.PlanRevision.get -> string?
+Penghou.Zhinu.WorkflowGeneration.PlanRevision.init -> void
+Penghou.Zhinu.WorkflowGeneration.PredecessorGenerationId.get -> System.Guid?
+Penghou.Zhinu.WorkflowGeneration.PredecessorGenerationId.init -> void
+Penghou.Zhinu.WorkflowGeneration.Status.get -> Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGeneration.Status.init -> void
+Penghou.Zhinu.WorkflowGeneration.SupersededAt.get -> System.DateTimeOffset?
+Penghou.Zhinu.WorkflowGeneration.SupersededAt.init -> void
+Penghou.Zhinu.WorkflowGeneration.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowGeneration.WorkflowRunId.init -> void
+Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGenerationStatus.Active = 2 -> Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGenerationStatus.Created = 0 -> Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGenerationStatus.Prepared = 1 -> Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGenerationStatus.Rejected = 4 -> Penghou.Zhinu.WorkflowGenerationStatus
+Penghou.Zhinu.WorkflowGenerationStatus.Superseded = 3 -> Penghou.Zhinu.WorkflowGenerationStatus
 Penghou.Zhinu.WorkflowHandle<TOutput>.GetLoopProgressAsync(Penghou.Zhinu.WorkflowLoopReference! loop, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowLoopProgress?>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.PlanLoopRestartAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.StepRestartMode mode = Penghou.Zhinu.StepRestartMode.Dependents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.RestartLoopStepAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.RestartLoopStepWithReceiptAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartReceipt!>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync(string! signalName, Penghou.Zhinu.SignalSendOptions! options, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.SendSignalWithReceiptAsync<TPayload>(Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
+Penghou.Zhinu.WorkflowInstance
+Penghou.Zhinu.WorkflowInstance.CreatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowInstance.CreatedAt.init -> void
+Penghou.Zhinu.WorkflowInstance.InstanceId.get -> System.Guid
+Penghou.Zhinu.WorkflowInstance.InstanceId.init -> void
+Penghou.Zhinu.WorkflowInstance.MetadataJson.get -> string?
+Penghou.Zhinu.WorkflowInstance.MetadataJson.init -> void
 Penghou.Zhinu.WorkflowLoopIteration<TState>
 Penghou.Zhinu.WorkflowLoopIteration<TState>.Break(TState finalState) -> Penghou.Zhinu.LoopBodyOutcome<TState>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.Continue(TState nextState) -> Penghou.Zhinu.LoopBodyOutcome<TState>!

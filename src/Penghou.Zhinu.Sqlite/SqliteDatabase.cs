@@ -417,5 +417,36 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             WHERE idempotency_key IS NOT NULL;
         CREATE INDEX IF NOT EXISTS ix_workflow_external_operations_run
             ON workflow_external_operations(workflow_run_id, status, created_at);
+
+        CREATE TABLE IF NOT EXISTS workflow_instances
+        (
+            instance_id TEXT PRIMARY KEY,
+            created_at TEXT NOT NULL,
+            metadata_json TEXT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS workflow_generations
+        (
+            generation_id TEXT PRIMARY KEY,
+            instance_id TEXT NOT NULL,
+            ordinal INTEGER NOT NULL,
+            workflow_run_id TEXT NOT NULL,
+            plan_revision TEXT NULL,
+            execution_fingerprint TEXT NULL,
+            status INTEGER NOT NULL,
+            predecessor_generation_id TEXT NULL,
+            created_at TEXT NOT NULL,
+            activated_at TEXT NULL,
+            superseded_at TEXT NULL,
+            CHECK (status BETWEEN 0 AND 4),
+            CHECK (ordinal >= 1),
+            FOREIGN KEY(instance_id) REFERENCES workflow_instances(instance_id) ON DELETE CASCADE,
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_generations_ordinal
+            ON workflow_generations(instance_id, ordinal);
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_generations_active
+            ON workflow_generations(instance_id)
+            WHERE status = 2;
         """;
 }
