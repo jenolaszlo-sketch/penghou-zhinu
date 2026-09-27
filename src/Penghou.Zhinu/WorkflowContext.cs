@@ -1257,6 +1257,7 @@ public sealed partial class WorkflowContext
                     StepExecutionId = step?.Id,
                     ProducerStepKey = step?.StepKey,
                     ProducerStepRevision = step?.Revision,
+                    ProducerLeaseOwner = step is null ? null : ownerId,
                     Artifact = artifact,
                     Now = timeProvider.GetUtcNow()
                 },

@@ -238,10 +238,13 @@ workflow policy:
   steps intentionally do not renew leases, so only a live rival owner
   fences).
 - Fence artifact publication from stale step executions by current producer
-  revision, run generation, and lease owner. Preserve historical references,
-  but reject a publication from an obsolete execution before it can become the
-  run's latest artifact. Add process-loss/restart race tests, including lookup
-  of the latest revision and publication-event atomicity.
+  revision, run generation, and lease owner. **Done 2026-09-27:** producer
+  verification requires the current revision, row-vs-run generation match,
+  and the requesting owner (`ArtifactPublicationRequest.ProducerLeaseOwner`,
+  required with step execution); stale or late publications fail closed with
+  `LeaseLostException` leaving no artifact row or event
+  (`StaleProducerArtifactFencingTests`: restart race, completed-step late
+  publish, current-execution success).
 - Add a safe generic external-operation handle seam. It must persist and look up
   an operation handle with workflow run, step execution/revision, attempt or
   idempotency identity, owner/generation fencing, lifecycle status, and recovery

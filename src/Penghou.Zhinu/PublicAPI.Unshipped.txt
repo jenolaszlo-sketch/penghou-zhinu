@@ -8,6 +8,8 @@ const Penghou.Zhinu.ZhinuDiagnostics.Attributes.StepImplementationKey = "zhinu.s
 const Penghou.Zhinu.ZhinuDiagnostics.Attributes.StepImplementationType = "zhinu.step.implementation.type" -> string!
 override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
 override Penghou.Zhinu.StepImplementationKey.ToString() -> string!
+Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.get -> string?
+Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.init -> void
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue

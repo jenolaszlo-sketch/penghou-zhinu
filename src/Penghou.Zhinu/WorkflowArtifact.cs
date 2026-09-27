@@ -102,6 +102,13 @@ public sealed record ArtifactPublicationRequest
     public Guid? StepExecutionId { get; init; }
     public string? ProducerStepKey { get; init; }
     public int? ProducerStepRevision { get; init; }
+    /// <summary>
+    /// Gets the lease owner publishing on behalf of the step execution.
+    /// Required when <see cref="StepExecutionId"/> is set; the store fences
+    /// publication by current producer revision, run generation, and this
+    /// owner.
+    /// </summary>
+    public string? ProducerLeaseOwner { get; init; }
     public required WorkflowArtifactDescriptor Artifact { get; init; }
     public required DateTimeOffset Now { get; init; }
 }

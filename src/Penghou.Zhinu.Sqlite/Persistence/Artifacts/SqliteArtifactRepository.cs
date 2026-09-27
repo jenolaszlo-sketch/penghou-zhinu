@@ -233,19 +233,68 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         Guid stepId,
         CancellationToken cancellationToken)
     {
-        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
-            SELECT COUNT(*) FROM workflow_steps
+        await using var producerCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT revision, lease_owner, lease_generation FROM workflow_steps
             WHERE id = $id AND workflow_run_id = $run AND step_key = $key
                 AND revision = $revision;
             """);
-        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(stepId));
-        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(request.WorkflowRunId));
-        command.Parameters.AddWithValue("$key", request.ProducerStepKey!);
-        command.Parameters.AddWithValue("$revision", request.ProducerStepRevision!.Value);
-        var count = Convert.ToInt32(
-            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
-        if (count != 1)
-            throw new WorkflowStateException("The artifact producer step revision does not exist.");
+        producerCommand.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(stepId));
+        producerCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(request.WorkflowRunId));
+        producerCommand.Parameters.AddWithValue("$key", request.ProducerStepKey!);
+        producerCommand.Parameters.AddWithValue("$revision", request.ProducerStepRevision!.Value);
+        int revision;
+        string? leaseOwner;
+        long leaseGeneration;
+        await using (var producerReader = await producerCommand.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false))
+        {
+            if (!await producerReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                throw new WorkflowStateException("The artifact producer step revision does not exist.");
+            revision = producerReader.GetInt32(0);
+            leaseOwner = producerReader.IsDBNull(1) ? null : producerReader.GetString(1);
+            leaseGeneration = producerReader.GetInt64(2);
+        }
+
+        await using var currentCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT COALESCE(MAX(revision), 0) FROM workflow_steps
+            WHERE workflow_run_id = $run AND step_key = $key;
+            """);
+        currentCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(request.WorkflowRunId));
+        currentCommand.Parameters.AddWithValue("$key", request.ProducerStepKey!);
+        var currentRevision = Convert.ToInt32(
+            await currentCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture);
+        if (currentRevision != revision)
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            throw new LeaseLostException(
+                $"Artifact producer step '{request.ProducerStepKey}' revision {revision} is " +
+                $"superseded by revision {currentRevision}; publication refused.");
+        }
+
+        await using var generationCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT lease_generation FROM workflow_runs WHERE id = $run;
+            """);
+        generationCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(request.WorkflowRunId));
+        var runGeneration = Convert.ToInt64(
+            await generationCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture);
+        if (runGeneration != leaseGeneration)
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            throw new LeaseLostException(
+                $"Artifact producer step '{request.ProducerStepKey}' generation {leaseGeneration} " +
+                $"no longer matches run generation {runGeneration}; publication refused.");
+        }
+
+        if (request.ProducerLeaseOwner is null ||
+            !string.Equals(leaseOwner, request.ProducerLeaseOwner, StringComparison.Ordinal))
+        {
+            ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
+            throw new LeaseLostException(
+                $"Artifact producer step '{request.ProducerStepKey}' is not leased to this worker; " +
+                "publication refused.");
+        }
     }
 
     private static async ValueTask<WorkflowArtifactReference?> GetInPublicationScopeAsync(
@@ -385,6 +434,12 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         {
             throw new ArgumentException(
                 "Step execution id, key, and revision must be provided together.",
+                nameof(request));
+        }
+        if (hasStepId && string.IsNullOrWhiteSpace(request.ProducerLeaseOwner))
+        {
+            throw new ArgumentException(
+                "Producer lease owner is required for step-scoped publication.",
                 nameof(request));
         }
     }
