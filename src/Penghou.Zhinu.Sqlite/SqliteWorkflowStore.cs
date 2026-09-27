@@ -340,6 +340,13 @@ public sealed class SqliteWorkflowStore :
             "generations.list",
             () => instances.ListGenerationsAsync(instanceId, cancellationToken));
 
+    public ValueTask<WorkflowGeneration?> GetGenerationByRunAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.by-run",
+            () => instances.GetGenerationByRunAsync(workflowRunId, cancellationToken));
+
     public ValueTask<WorkflowGeneration> PrepareGenerationAsync(
         Guid generationId,
         CancellationToken cancellationToken = default) =>

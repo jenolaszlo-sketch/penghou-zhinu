@@ -189,6 +189,28 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
     }
 
     /// <inheritdoc />
+    public async ValueTask<WorkflowGeneration?> GetGenerationByRunAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await database.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+            SELECT {Columns} FROM workflow_generations
+            WHERE workflow_run_id = $run
+            ORDER BY ordinal DESC
+            LIMIT 1;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? Read(reader)
+            : null;
+    }
+
+    /// <inheritdoc />
     public async ValueTask<WorkflowGeneration> PrepareGenerationAsync(
         Guid generationId,
         CancellationToken cancellationToken = default)

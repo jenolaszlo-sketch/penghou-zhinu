@@ -183,6 +183,12 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         registration.DefinitionFingerprint,
                         StringComparison.Ordinal))
                 {
+                    await EnsureGenerationBindingAsync(
+                        id,
+                        registration.DefinitionFingerprint,
+                        workflowName,
+                        workflowVersion,
+                        cancellationToken).ConfigureAwait(false);
                     return id;
                 }
                 throw new WorkflowStateException(
@@ -212,6 +218,12 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                     .ToHexString()
             },
             cancellationToken).ConfigureAwait(false);
+        await BindFirstGenerationAsync(
+            id,
+            fingerprint,
+            workflowName,
+            workflowVersion,
+            cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
             ZhinuLogEvents.RunCreated,
             "Created workflow {WorkflowRunId} for {WorkflowName} version {WorkflowVersion}.",
@@ -223,6 +235,50 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             new KeyValuePair<string, object?>(ZhinuDiagnostics.Attributes.WorkflowName, workflowName),
             new KeyValuePair<string, object?>(ZhinuDiagnostics.Attributes.WorkflowVersion, workflowVersion));
         return id;
+    }
+
+    /// <summary>
+    /// Binds a run to its first execution generation. Each started or forked
+    /// run opens its own instance: exactly one generation owns forward
+    /// progression per instance, so sharing the source instance would violate
+    /// single ownership.
+    /// </summary>
+    private async Task BindFirstGenerationAsync(
+        Guid workflowRunId,
+        string? planRevision,
+        string workflowName,
+        string workflowVersion,
+        CancellationToken cancellationToken)
+    {
+        var instance = await store.CreateInstanceAsync(
+            JsonSerializer.Serialize(
+                new { workflowName, workflowVersion }, serializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        var created = await store.CreateGenerationAsync(
+            instance.InstanceId, workflowRunId, planRevision, null, null,
+            cancellationToken).ConfigureAwait(false);
+        var prepared = await store.PrepareGenerationAsync(
+            created.GenerationId, cancellationToken).ConfigureAwait(false);
+        await store.ActivateGenerationAsync(
+            prepared.GenerationId, null, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Heals runs created without a generation binding (legacy runs, or a
+    /// crash between run creation and binding on an idempotent retry).
+    /// </summary>
+    private async Task EnsureGenerationBindingAsync(
+        Guid workflowRunId,
+        string? planRevision,
+        string workflowName,
+        string workflowVersion,
+        CancellationToken cancellationToken)
+    {
+        if (await store.GetGenerationByRunAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false) is null)
+            await BindFirstGenerationAsync(
+                workflowRunId, planRevision, workflowName, workflowVersion,
+                cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Starts a run and returns a typed durable handle.</summary>
@@ -867,6 +923,12 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             options.Mode,
             options.Actor,
             options.Reason,
+            cancellationToken).ConfigureAwait(false);
+        await BindFirstGenerationAsync(
+            id,
+            targetRegistration.DefinitionFingerprint,
+            targetName,
+            targetVersion,
             cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
             "Forked workflow {SourceWorkflowRunId} into {WorkflowRunId} from " +

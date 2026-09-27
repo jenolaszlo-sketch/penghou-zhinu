@@ -52,6 +52,14 @@ public interface IWorkflowInstanceRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Finds the latest generation bound to a run, if any. Runs are bound at
+    /// start; a run shared across generations resolves to its latest binding.
+    /// </summary>
+    ValueTask<WorkflowGeneration?> GetGenerationByRunAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Marks a created generation prepared. Only the recorded generation
     /// moves; anything else fails with <see cref="WorkflowStateException"/>.
     /// </summary>

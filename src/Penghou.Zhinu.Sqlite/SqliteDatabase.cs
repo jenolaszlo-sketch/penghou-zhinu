@@ -464,6 +464,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_generations_active
             ON workflow_generations(instance_id)
             WHERE status IN (2, 5);
+        CREATE INDEX IF NOT EXISTS ix_workflow_generations_run
+            ON workflow_generations(workflow_run_id, ordinal);
 
         CREATE TABLE IF NOT EXISTS workflow_generation_dispositions
         (

@@ -360,6 +360,8 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     public ValueTask<IReadOnlyList<WorkflowGeneration>> ListGenerationsAsync(Guid instanceId, CancellationToken ct = default) => inner.ListGenerationsAsync(instanceId, ct);
 
+    public ValueTask<WorkflowGeneration?> GetGenerationByRunAsync(Guid workflowRunId, CancellationToken ct = default) => inner.GetGenerationByRunAsync(workflowRunId, ct);
+
     public ValueTask<WorkflowGeneration> PrepareGenerationAsync(Guid generationId, CancellationToken ct = default) => inner.PrepareGenerationAsync(generationId, ct);
 
     public ValueTask<WorkflowGeneration> ActivateGenerationAsync(Guid generationId, Guid? expectedPredecessorGenerationId, CancellationToken ct = default) => inner.ActivateGenerationAsync(generationId, expectedPredecessorGenerationId, ct);

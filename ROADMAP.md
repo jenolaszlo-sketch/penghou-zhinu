@@ -128,15 +128,21 @@ instance/generation persistence with atomic activation; pause, quiescence,
 transition preview, reuse/invalidation maps, dispositions, and compensation
 integration remain open):
 
-1. Persist workflow-instance identity separately from run identity, plus an
-   immutable generation record bound to an admitted Fuwen revision and
-   execution fingerprint. **Done 2026-09-27:** `IWorkflowInstanceRepository`
-   with `SqliteWorkflowInstanceRepository`; dense ordinals, single active
-   owner backed by a partial unique index, supersession that never
-   reactivates, rejection that leaves the current generation resumable, and
-   crash-safe resume at every intermediate state
-   (`InstanceGenerationTests`). Plan revision and fingerprint stay opaque
-   strings; Zhinu takes no Fuwen dependency.
+ 1. Persist workflow-instance identity separately from run identity, plus an
+    immutable generation record bound to an admitted Fuwen revision and
+    execution fingerprint. **Done 2026-09-27:** `IWorkflowInstanceRepository`
+    with `SqliteWorkflowInstanceRepository`; dense ordinals, single active
+    owner backed by a partial unique index, supersession that never
+    reactivates, rejection that leaves the current generation resumable, and
+    crash-safe resume at every intermediate state
+    (`InstanceGenerationTests`). Plan revision and fingerprint stay opaque
+    strings; Zhinu takes no Fuwen dependency. **Engine consumption begun
+    2026-09-27:** `StartAsync` and `ForkAsync` bind every run to its own
+    instance plus an active first generation (plan revision = definition
+    fingerprint; forked runs open a fresh instance to preserve single
+    ownership), with idempotent-start backfill for unbound runs and
+    `GetGenerationByRunAsync` lookup (`RunGenerationBindingTests`). Claim
+    gating on generation status still open (needs a non-failing disposition).
  2. Add pause as "schedule no new work", quiescence, resume-before-cutover, and
     durable supersession. A superseded generation never becomes active again.
     **Done 2026-09-27 (store level):** `WorkflowGenerationStatus.Quiescing`
