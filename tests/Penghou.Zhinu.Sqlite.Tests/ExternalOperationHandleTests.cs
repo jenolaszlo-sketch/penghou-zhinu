@@ -15,7 +15,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Register_Get_List_RoundTrip()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var handle = await repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -41,7 +41,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Register_SameKey_ReturnsOriginal()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var request = new ExternalOperationRegistration
         {
@@ -62,7 +62,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Register_SameKeyDifferentIntent_Conflicts()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var request = new ExternalOperationRegistration
         {
@@ -84,7 +84,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Acquire_Complete_HappyPath()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -110,7 +110,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Acquire_Twice_SecondFails()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -131,7 +131,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Complete_WrongOwner_Fails()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -154,7 +154,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Complete_Twice_SecondFails()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -176,7 +176,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task Fail_RecordsError()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -200,7 +200,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     {
         var ct = TestContext.Current.CancellationToken;
         var runId = await StartRunAsync(ct);
-        var crashed = Repository();
+        var crashed = Store();
         var registered = await crashed.RegisterAsync(new ExternalOperationRegistration
         {
             WorkflowRunId = runId,
@@ -213,7 +213,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         }, ct);
 
         // Simulate a process kill: abandon the repository and reopen.
-        var recovered = Repository();
+        var recovered = Store();
         var found = await recovered.GetAsync(registered.OperationId, ct);
 
         found.Should().NotBeNull();
@@ -231,7 +231,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     {
         var ct = TestContext.Current.CancellationToken;
         var runId = await StartRunAsync(ct);
-        var crashed = Repository();
+        var crashed = Store();
         var registered = await crashed.RegisterAsync(new ExternalOperationRegistration
         {
             WorkflowRunId = runId,
@@ -242,7 +242,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         await crashed.AcquireAsync(
             registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
 
-        var recovered = Repository();
+        var recovered = Store();
         var found = await recovered.GetAsync(registered.OperationId, ct);
 
         found.Should().NotBeNull();
@@ -269,7 +269,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
             () => HasStepStatusAsync(engine, runId, "approval", StepStatus.Waiting, cts.Token),
             cts.Token);
 
-        var repository = Repository();
+        var repository = Store();
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
             WorkflowRunId = runId,
@@ -293,7 +293,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task MissingRun_Register_Fails()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
 
         var act = () => repository.RegisterAsync(new ExternalOperationRegistration
         {
@@ -309,7 +309,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     public async Task MissingOperation_LookupAndTransitions_Fail()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var missing = Guid.NewGuid();
 
         (await repository.GetAsync(missing, ct)).Should().BeNull();
@@ -324,13 +324,13 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
             .Should().ThrowAsync<WorkflowNotFoundException>();
     }
 
-    private SqliteExternalOperationRepository Repository() =>
-        new(new ZhinuSqliteOptions
+    private SqliteWorkflowStore Store() =>
+        new(new SqliteDatabase(new ZhinuSqliteOptions
         {
             DatabasePath = Path.Combine(root, "zhinu.db"),
             BusyTimeout = TimeSpan.FromSeconds(2),
             Pooling = false
-        });
+        }));
 
     private async Task<Guid> StartRunAsync(CancellationToken ct)
     {
@@ -339,5 +339,7 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         return await engine.StartAsync(name, "1", "x", cancellationToken: ct);
     }
 }
+
+
 
 

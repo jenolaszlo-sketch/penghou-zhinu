@@ -28,6 +28,8 @@ public sealed class SqliteWorkflowStore :
     private readonly SqliteTimerRepository timers;
     private readonly SqliteLeaseRepository leases;
     private readonly SqliteArtifactRepository artifacts;
+    private readonly SqliteExternalOperationRepository externalOperations;
+    private readonly SqliteWorkflowInstanceRepository instances;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -51,6 +53,8 @@ public sealed class SqliteWorkflowStore :
         timers = new SqliteTimerRepository(factory);
         leases = new SqliteLeaseRepository(factory);
         artifacts = new SqliteArtifactRepository(factory);
+        externalOperations = new SqliteExternalOperationRepository(factory);
+        instances = new SqliteWorkflowInstanceRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
@@ -216,6 +220,129 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "artifacts.latest",
             () => artifacts.GetLatestArtifactAsync(workflowRunId, name, cancellationToken));
+
+    public ValueTask<WorkflowExternalOperation> RegisterAsync(
+        ExternalOperationRegistration request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.register",
+            () => externalOperations.RegisterAsync(request, cancellationToken));
+
+    public ValueTask<WorkflowExternalOperation?> GetAsync(
+        Guid operationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.get",
+            () => externalOperations.GetAsync(operationId, cancellationToken));
+
+    public ValueTask<IReadOnlyList<WorkflowExternalOperation>> ListAsync(
+        Guid workflowRunId,
+        int limit = 100,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.list",
+            () => externalOperations.ListAsync(workflowRunId, limit, cancellationToken));
+
+    public ValueTask<WorkflowExternalOperation> AcquireAsync(
+        Guid operationId,
+        string ownerId,
+        long leaseGeneration,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.acquire",
+            () => externalOperations.AcquireAsync(
+                operationId, ownerId, leaseGeneration, cancellationToken));
+
+    public ValueTask<WorkflowExternalOperation> CompleteAsync(
+        Guid operationId,
+        string ownerId,
+        string? payloadJson,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.complete",
+            () => externalOperations.CompleteAsync(
+                operationId, ownerId, payloadJson, cancellationToken));
+
+    public ValueTask<WorkflowExternalOperation> FailAsync(
+        Guid operationId,
+        string ownerId,
+        string? error,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.fail",
+            () => externalOperations.FailAsync(
+                operationId, ownerId, error, cancellationToken));
+
+    public ValueTask<WorkflowInstance> CreateInstanceAsync(
+        string? metadataJson,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "instances.create",
+            () => instances.CreateInstanceAsync(metadataJson, cancellationToken));
+
+    public ValueTask<WorkflowInstance?> GetInstanceAsync(
+        Guid instanceId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "instances.get",
+            () => instances.GetInstanceAsync(instanceId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration> CreateGenerationAsync(
+        Guid instanceId,
+        Guid workflowRunId,
+        string? planRevision,
+        string? executionFingerprint,
+        Guid? predecessorGenerationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.create",
+            () => instances.CreateGenerationAsync(
+                instanceId, workflowRunId, planRevision, executionFingerprint,
+                predecessorGenerationId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration?> GetGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.get",
+            () => instances.GetGenerationAsync(generationId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration?> GetActiveGenerationAsync(
+        Guid instanceId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.active",
+            () => instances.GetActiveGenerationAsync(instanceId, cancellationToken));
+
+    public ValueTask<IReadOnlyList<WorkflowGeneration>> ListGenerationsAsync(
+        Guid instanceId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.list",
+            () => instances.ListGenerationsAsync(instanceId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration> PrepareGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.prepare",
+            () => instances.PrepareGenerationAsync(generationId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration> ActivateGenerationAsync(
+        Guid generationId,
+        Guid? expectedPredecessorGenerationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.activate",
+            () => instances.ActivateGenerationAsync(
+                generationId, expectedPredecessorGenerationId, cancellationToken));
+
+    public ValueTask<WorkflowGeneration> RejectGenerationAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.reject",
+            () => instances.RejectGenerationAsync(generationId, cancellationToken));
 
     public ValueTask<StepClaimResult> ClaimStepAsync(
         StepClaimRequest request,
@@ -774,3 +901,4 @@ public sealed class SqliteWorkflowStore :
                 ZhinuSqliteDiagnostics.StoreOperationName,
                 operation));
 }
+

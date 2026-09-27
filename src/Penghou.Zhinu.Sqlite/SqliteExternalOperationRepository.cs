@@ -19,13 +19,13 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
         created_at, updated_at, completed_at
         """;
 
-    private readonly SqliteDatabase database;
+    private readonly IZhinuSqliteDatabase database;
 
-    /// <summary>Creates a repository over the configured database file.</summary>
-    public SqliteExternalOperationRepository(ZhinuSqliteOptions options)
+    /// <summary>Creates a repository sharing the caller's database owner.</summary>
+    public SqliteExternalOperationRepository(IZhinuSqliteDatabase database)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        database = new SqliteDatabase(options);
+        ArgumentNullException.ThrowIfNull(database);
+        this.database = database;
     }
 
     /// <inheritdoc />

@@ -16,13 +16,13 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         activated_at, superseded_at
         """;
 
-    private readonly SqliteDatabase database;
+    private readonly IZhinuSqliteDatabase database;
 
-    /// <summary>Creates a repository over the configured database file.</summary>
-    public SqliteWorkflowInstanceRepository(ZhinuSqliteOptions options)
+    /// <summary>Creates a repository sharing the caller's database owner.</summary>
+    public SqliteWorkflowInstanceRepository(IZhinuSqliteDatabase database)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        database = new SqliteDatabase(options);
+        ArgumentNullException.ThrowIfNull(database);
+        this.database = database;
     }
 
     /// <inheritdoc />

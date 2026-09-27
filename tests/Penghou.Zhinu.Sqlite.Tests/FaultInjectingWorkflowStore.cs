@@ -331,5 +331,35 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
     public ValueTask<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(Guid workflowRunId, ArtifactQuery query, CancellationToken ct = default) => inner.QueryArtifactsAsync(workflowRunId, query, ct);
 
     public ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(Guid workflowRunId, string name, CancellationToken ct = default) => inner.GetLatestArtifactAsync(workflowRunId, name, ct);
+
+    public ValueTask<WorkflowExternalOperation> RegisterAsync(ExternalOperationRegistration request, CancellationToken ct = default) => inner.RegisterAsync(request, ct);
+
+    public ValueTask<WorkflowExternalOperation?> GetAsync(Guid operationId, CancellationToken ct = default) => inner.GetAsync(operationId, ct);
+
+    public ValueTask<IReadOnlyList<WorkflowExternalOperation>> ListAsync(Guid workflowRunId, int limit = 100, CancellationToken ct = default) => inner.ListAsync(workflowRunId, limit, ct);
+
+    public ValueTask<WorkflowExternalOperation> AcquireAsync(Guid operationId, string ownerId, long leaseGeneration, CancellationToken ct = default) => inner.AcquireAsync(operationId, ownerId, leaseGeneration, ct);
+
+    public ValueTask<WorkflowExternalOperation> CompleteAsync(Guid operationId, string ownerId, string? payloadJson, CancellationToken ct = default) => inner.CompleteAsync(operationId, ownerId, payloadJson, ct);
+
+    public ValueTask<WorkflowExternalOperation> FailAsync(Guid operationId, string ownerId, string? error, CancellationToken ct = default) => inner.FailAsync(operationId, ownerId, error, ct);
+
+    public ValueTask<WorkflowInstance> CreateInstanceAsync(string? metadataJson, CancellationToken ct = default) => inner.CreateInstanceAsync(metadataJson, ct);
+
+    public ValueTask<WorkflowInstance?> GetInstanceAsync(Guid instanceId, CancellationToken ct = default) => inner.GetInstanceAsync(instanceId, ct);
+
+    public ValueTask<WorkflowGeneration> CreateGenerationAsync(Guid instanceId, Guid workflowRunId, string? planRevision, string? executionFingerprint, Guid? predecessorGenerationId, CancellationToken ct = default) => inner.CreateGenerationAsync(instanceId, workflowRunId, planRevision, executionFingerprint, predecessorGenerationId, ct);
+
+    public ValueTask<WorkflowGeneration?> GetGenerationAsync(Guid generationId, CancellationToken ct = default) => inner.GetGenerationAsync(generationId, ct);
+
+    public ValueTask<WorkflowGeneration?> GetActiveGenerationAsync(Guid instanceId, CancellationToken ct = default) => inner.GetActiveGenerationAsync(instanceId, ct);
+
+    public ValueTask<IReadOnlyList<WorkflowGeneration>> ListGenerationsAsync(Guid instanceId, CancellationToken ct = default) => inner.ListGenerationsAsync(instanceId, ct);
+
+    public ValueTask<WorkflowGeneration> PrepareGenerationAsync(Guid generationId, CancellationToken ct = default) => inner.PrepareGenerationAsync(generationId, ct);
+
+    public ValueTask<WorkflowGeneration> ActivateGenerationAsync(Guid generationId, Guid? expectedPredecessorGenerationId, CancellationToken ct = default) => inner.ActivateGenerationAsync(generationId, expectedPredecessorGenerationId, ct);
+
+    public ValueTask<WorkflowGeneration> RejectGenerationAsync(Guid generationId, CancellationToken ct = default) => inner.RejectGenerationAsync(generationId, ct);
 }
 

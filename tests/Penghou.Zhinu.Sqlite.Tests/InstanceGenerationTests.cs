@@ -16,7 +16,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task FirstGeneration_ActivatesWithoutPredecessor()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var instance = await repository.CreateInstanceAsync(null, ct);
         var created = await repository.CreateGenerationAsync(
@@ -41,7 +41,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task SecondGeneration_RequiresPredecessor_AndSupersedesAtomically()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var instance = await repository.CreateInstanceAsync(null, ct);
         var first = await ActivateAsync(repository, instance.InstanceId, runId, "plan-1", null, ct);
@@ -69,7 +69,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task Activation_WithWrongPredecessor_FailsWithoutSideEffects()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var instance = await repository.CreateInstanceAsync(null, ct);
         var first = await ActivateAsync(repository, instance.InstanceId, runId, "plan-1", null, ct);
@@ -91,7 +91,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task SecondActiveOwner_IsRejected()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var instance = await repository.CreateInstanceAsync(null, ct);
         var first = await ActivateAsync(repository, instance.InstanceId, runId, "plan-1", null, ct);
@@ -118,7 +118,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task RejectedCandidate_LeavesCurrentResumable()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var instance = await repository.CreateInstanceAsync(null, ct);
         var first = await ActivateAsync(repository, instance.InstanceId, runId, "plan-1", null, ct);
@@ -139,7 +139,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task SupersededGeneration_NeverReactivates()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
         var runId = await StartRunAsync(ct);
         var instance = await repository.CreateInstanceAsync(null, ct);
         var first = await ActivateAsync(repository, instance.InstanceId, runId, "plan-1", null, ct);
@@ -160,7 +160,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     public async Task MissingEntities_FailWithNotFound()
     {
         var ct = TestContext.Current.CancellationToken;
-        var repository = Repository();
+        var repository = Store();
 
         (await repository.GetInstanceAsync(Guid.NewGuid(), ct)).Should().BeNull();
         (await repository.GetGenerationAsync(Guid.NewGuid(), ct)).Should().BeNull();
@@ -180,13 +180,13 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     {
         var ct = TestContext.Current.CancellationToken;
         var runId = await StartRunAsync(ct);
-        var crashed = Repository();
+        var crashed = Store();
         var instance = await crashed.CreateInstanceAsync("{\"k\":\"v\"}", ct);
         var created = await crashed.CreateGenerationAsync(
             instance.InstanceId, runId, "plan-1", "fp-1", null, ct);
 
         // Simulate a process kill: abandon the repository and reopen.
-        var recovered = Repository();
+        var recovered = Store();
         (await recovered.GetInstanceAsync(instance.InstanceId, ct))
             .Should().BeEquivalentTo(instance);
         var resumed = await recovered.GetGenerationAsync(created.GenerationId, ct);
@@ -200,13 +200,13 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
         active.Status.Should().Be(WorkflowGenerationStatus.Active);
     }
 
-    private SqliteWorkflowInstanceRepository Repository() =>
-        new(new ZhinuSqliteOptions
+    private SqliteWorkflowStore Store() =>
+        new(new SqliteDatabase(new ZhinuSqliteOptions
         {
             DatabasePath = Path.Combine(root, "zhinu.db"),
             BusyTimeout = TimeSpan.FromSeconds(2),
             Pooling = false
-        });
+        }));
 
     private async Task<Guid> StartRunAsync(CancellationToken ct)
     {
@@ -216,7 +216,7 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     }
 
     private static async Task<WorkflowGeneration> ActivateAsync(
-        SqliteWorkflowInstanceRepository repository,
+        SqliteWorkflowStore repository,
         Guid instanceId,
         Guid runId,
         string planRevision,
@@ -229,3 +229,4 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
         return await repository.ActivateGenerationAsync(prepared.GenerationId, predecessor, ct);
     }
 }
+

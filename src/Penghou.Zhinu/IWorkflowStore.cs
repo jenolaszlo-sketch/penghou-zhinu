@@ -14,7 +14,9 @@ public interface IWorkflowStore :
     IWorkflowTimerRepository,
     IWorkflowLeaseRepository,
     IWorkflowForkRepository,
-    IWorkflowArtifactRepository
+    IWorkflowArtifactRepository,
+    IWorkflowExternalOperationRepository,
+    IWorkflowInstanceRepository
 {
     /// <summary>
     /// Performs a safe health probe: verifies the backing store can be opened,

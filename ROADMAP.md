@@ -267,7 +267,8 @@ workflow policy:
   enforces owner plus atomic status transition while late results stay
   visible with their original generation. Crash-before/acquire, crash-after/
   resume-complete, ambiguous-retry, restart-abandonment, and missing-entity
-  coverage in `ExternalOperationHandleTests`; engine wiring follows with the
+  coverage in `ExternalOperationHandleTests`. **Wired into `IWorkflowStore`**
+  with `SqliteWorkflowStore` delegation; engine consumption follows with the
   generation cutover.
 
 Until these guarantees exist, Marang may use the existing capabilities for
