@@ -387,5 +387,35 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_run_operations_run
             ON workflow_run_operations(workflow_run_id, status, created_at);
+
+        CREATE TABLE IF NOT EXISTS workflow_external_operations
+        (
+            operation_id TEXT PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            step_id TEXT NULL,
+            step_key TEXT NULL,
+            step_revision INTEGER NULL,
+            attempt INTEGER NULL,
+            idempotency_key TEXT NULL,
+            provider TEXT NOT NULL,
+            external_id TEXT NULL,
+            owner TEXT NULL,
+            lease_generation INTEGER NOT NULL,
+            status INTEGER NOT NULL,
+            recovery_intent TEXT NOT NULL,
+            payload_json TEXT NULL,
+            error TEXT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            completed_at TEXT NULL,
+            CHECK (status BETWEEN 0 AND 4),
+            CHECK (lease_generation >= 1),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_external_operations_idempotency
+            ON workflow_external_operations(workflow_run_id, idempotency_key)
+            WHERE idempotency_key IS NOT NULL;
+        CREATE INDEX IF NOT EXISTS ix_workflow_external_operations_run
+            ON workflow_external_operations(workflow_run_id, status, created_at);
         """;
 }

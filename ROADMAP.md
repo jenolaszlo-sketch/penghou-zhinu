@@ -245,12 +245,18 @@ workflow policy:
   `LeaseLostException` leaving no artifact row or event
   (`StaleProducerArtifactFencingTests`: restart race, completed-step late
   publish, current-execution success).
-- Add a safe generic external-operation handle seam. It must persist and look up
-  an operation handle with workflow run, step execution/revision, attempt or
-  idempotency identity, owner/generation fencing, lifecycle status, and recovery
-  intent. Include crash tests before and after the external call and ambiguous
-  retry tests. `WorkflowRunOperation` is currently reserved for maintenance and
-  signal receipts and is not sufficient as a generic externally linked handle.
+- Add a safe generic external-operation handle seam. **Done 2026-09-27:**
+  `IWorkflowExternalOperationRepository` with `SqliteExternalOperationRepository`
+  persists handles carrying run, step execution/revision, attempt/idempotency
+  identity, owner/generation fencing, lifecycle status, and recovery intent in
+  a new `workflow_external_operations` table (no schema-version bump; created
+  idempotently). Registration is idempotent on idempotency keys with conflict
+  detection; acquisition enforces caller-vs-run generation; completion
+  enforces owner plus atomic status transition while late results stay
+  visible with their original generation. Crash-before/acquire, crash-after/
+  resume-complete, ambiguous-retry, restart-abandonment, and missing-entity
+  coverage in `ExternalOperationHandleTests`; engine wiring follows with the
+  generation cutover.
 
 Until these guarantees exist, Marang may use the existing capabilities for
 contract validation, in-memory orchestration, and non-durable planning, but a
@@ -282,7 +288,8 @@ Remaining foundation work:
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
 - Extend store conformance with stale artifact-publication fencing and
   generic external-operation handle persistence/recovery scenarios described
-  above (signal-consumption fencing is done; see above).
+  above (signal-consumption, artifact-publication, and external-operation
+  fencing are done; see above).
 - Publish benchmark methodology and baseline results.
 - Stabilize the preview API and document all transition guarantees.
 - Improve administrative inspection of stuck runs and active operations.

@@ -94,6 +94,37 @@ Penghou.Zhinu.Declarative.WorkflowValidationDiagnostic.StepId.init -> void
 Penghou.Zhinu.Declarative.WorkflowValidationSeverity
 Penghou.Zhinu.Declarative.WorkflowValidationSeverity.Error = 0 -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
 Penghou.Zhinu.Declarative.WorkflowValidationSeverity.Warning = 1 -> Penghou.Zhinu.Declarative.WorkflowValidationSeverity
+Penghou.Zhinu.ExternalOperationRecoveryIntent
+Penghou.Zhinu.ExternalOperationRecoveryIntent.Abandon = 2 -> Penghou.Zhinu.ExternalOperationRecoveryIntent
+Penghou.Zhinu.ExternalOperationRecoveryIntent.Resume = 0 -> Penghou.Zhinu.ExternalOperationRecoveryIntent
+Penghou.Zhinu.ExternalOperationRecoveryIntent.Retry = 1 -> Penghou.Zhinu.ExternalOperationRecoveryIntent
+Penghou.Zhinu.ExternalOperationRegistration
+Penghou.Zhinu.ExternalOperationRegistration.Attempt.get -> int?
+Penghou.Zhinu.ExternalOperationRegistration.Attempt.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.ExternalId.get -> string?
+Penghou.Zhinu.ExternalOperationRegistration.ExternalId.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.IdempotencyKey.get -> string?
+Penghou.Zhinu.ExternalOperationRegistration.IdempotencyKey.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.PayloadJson.get -> string?
+Penghou.Zhinu.ExternalOperationRegistration.PayloadJson.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.Provider.get -> string!
+Penghou.Zhinu.ExternalOperationRegistration.Provider.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.RecoveryIntent.get -> Penghou.Zhinu.ExternalOperationRecoveryIntent
+Penghou.Zhinu.ExternalOperationRegistration.RecoveryIntent.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.StepId.get -> System.Guid?
+Penghou.Zhinu.ExternalOperationRegistration.StepId.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.StepKey.get -> string?
+Penghou.Zhinu.ExternalOperationRegistration.StepKey.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.StepRevision.get -> int?
+Penghou.Zhinu.ExternalOperationRegistration.StepRevision.init -> void
+Penghou.Zhinu.ExternalOperationRegistration.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.ExternalOperationRegistration.WorkflowRunId.init -> void
+Penghou.Zhinu.ExternalOperationStatus
+Penghou.Zhinu.ExternalOperationStatus.Cancelled = 4 -> Penghou.Zhinu.ExternalOperationStatus
+Penghou.Zhinu.ExternalOperationStatus.Completed = 2 -> Penghou.Zhinu.ExternalOperationStatus
+Penghou.Zhinu.ExternalOperationStatus.Failed = 3 -> Penghou.Zhinu.ExternalOperationStatus
+Penghou.Zhinu.ExternalOperationStatus.Requested = 0 -> Penghou.Zhinu.ExternalOperationStatus
+Penghou.Zhinu.ExternalOperationStatus.Running = 1 -> Penghou.Zhinu.ExternalOperationStatus
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowName.get -> string?
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowName.init -> void
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowVersion.get -> string?
@@ -114,6 +145,13 @@ Penghou.Zhinu.IWorkflowClient
 Penghou.Zhinu.IWorkflowClient.GetRunAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRun?>!
 Penghou.Zhinu.IWorkflowClient.SendSignalAsync(System.Guid workflowRunId, string! signalName, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.IWorkflowClient.WaitForCompletionAsync<TOutput>(System.Guid workflowRunId, System.DateTimeOffset? deadline = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.IWorkflowExternalOperationRepository
+Penghou.Zhinu.IWorkflowExternalOperationRepository.AcquireAsync(System.Guid operationId, string! ownerId, long leaseGeneration, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
+Penghou.Zhinu.IWorkflowExternalOperationRepository.CompleteAsync(System.Guid operationId, string! ownerId, string? payloadJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
+Penghou.Zhinu.IWorkflowExternalOperationRepository.FailAsync(System.Guid operationId, string! ownerId, string? error, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
+Penghou.Zhinu.IWorkflowExternalOperationRepository.GetAsync(System.Guid operationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation?>
+Penghou.Zhinu.IWorkflowExternalOperationRepository.ListAsync(System.Guid workflowRunId, int limit = 100, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowExternalOperation!>!>
+Penghou.Zhinu.IWorkflowExternalOperationRepository.RegisterAsync(Penghou.Zhinu.ExternalOperationRegistration! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?
@@ -218,6 +256,43 @@ Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync(System.Guid workflowRunI
 Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync<TPayload>(System.Guid workflowRunId, Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
 Penghou.Zhinu.WorkflowEngine.WorkflowEngine(Penghou.Zhinu.IWorkflowStore! store, Penghou.Zhinu.IWorkflowRegistry! registry, Penghou.Zhinu.ZhinuOptions? options, System.Text.Json.JsonSerializerOptions? serializerOptions, System.TimeProvider? timeProvider, Microsoft.Extensions.Logging.ILogger<Penghou.Zhinu.WorkflowEngine!>? logger, Penghou.Zhinu.IWorkflowEventPublisher? eventPublisher, Penghou.Zhinu.IWorkflowStepResolver? workflowStepResolver) -> void
 Penghou.Zhinu.WorkflowEngineBuilder.WithStepResolver(Penghou.Zhinu.IWorkflowStepResolver! value) -> Penghou.Zhinu.WorkflowEngineBuilder!
+Penghou.Zhinu.WorkflowExternalOperation
+Penghou.Zhinu.WorkflowExternalOperation.Attempt.get -> int?
+Penghou.Zhinu.WorkflowExternalOperation.Attempt.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.CompletedAt.get -> System.DateTimeOffset?
+Penghou.Zhinu.WorkflowExternalOperation.CompletedAt.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.CreatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowExternalOperation.CreatedAt.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.Error.get -> string?
+Penghou.Zhinu.WorkflowExternalOperation.Error.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.ExternalId.get -> string?
+Penghou.Zhinu.WorkflowExternalOperation.ExternalId.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.IdempotencyKey.get -> string?
+Penghou.Zhinu.WorkflowExternalOperation.IdempotencyKey.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.LeaseGeneration.get -> long
+Penghou.Zhinu.WorkflowExternalOperation.LeaseGeneration.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.OperationId.get -> System.Guid
+Penghou.Zhinu.WorkflowExternalOperation.OperationId.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.OwnerId.get -> string?
+Penghou.Zhinu.WorkflowExternalOperation.OwnerId.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.PayloadJson.get -> string?
+Penghou.Zhinu.WorkflowExternalOperation.PayloadJson.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.Provider.get -> string!
+Penghou.Zhinu.WorkflowExternalOperation.Provider.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.RecoveryIntent.get -> Penghou.Zhinu.ExternalOperationRecoveryIntent
+Penghou.Zhinu.WorkflowExternalOperation.RecoveryIntent.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.Status.get -> Penghou.Zhinu.ExternalOperationStatus
+Penghou.Zhinu.WorkflowExternalOperation.Status.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.StepId.get -> System.Guid?
+Penghou.Zhinu.WorkflowExternalOperation.StepId.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.StepKey.get -> string?
+Penghou.Zhinu.WorkflowExternalOperation.StepKey.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.StepRevision.get -> int?
+Penghou.Zhinu.WorkflowExternalOperation.StepRevision.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.UpdatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowExternalOperation.UpdatedAt.init -> void
+Penghou.Zhinu.WorkflowExternalOperation.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowExternalOperation.WorkflowRunId.init -> void
 Penghou.Zhinu.WorkflowHandle<TOutput>.GetLoopProgressAsync(Penghou.Zhinu.WorkflowLoopReference! loop, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowLoopProgress?>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.PlanLoopRestartAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.StepRestartMode mode = Penghou.Zhinu.StepRestartMode.Dependents, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
 Penghou.Zhinu.WorkflowHandle<TOutput>.RestartLoopStepAsync(Penghou.Zhinu.WorkflowLoopStepReference! target, Penghou.Zhinu.RestartStepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.RestartPlan!>!
