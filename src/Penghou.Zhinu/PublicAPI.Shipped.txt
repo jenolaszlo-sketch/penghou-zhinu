@@ -182,9 +182,8 @@ Penghou.Zhinu.ForkRunOptions.Reason.init -> void
 Penghou.Zhinu.ForkRunOptions.WorkflowRunId.get -> System.Guid?
 Penghou.Zhinu.ForkRunOptions.WorkflowRunId.init -> void
 Penghou.Zhinu.ForkStepReason
-Penghou.Zhinu.ForkStepReason.CreationOrderFallback = 2 -> Penghou.Zhinu.ForkStepReason
 Penghou.Zhinu.ForkStepReason.Dependent = 1 -> Penghou.Zhinu.ForkStepReason
-Penghou.Zhinu.ForkStepReason.NotCompleted = 3 -> Penghou.Zhinu.ForkStepReason
+Penghou.Zhinu.ForkStepReason.NotCompleted = 2 -> Penghou.Zhinu.ForkStepReason
 Penghou.Zhinu.ForkStepReason.Requested = 0 -> Penghou.Zhinu.ForkStepReason
 Penghou.Zhinu.IArtifactProducingOutput
 Penghou.Zhinu.IArtifactProducingOutput.Artifacts.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowArtifactReference!>!
@@ -291,7 +290,6 @@ Penghou.Zhinu.RestartPlanStep.RestartPlanStep(string! StepKey, Penghou.Zhinu.Res
 Penghou.Zhinu.RestartPlanStep.StepKey.get -> string!
 Penghou.Zhinu.RestartPlanStep.StepKey.init -> void
 Penghou.Zhinu.RestartReason
-Penghou.Zhinu.RestartReason.CreationOrderFallback = 2 -> Penghou.Zhinu.RestartReason
 Penghou.Zhinu.RestartReason.Dependent = 1 -> Penghou.Zhinu.RestartReason
 Penghou.Zhinu.RestartReason.Requested = 0 -> Penghou.Zhinu.RestartReason
 Penghou.Zhinu.RestartStepOptions
@@ -494,7 +492,6 @@ Penghou.Zhinu.StepOptions.ExecutionTimeout.init -> void
 Penghou.Zhinu.StepOptions.Retry.get -> Penghou.Zhinu.RetryPolicy!
 Penghou.Zhinu.StepOptions.Retry.init -> void
 Penghou.Zhinu.StepRestartMode
-Penghou.Zhinu.StepRestartMode.CreationOrder = 2 -> Penghou.Zhinu.StepRestartMode
 Penghou.Zhinu.StepRestartMode.Dependents = 0 -> Penghou.Zhinu.StepRestartMode
 Penghou.Zhinu.StepRestartMode.StepOnly = 1 -> Penghou.Zhinu.StepRestartMode
 Penghou.Zhinu.StepStatus

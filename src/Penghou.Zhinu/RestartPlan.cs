@@ -7,10 +7,7 @@ public enum RestartReason
     Requested,
 
     /// <summary>A transitive dependent of the requested step.</summary>
-    Dependent,
-
-    /// <summary>Invalidated because it was created at or after the requested step.</summary>
-    CreationOrderFallback
+    Dependent
 }
 
 /// <summary>One step affected by a restart, and why.</summary>

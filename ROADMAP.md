@@ -290,13 +290,16 @@ Remaining foundation work:
   controlled, use the next development cycle to apply the obsolete markers,
   migrate those consumers, and remove confirmed compatibility-only APIs before
   cutting the next preview package.
-  Progress: `StepRestartMode.CreationOrder` now carries diagnostic
-  `ZHINUOBS001`, documents its replacements and removal window, and retains
-  narrowly suppressed compatibility tests. The non-receipt restart overload
-  and `IWorkflowStepRepository.RestartStepAsync` provider contract were
-  audited and intentionally remain supported: both represent explicitly
-  non-idempotent behavior needed by providers without the optional receipt
-  capability, so deprecating them would misclassify a supported operation.
+  Progress: retired 2026-09-27 — `StepRestartMode.CreationOrder` removed along
+  with `RestartReason.CreationOrderFallback`, `ForkStepReason.CreationOrderFallback`,
+  `ResolveCreationOrder`, and both narrowly suppressed compatibility tests
+  (`ZHINUOBS001` fully unreferenced). `ForkStepReason.NotCompleted` renumbered
+  3 to 2; both reason enums are in-memory plan DTOs, never persisted. The
+  non-receipt restart overload and `IWorkflowStepRepository.RestartStepAsync`
+  provider contract were audited and intentionally remain supported: both
+  represent explicitly non-idempotent behavior needed by providers without the
+  optional receipt capability, so deprecating them would misclassify a supported
+  operation.
 - Expand store conformance tests beyond round-trip smoke checks.
 - Add stress tests for claims, leases, cancellation, and process-loss windows.
 - Extend store conformance with stale artifact-publication fencing and

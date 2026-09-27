@@ -77,30 +77,6 @@ public sealed class ForkRunTests : WorkflowEngineTestBase
     }
 
     [Fact]
-    public async Task ForkAsync_CreationOrder_ReexecutesSelectedStepAndLaterSteps()
-    {
-        var sourceWorkflow = new DependentStepsWorkflow();
-        var engine = CreateEngine(sourceWorkflow, "fork-order");
-        await engine.RunAsync<string, string>(
-            "fork-order",
-            "1",
-            "x",
-            cancellationToken: TestContext.Current.CancellationToken);
-
-#pragma warning disable ZHINUOBS001 // Intentional coverage of the retained compatibility mode.
-        var preview = await engine.PlanForkAsync(
-            sourceWorkflow.RunId,
-            "b",
-            StepRestartMode.CreationOrder,
-            TestContext.Current.CancellationToken);
-#pragma warning restore ZHINUOBS001
-
-        preview.StepsToReuse.Should().Equal("a", "c");
-        preview.StepsToReexecute.Select(item => item.StepKey)
-            .Should().Equal("b", "d", "e");
-    }
-
-    [Fact]
     public async Task ForkAsync_RejectsExistingDestinationWithoutChangingIt()
     {
         var sourceWorkflow = new TwoStepWorkflow();

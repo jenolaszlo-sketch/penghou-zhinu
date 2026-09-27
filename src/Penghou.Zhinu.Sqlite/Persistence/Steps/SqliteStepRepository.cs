@@ -1312,8 +1312,6 @@ internal sealed class SqliteStepRepository :
         {
             RestartReason.Requested => ForkStepReason.Requested,
             RestartReason.Dependent => ForkStepReason.Dependent,
-            RestartReason.CreationOrderFallback =>
-                ForkStepReason.CreationOrderFallback,
             _ => throw new ArgumentOutOfRangeException(nameof(reason))
         };
 
@@ -1386,10 +1384,6 @@ internal sealed class SqliteStepRepository :
                 {
                     new(stepKey, RestartReason.Requested)
                 },
-#pragma warning disable ZHINUOBS001 // Compatibility mode retained until after 0.1.0-preview.12.
-            StepRestartMode.CreationOrder =>
-                ResolveCreationOrder(steps, target),
-#pragma warning restore ZHINUOBS001
             StepRestartMode.Dependents =>
                 await ResolveDependentsAsync(
                     connection,
@@ -1453,23 +1447,6 @@ internal sealed class SqliteStepRepository :
             .ToList();
         ordered.Insert(0, new RestartPlanStep(stepKey, RestartReason.Requested));
         return ordered;
-    }
-
-    private static List<RestartPlanStep> ResolveCreationOrder(
-        IReadOnlyList<WorkflowStepRun> steps,
-        WorkflowStepRun target)
-    {
-        var invalidated = steps
-            .Where(step => step.CreatedAt >= target.CreatedAt &&
-                           step.StepKey != target.StepKey)
-            .OrderBy(step => step.CreatedAt)
-            .ThenBy(step => step.StepKey, StringComparer.Ordinal)
-            .Select(step => new RestartPlanStep(
-                step.StepKey,
-                RestartReason.CreationOrderFallback))
-            .ToList();
-        invalidated.Insert(0, new RestartPlanStep(target.StepKey, RestartReason.Requested));
-        return invalidated;
     }
 
     private static RollbackPlan ResolveRollbackPlan(

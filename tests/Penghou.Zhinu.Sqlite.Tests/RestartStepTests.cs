@@ -347,31 +347,6 @@ public sealed class RestartStepTests : WorkflowEngineTestBase
     }
 
     [Fact]
-    public async Task RestartStepAsync_CreationOrderMode_FallsBackToLegacyBehavior()
-    {
-        var workflow = new DependentStepsWorkflow();
-        var engine = CreateEngine(workflow, "deps-creation-order");
-        await engine.RunAsync<string, string>(
-            "deps-creation-order",
-            "1",
-            "x",
-            cancellationToken: TestContext.Current.CancellationToken);
-
-#pragma warning disable ZHINUOBS001 // Intentional coverage of the retained compatibility mode.
-        var plan = await engine.RestartStepAsync(
-            workflow.RunId,
-            "b",
-            new RestartStepOptions { Mode = StepRestartMode.CreationOrder },
-            cancellationToken: TestContext.Current.CancellationToken);
-#pragma warning restore ZHINUOBS001
-
-        plan.StepsToInvalidate.Select(item => item.StepKey)
-            .Should().Equal("b", "d", "e");
-        plan.StepsToInvalidate.Should().Contain(item =>
-            item.StepKey == "d" && item.Reason == RestartReason.CreationOrderFallback);
-    }
-
-    [Fact]
     public async Task RestartStepAsync_FanOut_ReusesSiblingItems()
     {
         var workflow = new FanOutWorkflow();
