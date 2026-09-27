@@ -703,4 +703,76 @@ public sealed class DeclarativeVerticalTests : WorkflowEngineTestBase
             return input + "-b";
         }
     }
+
+    [Fact]
+    public async Task DeclarativeChain_ReturnsSinkOutput()
+    {
+        var (registry, _) = ChainDefinition("z-first", "a-last");
+        await using var engine = CreateEngine(registry);
+        var result = await engine.RunAsync<JsonElement, JsonElement>(
+            "chain",
+            "1",
+            JsonSerializer.SerializeToElement("x"),
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.GetString().Should().Be("x!!");
+    }
+
+    [Fact]
+    public async Task DeclarativeChain_PersistsDependencies()
+    {
+        var (registry, _) = ChainDefinition("a", "b");
+        await using var engine = CreateEngine(registry);
+        var id = await engine.StartAsync(
+            "chain",
+            "1",
+            JsonSerializer.SerializeToElement("x"),
+            cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(id, TestContext.Current.CancellationToken);
+        var edges = await engine.GetDependencyGraphAsync(id, TestContext.Current.CancellationToken);
+        edges.Should().Contain(e => e.StepKey == "b" && e.DependsOnStepKey == "a");
+    }
+
+    [Fact]
+    public async Task DeclarativeChain_RestartUpstreamInvalidatesDownstream()
+    {
+        var (registry, _) = ChainDefinition("a", "b");
+        await using var engine = CreateEngine(registry);
+        var result = await engine.RunAsync<JsonElement, JsonElement>(
+            "chain",
+            "1",
+            JsonSerializer.SerializeToElement("x"),
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.GetString().Should().Be("x!!");
+        var runId = (await engine.GetRunsAsync(
+            new RunQuery { WorkflowName = "chain" },
+            cancellationToken: TestContext.Current.CancellationToken))
+            .Should().ContainSingle().Subject.Id;
+
+        var plan = await engine.PlanRestartAsync(
+            runId, "a", cancellationToken: TestContext.Current.CancellationToken);
+
+        plan.StepsToInvalidate.Select(item => item.StepKey).Should().Equal("a", "b");
+    }
+
+    private static (WorkflowRegistry, CompiledWorkflowDefinition) ChainDefinition(
+        string first, string last)
+    {
+        var catalogue = new ActivityCatalogue();
+        catalogue.Register(new ActivityReference("append", "1"), new AppendActivity());
+        var compiled = WorkflowCompiler.Compile(new DeclarativeWorkflowDefinition
+        {
+            Name = "chain",
+            Version = "1",
+            Steps = [
+                new() { Id = first, Activity = new("append", "1") },
+                new() { Id = last, Activity = new("append", "1"), DependsOn = [first] }]
+        }, catalogue).Compiled!;
+        return (new WorkflowRegistry().RegisterDeclarative(compiled, catalogue), compiled);
+    }
+
+    private sealed class AppendActivity : IActivity<string, string>
+    {
+        public Task<string> ExecuteAsync(string input, CancellationToken cancellationToken) =>
+            Task.FromResult(input + "!");
+    }
 }

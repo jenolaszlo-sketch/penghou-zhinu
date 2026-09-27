@@ -28,6 +28,7 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>,
         // Simple topological sort for sequential dependencies
         var executed = new HashSet<string>(StringComparer.Ordinal);
         var remaining = new Queue<CompiledWorkflowStep>(orderedSteps);
+        var lastExecutedId = string.Empty;
 
         while (remaining.Count > 0)
         {
@@ -64,14 +65,26 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>,
                         result,
                         result?.GetType() ?? typeof(object));
                 },
+                new StepOptions { DependsOn = step.DependsOn },
                 cancellationToken: cancellationToken);
 
             outputs[step.Id] = output;
             executed.Add(step.Id);
+            lastExecutedId = step.Id;
         }
 
-        // Return last step's output as workflow output
-        var lastStepId = orderedSteps.Last().Id;
-        return outputs[lastStepId];
+        // Return the unique sink's output: names are durable identities, not
+        // execution order. Without a unique sink, fall back to the last
+        // topologically executed step. Previously executed runs keep their
+        // committed step rows and edges untouched; only new executions record
+        // the declared edges.
+        var sinks = orderedSteps
+            .Where(candidate => !orderedSteps.Any(other => other.DependsOn.Contains(candidate.Id)))
+            .ToList();
+        if (sinks.Count == 1)
+            return outputs[sinks[0].Id];
+        if (lastExecutedId.Length == 0)
+            throw new WorkflowStateException("Compiled workflow has no steps to execute.");
+        return outputs[lastExecutedId];
     }
 }
