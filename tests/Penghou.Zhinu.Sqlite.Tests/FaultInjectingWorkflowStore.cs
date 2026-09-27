@@ -365,5 +365,9 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
     public ValueTask<WorkflowGeneration> ResumeGenerationAsync(Guid generationId, CancellationToken ct = default) => inner.ResumeGenerationAsync(generationId, ct);
 
     public ValueTask<WorkflowGeneration> RejectGenerationAsync(Guid generationId, CancellationToken ct = default) => inner.RejectGenerationAsync(generationId, ct);
+
+    public ValueTask<GenerationDisposition> RecordDispositionAsync(Guid generationId, CheckpointDisposition disposition, string? reason, string? actor, CancellationToken ct = default) => inner.RecordDispositionAsync(generationId, disposition, reason, actor, ct);
+
+    public ValueTask<IReadOnlyList<GenerationDisposition>> ListDispositionsAsync(Guid generationId, CancellationToken ct = default) => inner.ListDispositionsAsync(generationId, ct);
 }
 

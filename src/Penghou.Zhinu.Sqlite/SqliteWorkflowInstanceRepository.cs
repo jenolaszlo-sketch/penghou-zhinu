@@ -401,6 +401,87 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         return (await GetGenerationAsync(generationId, cancellationToken).ConfigureAwait(false))!;
     }
 
+    /// <inheritdoc />
+    public async ValueTask<GenerationDisposition> RecordDispositionAsync(
+        Guid generationId,
+        CheckpointDisposition disposition,
+        string? reason,
+        string? actor,
+        CancellationToken cancellationToken = default)
+    {
+        await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await database.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        _ = await ReadAsync(connection, transaction, generationId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
+                $"Generation '{generationId:D}' does not exist.");
+        var recorded = new GenerationDisposition
+        {
+            DispositionId = Guid.NewGuid(),
+            GenerationId = generationId,
+            Disposition = disposition,
+            Reason = reason,
+            Actor = actor,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            INSERT INTO workflow_generation_dispositions
+                (disposition_id, generation_id, disposition, reason, actor, created_at)
+            VALUES
+                ($id, $generation, $disposition, $reason, $actor, $created);
+            """);
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(recorded.DispositionId));
+        command.Parameters.AddWithValue("$generation", SqliteStoreSupport.Format(generationId));
+        command.Parameters.AddWithValue("$disposition", (int)disposition);
+        command.Parameters.AddWithValue("$reason", SqliteStoreSupport.DbValue(reason));
+        command.Parameters.AddWithValue("$actor", SqliteStoreSupport.DbValue(actor));
+        command.Parameters.AddWithValue(
+            "$created", SqliteStoreSupport.FormatTimestamp(recorded.CreatedAt));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return recorded;
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<IReadOnlyList<GenerationDisposition>> ListDispositionsAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default)
+    {
+        await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await database.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT disposition_id, generation_id, disposition, reason, actor, created_at
+            FROM workflow_generation_dispositions
+            WHERE generation_id = $generation
+            ORDER BY rowid;
+            """);
+        command.Parameters.AddWithValue("$generation", SqliteStoreSupport.Format(generationId));
+        var results = new List<GenerationDisposition>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadDisposition(reader));
+        return results;
+    }
+
+    private static GenerationDisposition ReadDisposition(SqliteDataReader reader) => new()
+    {
+        DispositionId = Guid.Parse(reader.GetString(0)),
+        GenerationId = Guid.Parse(reader.GetString(1)),
+        Disposition = ReadDispositionValue(reader.GetInt32(2)),
+        Reason = SqliteStoreSupport.GetNullableString(reader, 3),
+        Actor = SqliteStoreSupport.GetNullableString(reader, 4),
+        CreatedAt = SqliteStoreSupport.ParseTimestamp(reader.GetString(5))
+    };
+
+    private static CheckpointDisposition ReadDispositionValue(int value) =>
+        Enum.IsDefined((CheckpointDisposition)value)
+            ? (CheckpointDisposition)value
+            : throw new WorkflowStateException(
+                $"Stored checkpoint disposition '{value}' is not supported.");
+
     private static async ValueTask<WorkflowInstance?> ReadInstanceAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,

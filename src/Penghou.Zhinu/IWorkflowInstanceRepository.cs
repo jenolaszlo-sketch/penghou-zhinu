@@ -97,4 +97,23 @@ public interface IWorkflowInstanceRepository
     ValueTask<WorkflowGeneration> RejectGenerationAsync(
         Guid generationId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a checkpoint disposition on a generation. Decisions are
+    /// append-only audit and never transition the generation; acting on them
+    /// (activate, prepare a new candidate, seek external planning) stays
+    /// explicit. Missing generations fail with
+    /// <see cref="WorkflowNotFoundException"/>.
+    /// </summary>
+    ValueTask<GenerationDisposition> RecordDispositionAsync(
+        Guid generationId,
+        CheckpointDisposition disposition,
+        string? reason,
+        string? actor,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Lists a generation's dispositions in recorded order.</summary>
+    ValueTask<IReadOnlyList<GenerationDisposition>> ListDispositionsAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default);
 }

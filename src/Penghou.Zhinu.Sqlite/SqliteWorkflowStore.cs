@@ -358,6 +358,24 @@ public sealed class SqliteWorkflowStore :
             "generations.reject",
             () => instances.RejectGenerationAsync(generationId, cancellationToken));
 
+    public ValueTask<GenerationDisposition> RecordDispositionAsync(
+        Guid generationId,
+        CheckpointDisposition disposition,
+        string? reason,
+        string? actor,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.disposition.record",
+            () => instances.RecordDispositionAsync(
+                generationId, disposition, reason, actor, cancellationToken));
+
+    public ValueTask<IReadOnlyList<GenerationDisposition>> ListDispositionsAsync(
+        Guid generationId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "generations.disposition.list",
+            () => instances.ListDispositionsAsync(generationId, cancellationToken));
+
     public ValueTask<StepClaimResult> ClaimStepAsync(
         StepClaimRequest request,
         CancellationToken cancellationToken = default) =>

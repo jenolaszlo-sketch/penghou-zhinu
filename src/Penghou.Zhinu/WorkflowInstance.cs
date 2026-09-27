@@ -30,6 +30,37 @@ public sealed record WorkflowInstance
 }
 
 /// <summary>
+/// Review-gate decision on a checkpointed generation. Zhinu records the
+/// decision; it never invokes an AI planner. <see cref="Accept"/> means the
+/// reviewer proceeds (activation stays an explicit, atomic operation);
+/// <see cref="Retry"/> means the candidate is sent back for re-evaluation;
+/// <see cref="Replan"/> requests external planning.
+/// </summary>
+public enum CheckpointDisposition
+{
+    /// <summary>The generation is accepted; activation remains explicit.</summary>
+    Accept = 0,
+    /// <summary>The candidate returns for re-evaluation.</summary>
+    Retry = 1,
+    /// <summary>External planning is requested; Zhinu plans nothing.</summary>
+    Replan = 2
+}
+
+/// <summary>
+/// One recorded checkpoint disposition. Decisions are append-only audit:
+/// recording never transitions the generation itself.
+/// </summary>
+public sealed record GenerationDisposition
+{
+    public required Guid DispositionId { get; init; }
+    public required Guid GenerationId { get; init; }
+    public required CheckpointDisposition Disposition { get; init; }
+    public string? Reason { get; init; }
+    public string? Actor { get; init; }
+    public required DateTimeOffset CreatedAt { get; init; }
+}
+
+/// <summary>
 /// Immutable generation record binding one Zhinu run to an admitted plan
 /// revision. Plan revision and execution fingerprint are opaque identities
 /// supplied by the planning layer; Zhinu never interprets them.

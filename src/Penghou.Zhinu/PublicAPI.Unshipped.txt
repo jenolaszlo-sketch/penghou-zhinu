@@ -10,6 +10,10 @@ override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
 override Penghou.Zhinu.StepImplementationKey.ToString() -> string!
 Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.get -> string?
 Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.init -> void
+Penghou.Zhinu.CheckpointDisposition
+Penghou.Zhinu.CheckpointDisposition.Accept = 0 -> Penghou.Zhinu.CheckpointDisposition
+Penghou.Zhinu.CheckpointDisposition.Replan = 2 -> Penghou.Zhinu.CheckpointDisposition
+Penghou.Zhinu.CheckpointDisposition.Retry = 1 -> Penghou.Zhinu.CheckpointDisposition
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue
@@ -129,6 +133,19 @@ Penghou.Zhinu.ForkRunOptions.TargetWorkflowName.get -> string?
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowName.init -> void
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowVersion.get -> string?
 Penghou.Zhinu.ForkRunOptions.TargetWorkflowVersion.init -> void
+Penghou.Zhinu.GenerationDisposition
+Penghou.Zhinu.GenerationDisposition.Actor.get -> string?
+Penghou.Zhinu.GenerationDisposition.Actor.init -> void
+Penghou.Zhinu.GenerationDisposition.CreatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.GenerationDisposition.CreatedAt.init -> void
+Penghou.Zhinu.GenerationDisposition.Disposition.get -> Penghou.Zhinu.CheckpointDisposition
+Penghou.Zhinu.GenerationDisposition.Disposition.init -> void
+Penghou.Zhinu.GenerationDisposition.DispositionId.get -> System.Guid
+Penghou.Zhinu.GenerationDisposition.DispositionId.init -> void
+Penghou.Zhinu.GenerationDisposition.GenerationId.get -> System.Guid
+Penghou.Zhinu.GenerationDisposition.GenerationId.init -> void
+Penghou.Zhinu.GenerationDisposition.Reason.get -> string?
+Penghou.Zhinu.GenerationDisposition.Reason.init -> void
 Penghou.Zhinu.IAuditedWorkflowCancellationRepository
 Penghou.Zhinu.IAuditedWorkflowCancellationRepository.CancelRunAsync(System.Guid workflowRunId, string? actor, string? reason, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Penghou.Zhinu.ICompensatingWorkflowStep<TInput, TOutput>
@@ -161,9 +178,11 @@ Penghou.Zhinu.IWorkflowInstanceRepository.CreateInstanceAsync(string? metadataJs
 Penghou.Zhinu.IWorkflowInstanceRepository.GetActiveGenerationAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration?>
 Penghou.Zhinu.IWorkflowInstanceRepository.GetGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration?>
 Penghou.Zhinu.IWorkflowInstanceRepository.GetInstanceAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowInstance?>
+Penghou.Zhinu.IWorkflowInstanceRepository.ListDispositionsAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.GenerationDisposition!>!>
 Penghou.Zhinu.IWorkflowInstanceRepository.ListGenerationsAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGeneration!>!>
 Penghou.Zhinu.IWorkflowInstanceRepository.PrepareGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.PauseGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.RecordDispositionAsync(System.Guid generationId, Penghou.Zhinu.CheckpointDisposition disposition, string? reason, string? actor, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.GenerationDisposition!>
 Penghou.Zhinu.IWorkflowInstanceRepository.RejectGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.ResumeGenerationAsync(System.Guid generationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?

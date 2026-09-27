@@ -163,8 +163,14 @@ integration remain open):
    **Activation core done 2026-09-27** (single-transaction supersede plus
    establish with predecessor linkage checks); reuse/invalidation maps ride
    with the transition preview (item 4).
-8. Add a typed checkpoint disposition such as `Accept`, `Retry`, or `Replan`.
-   `Replan` requests external planning; Zhinu does not invoke an AI planner.
+ 8. Add a typed checkpoint disposition such as `Accept`, `Retry`, or `Replan`.
+    `Replan` requests external planning; Zhinu does not invoke an AI planner.
+    **Done 2026-09-27 (store level):** `CheckpointDisposition` with
+    `GenerationDisposition` records in a new `workflow_generation_dispositions`
+    table via `RecordDispositionAsync`/`ListDispositionsAsync`. Decisions are
+    append-only audit and never transition the generation; acting on them
+    (explicit activate, new candidate, external planning) stays with the
+    caller (`GenerationDispositionTests`).
 9. Preserve compensation independently. Returning to an earlier plan creates a
    later generation and never erases or rewinds execution history.
 
