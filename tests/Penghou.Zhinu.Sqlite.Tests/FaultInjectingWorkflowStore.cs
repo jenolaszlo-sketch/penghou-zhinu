@@ -332,6 +332,10 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
 
     public ValueTask<WorkflowArtifactReference?> GetLatestArtifactAsync(Guid workflowRunId, string name, CancellationToken ct = default) => inner.GetLatestArtifactAsync(workflowRunId, name, ct);
 
+    public ValueTask<ArtifactInvalidation> InvalidateArtifactAsync(Guid artifactId, ArtifactInvalidationKind kind, string? reason, string? actor, DateTimeOffset now, CancellationToken ct = default) => inner.InvalidateArtifactAsync(artifactId, kind, reason, actor, now, ct);
+
+    public ValueTask<IReadOnlyList<ArtifactInvalidation>> GetInvalidationsAsync(Guid artifactId, CancellationToken ct = default) => inner.GetInvalidationsAsync(artifactId, ct);
+
     public ValueTask<WorkflowExternalOperation> RegisterAsync(ExternalOperationRegistration request, CancellationToken ct = default) => inner.RegisterAsync(request, ct);
 
     public ValueTask<WorkflowExternalOperation?> GetAsync(Guid operationId, CancellationToken ct = default) => inner.GetAsync(operationId, ct);

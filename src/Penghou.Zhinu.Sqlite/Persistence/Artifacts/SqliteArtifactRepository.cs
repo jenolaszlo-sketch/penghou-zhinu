@@ -220,17 +220,131 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
             SELECT {Columns} FROM workflow_artifacts
             WHERE workflow_run_id = $run AND name = $name
+                AND NOT EXISTS (
+                    SELECT 1 FROM workflow_artifact_invalidations
+                    WHERE artifact_id = workflow_artifacts.id
+                        AND kind = $tombstone)
             ORDER BY revision DESC
             LIMIT 1;
             """);
         command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
         command.Parameters.AddWithValue("$name", name);
+        command.Parameters.AddWithValue("$tombstone", (int)ArtifactInvalidationKind.Artifact);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken)
             .ConfigureAwait(false);
         return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
             ? Read(reader)
             : null;
     }
+
+    public async ValueTask<ArtifactInvalidation> InvalidateArtifactAsync(
+        Guid artifactId,
+        ArtifactInvalidationKind kind,
+        string? reason,
+        string? actor,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Enum.IsDefined(kind))
+            throw new ArgumentOutOfRangeException(nameof(kind));
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var artifact = await ReadInTransactionAsync(
+                connection, transaction, artifactId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
+                $"Artifact '{artifactId:D}' does not exist.");
+        var invalidation = new ArtifactInvalidation
+        {
+            InvalidationId = Guid.NewGuid(),
+            ArtifactId = artifactId,
+            Kind = kind,
+            Reason = reason,
+            Actor = actor,
+            CreatedAt = now
+        };
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            INSERT INTO workflow_artifact_invalidations
+                (invalidation_id, artifact_id, kind, reason, actor, created_at)
+            VALUES
+                ($id, $artifact, $kind, $reason, $actor, $created);
+            """);
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(invalidation.InvalidationId));
+        command.Parameters.AddWithValue("$artifact", SqliteStoreSupport.Format(artifactId));
+        command.Parameters.AddWithValue("$kind", (int)kind);
+        command.Parameters.AddWithValue("$reason", SqliteStoreSupport.DbValue(reason));
+        command.Parameters.AddWithValue("$actor", SqliteStoreSupport.DbValue(actor));
+        command.Parameters.AddWithValue("$created", SqliteStoreSupport.FormatTimestamp(now));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        _ = await insertEvent.ExecuteAsync(
+            connection,
+            transaction,
+            artifact.WorkflowRunId,
+            artifact.ProducerStepKey,
+            WorkflowEventTypes.ArtifactInvalidated,
+            now,
+            null,
+            JsonSerializer.Serialize(invalidation, SqliteStoreSupport.SerializerOptions),
+            cancellationToken).ConfigureAwait(false);
+        transaction.Commit();
+        return invalidation;
+    }
+
+    public async ValueTask<IReadOnlyList<ArtifactInvalidation>> GetInvalidationsAsync(
+        Guid artifactId,
+        CancellationToken cancellationToken = default)
+    {
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT invalidation_id, artifact_id, kind, reason, actor, created_at
+            FROM workflow_artifact_invalidations
+            WHERE artifact_id = $artifact
+            ORDER BY rowid;
+            """);
+        command.Parameters.AddWithValue("$artifact", SqliteStoreSupport.Format(artifactId));
+        var results = new List<ArtifactInvalidation>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadInvalidation(reader));
+        return results;
+    }
+
+    private async ValueTask<WorkflowArtifactReference?> ReadInTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid artifactId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(
+            connection, transaction,
+            $"SELECT {Columns} FROM workflow_artifacts WHERE id = $id;");
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(artifactId));
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? Read(reader)
+            : null;
+    }
+
+    private static ArtifactInvalidation ReadInvalidation(SqliteDataReader reader) => new()
+    {
+        InvalidationId = Guid.Parse(reader.GetString(0)),
+        ArtifactId = Guid.Parse(reader.GetString(1)),
+        Kind = ReadInvalidationKind(reader.GetInt32(2)),
+        Reason = SqliteStoreSupport.GetNullableString(reader, 3),
+        Actor = SqliteStoreSupport.GetNullableString(reader, 4),
+        CreatedAt = SqliteStoreSupport.ParseTimestamp(reader.GetString(5))
+    };
+
+    private static ArtifactInvalidationKind ReadInvalidationKind(int value) =>
+        Enum.IsDefined((ArtifactInvalidationKind)value)
+            ? (ArtifactInvalidationKind)value
+            : throw new WorkflowStateException(
+                $"Stored artifact invalidation kind '{value}' is not supported.");
 
     private static async ValueTask<(string? EffectiveInputsHash, string? ProducerSemantics)>
         VerifyProducerAsync(

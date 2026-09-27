@@ -163,8 +163,18 @@ integration remain open):
     producer trust needed. Null for run-scoped publications. Schema 4 to 5
     (preview policy: recreate, no migration). Covered by
     `ArtifactProvenanceTests` including revision-following across restart.
-6. Distinguish artifact invalidation from evidence/validation invalidation so
-   stricter acceptance criteria can revalidate expensive existing artifacts.
+ 6. Distinguish artifact invalidation from evidence/validation invalidation so
+    stricter acceptance criteria can revalidate expensive existing artifacts.
+    **Done 2026-09-27:** `ArtifactInvalidationKind.Artifact` tombstones a
+    revision (hidden from `GetLatestArtifactAsync` with fallback to the
+    earlier good revision, rows retained for audit) while
+    `ArtifactInvalidationKind.Evidence` only flags the retained artifact for
+    revalidation and keeps serving. Records are append-only per revision in
+    `workflow_artifact_invalidations` via `InvalidateArtifactAsync` /
+    `GetInvalidationsAsync`, each emitting an `artifact-invalidated` event
+    (schema stays 5; tables unreleased). Covered by
+    `ArtifactInvalidationTests`; revalidation execution follows with engine
+    consumption.
 7. Atomically activate the new generation with its reuse/invalidation map and
    leave failed pre-cutover candidates resumable on the current generation.
    **Activation core done 2026-09-27** (single-transaction supersede plus

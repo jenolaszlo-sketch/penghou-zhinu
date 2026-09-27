@@ -313,6 +313,20 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             ON workflow_artifacts(workflow_run_id, producer_step_key,
                 producer_step_revision);
 
+        CREATE TABLE IF NOT EXISTS workflow_artifact_invalidations
+        (
+            invalidation_id TEXT PRIMARY KEY,
+            artifact_id TEXT NOT NULL,
+            kind INTEGER NOT NULL,
+            reason TEXT NULL,
+            actor TEXT NULL,
+            created_at TEXT NOT NULL,
+            CHECK (kind BETWEEN 0 AND 1),
+            FOREIGN KEY(artifact_id) REFERENCES workflow_artifacts(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_artifact_invalidations_artifact
+            ON workflow_artifact_invalidations(artifact_id, created_at);
+
         CREATE TABLE IF NOT EXISTS workflow_events
         (
             sequence INTEGER PRIMARY KEY AUTOINCREMENT,

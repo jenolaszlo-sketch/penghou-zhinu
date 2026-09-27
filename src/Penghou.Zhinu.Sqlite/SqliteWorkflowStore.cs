@@ -221,6 +221,25 @@ public sealed class SqliteWorkflowStore :
             "artifacts.latest",
             () => artifacts.GetLatestArtifactAsync(workflowRunId, name, cancellationToken));
 
+    public ValueTask<ArtifactInvalidation> InvalidateArtifactAsync(
+        Guid artifactId,
+        ArtifactInvalidationKind kind,
+        string? reason,
+        string? actor,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "artifacts.invalidate",
+            () => artifacts.InvalidateArtifactAsync(
+                artifactId, kind, reason, actor, now, cancellationToken));
+
+    public ValueTask<IReadOnlyList<ArtifactInvalidation>> GetInvalidationsAsync(
+        Guid artifactId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "artifacts.invalidations",
+            () => artifacts.GetInvalidationsAsync(artifactId, cancellationToken));
+
     public ValueTask<WorkflowExternalOperation> RegisterAsync(
         ExternalOperationRegistration request,
         CancellationToken cancellationToken = default) =>

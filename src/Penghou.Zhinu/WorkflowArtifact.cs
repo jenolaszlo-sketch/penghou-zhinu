@@ -133,3 +133,33 @@ public sealed record ArtifactPublicationResult
     public WorkflowEvent? Event { get; init; }
     public required bool Created { get; init; }
 }
+
+/// <summary>
+/// What an artifact invalidation declares. <see cref="Artifact"/> means the
+/// artifact content itself is untrustworthy and must no longer serve as the
+/// latest revision; <see cref="Evidence"/> means acceptance criteria changed,
+/// so the retained artifact must be revalidated rather than reproduced.
+/// </summary>
+public enum ArtifactInvalidationKind
+{
+    /// <summary>The artifact itself is invalid; it stops serving as latest.</summary>
+    Artifact = 0,
+    /// <summary>Validation evidence is stale; the artifact is retained for revalidation.</summary>
+    Evidence = 1
+}
+
+/// <summary>
+/// One recorded artifact invalidation. Records are append-only audit: an
+/// artifact revision is tombstoned when any <see cref="ArtifactInvalidationKind.Artifact"/>
+/// record exists for it, while <see cref="ArtifactInvalidationKind.Evidence"/>
+/// records only flag it. Rows are never deleted.
+/// </summary>
+public sealed record ArtifactInvalidation
+{
+    public required Guid InvalidationId { get; init; }
+    public required Guid ArtifactId { get; init; }
+    public required ArtifactInvalidationKind Kind { get; init; }
+    public string? Reason { get; init; }
+    public string? Actor { get; init; }
+    public required DateTimeOffset CreatedAt { get; init; }
+}

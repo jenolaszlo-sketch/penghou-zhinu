@@ -1,5 +1,6 @@
 #nullable enable
 const Penghou.Zhinu.WorkflowEventTypes.ArtifactPublished = "artifact-published" -> string!
+const Penghou.Zhinu.WorkflowEventTypes.ArtifactInvalidated = "artifact-invalidated" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.CompensationCompleted = "compensation-completed" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.CompensationFailed = "compensation-failed" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.CompensationStarted = "compensation-started" -> string!
@@ -97,6 +98,22 @@ Penghou.Zhinu.ArtifactPublicationResult.Created.get -> bool
 Penghou.Zhinu.ArtifactPublicationResult.Created.init -> void
 Penghou.Zhinu.ArtifactPublicationResult.Event.get -> Penghou.Zhinu.WorkflowEvent?
 Penghou.Zhinu.ArtifactPublicationResult.Event.init -> void
+Penghou.Zhinu.ArtifactInvalidation
+Penghou.Zhinu.ArtifactInvalidation.Actor.get -> string?
+Penghou.Zhinu.ArtifactInvalidation.Actor.init -> void
+Penghou.Zhinu.ArtifactInvalidation.ArtifactId.get -> System.Guid
+Penghou.Zhinu.ArtifactInvalidation.ArtifactId.init -> void
+Penghou.Zhinu.ArtifactInvalidation.CreatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.ArtifactInvalidation.CreatedAt.init -> void
+Penghou.Zhinu.ArtifactInvalidation.InvalidationId.get -> System.Guid
+Penghou.Zhinu.ArtifactInvalidation.InvalidationId.init -> void
+Penghou.Zhinu.ArtifactInvalidation.Kind.get -> Penghou.Zhinu.ArtifactInvalidationKind
+Penghou.Zhinu.ArtifactInvalidation.Kind.init -> void
+Penghou.Zhinu.ArtifactInvalidation.Reason.get -> string?
+Penghou.Zhinu.ArtifactInvalidation.Reason.init -> void
+Penghou.Zhinu.ArtifactInvalidationKind
+Penghou.Zhinu.ArtifactInvalidationKind.Artifact = 0 -> Penghou.Zhinu.ArtifactInvalidationKind
+Penghou.Zhinu.ArtifactInvalidationKind.Evidence = 1 -> Penghou.Zhinu.ArtifactInvalidationKind
 Penghou.Zhinu.ArtifactQuery
 Penghou.Zhinu.ArtifactQuery.AfterId.get -> System.Guid?
 Penghou.Zhinu.ArtifactQuery.AfterId.init -> void
@@ -192,7 +209,9 @@ Penghou.Zhinu.IWorkflow<TInput, TOutput>.RunAsync(Penghou.Zhinu.WorkflowContext!
 Penghou.Zhinu.IWorkflowArtifactRepository
 Penghou.Zhinu.IWorkflowArtifactRepository.GetArtifactAsync(System.Guid artifactId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowArtifactReference?>
 Penghou.Zhinu.IWorkflowArtifactRepository.GetArtifactsAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowArtifactReference!>!>
+Penghou.Zhinu.IWorkflowArtifactRepository.GetInvalidationsAsync(System.Guid artifactId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.ArtifactInvalidation!>!>
 Penghou.Zhinu.IWorkflowArtifactRepository.GetLatestArtifactAsync(System.Guid workflowRunId, string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowArtifactReference?>
+Penghou.Zhinu.IWorkflowArtifactRepository.InvalidateArtifactAsync(System.Guid artifactId, Penghou.Zhinu.ArtifactInvalidationKind kind, string? reason, string? actor, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ArtifactInvalidation!>
 Penghou.Zhinu.IWorkflowArtifactRepository.PublishArtifactAsync(Penghou.Zhinu.ArtifactPublicationRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ArtifactPublicationResult!>
 Penghou.Zhinu.IWorkflowArtifactRepository.QueryArtifactsAsync(System.Guid workflowRunId, Penghou.Zhinu.ArtifactQuery! query, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowArtifactReference!>!>
 Penghou.Zhinu.IWorkflowArtifactValidator
