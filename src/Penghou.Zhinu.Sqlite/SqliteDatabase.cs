@@ -498,6 +498,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             created_at TEXT NOT NULL,
             activated_at TEXT NULL,
             superseded_at TEXT NULL,
+            activation_preview_json TEXT NULL,
             CHECK (status BETWEEN 0 AND 5),
             CHECK (ordinal >= 1),
             FOREIGN KEY(instance_id) REFERENCES workflow_instances(instance_id) ON DELETE CASCADE,

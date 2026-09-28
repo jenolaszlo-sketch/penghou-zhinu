@@ -78,4 +78,9 @@ public sealed record WorkflowGeneration
     public required DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset? ActivatedAt { get; init; }
     public DateTimeOffset? SupersededAt { get; init; }
+    /// <summary>
+    /// Opaque audit of the transition preview the activator acted on, if any.
+    /// Zhinu never interprets it; reuse authorization stays explicit.
+    /// </summary>
+    public string? ActivationPreviewJson { get; init; }
 }

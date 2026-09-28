@@ -99,6 +99,18 @@ public interface IWorkflowInstanceRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Atomically activates with an opaque transition-preview audit attached.
+    /// The preview is recorded, never interpreted; reuse authorization stays
+    /// explicit. Behaves like <see cref="ActivateGenerationAsync(Guid, Guid?, CancellationToken)"/>
+    /// otherwise.
+    /// </summary>
+    ValueTask<WorkflowGeneration> ActivateGenerationAsync(
+        Guid generationId,
+        Guid? expectedPredecessorGenerationId,
+        string? previewJson,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Rejects a created or prepared candidate. Active or superseded
     /// generations cannot be rejected.
     /// </summary>

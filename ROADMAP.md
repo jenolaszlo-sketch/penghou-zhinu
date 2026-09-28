@@ -206,7 +206,9 @@ integration remain open):
    2026-09-28** as the preview's computed sets (reusable requires unchanged,
    completed, and no invalidated dependency; invalidation is transitive;
    running/waiting invalidated steps are flagged for cancellation).
-   Attaching the map at activation remains open.
+   **Done 2026-09-28:** activation accepts an opaque preview audit attached
+   atomically (`ActivateGenerationAsync` overload, `ActivationPreviewJson`);
+   recording never authorizes reuse.
  8. Add a typed checkpoint disposition such as `Accept`, `Retry`, or `Replan`.
     `Replan` requests external planning; Zhinu does not invoke an AI planner.
     **Done 2026-09-27 (store level):** `CheckpointDisposition` with

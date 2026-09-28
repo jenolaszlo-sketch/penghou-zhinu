@@ -196,6 +196,7 @@ Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
 Penghou.Zhinu.IWorkflowInstanceRepository
 Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
+Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, string? previewJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.CreateGenerationAsync(System.Guid instanceId, System.Guid workflowRunId, string? planRevision, string? executionFingerprint, System.Guid? predecessorGenerationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.CreateInstanceAsync(string? metadataJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowInstance!>
 Penghou.Zhinu.IWorkflowInstanceRepository.GetActiveGenerationAsync(System.Guid instanceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration?>
@@ -468,6 +469,8 @@ Penghou.Zhinu.WorkflowExternalOperation.WorkflowRunId.init -> void
 Penghou.Zhinu.WorkflowGeneration
 Penghou.Zhinu.WorkflowGeneration.ActivatedAt.get -> System.DateTimeOffset?
 Penghou.Zhinu.WorkflowGeneration.ActivatedAt.init -> void
+Penghou.Zhinu.WorkflowGeneration.ActivationPreviewJson.get -> string?
+Penghou.Zhinu.WorkflowGeneration.ActivationPreviewJson.init -> void
 Penghou.Zhinu.WorkflowGeneration.CreatedAt.get -> System.DateTimeOffset
 Penghou.Zhinu.WorkflowGeneration.CreatedAt.init -> void
 Penghou.Zhinu.WorkflowGeneration.ExecutionFingerprint.get -> string?

@@ -160,6 +160,43 @@ public sealed class InstanceGenerationTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task ActivationWithPreview_AttachesAuditJson()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        var runId = await StartRunAsync(ct);
+        var instance = await repository.CreateInstanceAsync(null, ct);
+        var created = await repository.CreateGenerationAsync(
+            instance.InstanceId, runId, "plan-1", "fp-1", predecessorGenerationId: null, ct);
+        await repository.PrepareGenerationAsync(created.GenerationId, ct);
+
+        var active = await repository.ActivateGenerationAsync(
+            created.GenerationId, expectedPredecessorGenerationId: null, "{\"reuse\":[\"a\"]}", ct);
+
+        active.Status.Should().Be(WorkflowGenerationStatus.Active);
+        active.ActivationPreviewJson.Should().Be("{\"reuse\":[\"a\"]}");
+        (await repository.GetGenerationAsync(created.GenerationId, ct))!
+            .ActivationPreviewJson.Should().Be("{\"reuse\":[\"a\"]}");
+    }
+
+    [Fact]
+    public async Task ActivationWithoutPreview_LeavesAuditNull()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        var runId = await StartRunAsync(ct);
+        var instance = await repository.CreateInstanceAsync(null, ct);
+        var created = await repository.CreateGenerationAsync(
+            instance.InstanceId, runId, "plan-1", "fp-1", predecessorGenerationId: null, ct);
+        await repository.PrepareGenerationAsync(created.GenerationId, ct);
+
+        var active = await repository.ActivateGenerationAsync(
+            created.GenerationId, expectedPredecessorGenerationId: null, ct);
+
+        active.ActivationPreviewJson.Should().BeNull();
+    }
+
+    [Fact]
     public async Task MissingEntities_FailWithNotFound()
     {
         var ct = TestContext.Current.CancellationToken;

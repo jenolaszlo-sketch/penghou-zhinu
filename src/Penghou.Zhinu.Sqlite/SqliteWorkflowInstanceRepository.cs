@@ -13,7 +13,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
     private const string Columns = """
         generation_id, instance_id, ordinal, workflow_run_id, plan_revision,
         execution_fingerprint, status, predecessor_generation_id, created_at,
-        activated_at, superseded_at
+        activated_at, superseded_at, activation_preview_json
         """;
 
     private readonly IZhinuSqliteDatabase database;
@@ -305,10 +305,25 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
     }
 
     /// <inheritdoc />
-    public async ValueTask<WorkflowGeneration> ActivateGenerationAsync(
+    public ValueTask<WorkflowGeneration> ActivateGenerationAsync(
         Guid generationId,
         Guid? expectedPredecessorGenerationId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        ActivateCoreAsync(generationId, expectedPredecessorGenerationId, null, cancellationToken);
+
+    /// <inheritdoc />
+    public ValueTask<WorkflowGeneration> ActivateGenerationAsync(
+        Guid generationId,
+        Guid? expectedPredecessorGenerationId,
+        string? previewJson,
+        CancellationToken cancellationToken = default) =>
+        ActivateCoreAsync(generationId, expectedPredecessorGenerationId, previewJson, cancellationToken);
+
+    private async ValueTask<WorkflowGeneration> ActivateCoreAsync(
+        Guid generationId,
+        Guid? expectedPredecessorGenerationId,
+        string? previewJson,
+        CancellationToken cancellationToken)
     {
         await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await database.OpenAsync(cancellationToken)
@@ -371,11 +386,12 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
 
         await using var activate = SqliteStoreSupport.CreateCommand(connection, transaction, """
             UPDATE workflow_generations
-            SET status = $active, activated_at = $now
+            SET status = $active, activated_at = $now, activation_preview_json = $preview
             WHERE generation_id = $id AND status = $prepared;
             """);
         activate.Parameters.AddWithValue("$active", (int)WorkflowGenerationStatus.Active);
         activate.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(now));
+        activate.Parameters.AddWithValue("$preview", SqliteStoreSupport.DbValue(previewJson));
         activate.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(generationId));
         activate.Parameters.AddWithValue("$prepared", (int)WorkflowGenerationStatus.Prepared);
         if (await activate.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
@@ -603,10 +619,10 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
             INSERT INTO workflow_generations
                 (generation_id, instance_id, ordinal, workflow_run_id, plan_revision,
                  execution_fingerprint, status, predecessor_generation_id, created_at,
-                 activated_at, superseded_at)
+                 activated_at, superseded_at, activation_preview_json)
             VALUES
                 ($id, $instance, $ordinal, $run, $revision, $fingerprint, $status,
-                 $predecessor, $created, $activated, $superseded);
+                 $predecessor, $created, $activated, $superseded, $preview);
             """);
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(generation.GenerationId));
         command.Parameters.AddWithValue("$instance", SqliteStoreSupport.Format(generation.InstanceId));
@@ -623,6 +639,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
             ? DBNull.Value : SqliteStoreSupport.FormatTimestamp(generation.ActivatedAt.Value));
         command.Parameters.AddWithValue("$superseded", generation.SupersededAt is null
             ? DBNull.Value : SqliteStoreSupport.FormatTimestamp(generation.SupersededAt.Value));
+        command.Parameters.AddWithValue("$preview", SqliteStoreSupport.DbValue(generation.ActivationPreviewJson));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -638,7 +655,8 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         PredecessorGenerationId = reader.IsDBNull(7) ? null : Guid.Parse(reader.GetString(7)),
         CreatedAt = SqliteStoreSupport.ParseTimestamp(reader.GetString(8)),
         ActivatedAt = reader.IsDBNull(9) ? null : SqliteStoreSupport.ParseTimestamp(reader.GetString(9)),
-        SupersededAt = reader.IsDBNull(10) ? null : SqliteStoreSupport.ParseTimestamp(reader.GetString(10))
+        SupersededAt = reader.IsDBNull(10) ? null : SqliteStoreSupport.ParseTimestamp(reader.GetString(10)),
+        ActivationPreviewJson = SqliteStoreSupport.GetNullableString(reader, 11)
     };
 
     private static WorkflowGenerationStatus ReadStatus(int value) =>
