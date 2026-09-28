@@ -97,7 +97,10 @@ public sealed class BoundedResourceTests : WorkflowEngineTestBase
             await subscriber.DisposeAsync();
         }
         await collecting;
-        received.Should().Contain(e => e.EventType == WorkflowEventTypes.WorkflowCompleted);
+        var final = await engine.GetRunAsync(runId, TestContext.Current.CancellationToken);
+        received.Should().Contain(
+            e => e.EventType == WorkflowEventTypes.WorkflowCompleted,
+            $"run ended {final?.Status} with error {final?.Error?.Message}");
         engine.SubscriptionChannelCount.Should().Be(0);
     }
 

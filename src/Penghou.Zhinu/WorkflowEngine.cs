@@ -1870,8 +1870,23 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                 }
                 var run = await GetRunAsync(workflowRunId, cancellationToken)
                     .ConfigureAwait(false);
-                if (run is null || RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0)
+                if (run is null || (RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0))
                 {
+                    // A terminal transition may have committed events after the
+                    // events query above; re-read once before concluding, or a
+                    // torn read drops the terminal events.
+                    var tail = await GetEventsAsync(
+                            workflowRunId, cursor, 100, cancellationToken)
+                        .ConfigureAwait(false);
+                    var tailed = false;
+                    foreach (var item in tail)
+                    {
+                        cursor = item.Sequence;
+                        yield return item;
+                        tailed = true;
+                    }
+                    if (tailed)
+                        continue;
                     yield break;
                 }
                 if (events.Count == 0)
