@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using Penghou.Zhinu.Sqlite.Persistence.Steps;
+using Penghou.Zhinu.Sqlite.Persistence.Waits;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Signals;
@@ -45,7 +46,7 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
         }
-        var now = DateTimeOffset.UtcNow;
+        var now = factory.TimeProvider.GetUtcNow();
         await insertSignal.ExecuteAsync(
             connection,
             transaction,
@@ -55,6 +56,14 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             dataJson,
             now,
             cancellationToken).ConfigureAwait(false);
+        await SqliteWaitRepository.MarkSignalReadyInTransactionAsync(
+                connection,
+                transaction,
+                workflowRunId,
+                signalName,
+                now,
+                cancellationToken)
+            .ConfigureAwait(false);
         await insertEvent.ExecuteAsync(
             connection,
             transaction,
@@ -117,6 +126,14 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             dataJson,
             now,
             cancellationToken).ConfigureAwait(false);
+        await SqliteWaitRepository.MarkSignalReadyInTransactionAsync(
+                connection,
+                transaction,
+                workflowRunId,
+                signalName,
+                now,
+                cancellationToken)
+            .ConfigureAwait(false);
         var signalEvent = await insertEvent.ExecuteAsync(
             connection,
             transaction,
@@ -203,12 +220,34 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
                 cancellationToken)
             .ConfigureAwait(false);
         var effectiveName = step.SignalName ?? signalName;
-        var (signalId, dataJson) = await getUndeliveredSignal.ExecuteAsync(
+        var wait = await SqliteWaitRepository.ReadStepWaitAsync(
+                connection,
+                transaction,
+                step.WorkflowRunId,
+                step.StepKey,
+                cancellationToken)
+            .ConfigureAwait(false);
+        var (signalId, dataJson, signalCreatedAt) = await getUndeliveredSignal.ExecuteAsync(
             connection,
             transaction,
             step.WorkflowRunId,
             effectiveName,
             cancellationToken).ConfigureAwait(false);
+        if (wait?.DeadlineAt is { } deadline &&
+            now > deadline &&
+            (signalCreatedAt is null || signalCreatedAt > deadline))
+        {
+            // The persisted deadline expired without a timely signal: a signal
+            // buffered after the deadline does not win. The expired wait is
+            // cancelled atomically with this verdict so the engine times out
+            // instead of parking again.
+            if (wait.Status is WaitStatus.Parked or WaitStatus.Ready)
+                await SqliteWaitRepository.CancelWaitInTransactionAsync(
+                        connection, transaction, wait.WaitId, cancellationToken)
+                    .ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
         if (signalId is null)
         {
             if (step.Status == StepStatus.Running)
@@ -249,6 +288,13 @@ internal sealed class SqliteSignalRepository : IWorkflowSignalRepository
             throw new LeaseLostException(
                 $"Step '{step.StepKey}' changed underneath delivery; the completion was fenced.");
         }
+        await SqliteWaitRepository.CompleteStepWaitAsync(
+                connection,
+                transaction,
+                step.WorkflowRunId,
+                step.StepKey,
+                cancellationToken)
+            .ConfigureAwait(false);
         await insertEvent.ExecuteAsync(
             connection,
             transaction,

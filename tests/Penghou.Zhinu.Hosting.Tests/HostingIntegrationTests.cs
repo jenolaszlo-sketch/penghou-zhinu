@@ -136,6 +136,48 @@ public sealed class HostingIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task ParkedWaiter_FreesHostedCapacity()
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddZhinuSqlite(options =>
+        {
+            options.DatabasePath = Path.Combine(root, "zhinu-park.db");
+            options.Pooling = false;
+        });
+        builder.Services.AddZhinu(options =>
+        {
+            options.MaxConcurrentWorkflows = 1;
+            options.PollInterval = TimeSpan.FromMilliseconds(10);
+        });
+        builder.Services.AddZhinuWorkflow<SchedulerReviewWorkflow, string, string>("park", "1");
+        using var host = builder.Build();
+        var engine = host.Services.GetRequiredService<WorkflowEngine>();
+        var waiting = await engine.StartAsync(
+            "park", "1", "wait", cancellationToken: TestContext.Current.CancellationToken);
+        await host.StartAsync(TestContext.Current.CancellationToken);
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            while (!(await engine.GetStepsAsync(waiting, timeout.Token))
+                .Any(s => s.Status == StepStatus.Waiting))
+                await Task.Delay(10, timeout.Token);
+            var quick = await engine.StartAsync(
+                "park", "1", "ready", cancellationToken: timeout.Token);
+            while ((await engine.GetRunAsync(quick, timeout.Token))!.Status != WorkflowStatus.Completed)
+                await Task.Delay(10, timeout.Token);
+            await engine.SendSignalAsync(waiting, "release", "go", timeout.Token);
+            while ((await engine.GetRunAsync(waiting, timeout.Token))!.Status != WorkflowStatus.Completed)
+                await Task.Delay(10, timeout.Token);
+        }
+        finally
+        {
+            await host.StopAsync(TestContext.Current.CancellationToken);
+        }
+        (await engine.GetRunAsync(waiting, TestContext.Current.CancellationToken))!.Status
+            .Should().Be(WorkflowStatus.Completed);
+    }
+
+    [Fact]
     public async Task HostRespectsSharedConcurrencyBound()
     {
         ConcurrencyProbeWorkflow.Current = 0;

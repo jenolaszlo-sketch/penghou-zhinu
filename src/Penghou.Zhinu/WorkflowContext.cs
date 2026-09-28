@@ -588,17 +588,35 @@ public sealed partial class WorkflowContext
                                 activity?.SetStatus(ActivityStatusCode.Ok);
                                 return Deserialize<T>(delivered.DataJson, outputType);
                             }
-                            if (deadline is { } waitDeadline &&
-                                timeProvider.GetUtcNow() > waitDeadline)
+                            var parked = await ParkSignalWaitAsync(
+                                claim.Step.Id,
+                                stepKey,
+                                claim.Step.Revision,
+                                signalName,
+                                timeout,
+                                deadline,
+                                linkedCancellation.Token).ConfigureAwait(false);
+                            if (!parked.Supported)
                             {
+                                // Stores without wait support keep in-worker polling.
+                                if (deadline is { } waitDeadline &&
+                                    timeProvider.GetUtcNow() > waitDeadline)
+                                {
+                                    throw new WorkflowTimeoutException(
+                                        $"Signal '{signalName}' was not delivered before the wait deadline.");
+                                }
+                                await Task.Delay(
+                                    options.PollInterval,
+                                    timeProvider,
+                                    linkedCancellation.Token).ConfigureAwait(false);
+                                continue;
+                            }
+                            if (parked.Redrive)
+                                continue;
+                            if (parked.Expired)
                                 throw new WorkflowTimeoutException(
                                     $"Signal '{signalName}' was not delivered before the wait deadline.");
-                            }
-                            await Task.Delay(
-                                options.PollInterval,
-                                timeProvider,
-                                linkedCancellation.Token).ConfigureAwait(false);
-                            continue;
+                            throw new ParkedExecutionException(parked.WaitId);
                         }
                     default:
                         throw new WorkflowStateException(
@@ -610,6 +628,52 @@ public sealed partial class WorkflowContext
         {
             stepLock.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Parks a signal wait durably and reports how the caller should proceed.
+    /// Ready means a signal arrived after the last delivery attempt: drive
+    /// delivery again. Expired means the persisted (or computed) deadline
+    /// passed: fail with a timeout. Otherwise the wait is parked for a worker
+    /// to resume later. Unsupported stores keep legacy in-worker polling.
+    /// </summary>
+    private async ValueTask<(bool Supported, bool Redrive, bool Expired, Guid WaitId)>
+        ParkSignalWaitAsync(
+        Guid stepId,
+        string stepKey,
+        int stepRevision,
+        string signalName,
+        TimeSpan? timeout,
+        DateTimeOffset? engineDeadline,
+        CancellationToken cancellationToken)
+    {
+        if (store is not IWorkflowWaitRepository waits)
+            return (false, false, false, Guid.Empty);
+        var existing = await waits.GetWaitAsync(WorkflowRunId, stepKey, cancellationToken)
+            .ConfigureAwait(false);
+        if (existing?.Status == WaitStatus.Ready)
+            return (true, true, false, Guid.Empty);
+        if (existing?.Status == WaitStatus.Cancelled)
+            return (true, false, true, Guid.Empty);
+        if (existing is null &&
+            engineDeadline is { } deadline &&
+            timeProvider.GetUtcNow() > deadline)
+            return (true, false, true, Guid.Empty);
+        var wait = await waits.ParkWaitAsync(
+            new ParkWaitRequest
+            {
+                WorkflowRunId = WorkflowRunId,
+                StepKey = stepKey,
+                StepRevision = stepRevision,
+                StepId = stepId,
+                Kind = WaitKind.Signal,
+                SignalName = signalName,
+                Timeout = timeout,
+                LeaseGeneration = leaseGeneration,
+                Now = timeProvider.GetUtcNow()
+            },
+            cancellationToken).ConfigureAwait(false);
+        return (true, false, false, wait.WaitId);
     }
 
     /// <summary>

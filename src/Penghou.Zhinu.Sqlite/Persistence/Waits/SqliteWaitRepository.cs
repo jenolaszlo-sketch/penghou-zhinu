@@ -265,6 +265,91 @@ internal sealed class SqliteWaitRepository : IWorkflowWaitRepository
             : null;
     }
 
+    /// <summary>Marks the latest wait for a step completed inside the caller's transaction.</summary>
+    internal static async ValueTask CompleteStepWaitAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid workflowRunId,
+        string stepKey,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_waits
+            SET status = $completed
+            WHERE workflow_run_id = $run AND step_key = $key
+                AND status IN ($parked, $ready);
+            """);
+        command.Parameters.AddWithValue("$completed", (int)WaitStatus.Completed);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$key", stepKey);
+        command.Parameters.AddWithValue("$parked", (int)WaitStatus.Parked);
+        command.Parameters.AddWithValue("$ready", (int)WaitStatus.Ready);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Flips parked signal waits to ready inside the caller's transaction.</summary>
+    internal static async ValueTask MarkSignalReadyInTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid workflowRunId,
+        string signalName,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_waits
+            SET status = $ready, updated_at = $now
+            WHERE workflow_run_id = $run AND signal_name = $signal
+                AND kind = $kind AND status = $parked;
+            """);
+        command.Parameters.AddWithValue("$ready", (int)WaitStatus.Ready);
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(now));
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$signal", signalName);
+        command.Parameters.AddWithValue("$kind", (int)WaitKind.Signal);
+        command.Parameters.AddWithValue("$parked", (int)WaitStatus.Parked);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Marks one wait cancelled inside the caller's transaction.</summary>
+    internal static async ValueTask CancelWaitInTransactionAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid waitId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_waits
+            SET status = $cancelled
+            WHERE wait_id = $id AND status IN ($parked, $ready);
+            """);
+        command.Parameters.AddWithValue("$cancelled", (int)WaitStatus.Cancelled);
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(waitId));
+        command.Parameters.AddWithValue("$parked", (int)WaitStatus.Parked);
+        command.Parameters.AddWithValue("$ready", (int)WaitStatus.Ready);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads the latest wait for a step key inside the caller's transaction.</summary>
+    internal static async ValueTask<WorkflowWait?> ReadStepWaitAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid workflowRunId,
+        string stepKey,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(
+            connection, transaction,
+            $"SELECT {Columns} FROM workflow_waits WHERE workflow_run_id = $run AND step_key = $key;");
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$key", stepKey);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? Read(reader)
+            : null;
+    }
+
     private static WorkflowWait Read(SqliteDataReader reader) => new()
     {
         WaitId = Guid.Parse(reader.GetString(0)),

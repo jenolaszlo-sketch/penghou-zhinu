@@ -1710,7 +1710,12 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         return Result(RunDiagnosisCode.AwaitingWorker, "The run has no active lease and awaits a worker.");
     }
 
-    /// <summary>Polls durable state without blocking a thread until a run terminates.</summary>
+    /// <summary>
+    /// Polls durable state without blocking a thread until a run terminates.
+    /// Best-effort drives execution while waiting so parked waits resume
+    /// without an external worker; terminal outcomes still come only from
+    /// durable run state.
+    /// </summary>
     public async Task<TOutput> WaitForCompletionAsync<TOutput>(
         Guid workflowRunId,
         DateTimeOffset? deadline = null,
@@ -1774,6 +1779,16 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                 case WorkflowStatus.Compensated:
                     throw new WorkflowStateException(
                         $"Workflow '{workflowRunId:D}' was compensated and has no forward result to return.");
+            }
+            try
+            {
+                await ExecuteAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // Driving is best-effort: terminal outcomes surface through
+                // durable state on the next iteration with their mapped errors.
+                ZhinuDiagnostics.RecordException(null, exception);
             }
             await Task.Delay(
                 options.PollInterval,
