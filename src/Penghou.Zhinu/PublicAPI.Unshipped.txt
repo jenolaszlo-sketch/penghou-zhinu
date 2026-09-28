@@ -249,6 +249,14 @@ Penghou.Zhinu.IWorkflowStepLease<TStep>
 Penghou.Zhinu.IWorkflowStepLease<TStep>.Step.get -> TStep!
 Penghou.Zhinu.IWorkflowStepResolver
 Penghou.Zhinu.IWorkflowStepResolver.ResolveAsync<TStep>(Penghou.Zhinu.StepImplementationKey implementationKey, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.IWorkflowStepLease<TStep!>!>
+Penghou.Zhinu.IWorkflowWaitRepository
+Penghou.Zhinu.IWorkflowWaitRepository.CompleteWaitAsync(System.Guid waitId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.IWorkflowWaitRepository.GetWaitAsync(System.Guid workflowRunId, string! stepKey, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowWait?>
+Penghou.Zhinu.IWorkflowWaitRepository.HasParkedWaitsAsync(System.Guid workflowRunId, long leaseGeneration, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Penghou.Zhinu.IWorkflowWaitRepository.ListWaitsAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowWait!>!>
+Penghou.Zhinu.IWorkflowWaitRepository.MarkChildWaitsReadyAsync(System.Guid childRunId, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.IWorkflowWaitRepository.MarkSignalWaitsReadyAsync(System.Guid workflowRunId, string! signalName, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.IWorkflowWaitRepository.ParkWaitAsync(Penghou.Zhinu.ParkWaitRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowWait!>
 Penghou.Zhinu.IWorkflowStore.CheckHealthAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowStoreHealth!>
 Penghou.Zhinu.LoopBodyOutcome<TState>
 Penghou.Zhinu.LoopBodyOutcome<TState>.Kind.get -> Penghou.Zhinu.LoopBodyOutcomeKind
@@ -280,6 +288,29 @@ Penghou.Zhinu.LoopOptions.LoopOptions(int maxIterations) -> void
 Penghou.Zhinu.LoopOptions.MaxIterations.get -> int
 Penghou.Zhinu.LoopOptions.TimeBudget.get -> System.TimeSpan?
 Penghou.Zhinu.LoopOptions.TimeBudget.init -> void
+Penghou.Zhinu.ParkWaitRequest
+Penghou.Zhinu.ParkWaitRequest.AvailableAt.get -> System.DateTimeOffset?
+Penghou.Zhinu.ParkWaitRequest.AvailableAt.init -> void
+Penghou.Zhinu.ParkWaitRequest.ChildRunId.get -> System.Guid?
+Penghou.Zhinu.ParkWaitRequest.ChildRunId.init -> void
+Penghou.Zhinu.ParkWaitRequest.Kind.get -> Penghou.Zhinu.WaitKind
+Penghou.Zhinu.ParkWaitRequest.Kind.init -> void
+Penghou.Zhinu.ParkWaitRequest.LeaseGeneration.get -> long
+Penghou.Zhinu.ParkWaitRequest.LeaseGeneration.init -> void
+Penghou.Zhinu.ParkWaitRequest.Now.get -> System.DateTimeOffset
+Penghou.Zhinu.ParkWaitRequest.Now.init -> void
+Penghou.Zhinu.ParkWaitRequest.SignalName.get -> string?
+Penghou.Zhinu.ParkWaitRequest.SignalName.init -> void
+Penghou.Zhinu.ParkWaitRequest.StepId.get -> System.Guid
+Penghou.Zhinu.ParkWaitRequest.StepId.init -> void
+Penghou.Zhinu.ParkWaitRequest.StepKey.get -> string!
+Penghou.Zhinu.ParkWaitRequest.StepKey.init -> void
+Penghou.Zhinu.ParkWaitRequest.StepRevision.get -> int
+Penghou.Zhinu.ParkWaitRequest.StepRevision.init -> void
+Penghou.Zhinu.ParkWaitRequest.Timeout.get -> System.TimeSpan?
+Penghou.Zhinu.ParkWaitRequest.Timeout.init -> void
+Penghou.Zhinu.ParkWaitRequest.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.ParkWaitRequest.WorkflowRunId.init -> void
 Penghou.Zhinu.RestartReceipt
 Penghou.Zhinu.RestartReceipt.Actor.get -> string?
 Penghou.Zhinu.RestartReceipt.Actor.init -> void
@@ -341,6 +372,15 @@ Penghou.Zhinu.StepImplementationKey
 Penghou.Zhinu.StepImplementationKey.StepImplementationKey() -> void
 Penghou.Zhinu.StepImplementationKey.StepImplementationKey(string! value) -> void
 Penghou.Zhinu.StepImplementationKey.Value.get -> string!
+Penghou.Zhinu.WaitKind
+Penghou.Zhinu.WaitKind.Child = 2 -> Penghou.Zhinu.WaitKind
+Penghou.Zhinu.WaitKind.Retry = 1 -> Penghou.Zhinu.WaitKind
+Penghou.Zhinu.WaitKind.Signal = 0 -> Penghou.Zhinu.WaitKind
+Penghou.Zhinu.WaitStatus
+Penghou.Zhinu.WaitStatus.Cancelled = 3 -> Penghou.Zhinu.WaitStatus
+Penghou.Zhinu.WaitStatus.Completed = 2 -> Penghou.Zhinu.WaitStatus
+Penghou.Zhinu.WaitStatus.Parked = 0 -> Penghou.Zhinu.WaitStatus
+Penghou.Zhinu.WaitStatus.Ready = 1 -> Penghou.Zhinu.WaitStatus
 Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(string! message, System.Exception! innerException) -> void
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
@@ -540,6 +580,35 @@ Penghou.Zhinu.WorkflowStoreHealth.WalMode.get -> bool?
 Penghou.Zhinu.WorkflowStoreHealth.WalMode.init -> void
 Penghou.Zhinu.WorkflowTimeoutException
 Penghou.Zhinu.WorkflowTimeoutException.WorkflowTimeoutException(string! message) -> void
+Penghou.Zhinu.WorkflowWait
+Penghou.Zhinu.WorkflowWait.AvailableAt.get -> System.DateTimeOffset?
+Penghou.Zhinu.WorkflowWait.AvailableAt.init -> void
+Penghou.Zhinu.WorkflowWait.ChildRunId.get -> System.Guid?
+Penghou.Zhinu.WorkflowWait.ChildRunId.init -> void
+Penghou.Zhinu.WorkflowWait.CreatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowWait.CreatedAt.init -> void
+Penghou.Zhinu.WorkflowWait.DeadlineAt.get -> System.DateTimeOffset?
+Penghou.Zhinu.WorkflowWait.DeadlineAt.init -> void
+Penghou.Zhinu.WorkflowWait.Kind.get -> Penghou.Zhinu.WaitKind
+Penghou.Zhinu.WorkflowWait.Kind.init -> void
+Penghou.Zhinu.WorkflowWait.LeaseGeneration.get -> long
+Penghou.Zhinu.WorkflowWait.LeaseGeneration.init -> void
+Penghou.Zhinu.WorkflowWait.SignalName.get -> string?
+Penghou.Zhinu.WorkflowWait.SignalName.init -> void
+Penghou.Zhinu.WorkflowWait.Status.get -> Penghou.Zhinu.WaitStatus
+Penghou.Zhinu.WorkflowWait.Status.init -> void
+Penghou.Zhinu.WorkflowWait.StepId.get -> System.Guid
+Penghou.Zhinu.WorkflowWait.StepId.init -> void
+Penghou.Zhinu.WorkflowWait.StepKey.get -> string!
+Penghou.Zhinu.WorkflowWait.StepKey.init -> void
+Penghou.Zhinu.WorkflowWait.StepRevision.get -> int
+Penghou.Zhinu.WorkflowWait.StepRevision.init -> void
+Penghou.Zhinu.WorkflowWait.UpdatedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowWait.UpdatedAt.init -> void
+Penghou.Zhinu.WorkflowWait.WaitId.get -> System.Guid
+Penghou.Zhinu.WorkflowWait.WaitId.init -> void
+Penghou.Zhinu.WorkflowWait.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowWait.WorkflowRunId.init -> void
 Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.get -> int
 Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.set -> void
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan

@@ -171,6 +171,21 @@ internal sealed class RunExecutionPipeline
                 run.InputJson ?? "null",
                 serializerOptions,
                 runCancellation.Token).ConfigureAwait(false);
+            if (store is IWorkflowWaitRepository waits &&
+                await waits.HasParkedWaitsAsync(
+                    workflowRunId, leaseGeneration.Value, CancellationToken.None)
+                    .ConfigureAwait(false))
+            {
+                // A swallowed park must never become durable success: the
+                // workflow returned normally while waits it parked are still
+                // unconsumed, so fail loudly instead of completing.
+                await outcomeHandler.FailOnExceptionAsync(
+                    workflowRunId,
+                    new WorkflowStateException(
+                        $"Workflow '{workflowRunId:D}' completed with unconsumed parked waits; " +
+                        "a parked wait primitive must not be bypassed.")).ConfigureAwait(false);
+                return;
+            }
             await outcomeHandler.CompleteAsync(
                 workflowRunId,
                 outputJson,
@@ -178,6 +193,14 @@ internal sealed class RunExecutionPipeline
         }
         catch (OperationCanceledException) when (runCancellation.IsCancellationRequested)
         {
+            await outcomeHandler.ReleaseLeaseOnCancellationAsync(workflowRunId)
+                .ConfigureAwait(false);
+        }
+        catch (ParkedExecutionException)
+        {
+            // A parked wait releases capacity without failing: the run stays
+            // pending with its waits persisted, and the lease is released so
+            // another worker can drive it when the wait becomes ready.
             await outcomeHandler.ReleaseLeaseOnCancellationAsync(workflowRunId)
                 .ConfigureAwait(false);
         }

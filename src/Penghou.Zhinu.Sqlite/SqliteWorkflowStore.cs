@@ -5,6 +5,7 @@ using Penghou.Zhinu.Sqlite.Persistence.Steps;
 using Penghou.Zhinu.Sqlite.Persistence.Timers;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 using Penghou.Zhinu.Sqlite.Persistence.Artifacts;
+using Penghou.Zhinu.Sqlite.Persistence.Waits;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 
@@ -20,7 +21,8 @@ public sealed class SqliteWorkflowStore :
     IIdempotentWorkflowRestartRepository,
     IIdempotentWorkflowSignalRepository,
     IAuditedWorkflowCancellationRepository,
-    IWorkflowRetentionRepository
+    IWorkflowRetentionRepository,
+    IWorkflowWaitRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -31,6 +33,7 @@ public sealed class SqliteWorkflowStore :
     private readonly SqliteArtifactRepository artifacts;
     private readonly SqliteExternalOperationRepository externalOperations;
     private readonly SqliteWorkflowInstanceRepository instances;
+    private readonly SqliteWaitRepository waits;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -56,6 +59,7 @@ public sealed class SqliteWorkflowStore :
         artifacts = new SqliteArtifactRepository(factory);
         externalOperations = new SqliteExternalOperationRepository(factory);
         instances = new SqliteWorkflowInstanceRepository(factory);
+        waits = new SqliteWaitRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
@@ -191,6 +195,59 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "runs.retention.purge",
             () => workflows.PurgeRetainedRunsAsync(options, cancellationToken));
+
+    public ValueTask<WorkflowWait> ParkWaitAsync(
+        ParkWaitRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "waits.park",
+            () => waits.ParkWaitAsync(request, cancellationToken));
+
+    public ValueTask<WorkflowWait?> GetWaitAsync(
+        Guid workflowRunId,
+        string stepKey,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "waits.get",
+            () => waits.GetWaitAsync(workflowRunId, stepKey, cancellationToken));
+
+    public ValueTask<IReadOnlyList<WorkflowWait>> ListWaitsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "waits.list",
+            () => waits.ListWaitsAsync(workflowRunId, cancellationToken));
+
+    public ValueTask CompleteWaitAsync(
+        Guid waitId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "waits.complete",
+            () => waits.CompleteWaitAsync(waitId, cancellationToken));
+
+    public ValueTask MarkSignalWaitsReadyAsync(
+        Guid workflowRunId,
+        string signalName,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "waits.signal-ready",
+            () => waits.MarkSignalWaitsReadyAsync(
+                workflowRunId, signalName, now, cancellationToken));
+
+    public ValueTask MarkChildWaitsReadyAsync(
+        Guid childRunId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "waits.child-ready",
+            () => waits.MarkChildWaitsReadyAsync(childRunId, now, cancellationToken));
+
+    public ValueTask<bool> HasParkedWaitsAsync(
+        Guid workflowRunId,
+        long leaseGeneration,
+        CancellationToken cancellationToken = default) =>
+        waits.HasParkedWaitsAsync(workflowRunId, leaseGeneration, cancellationToken);
 
     public ValueTask<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         Guid workflowRunId,

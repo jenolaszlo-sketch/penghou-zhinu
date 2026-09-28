@@ -327,6 +327,37 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         CREATE INDEX IF NOT EXISTS ix_workflow_artifact_invalidations_artifact
             ON workflow_artifact_invalidations(artifact_id, created_at);
 
+        CREATE TABLE IF NOT EXISTS workflow_waits
+        (
+            wait_id TEXT PRIMARY KEY,
+            workflow_run_id TEXT NOT NULL,
+            step_key TEXT NOT NULL,
+            step_revision INTEGER NOT NULL,
+            step_id TEXT NOT NULL,
+            kind INTEGER NOT NULL,
+            signal_name TEXT NULL,
+            child_run_id TEXT NULL,
+            deadline_at TEXT NULL,
+            available_at TEXT NULL,
+            status INTEGER NOT NULL,
+            lease_generation INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK (kind BETWEEN 0 AND 2),
+            CHECK (status BETWEEN 0 AND 3),
+            CHECK (step_revision >= 1),
+            CHECK (lease_generation >= 1),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_waits_key
+            ON workflow_waits(workflow_run_id, step_key);
+        CREATE INDEX IF NOT EXISTS ix_workflow_waits_status
+            ON workflow_waits(status, available_at, workflow_run_id);
+        CREATE INDEX IF NOT EXISTS ix_workflow_waits_signal
+            ON workflow_waits(workflow_run_id, signal_name, status);
+        CREATE INDEX IF NOT EXISTS ix_workflow_waits_child
+            ON workflow_waits(child_run_id, status);
+
         CREATE TABLE IF NOT EXISTS workflow_events
         (
             sequence INTEGER PRIMARY KEY AUTOINCREMENT,
