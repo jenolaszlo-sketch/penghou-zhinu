@@ -22,7 +22,8 @@ public sealed class SqliteWorkflowStore :
     IIdempotentWorkflowSignalRepository,
     IAuditedWorkflowCancellationRepository,
     IWorkflowRetentionRepository,
-    IWorkflowWaitRepository
+    IWorkflowWaitRepository,
+    IWorkflowEventExportRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -248,6 +249,24 @@ public sealed class SqliteWorkflowStore :
         long leaseGeneration,
         CancellationToken cancellationToken = default) =>
         waits.HasParkedWaitsAsync(workflowRunId, leaseGeneration, cancellationToken);
+
+    public ValueTask<IReadOnlyList<WorkflowEvent>> ReadExportBatchAsync(
+        string consumerId,
+        Guid workflowRunId,
+        int limit,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "events.export.read",
+            () => workflows.ReadExportBatchAsync(consumerId, workflowRunId, limit, cancellationToken));
+
+    public ValueTask AcknowledgeExportAsync(
+        string consumerId,
+        Guid workflowRunId,
+        long sequence,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "events.export.ack",
+            () => workflows.AcknowledgeExportAsync(consumerId, workflowRunId, sequence, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         Guid workflowRunId,

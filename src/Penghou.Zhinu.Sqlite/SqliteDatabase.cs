@@ -358,6 +358,19 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         CREATE INDEX IF NOT EXISTS ix_workflow_waits_child
             ON workflow_waits(child_run_id, status);
 
+        CREATE TABLE IF NOT EXISTS workflow_event_consumers
+        (
+            consumer_id TEXT NOT NULL,
+            workflow_run_id TEXT NOT NULL,
+            last_sequence INTEGER NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY (consumer_id, workflow_run_id),
+            CHECK (last_sequence >= 0),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_event_consumers_run
+            ON workflow_event_consumers(workflow_run_id, last_sequence);
+
         CREATE TABLE IF NOT EXISTS workflow_events
         (
             sequence INTEGER PRIMARY KEY AUTOINCREMENT,

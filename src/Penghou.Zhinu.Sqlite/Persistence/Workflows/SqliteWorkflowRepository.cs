@@ -146,6 +146,96 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         }
     }
 
+    public async ValueTask<IReadOnlyList<WorkflowEvent>> ReadExportBatchAsync(
+        string consumerId,
+        Guid workflowRunId,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(consumerId);
+        if (limit is < 1 or > 1000)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        await using var cursorCommand = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT last_sequence FROM workflow_event_consumers
+            WHERE consumer_id = $consumer AND workflow_run_id = $run;
+            """);
+        cursorCommand.Parameters.AddWithValue("$consumer", consumerId);
+        cursorCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        var cursor = await cursorCommand.ExecuteScalarAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var after = cursor is null or DBNull
+            ? 0L
+            : Convert.ToInt64(cursor, System.Globalization.CultureInfo.InvariantCulture);
+        await using var batchCommand = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT sequence, workflow_run_id, step_key, event_type, timestamp, attempt, data_json
+            FROM workflow_events
+            WHERE workflow_run_id = $run AND sequence > $after
+            ORDER BY sequence
+            LIMIT $limit;
+            """);
+        batchCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        batchCommand.Parameters.AddWithValue("$after", after);
+        batchCommand.Parameters.AddWithValue("$limit", limit);
+        var results = new List<WorkflowEvent>();
+        await using var reader = await batchCommand.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            results.Add(ReadEvent(reader));
+        return results;
+    }
+
+    public async ValueTask AcknowledgeExportAsync(
+        string consumerId,
+        Guid workflowRunId,
+        long sequence,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(consumerId);
+        if (sequence < 0)
+            throw new ArgumentOutOfRangeException(nameof(sequence));
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        // Acknowledging a purged or unknown run is a no-op success: there is
+        // nothing left to protect, and exporters must not crash-loop on it.
+        await using var exists = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT EXISTS(SELECT 1 FROM workflow_runs WHERE id = $run);
+            """);
+        exists.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        if (Convert.ToInt32(
+                await exists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+                System.Globalization.CultureInfo.InvariantCulture) == 0)
+            return;
+        var now = factory.TimeProvider.GetUtcNow();
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
+            INSERT INTO workflow_event_consumers
+                (consumer_id, workflow_run_id, last_sequence, updated_at)
+            VALUES ($consumer, $run, $sequence, $now)
+            ON CONFLICT (consumer_id, workflow_run_id) DO UPDATE SET
+                last_sequence = max(workflow_event_consumers.last_sequence, excluded.last_sequence),
+                updated_at = excluded.updated_at;
+            """);
+        command.Parameters.AddWithValue("$consumer", consumerId);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$sequence", sequence);
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(now));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static WorkflowEvent ReadEvent(Microsoft.Data.Sqlite.SqliteDataReader reader) => new()
+    {
+        Sequence = reader.GetInt64(0),
+        WorkflowRunId = Guid.Parse(reader.GetString(1)),
+        StepKey = SqliteStoreSupport.GetNullableString(reader, 2),
+        EventType = reader.GetString(3),
+        Timestamp = SqliteStoreSupport.ParseTimestamp(reader.GetString(4)),
+        Attempt = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+        DataJson = SqliteStoreSupport.GetNullableString(reader, 6)
+    };
+
     private static string EligibilityClause(RunRetentionOptions options)
     {
         var statuses = options.Statuses ??
@@ -158,7 +248,13 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
             ", ",
             statuses.Select(status =>
                 ((int)status).ToString(System.Globalization.CultureInfo.InvariantCulture)));
-        return $"status IN ({values}) AND COALESCE(completed_at, updated_at) < $cutoff";
+        // Runs with lagging export consumers are skipped: a consumer behind
+        // the run's event high-water mark keeps its run until it catches up.
+        return $"status IN ({values}) AND COALESCE(completed_at, updated_at) < $cutoff" +
+            " AND NOT EXISTS (SELECT 1 FROM workflow_event_consumers lag " +
+            "WHERE lag.workflow_run_id = workflow_runs.id AND lag.last_sequence < " +
+            "(SELECT COALESCE(MAX(sequence), 0) FROM workflow_events delivered " +
+            "WHERE delivered.workflow_run_id = workflow_runs.id))";
     }
 
     public async ValueTask<IReadOnlyList<WorkflowRun>> GetRunsAsync(
