@@ -34,9 +34,16 @@ rather than only implied by code.
 ## Retry guarantee
 
 - A failed step is retried only if `RetryPolicy.MaxAttempts > 1`. The attempt
-  count, error, and next eligible time are persisted. Retry backoff is
-  deterministic (no jitter). The step stays `Waiting` until its `AvailableAt`,
-  then re-claims as a new attempt.
+  count, error, and next eligible time are persisted. The step stays `Waiting`
+  until its `AvailableAt`, then re-claims as a new attempt.
+- `BackoffCoefficient` grows the delay geometrically with an optional
+  `MaximumDelay` cap; both are validated and overflow-safe. `JitterFactor`
+  (0 to 1, default 0) applies symmetric jitter whose result is persisted as
+  the eligible time, so replays observe the same bound.
+- `NonRetryableErrorTypes` lists exception type full names (matched with base
+  types) that fail immediately without backoff. Delegates and policies resolve
+  from registered code on every replay: only data (attempts, errors, eligible
+  times, type names) is persisted, never executable objects.
 - Retries are durable: a process restart between attempts preserves the attempt
   count and schedule.
 - A class-based step resolves a fresh implementation and DI scope for every

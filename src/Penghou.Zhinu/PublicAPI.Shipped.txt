@@ -325,10 +325,15 @@ Penghou.Zhinu.RetryPolicy.BackoffCoefficient.get -> double
 Penghou.Zhinu.RetryPolicy.BackoffCoefficient.init -> void
 Penghou.Zhinu.RetryPolicy.InitialDelay.get -> System.TimeSpan
 Penghou.Zhinu.RetryPolicy.InitialDelay.init -> void
+Penghou.Zhinu.RetryPolicy.IsRetryable(System.Exception! exception) -> bool
+Penghou.Zhinu.RetryPolicy.JitterFactor.get -> double
+Penghou.Zhinu.RetryPolicy.JitterFactor.init -> void
 Penghou.Zhinu.RetryPolicy.MaxAttempts.get -> int
 Penghou.Zhinu.RetryPolicy.MaxAttempts.init -> void
 Penghou.Zhinu.RetryPolicy.MaximumDelay.get -> System.TimeSpan?
 Penghou.Zhinu.RetryPolicy.MaximumDelay.init -> void
+Penghou.Zhinu.RetryPolicy.NonRetryableErrorTypes.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Penghou.Zhinu.RetryPolicy.NonRetryableErrorTypes.init -> void
 Penghou.Zhinu.RollbackAction
 Penghou.Zhinu.RollbackAction.Compensate = 0 -> Penghou.Zhinu.RollbackAction
 Penghou.Zhinu.RollbackAction.Preserve = 1 -> Penghou.Zhinu.RollbackAction

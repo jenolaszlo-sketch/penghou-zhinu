@@ -1266,6 +1266,17 @@ public sealed partial class WorkflowContext
                         // recording anything against the step.
                         throw;
                     }
+                    catch (Exception exception) when (!configured.Retry.IsRetryable(exception))
+                    {
+                        // Permanent failures skip backoff: record terminally
+                        // with the attempt policy exhausted.
+                        step = await RecordFailureAsync(
+                            step,
+                            exception,
+                            configured.Retry with { MaxAttempts = 1 },
+                            outputType,
+                            cancellationToken).ConfigureAwait(false);
+                    }
                     catch (Exception exception)
                     {
                         step = await RecordFailureAsync(
