@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Channels;
 using Penghou.Zhinu.Execution.Outcomes;
 using Penghou.Zhinu.Execution.Steps;
+using Penghou.Zhinu.Subscriptions;
 
 namespace Penghou.Zhinu;
 
@@ -35,7 +35,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     private readonly RollbackAndRestartCoordinator rollbackAndRestart;
     private readonly ConcurrentDictionary<Guid, CancellationTokenSource>
         runningCancellations = new();
-    private readonly ConcurrentDictionary<Guid, Channel<byte>> eventChannels = new();
+    private readonly EventSubscriptionHub eventSubscriptions = new();
     private int disposed;
 
     public WorkflowEngine(
@@ -1854,89 +1854,53 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var cursor = afterSequence;
-        try
+        using var subscription = eventSubscriptions.Own(workflowRunId);
+        while (!cancellationToken.IsCancellationRequested)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            var events = await GetEventsAsync(
+                workflowRunId,
+                cursor,
+                100,
+                cancellationToken).ConfigureAwait(false);
+            foreach (var item in events)
             {
-                var events = await GetEventsAsync(
-                    workflowRunId,
-                    cursor,
-                    100,
-                    cancellationToken).ConfigureAwait(false);
-                foreach (var item in events)
+                cursor = item.Sequence;
+                yield return item;
+            }
+            var run = await GetRunAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false);
+            if (run is null || (RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0))
+            {
+                // A terminal transition may have committed events after the
+                // events query above; re-read once before concluding, or a
+                // torn read drops the terminal events.
+                var tail = await GetEventsAsync(
+                        workflowRunId, cursor, 100, cancellationToken)
+                    .ConfigureAwait(false);
+                var tailed = false;
+                foreach (var item in tail)
                 {
                     cursor = item.Sequence;
                     yield return item;
+                    tailed = true;
                 }
-                var run = await GetRunAsync(workflowRunId, cancellationToken)
-                    .ConfigureAwait(false);
-                if (run is null || (RunExecutionPipeline.IsTerminal(run.Status) && events.Count == 0))
-                {
-                    // A terminal transition may have committed events after the
-                    // events query above; re-read once before concluding, or a
-                    // torn read drops the terminal events.
-                    var tail = await GetEventsAsync(
-                            workflowRunId, cursor, 100, cancellationToken)
-                        .ConfigureAwait(false);
-                    var tailed = false;
-                    foreach (var item in tail)
-                    {
-                        cursor = item.Sequence;
-                        yield return item;
-                        tailed = true;
-                    }
-                    if (tailed)
-                        continue;
-                    yield break;
-                }
-                if (events.Count == 0)
-                {
-                    // Wait briefly for an in-process notification instead of
-                    // hammering the store every poll interval. Fall back to the
-                    // poll interval so events appended by other processes (or
-                    // before this subscriber existed) are still observed.
-                    var channel = eventChannels.GetOrAdd(
-                        workflowRunId,
-                        _ => Channel.CreateBounded<byte>(
-                            new BoundedChannelOptions(1)
-                            {
-                                FullMode = BoundedChannelFullMode.DropWrite
-                            }));
-                    // Cancel the losing wait so repeated quiet polls cannot
-                    // accumulate pending channel readers.
-                    using var iterationTimeout = CancellationTokenSource
-                        .CreateLinkedTokenSource(cancellationToken);
-                    var notify = channel.Reader.WaitToReadAsync(iterationTimeout.Token)
-                        .AsTask();
-                    var poll = Task.Delay(
-                        options.PollInterval,
-                        timeProvider,
-                        iterationTimeout.Token);
-                    await Task.WhenAny(notify, poll).ConfigureAwait(false);
-                    await iterationTimeout.CancelAsync().ConfigureAwait(false);
-                    // Drain the notification byte so the next wait actually
-                    // blocks instead of busy-spinning on a stale signal.
-                    channel.Reader.TryRead(out _);
-                }
+                if (tailed)
+                    continue;
+                yield break;
             }
-        }
-        finally
-        {
-            // Release the per-run wakeup channel when this subscriber leaves
-            // (terminal, cancellation, or disconnection) so eventChannels cannot
-            // grow unbounded with abandoned subscriptions. A concurrent
-            // subscriber re-creates it on demand.
-            eventChannels.TryRemove(workflowRunId, out _);
+            if (events.Count == 0)
+            {
+                await eventSubscriptions.WaitForNotificationOrPollAsync(
+                    workflowRunId,
+                    options.PollInterval,
+                    timeProvider,
+                    cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
-    private void NotifyEventAppended(Guid workflowRunId)
-    {
-        if (eventChannels.TryGetValue(workflowRunId, out var channel))
-        {
-            channel.Writer.TryWrite(0);
-        }
-    }
+    private void NotifyEventAppended(Guid workflowRunId) =>
+        eventSubscriptions.Notify(workflowRunId);
 
     /// <summary>Returns a non-throwing point-in-time result for a run.</summary>
     public async Task<WorkflowResult<TOutput>> GetResultAsync<TOutput>(
@@ -1990,15 +1954,13 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             await Task.Delay(TimeSpan.FromMilliseconds(10), timeProvider)
                 .ConfigureAwait(false);
         }
-        foreach (var channel in eventChannels.Values)
-            channel.Writer.TryComplete();
-        eventChannels.Clear();
+        eventSubscriptions.CompleteAll();
     }
 
     private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(disposed != 0, this);
 
-    internal int SubscriptionChannelCount => eventChannels.Count;
+    internal int SubscriptionChannelCount => eventSubscriptions.Count;
 
     private sealed class LoopProgressBuilder
     {
