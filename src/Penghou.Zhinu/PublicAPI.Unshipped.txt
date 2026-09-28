@@ -406,6 +406,7 @@ Penghou.Zhinu.StepImplementationKey.StepImplementationKey(string! value) -> void
 Penghou.Zhinu.StepImplementationKey.Value.get -> string!
 Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Child = 2 -> Penghou.Zhinu.WaitKind
+Penghou.Zhinu.WaitKind.Delay = 3 -> Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Retry = 1 -> Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Signal = 0 -> Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitStatus

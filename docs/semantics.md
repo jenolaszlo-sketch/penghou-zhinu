@@ -299,11 +299,15 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
   generation changes never duplicate a delivery: buffered signals are consumed
   exactly once by guarded update, and timed-out or superseded waits are
   cancelled, never delivered.
-- Durable delays stay in-worker: their absolute deadline is already durable
-  and a restart preserves it. Child completion waits stay in-worker while the
-  child runs inline (no extra capacity is occupied); a child leased elsewhere
-  is future work, with parent wakeups already firing on child terminal
-  transitions. Compensation replay never parks: it replays committed results.
+- Durable delays park like signal and retry waits: the due time is persisted as
+  a `Delay` wait, the run lease is released for the whole delay, and the delay
+  resumes when the due time is reached, surviving a crash. On resume the step
+  is re-claimed into the current generation before it completes, so a restarted
+  run never restarts the delay from zero. Child completion waits stay in-worker
+  while the child runs inline (no extra capacity is occupied); a child leased
+  elsewhere is future work, with parent wakeups already firing on child
+  terminal transitions. Compensation replay never parks: it replays committed
+  results.
 - Run deadlines bound admission and claiming; `WaitForCompletionAsync` and
   `WaitUntilBlockedAsync` deadlines bound only the caller. Parking never
   extends any deadline.

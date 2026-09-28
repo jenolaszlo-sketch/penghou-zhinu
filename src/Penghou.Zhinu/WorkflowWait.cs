@@ -8,7 +8,9 @@ public enum WaitKind
     /// <summary>A retry backoff becoming due.</summary>
     Retry = 1,
     /// <summary>A child run reaching a terminal state.</summary>
-    Child = 2
+    Child = 2,
+    /// <summary>A durable delay becoming due.</summary>
+    Delay = 3
 }
 
 /// <summary>Lifecycle of one persisted wait record.</summary>

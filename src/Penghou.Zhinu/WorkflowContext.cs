@@ -410,6 +410,7 @@ public sealed partial class WorkflowContext
                 throw new WorkflowStateException(
                     $"Step '{stepKey}' has no committed delay to replay during rollback.");
             }
+            var waits = store as IWorkflowWaitRepository;
             while (true)
             {
                 var claim = await ClaimAsync(
@@ -423,7 +424,11 @@ public sealed partial class WorkflowContext
                     null,
                     linkedCancellation.Token).ConfigureAwait(false);
                 if (claim.Disposition == StepClaimDisposition.Reused)
+                {
+                    await ConsumeDelayWaitAsync(waits, stepKey, linkedCancellation.Token)
+                        .ConfigureAwait(false);
                     return;
+                }
                 if (claim.Disposition == StepClaimDisposition.Busy)
                 {
                     await Task.Delay(
@@ -434,6 +439,12 @@ public sealed partial class WorkflowContext
                 }
                 if (claim.Disposition == StepClaimDisposition.Waiting)
                 {
+                    // A parked delay releases worker capacity until its due
+                    // time; a store without wait support keeps in-worker polling.
+                    var parked = await FindDelayWaitAsync(
+                        waits, stepKey, linkedCancellation.Token).ConfigureAwait(false);
+                    if (parked is not null)
+                        throw new ParkedExecutionException(parked.WaitId);
                     await WaitUntilAsync(
                         claim.Step.AvailableAt,
                         linkedCancellation.Token).ConfigureAwait(false);
@@ -465,6 +476,25 @@ public sealed partial class WorkflowContext
                         "no longer owns forward progression.");
 
                 var now = timeProvider.GetUtcNow();
+                var alreadyParked = await FindDelayWaitAsync(
+                    waits, stepKey, linkedCancellation.Token).ConfigureAwait(false);
+                if (alreadyParked is not null)
+                {
+                    // The delay is due: the waiting step was just re-claimed
+                    // into this execution generation, so finish it rather than
+                    // schedule a fresh delay. Consuming the wait first keeps a
+                    // crash between the two writes self-healing.
+                    await waits!.CompleteWaitAsync(
+                        alreadyParked.WaitId,
+                        linkedCancellation.Token).ConfigureAwait(false);
+                    await store.CompleteStepAsync(
+                        claim.Step.Id,
+                        ownerId,
+                        outputJson: null,
+                        now,
+                        linkedCancellation.Token).ConfigureAwait(false);
+                    return;
+                }
                 var availableAt = now + delay;
                 await store.ScheduleDelayAsync(
                     claim.Step.Id,
@@ -472,6 +502,23 @@ public sealed partial class WorkflowContext
                     availableAt,
                     now,
                     linkedCancellation.Token).ConfigureAwait(false);
+                if (waits is not null)
+                {
+                    var wait = await waits.ParkWaitAsync(
+                        new ParkWaitRequest
+                        {
+                            WorkflowRunId = WorkflowRunId,
+                            StepKey = stepKey,
+                            StepRevision = claim.Step.Revision,
+                            StepId = claim.Step.Id,
+                            Kind = WaitKind.Delay,
+                            AvailableAt = availableAt,
+                            LeaseGeneration = leaseGeneration,
+                            Now = now
+                        },
+                        linkedCancellation.Token).ConfigureAwait(false);
+                    throw new ParkedExecutionException(wait.WaitId);
+                }
                 await WaitUntilAsync(
                     availableAt,
                     linkedCancellation.Token).ConfigureAwait(false);
@@ -486,6 +533,29 @@ public sealed partial class WorkflowContext
         {
             stepLock.Dispose();
         }
+    }
+
+    private async ValueTask<WorkflowWait?> FindDelayWaitAsync(
+        IWorkflowWaitRepository? waits,
+        string stepKey,
+        CancellationToken cancellationToken)
+    {
+        if (waits is null)
+            return null;
+        var wait = await waits.GetWaitAsync(WorkflowRunId, stepKey, cancellationToken)
+            .ConfigureAwait(false);
+        return wait is { Kind: WaitKind.Delay } ? wait : null;
+    }
+
+    private async ValueTask ConsumeDelayWaitAsync(
+        IWorkflowWaitRepository? waits,
+        string stepKey,
+        CancellationToken cancellationToken)
+    {
+        var wait = await FindDelayWaitAsync(waits, stepKey, cancellationToken)
+            .ConfigureAwait(false);
+        if (wait is not null)
+            await waits!.CompleteWaitAsync(wait.WaitId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

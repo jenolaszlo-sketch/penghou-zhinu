@@ -343,7 +343,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             lease_generation INTEGER NOT NULL,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
-            CHECK (kind BETWEEN 0 AND 2),
+            CHECK (kind BETWEEN 0 AND 3),
             CHECK (status BETWEEN 0 AND 3),
             CHECK (step_revision >= 1),
             CHECK (lease_generation >= 1),
