@@ -19,7 +19,8 @@ public sealed class SqliteWorkflowStore :
     IWorkflowStore,
     IIdempotentWorkflowRestartRepository,
     IIdempotentWorkflowSignalRepository,
-    IAuditedWorkflowCancellationRepository
+    IAuditedWorkflowCancellationRepository,
+    IWorkflowRetentionRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -176,6 +177,20 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "runs.purge",
             () => workflows.PurgeRunsAsync(olderThan, statuses, cancellationToken));
+
+    public ValueTask<RunRetentionPreview> PreviewRetentionAsync(
+        RunRetentionOptions options,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "runs.retention.preview",
+            () => workflows.PreviewRetentionAsync(options, cancellationToken));
+
+    public ValueTask<int> PurgeRetainedRunsAsync(
+        RunRetentionOptions options,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "runs.retention.purge",
+            () => workflows.PurgeRetainedRunsAsync(options, cancellationToken));
 
     public ValueTask<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         Guid workflowRunId,

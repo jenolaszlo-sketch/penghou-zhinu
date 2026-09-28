@@ -75,6 +75,91 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
             .ConfigureAwait(false);
     }
 
+    public async ValueTask<RunRetentionPreview> PreviewRetentionAsync(
+        RunRetentionOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var where = EligibilityClause(options);
+        await using var countCommand = SqliteStoreSupport.CreateCommand(
+            connection, null,
+            $"SELECT COUNT(*) FROM workflow_runs WHERE {where};");
+        countCommand.Parameters.AddWithValue(
+            "$cutoff", SqliteStoreSupport.FormatTimestamp(options.OlderThan));
+        var count = Convert.ToInt32(
+            await countCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture);
+        await using var sampleCommand = SqliteStoreSupport.CreateCommand(
+            connection, null,
+            $"SELECT id FROM workflow_runs WHERE {where} " +
+            "ORDER BY COALESCE(completed_at, updated_at), id LIMIT 100;");
+        sampleCommand.Parameters.AddWithValue(
+            "$cutoff", SqliteStoreSupport.FormatTimestamp(options.OlderThan));
+        var sample = new List<Guid>();
+        await using var reader = await sampleCommand.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            sample.Add(Guid.Parse(reader.GetString(0)));
+        return new RunRetentionPreview
+        {
+            EligibleRunCount = count,
+            SampleRunIds = sample,
+            EvaluatedAt = factory.TimeProvider.GetUtcNow()
+        };
+    }
+
+    public async ValueTask<int> PurgeRetainedRunsAsync(
+        RunRetentionOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        var where = EligibilityClause(options);
+        var deleted = 0;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await using var connection = await factory.OpenAsync(cancellationToken)
+                .ConfigureAwait(false);
+            // Eligibility is re-evaluated in every batch: a preview is not a
+            // lock, so a run reactivated after previewing is never deleted.
+            await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+                DELETE FROM workflow_runs WHERE id IN (
+                    SELECT id FROM workflow_runs WHERE {where}
+                    ORDER BY COALESCE(completed_at, updated_at), id
+                    LIMIT $batch);
+                """);
+            command.Parameters.AddWithValue(
+                "$cutoff", SqliteStoreSupport.FormatTimestamp(options.OlderThan));
+            command.Parameters.AddWithValue("$batch", options.BatchSize);
+            var batch = await command.ExecuteNonQueryAsync(cancellationToken)
+                .ConfigureAwait(false);
+            deleted += batch;
+            if (batch == 0)
+                return deleted;
+        }
+    }
+
+    private static string EligibilityClause(RunRetentionOptions options)
+    {
+        var statuses = options.Statuses ??
+            new[]
+            {
+                WorkflowStatus.Completed, WorkflowStatus.Failed,
+                WorkflowStatus.Cancelled, WorkflowStatus.Compensated
+            };
+        var values = string.Join(
+            ", ",
+            statuses.Select(status =>
+                ((int)status).ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        return $"status IN ({values}) AND COALESCE(completed_at, updated_at) < $cutoff";
+    }
+
     public async ValueTask<IReadOnlyList<WorkflowRun>> GetRunsAsync(
         RunQuery query,
         CancellationToken cancellationToken = default)
