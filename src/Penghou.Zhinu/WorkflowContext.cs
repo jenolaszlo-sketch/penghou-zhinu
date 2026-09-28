@@ -704,6 +704,90 @@ public sealed partial class WorkflowContext
     }
 
     /// <summary>
+    /// Executes one durable step per input in parallel with stable caller
+    /// supplied keys (<c>"{prefix}.{key}"</c>) and bounded concurrency.
+    /// Unlike index keys, stable keys survive input reordering: completed
+    /// items are reused by key, and an existing key with an incompatible
+    /// input fails loudly instead of reusing the wrong result. Results are
+    /// returned in the order of <paramref name="inputs"/>. Items execute in
+    /// chunks of <see cref="FanOutOptions.MaxDegreeOfParallelism"/>: a chunk
+    /// failure stops later chunks while in-flight items settle.
+    /// </summary>
+    public Task<IReadOnlyList<TOutput>> FanOutAsync<TInput, TOutput>(
+        string stepKeyPrefix,
+        IReadOnlyList<TInput> inputs,
+        Func<TInput, string> keySelector,
+        Func<TInput, WorkflowStepContext, CancellationToken, Task<TOutput>> operation,
+        FanOutOptions options,
+        StepOptions? stepOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateStepKey(stepKeyPrefix);
+        ArgumentNullException.ThrowIfNull(inputs);
+        ArgumentNullException.ThrowIfNull(keySelector);
+        ArgumentNullException.ThrowIfNull(operation);
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
+        if (inputs.Count == 0)
+            return Task.FromResult<IReadOnlyList<TOutput>>(Array.Empty<TOutput>());
+        var keys = ValidateItemKeys(stepKeyPrefix, inputs, keySelector);
+        return FanOutChunkedAsync(
+            keys,
+            inputs,
+            (key, input, ct) => StepAsync(
+                $"{stepKeyPrefix}.{key}",
+                input,
+                (value, step, stepCancellation) => operation(value, step, stepCancellation),
+                stepOptions,
+                ct),
+            options.MaxDegreeOfParallelism,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes one class-based durable step per input in parallel with stable
+    /// keys and bounded concurrency. See the functional overload for key and
+    /// chunking semantics.
+    /// </summary>
+    public Task<IReadOnlyList<TOutput>> FanOutAsync<TInput, TOutput>(
+        string stepKeyPrefix,
+        WorkflowStepReference<TInput, TOutput> step,
+        IReadOnlyList<TInput> inputs,
+        Func<TInput, string> keySelector,
+        FanOutOptions options,
+        StepOptions? stepOptions = null,
+        CancellationToken cancellationToken = default,
+        StepCompensationMode compensation = StepCompensationMode.None)
+    {
+        ValidateStepKey(stepKeyPrefix);
+        ArgumentNullException.ThrowIfNull(step);
+        ArgumentNullException.ThrowIfNull(inputs);
+        ArgumentNullException.ThrowIfNull(keySelector);
+        ArgumentNullException.ThrowIfNull(options);
+        if (!Enum.IsDefined(compensation))
+            throw new ArgumentOutOfRangeException(nameof(compensation));
+        options.Validate();
+        if (inputs.Count == 0)
+        {
+            return Task.FromResult<IReadOnlyList<TOutput>>(
+                Array.Empty<TOutput>());
+        }
+        var keys = ValidateItemKeys(stepKeyPrefix, inputs, keySelector);
+        return FanOutChunkedAsync(
+            keys,
+            inputs,
+            (key, input, ct) => StepAsync(
+                $"{stepKeyPrefix}.{key}",
+                step,
+                input,
+                stepOptions,
+                ct,
+                compensation),
+            options.MaxDegreeOfParallelism,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Executes one class-based durable step per input in parallel. The same
     /// typed implementation reference is used for every item; durable keys are
     /// <c>"{prefix}.{index}"</c> and results preserve input order.
@@ -734,6 +818,50 @@ public sealed partial class WorkflowContext
             options,
             cancellationToken,
             compensation);
+    }
+
+    private static IReadOnlyList<string> ValidateItemKeys<TInput>(
+        string stepKeyPrefix,
+        IReadOnlyList<TInput> inputs,
+        Func<TInput, string> keySelector)
+    {
+        var keys = new string[inputs.Count];
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        for (var i = 0; i < inputs.Count; i++)
+        {
+            var key = keySelector(inputs[i]);
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException(
+                    $"Fan-out item {i} produced a blank stable key.",
+                    nameof(keySelector));
+            if (!seen.Add(key))
+                throw new ArgumentException(
+                    $"Fan-out item {i} duplicates stable key '{key}'.",
+                    nameof(keySelector));
+            ValidateStepKey($"{stepKeyPrefix}.{key}");
+            keys[i] = key;
+        }
+        return keys;
+    }
+
+    private async Task<IReadOnlyList<TOutput>> FanOutChunkedAsync<TInput, TOutput>(
+        IReadOnlyList<string> keys,
+        IReadOnlyList<TInput> inputs,
+        Func<string, TInput, CancellationToken, Task<TOutput>> runItem,
+        int maxDegree,
+        CancellationToken cancellationToken)
+    {
+        var results = new TOutput[keys.Count];
+        for (var offset = 0; offset < keys.Count; offset += maxDegree)
+        {
+            var count = Math.Min(maxDegree, keys.Count - offset);
+            var tasks = new Task<TOutput>[count];
+            for (var j = 0; j < count; j++)
+                tasks[j] = runItem(keys[offset + j], inputs[offset + j], cancellationToken);
+            var completed = await Task.WhenAll(tasks).ConfigureAwait(false);
+            completed.CopyTo(results, offset);
+        }
+        return results;
     }
 
     private async Task<IReadOnlyList<TOutput>> FanOutCoreAsync<TInput, TOutput>(
