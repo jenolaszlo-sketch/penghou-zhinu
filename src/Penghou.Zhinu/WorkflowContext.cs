@@ -71,10 +71,13 @@ public sealed partial class WorkflowContext
         this.workflowStepResolver = workflowStepResolver ??
             UnavailableWorkflowStepResolver.Instance;
         childRuns = new ChildRunCoordinator(
+            WorkflowRunId,
             store,
             this.options,
             this.serializerOptions,
             this.timeProvider,
+            this.ownerId,
+            this.leaseGeneration,
             executeChildRun,
             registry);
     }
@@ -1180,8 +1183,11 @@ public sealed partial class WorkflowContext
         return await StepAsync(
             $"{stepKey}:wait",
             childId,
-            (value, _, ct) => childRuns.AwaitChildCoreAsync<TOutput>(
+            (value, step, ct) => childRuns.AwaitChildCoreAsync<TOutput>(
                 value,
+                step.StepKey,
+                step.Revision,
+                step.StepExecutionId,
                 ct),
             new StepOptions { DependsOn = [$"{stepKey}:start"] },
             cancellationToken).ConfigureAwait(false);

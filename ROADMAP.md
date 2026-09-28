@@ -276,12 +276,11 @@ seven reproduced defects) was implemented in packages ZH-00 through ZH-11:
 - Shared acquisition loop, Starter/Reader/Operator/HostedRuntime capability
   interfaces, aligned clocks with a time-injected test host, cooperating
   lease loss, bounded subscriptions, keyed bounded fan-out, terminal-run
-  retention, durable parked waits (signal/retry/delay) with persisted deadlines,
-  operator CLI, event export cursors, classified retry policies, and explicit
-  agent restart semantics.
+  retention, durable parked waits (signal/retry/delay/child) with persisted
+  deadlines, operator CLI, event export cursors, classified retry policies, and
+  explicit agent restart semantics.
 - The transition preview and reuse/invalidation maps (item 4 and the second
-  half of item 7) remain Fuwen-blocked. Deliberately deferred: child-completion
-  wait parking.
+  half of item 7) remain Fuwen-blocked.
 
 ## Terminology
 

@@ -303,11 +303,11 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
   a `Delay` wait, the run lease is released for the whole delay, and the delay
   resumes when the due time is reached, surviving a crash. On resume the step
   is re-claimed into the current generation before it completes, so a restarted
-  run never restarts the delay from zero. Child completion waits stay in-worker
-  while the child runs inline (no extra capacity is occupied); a child leased
-  elsewhere is future work, with parent wakeups already firing on child
-  terminal transitions. Compensation replay never parks: it replays committed
-  results.
+  run never restarts the delay from zero. Child completion waits run the child
+  inline while this worker can own its lease; when another owner holds the
+  child's lease, the parent parks a child wait, releases capacity, and resumes
+  when the child's terminal transition flips the wait ready. Compensation
+  replay never parks: it replays committed results.
 - Run deadlines bound admission and claiming; `WaitForCompletionAsync` and
   `WaitUntilBlockedAsync` deadlines bound only the caller. Parking never
   extends any deadline.

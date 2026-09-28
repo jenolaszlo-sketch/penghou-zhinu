@@ -9,25 +9,34 @@ namespace Penghou.Zhinu.Context;
 /// </summary>
 internal sealed class ChildRunCoordinator
 {
+    private readonly Guid workflowRunId;
     private readonly IWorkflowStore store;
     private readonly ZhinuOptions options;
     private readonly JsonSerializerOptions serializerOptions;
     private readonly TimeProvider timeProvider;
+    private readonly string ownerId;
+    private readonly long leaseGeneration;
     private readonly Func<Guid, CancellationToken, Task>? executeChildRun;
     private readonly IWorkflowRegistry? registry;
 
     public ChildRunCoordinator(
+        Guid workflowRunId,
         IWorkflowStore store,
         ZhinuOptions options,
         JsonSerializerOptions serializerOptions,
         TimeProvider timeProvider,
+        string ownerId,
+        long leaseGeneration,
         Func<Guid, CancellationToken, Task>? executeChildRun,
         IWorkflowRegistry? registry = null)
     {
+        this.workflowRunId = workflowRunId;
         this.store = store;
         this.options = options;
         this.serializerOptions = serializerOptions;
         this.timeProvider = timeProvider;
+        this.ownerId = ownerId;
+        this.leaseGeneration = leaseGeneration;
         this.executeChildRun = executeChildRun;
         this.registry = registry;
     }
@@ -189,61 +198,148 @@ internal sealed class ChildRunCoordinator
 
     public async Task<TOutput> AwaitChildCoreAsync<TOutput>(
         Guid childId,
+        string stepKey,
+        int stepRevision,
+        Guid stepId,
         CancellationToken cancellationToken)
     {
         var outputType = SerializationIdentity.TypeId(typeof(TOutput));
+        var waits = store as IWorkflowWaitRepository;
         while (true)
         {
-            var child = await store.GetRunAsync(childId, cancellationToken)
-                .ConfigureAwait(false) ??
-                throw new WorkflowStateException(
-                    $"Child workflow '{childId:D}' does not exist.");
-            switch (child.Status)
+            var child = await GetChildAsync(childId, cancellationToken).ConfigureAwait(false);
+            if (IsTerminal(child.Status))
             {
-                case WorkflowStatus.Completed:
-                    if (!string.Equals(
-                            child.OutputType,
-                            outputType,
-                            StringComparison.Ordinal))
-                    {
-                        throw new WorkflowSerializationException(
-                            $"Child workflow result was stored as '{child.OutputType}', not '{outputType}'.");
-                    }
-                    return StepResultSerializer.Deserialize<TOutput>(
-                        child.OutputJson,
-                        outputType,
-                        serializerOptions);
-                case WorkflowStatus.Failed:
-                    throw new WorkflowExecutionFailedException(
-                        childId,
-                        child.Error ?? new WorkflowError
-                        {
-                            Type = typeof(WorkflowStateException).FullName!,
-                            Message = $"Child workflow '{childId:D}' failed without persisted details.",
-                            Timestamp = timeProvider.GetUtcNow()
-                        });
-                case WorkflowStatus.Cancelled:
-                    throw new OperationCanceledException(
-                        $"Child workflow '{childId:D}' was cancelled.",
-                        cancellationToken);
-                case WorkflowStatus.Compensated:
-                    throw new WorkflowStateException(
-                        $"Child workflow '{childId:D}' was compensated and has no forward result to return.");
+                await ConsumeChildWaitAsync(waits, stepKey, cancellationToken)
+                    .ConfigureAwait(false);
+                return ReadChildResult<TOutput>(child, outputType, childId, cancellationToken);
             }
-            // Child waits stay in-worker for now: the child usually executes
-            // inline in this task, so no extra capacity is occupied. Parking
-            // applies once a child runs elsewhere; the trigger is a child
-            // leased to another owner while this worker waits.
+
+            if (waits is not null)
+            {
+                var existing = await waits.GetWaitAsync(
+                    workflowRunId, stepKey, cancellationToken).ConfigureAwait(false);
+                if (existing is { Kind: WaitKind.Child })
+                {
+                    if (existing.Status == WaitStatus.Ready)
+                    {
+                        // The child reached a terminal state and flipped the
+                        // wakeup; consume it and re-read the result.
+                        await waits.CompleteWaitAsync(existing.WaitId, cancellationToken)
+                            .ConfigureAwait(false);
+                        continue;
+                    }
+                    // Still parked: keep this worker free until the child ends.
+                    throw new ParkedExecutionException(existing.WaitId);
+                }
+            }
+
+            // Drive the child inline when this worker can own its lease. This
+            // occupies no extra capacity: the child runs synchronously here.
             if (executeChildRun is not null)
             {
                 await executeChildRun(childId, cancellationToken).ConfigureAwait(false);
             }
+
+            child = await GetChildAsync(childId, cancellationToken).ConfigureAwait(false);
+            if (IsTerminal(child.Status))
+                continue;
+
+            // Another owner holds the child's lease: release this worker and
+            // park until the child terminates and flips the wait ready.
+            if (waits is not null &&
+                child.LeaseOwner is not null &&
+                !string.Equals(child.LeaseOwner, ownerId, StringComparison.Ordinal))
+            {
+                var parked = await waits.ParkWaitAsync(
+                    new ParkWaitRequest
+                    {
+                        WorkflowRunId = workflowRunId,
+                        StepKey = stepKey,
+                        StepRevision = stepRevision,
+                        StepId = stepId,
+                        Kind = WaitKind.Child,
+                        ChildRunId = childId,
+                        LeaseGeneration = leaseGeneration,
+                        Now = timeProvider.GetUtcNow()
+                    },
+                    cancellationToken).ConfigureAwait(false);
+                throw new ParkedExecutionException(parked.WaitId);
+            }
+
             await Task.Delay(
                 options.PollInterval,
                 timeProvider,
                 cancellationToken).ConfigureAwait(false);
         }
     }
+
+    private async ValueTask<WorkflowRun> GetChildAsync(
+        Guid childId,
+        CancellationToken cancellationToken) =>
+        await store.GetRunAsync(childId, cancellationToken).ConfigureAwait(false) ??
+        throw new WorkflowStateException(
+            $"Child workflow '{childId:D}' does not exist.");
+
+    private async ValueTask ConsumeChildWaitAsync(
+        IWorkflowWaitRepository? waits,
+        string stepKey,
+        CancellationToken cancellationToken)
+    {
+        if (waits is null)
+            return;
+        var wait = await waits.GetWaitAsync(workflowRunId, stepKey, cancellationToken)
+            .ConfigureAwait(false);
+        if (wait is { Kind: WaitKind.Child })
+            await waits.CompleteWaitAsync(wait.WaitId, cancellationToken).ConfigureAwait(false);
+    }
+
+    private TOutput ReadChildResult<TOutput>(
+        WorkflowRun child,
+        string outputType,
+        Guid childId,
+        CancellationToken cancellationToken)
+    {
+        switch (child.Status)
+        {
+            case WorkflowStatus.Completed:
+                if (!string.Equals(
+                        child.OutputType,
+                        outputType,
+                        StringComparison.Ordinal))
+                {
+                    throw new WorkflowSerializationException(
+                        $"Child workflow result was stored as '{child.OutputType}', not '{outputType}'.");
+                }
+                return StepResultSerializer.Deserialize<TOutput>(
+                    child.OutputJson,
+                    outputType,
+                    serializerOptions);
+            case WorkflowStatus.Failed:
+                throw new WorkflowExecutionFailedException(
+                    childId,
+                    child.Error ?? new WorkflowError
+                    {
+                        Type = typeof(WorkflowStateException).FullName!,
+                        Message = $"Child workflow '{childId:D}' failed without persisted details.",
+                        Timestamp = timeProvider.GetUtcNow()
+                    });
+            case WorkflowStatus.Cancelled:
+                throw new OperationCanceledException(
+                    $"Child workflow '{childId:D}' was cancelled.",
+                    cancellationToken);
+            case WorkflowStatus.Compensated:
+                throw new WorkflowStateException(
+                    $"Child workflow '{childId:D}' was compensated and has no forward result to return.");
+            default:
+                throw new WorkflowStateException(
+                    $"Child workflow '{childId:D}' is not terminal ({child.Status}).");
+        }
+    }
+
+    private static bool IsTerminal(WorkflowStatus status) =>
+        status is WorkflowStatus.Completed or WorkflowStatus.Failed
+            or WorkflowStatus.Cancelled or WorkflowStatus.Compensated;
 
     internal sealed record ChildStartRequest(
         string WorkflowName,
