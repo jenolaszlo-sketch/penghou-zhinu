@@ -10,6 +10,15 @@ override Penghou.Zhinu.Declarative.ActivityReference.ToString() -> string!
 override Penghou.Zhinu.StepImplementationKey.ToString() -> string!
 Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.get -> string?
 Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.init -> void
+Penghou.Zhinu.CandidateStep
+Penghou.Zhinu.CandidateStep.DependsOn.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Penghou.Zhinu.CandidateStep.DependsOn.init -> void
+Penghou.Zhinu.CandidateStep.ImplementationKey.get -> string?
+Penghou.Zhinu.CandidateStep.ImplementationKey.init -> void
+Penghou.Zhinu.CandidateStep.InputHash.get -> string?
+Penghou.Zhinu.CandidateStep.InputHash.init -> void
+Penghou.Zhinu.CandidateStep.StepKey.get -> string!
+Penghou.Zhinu.CandidateStep.StepKey.init -> void
 Penghou.Zhinu.CheckpointDisposition
 Penghou.Zhinu.CheckpointDisposition.Accept = 0 -> Penghou.Zhinu.CheckpointDisposition
 Penghou.Zhinu.CheckpointDisposition.Replan = 2 -> Penghou.Zhinu.CheckpointDisposition
@@ -320,6 +329,19 @@ Penghou.Zhinu.ParkWaitRequest.Timeout.get -> System.TimeSpan?
 Penghou.Zhinu.ParkWaitRequest.Timeout.init -> void
 Penghou.Zhinu.ParkWaitRequest.WorkflowRunId.get -> System.Guid
 Penghou.Zhinu.ParkWaitRequest.WorkflowRunId.init -> void
+Penghou.Zhinu.PlanNodePreview
+Penghou.Zhinu.PlanNodePreview.PlanNodePreview(string! StepKey, Penghou.Zhinu.PlanNodeTransition Transition) -> void
+Penghou.Zhinu.PlanNodePreview.StepKey.get -> string!
+Penghou.Zhinu.PlanNodePreview.StepKey.init -> void
+Penghou.Zhinu.PlanNodePreview.Transition.get -> Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodePreview.Transition.init -> void
+Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodeTransition.Added = 1 -> Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodeTransition.ChangedDependencies = 5 -> Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodeTransition.ChangedImplementation = 4 -> Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodeTransition.ChangedInputs = 3 -> Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodeTransition.Removed = 2 -> Penghou.Zhinu.PlanNodeTransition
+Penghou.Zhinu.PlanNodeTransition.Unchanged = 0 -> Penghou.Zhinu.PlanNodeTransition
 Penghou.Zhinu.RestartReceipt
 Penghou.Zhinu.RestartReceipt.Actor.get -> string?
 Penghou.Zhinu.RestartReceipt.Actor.init -> void
@@ -618,6 +640,19 @@ Penghou.Zhinu.WorkflowWait.WaitId.get -> System.Guid
 Penghou.Zhinu.WorkflowWait.WaitId.init -> void
 Penghou.Zhinu.WorkflowWait.WorkflowRunId.get -> System.Guid
 Penghou.Zhinu.WorkflowWait.WorkflowRunId.init -> void
+Penghou.Zhinu.TransitionPreview
+static Penghou.Zhinu.TransitionPreview.Calculate(System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowStepRun!>! currentSteps, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.StepDependency!>! currentDependencies, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.CandidateStep!>! candidateSteps) -> Penghou.Zhinu.WorkflowTransitionPreview!
+Penghou.Zhinu.WorkflowTransitionPreview
+Penghou.Zhinu.WorkflowTransitionPreview.AddedSteps.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowTransitionPreview.AddedSteps.init -> void
+Penghou.Zhinu.WorkflowTransitionPreview.CancelledSteps.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowTransitionPreview.CancelledSteps.init -> void
+Penghou.Zhinu.WorkflowTransitionPreview.InvalidatedSteps.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowTransitionPreview.InvalidatedSteps.init -> void
+Penghou.Zhinu.WorkflowTransitionPreview.Nodes.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.PlanNodePreview!>!
+Penghou.Zhinu.WorkflowTransitionPreview.Nodes.init -> void
+Penghou.Zhinu.WorkflowTransitionPreview.ReusableSteps.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowTransitionPreview.ReusableSteps.init -> void
 Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.get -> int
 Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.set -> void
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan

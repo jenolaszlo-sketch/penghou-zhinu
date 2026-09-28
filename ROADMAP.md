@@ -170,6 +170,12 @@ integration remain open):
 4. Accept a bounded Fuwen semantic comparison and calculate a transition
    preview covering unchanged/new/removed/changed nodes, running work, candidate
    reuse, revalidation, invalidation, and cancellation impact.
+   **Done 2026-09-28 (Zhinu side):** `TransitionPreview.Calculate` is a pure
+   deterministic calculator over current durable steps plus a candidate in the
+   same step terms, emitting per-node verdicts. It consumes the bounded
+   comparison Fuwen already provides (`PlanRevisionComparer`); translating
+   plan paths to step keys stays with the adapter, since Zhinu takes no Fuwen
+   dependency (`TransitionPreviewTests`).
  5. Extend immutable artifact production provenance with the effective inputs
     and producer semantics needed for deterministic reuse evaluation. Reuse
     creates a new consumption/attachment decision; it never rewrites original
@@ -196,8 +202,11 @@ integration remain open):
 7. Atomically activate the new generation with its reuse/invalidation map and
    leave failed pre-cutover candidates resumable on the current generation.
    **Activation core done 2026-09-27** (single-transaction supersede plus
-   establish with predecessor linkage checks); reuse/invalidation maps ride
-   with the transition preview (item 4).
+   establish with predecessor linkage checks); **reuse/invalidation maps done
+   2026-09-28** as the preview's computed sets (reusable requires unchanged,
+   completed, and no invalidated dependency; invalidation is transitive;
+   running/waiting invalidated steps are flagged for cancellation).
+   Attaching the map at activation remains open.
  8. Add a typed checkpoint disposition such as `Accept`, `Retry`, or `Replan`.
     `Replan` requests external planning; Zhinu does not invoke an AI planner.
     **Done 2026-09-27 (store level):** `CheckpointDisposition` with
