@@ -36,7 +36,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         var instance = new WorkflowInstance
         {
             InstanceId = Guid.NewGuid(),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = database.TimeProvider.GetUtcNow(),
             MetadataJson = metadataJson
         };
         await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
@@ -105,7 +105,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
                 $"Instance '{instanceId:D}' already has generations; a predecessor is required.");
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = database.TimeProvider.GetUtcNow();
         var generation = new WorkflowGeneration
         {
             GenerationId = Guid.NewGuid(),
@@ -330,7 +330,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
                 $"Candidate declares a different predecessor than requested; activation refused.");
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = database.TimeProvider.GetUtcNow();
         if (expectedPredecessorGenerationId is null)
         {
             var active = await ReadActiveAsync(
@@ -445,7 +445,7 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
             Disposition = disposition,
             Reason = reason,
             Actor = actor,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = database.TimeProvider.GetUtcNow()
         };
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             INSERT INTO workflow_generation_dispositions

@@ -938,7 +938,12 @@ public sealed partial class WorkflowContext
                         step.Id,
                         ownerId,
                         timeProvider.GetUtcNow() + options.LeaseDuration,
-                        token)))
+                        token),
+                    _ =>
+                    {
+                        executionCancellation.Cancel();
+                        return ValueTask.CompletedTask;
+                    }))
                 {
                     try
                     {

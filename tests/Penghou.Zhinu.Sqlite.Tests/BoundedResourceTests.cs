@@ -65,4 +65,65 @@ public sealed class BoundedResourceTests : WorkflowEngineTestBase
         await reconnect.DisposeAsync();
         events.Should().Contain(e => e.EventType == WorkflowEventTypes.WorkflowCompleted);
     }
+
+    [Fact]
+    public async Task Subscribe_IdlePolls_ThenReceivesLaterEvents()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "bounded-idle");
+        var runId = await engine.StartAsync("bounded-idle", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        var received = new List<WorkflowEvent>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var subscriber = engine.SubscribeAsync(runId, cancellationToken: cts.Token).GetAsyncEnumerator(cts.Token);
+        var collecting = Task.Run(async () =>
+        {
+            while (await subscriber.MoveNextAsync())
+            {
+                received.Add(subscriber.Current);
+                if (subscriber.Current.EventType == WorkflowEventTypes.WorkflowCompleted)
+                    return;
+            }
+        }, TestContext.Current.CancellationToken);
+        try
+        {
+            // Let the subscriber sit through quiet polls with no new events.
+            await Task.Delay(300, TestContext.Current.CancellationToken);
+            await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+            await collecting.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            await cts.CancelAsync();
+            await subscriber.DisposeAsync();
+        }
+        await collecting;
+        received.Should().Contain(e => e.EventType == WorkflowEventTypes.WorkflowCompleted);
+        engine.SubscriptionChannelCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Subscribe_MultipleSubscribers_ReceiveCompletion()
+    {
+        var workflow = new TwoStepWorkflow();
+        var engine = CreateEngine(workflow, "bounded-multi");
+        var runId = await engine.StartAsync("bounded-multi", "1", "x", cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+        await engine.WaitForCompletionAsync<string>(runId, cancellationToken: TestContext.Current.CancellationToken);
+
+        async Task<List<WorkflowEvent>> CollectAsync()
+        {
+            var events = new List<WorkflowEvent>();
+            var subscriber = engine.SubscribeAsync(runId).GetAsyncEnumerator(TestContext.Current.CancellationToken);
+            while (await subscriber.MoveNextAsync())
+                events.Add(subscriber.Current);
+            await subscriber.DisposeAsync();
+            return events;
+        }
+        var results = await Task.WhenAll(CollectAsync(), CollectAsync());
+
+        results.Should().HaveCount(2);
+        foreach (var events in results)
+            events.Should().Contain(e => e.EventType == WorkflowEventTypes.WorkflowCompleted);
+        engine.SubscriptionChannelCount.Should().Be(0);
+    }
 }

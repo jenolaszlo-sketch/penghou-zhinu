@@ -62,7 +62,7 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
             }
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = database.TimeProvider.GetUtcNow();
         var handle = new WorkflowExternalOperation
         {
             OperationId = Guid.NewGuid(),
@@ -167,7 +167,7 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
             """);
         command.Parameters.AddWithValue("$running", (int)ExternalOperationStatus.Running);
         command.Parameters.AddWithValue("$owner", ownerId);
-        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(database.TimeProvider.GetUtcNow()));
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(operationId));
         command.Parameters.AddWithValue("$requested", (int)ExternalOperationStatus.Requested);
         if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
@@ -229,7 +229,7 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
         command.Parameters.AddWithValue("$status", (int)terminal);
         command.Parameters.AddWithValue("$payload", SqliteStoreSupport.DbValue(payloadJson));
         command.Parameters.AddWithValue("$error", SqliteStoreSupport.DbValue(error));
-        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(database.TimeProvider.GetUtcNow()));
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(operationId));
         command.Parameters.AddWithValue("$running", (int)ExternalOperationStatus.Running);
         command.Parameters.AddWithValue("$owner", ownerId);

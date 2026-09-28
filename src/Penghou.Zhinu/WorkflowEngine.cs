@@ -1822,13 +1822,18 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                             {
                                 FullMode = BoundedChannelFullMode.DropWrite
                             }));
-                    var notify = channel.Reader.WaitToReadAsync(cancellationToken)
+                    // Cancel the losing wait so repeated quiet polls cannot
+                    // accumulate pending channel readers.
+                    using var iterationTimeout = CancellationTokenSource
+                        .CreateLinkedTokenSource(cancellationToken);
+                    var notify = channel.Reader.WaitToReadAsync(iterationTimeout.Token)
                         .AsTask();
                     var poll = Task.Delay(
                         options.PollInterval,
                         timeProvider,
-                        cancellationToken);
+                        iterationTimeout.Token);
                     await Task.WhenAny(notify, poll).ConfigureAwait(false);
+                    await iterationTimeout.CancelAsync().ConfigureAwait(false);
                     // Drain the notification byte so the next wait actually
                     // blocks instead of busy-spinning on a stale signal.
                     channel.Reader.TryRead(out _);

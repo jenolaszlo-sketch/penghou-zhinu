@@ -123,7 +123,12 @@ internal sealed class RunExecutionPipeline
                 workflowRunId,
                 ownerId,
                 timeProvider.GetUtcNow() + options.LeaseDuration,
-                token));
+                token),
+            _ =>
+            {
+                runCancellation.Cancel();
+                return ValueTask.CompletedTask;
+            });
         try
         {
             if (!registry.TryGet(

@@ -29,11 +29,14 @@ Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.Groups.get -> System.Collec
 Penghou.Zhinu.Testing.WorkflowStoreConformanceReport.Groups.init -> void
 Penghou.Zhinu.Testing.WorkflowStoreConformanceSuite
 Penghou.Zhinu.Testing.ZhinuTestHost
+Penghou.Zhinu.Testing.ZhinuTestHost.CrashAndReopen(Penghou.Zhinu.WorkflowRegistry! registry) -> Penghou.Zhinu.WorkflowEngine!
 Penghou.Zhinu.Testing.ZhinuTestHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Penghou.Zhinu.Testing.ZhinuTestHost.Engine.get -> Penghou.Zhinu.WorkflowEngine!
 Penghou.Zhinu.Testing.ZhinuTestHost.RunUntilIdleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.Testing.ZhinuTestHost.Store.get -> Penghou.Zhinu.Sqlite.SqliteWorkflowStore!
-Penghou.Zhinu.Testing.ZhinuTestHost.ZhinuTestHost(Penghou.Zhinu.WorkflowRegistry! registry, System.Action<Penghou.Zhinu.ZhinuOptions!>? configure = null) -> void
+Penghou.Zhinu.Testing.ZhinuTestHost.TimeProvider.get -> System.TimeProvider!
+Penghou.Zhinu.Testing.ZhinuTestHost.WaitForStateAsync(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<bool>>! condition, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Testing.ZhinuTestHost.ZhinuTestHost(Penghou.Zhinu.WorkflowRegistry! registry, System.Action<Penghou.Zhinu.ZhinuOptions!>? configure = null, System.TimeProvider? timeProvider = null) -> void
 static Penghou.Zhinu.Testing.WorkflowStoreConformance.VerifyArtifactRoundTripAsync(Penghou.Zhinu.IWorkflowStore! store, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Penghou.Zhinu.Testing.WorkflowStoreConformance.VerifyRunRoundTripAsync(Penghou.Zhinu.IWorkflowStore! store, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Penghou.Zhinu.Testing.WorkflowStoreConformanceSuite.VerifyAsync(Penghou.Zhinu.Testing.IWorkflowStoreFixture! fixture, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.Testing.WorkflowStoreConformanceReport!>!
