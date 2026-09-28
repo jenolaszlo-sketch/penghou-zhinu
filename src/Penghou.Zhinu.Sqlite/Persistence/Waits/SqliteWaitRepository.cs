@@ -330,6 +330,27 @@ internal sealed class SqliteWaitRepository : IWorkflowWaitRepository
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Flips parked child waits to ready inside the caller's transaction.</summary>
+    internal static async ValueTask MarkChildWaitsReadyAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid childRunId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_waits
+            SET status = $ready, updated_at = $now
+            WHERE child_run_id = $child AND kind = $kind AND status = $parked;
+            """);
+        command.Parameters.AddWithValue("$ready", (int)WaitStatus.Ready);
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(now));
+        command.Parameters.AddWithValue("$child", SqliteStoreSupport.Format(childRunId));
+        command.Parameters.AddWithValue("$kind", (int)WaitKind.Child);
+        command.Parameters.AddWithValue("$parked", (int)WaitStatus.Parked);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>Reads the latest wait for a step key inside the caller's transaction.</summary>
     internal static async ValueTask<WorkflowWait?> ReadStepWaitAsync(
         SqliteConnection connection,

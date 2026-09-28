@@ -87,6 +87,8 @@ public interface IWorkflowReader
         SignalQuery? query = null, CancellationToken cancellationToken = default);
     Task<WorkflowLoopProgress?> GetLoopProgressAsync(Guid workflowRunId,
         WorkflowLoopReference loop, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<WorkflowWait>> GetWaitsAsync(Guid workflowRunId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Capabilities for intervening in existing runs: restart, fork, rollback, and retention.</summary>
@@ -141,4 +143,11 @@ public interface IHostedWorkflowRuntime : IWorkflowRuntime
 {
     Task<int> AdmitAvailableAsync(CancellationToken cancellationToken = default);
     Task DrainAdmittedAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>A run observed with no immediately runnable work: terminal, or every open step covered by a parked wait.</summary>
+public sealed record BlockedRun
+{
+    public required WorkflowRun Run { get; init; }
+    public required IReadOnlyList<WorkflowWait> BlockingWaits { get; init; }
 }

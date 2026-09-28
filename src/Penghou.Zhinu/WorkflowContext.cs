@@ -677,6 +677,55 @@ public sealed partial class WorkflowContext
     }
 
     /// <summary>
+    /// Parks a failed step's retry backoff durably instead of waiting
+    /// in-worker. Returns null when the store has no wait support or no
+    /// backoff is scheduled, in which case the caller waits in-worker.
+    /// </summary>
+    private async ValueTask<WorkflowWait?> TryParkRetryWaitAsync(
+        WorkflowStepRun failedStep,
+        CancellationToken cancellationToken)
+    {
+        if (store is not IWorkflowWaitRepository waits)
+            return null;
+        if (failedStep.AvailableAt is null)
+            return null;
+        return await waits.ParkWaitAsync(
+            new ParkWaitRequest
+            {
+                WorkflowRunId = WorkflowRunId,
+                StepKey = failedStep.StepKey,
+                StepRevision = failedStep.Revision,
+                StepId = failedStep.Id,
+                Kind = WaitKind.Retry,
+                AvailableAt = failedStep.AvailableAt,
+                LeaseGeneration = leaseGeneration,
+                Now = timeProvider.GetUtcNow()
+            },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Consumes a parked retry wait when its backoff is due so completion is
+    /// never blocked by a stale park. Other wait kinds are owned by their own
+    /// delivery paths.
+    /// </summary>
+    private async ValueTask ConsumeRetryWaitAsync(
+        WorkflowStepRun step,
+        CancellationToken cancellationToken)
+    {
+        if (store is not IWorkflowWaitRepository waits)
+            return;
+        var wait = await waits.GetWaitAsync(WorkflowRunId, step.StepKey, cancellationToken)
+            .ConfigureAwait(false);
+        if (wait?.Kind != WaitKind.Retry ||
+            wait.Status is not (WaitStatus.Parked or WaitStatus.Ready))
+            return;
+        if (step.AvailableAt is not null && step.AvailableAt > timeProvider.GetUtcNow())
+            return;
+        await waits.CompleteWaitAsync(wait.WaitId, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Persists a caller-visible, replay-safe event with optional serialized data.
     /// Emitted events are committed atomically with state transitions and survive
     /// process restarts; subscribers can read them via <c>SubscribeAsync</c> or
@@ -1090,6 +1139,7 @@ public sealed partial class WorkflowContext
         try
         {
             var owned = true;
+            await ConsumeRetryWaitAsync(step, cancellationToken).ConfigureAwait(false);
             while (true)
             {
                 if (!owned)
@@ -1210,6 +1260,12 @@ public sealed partial class WorkflowContext
                     {
                         throw;
                     }
+                    catch (ParkedExecutionException)
+                    {
+                        // Parking is not a failure: release capacity without
+                        // recording anything against the step.
+                        throw;
+                    }
                     catch (Exception exception)
                     {
                         step = await RecordFailureAsync(
@@ -1226,7 +1282,14 @@ public sealed partial class WorkflowContext
                     throw new WorkflowStepFailedException(
                         step.StepKey, step.Error ?? UnknownFailure(step.StepKey));
                 }
-                await WaitUntilAsync(step.AvailableAt, cancellationToken).ConfigureAwait(false);
+                var parked = await TryParkRetryWaitAsync(step, cancellationToken)
+                    .ConfigureAwait(false);
+                if (parked is null)
+                {
+                    await WaitUntilAsync(step.AvailableAt, cancellationToken).ConfigureAwait(false);
+                    continue;
+                }
+                throw new ParkedExecutionException(parked.WaitId);
             }
         }
         catch (Exception exception)

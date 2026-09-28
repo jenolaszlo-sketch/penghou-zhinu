@@ -127,6 +127,7 @@ public sealed class StaleWorkerSignalFencingTests : WorkflowEngineTestBase
             cts.Token);
         await engine.SendSignalAsync(runId, "approve", "yes", cts.Token);
         await execution;
+        await engine.ExecuteAsync(runId, cts.Token);
         var completed = (await engine.GetStepsAsync(runId, ct))
             .Single(item => item.StepKey == "approval");
         completed.Status.Should().Be(StepStatus.Completed);

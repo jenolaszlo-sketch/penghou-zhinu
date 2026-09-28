@@ -14,6 +14,11 @@ Penghou.Zhinu.CheckpointDisposition
 Penghou.Zhinu.CheckpointDisposition.Accept = 0 -> Penghou.Zhinu.CheckpointDisposition
 Penghou.Zhinu.CheckpointDisposition.Replan = 2 -> Penghou.Zhinu.CheckpointDisposition
 Penghou.Zhinu.CheckpointDisposition.Retry = 1 -> Penghou.Zhinu.CheckpointDisposition
+Penghou.Zhinu.BlockedRun
+Penghou.Zhinu.BlockedRun.BlockingWaits.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowWait!>!
+Penghou.Zhinu.BlockedRun.BlockingWaits.init -> void
+Penghou.Zhinu.BlockedRun.Run.get -> Penghou.Zhinu.WorkflowRun!
+Penghou.Zhinu.BlockedRun.Run.init -> void
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue
@@ -207,6 +212,7 @@ Penghou.Zhinu.IWorkflowReader.GetRunProgressAsync(System.Guid workflowRunId, Pen
 Penghou.Zhinu.IWorkflowReader.GetRunsAsync(Penghou.Zhinu.RunQuery! query, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowRun!>!>!
 Penghou.Zhinu.IWorkflowReader.GetSignalsAsync(System.Guid workflowRunId, Penghou.Zhinu.SignalQuery? query = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowSignalRecord!>!>!
 Penghou.Zhinu.IWorkflowReader.GetStepsAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowStepRun!>!>!
+Penghou.Zhinu.IWorkflowReader.GetWaitsAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowWait!>!>!
 Penghou.Zhinu.IWorkflowReader.QueryArtifactsAsync(System.Guid workflowRunId, Penghou.Zhinu.ArtifactQuery! query, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowArtifactReference!>!>!
 Penghou.Zhinu.IWorkflowReader.WaitForCompletionAsync<TOutput>(System.Guid workflowRunId, System.DateTimeOffset? deadline = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.IWorkflowRegistration.DefinitionFingerprint.get -> string?

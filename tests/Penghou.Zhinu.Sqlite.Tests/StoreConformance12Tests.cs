@@ -92,6 +92,7 @@ public sealed class StoreConformance12Tests : WorkflowEngineTestBase
         await engine.SendSignalAsync(runId, "approve", "once", cts.Token);
         await engine.SendSignalAsync(runId, "approve", "once", cts.Token);
         await exec;
+        await engine.ExecuteAsync(runId, cts.Token);
         var events = await engine.GetEventsAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
         events.Count(e => e.EventType == WorkflowEventTypes.SignalDelivered).Should().Be(1);
     }

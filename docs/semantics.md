@@ -269,3 +269,34 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
 - Restart invalidation uses the recorded dependency graph (`Dependents` mode) and
   bumps the fencing generation so stale workers can never commit to the
   restarted run.
+
+## Parked waits
+
+- A signal wait or retry backoff parks instead of occupying a worker: the wait
+  is recorded durably (`workflow_waits`, one row per run and step key), the run
+  lease is released, and execution ends. Schedulers skip fully parked runs
+  until a wait becomes ready or due; signal arrival flips the wait to ready in
+  the same transaction that buffers the signal, so wakeups survive crashes and
+  lost notifications. `ExecuteAsync` and `WaitForCompletionAsync` re-drive
+  parked runs on demand.
+- Signal deadlines persist on first park and are never reset by resume. A
+  restart carries the original deadline to the new revision rather than
+  extending it. The deadline race resolves transactionally at delivery: a
+  signal buffered at or before the deadline wins even if delivery runs late; a
+  later or absent signal loses and the wait expires. Late signals stay buffered
+  as evidence.
+- Parking is fenced by run generation, and stale revisions cannot park over a
+  newer wait. A run that returns normally while its generation still owns
+  parked waits fails loudly instead of completing, so catching the park around
+  a wait primitive cannot fabricate success. Cancellation, lease loss, and
+  generation changes never duplicate a delivery: buffered signals are consumed
+  exactly once by guarded update, and timed-out or superseded waits are
+  cancelled, never delivered.
+- Durable delays stay in-worker: their absolute deadline is already durable
+  and a restart preserves it. Child completion waits stay in-worker while the
+  child runs inline (no extra capacity is occupied); a child leased elsewhere
+  is future work, with parent wakeups already firing on child terminal
+  transitions. Compensation replay never parks: it replays committed results.
+- Run deadlines bound admission and claiming; `WaitForCompletionAsync` and
+  `WaitUntilBlockedAsync` deadlines bound only the caller. Parking never
+  extends any deadline.

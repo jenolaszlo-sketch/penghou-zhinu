@@ -230,6 +230,10 @@ internal sealed class ChildRunCoordinator
                     throw new WorkflowStateException(
                         $"Child workflow '{childId:D}' was compensated and has no forward result to return.");
             }
+            // Child waits stay in-worker for now: the child usually executes
+            // inline in this task, so no extra capacity is occupied. Parking
+            // applies once a child runs elsewhere; the trigger is a child
+            // leased to another owner while this worker waits.
             if (executeChildRun is not null)
             {
                 await executeChildRun(childId, cancellationToken).ConfigureAwait(false);

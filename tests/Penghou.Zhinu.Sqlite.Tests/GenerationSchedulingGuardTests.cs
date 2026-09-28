@@ -260,6 +260,7 @@ public sealed class GenerationSchedulingGuardTests : WorkflowEngineTestBase
             await store.PrepareGenerationAsync(candidate.GenerationId, stop.Token);
             await store.PauseGenerationAsync(first.GenerationId, stop.Token);
             await store.ActivateGenerationAsync(candidate.GenerationId, first.GenerationId, stop.Token);
+            await engine.ExecuteAsync(id, stop.Token);
             await execution;
             workflow.Calls.Should().Be(1, "no subsequent invocation from the old execution");
             (await store.GetRunAsync(id, stop.Token))!.Status.Should().Be(WorkflowStatus.Failed);

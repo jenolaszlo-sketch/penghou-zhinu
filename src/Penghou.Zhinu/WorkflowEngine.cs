@@ -1797,6 +1797,56 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
     }
 
+    /// <summary>Lists a run's persisted wait records.</summary>
+    public async Task<IReadOnlyList<WorkflowWait>> GetWaitsAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        if (store is not IWorkflowWaitRepository waits)
+            return Array.Empty<WorkflowWait>();
+        return await waits.ListWaitsAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Returns when a run has no immediately runnable work: terminal, or every
+    /// open step covered by a parked wait that is neither ready nor due. The
+    /// returned waits are the precise blocked reason. This observes; pair it
+    /// with a driver (hosted dispatch or <c>ExecuteAsync</c>) to make progress.
+    /// </summary>
+    public async Task<BlockedRun> WaitUntilBlockedAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var run = await store.GetRunAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false) ??
+                throw new WorkflowNotFoundException(
+                    $"Workflow '{workflowRunId:D}' does not exist.");
+            if (RunExecutionPipeline.IsTerminal(run.Status))
+                return new BlockedRun { Run = run, BlockingWaits = Array.Empty<WorkflowWait>() };
+            var waits = await GetWaitsAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false);
+            var now = timeProvider.GetUtcNow();
+            var blocking = waits
+                .Where(wait => wait.Status == WaitStatus.Parked &&
+                    (wait.AvailableAt is null || wait.AvailableAt > now))
+                .ToList();
+            var steps = await store.GetStepsAsync(workflowRunId, cancellationToken)
+                .ConfigureAwait(false);
+            var open = steps.Where(step =>
+                step.Status is StepStatus.Pending or StepStatus.Running or StepStatus.Waiting);
+            if (open.Any() && open.All(step => blocking.Any(wait => wait.StepKey == step.StepKey)))
+                return new BlockedRun { Run = run, BlockingWaits = blocking };
+            await Task.Delay(options.PollInterval, timeProvider, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
     /// <summary>Streams committed events and survives missed in-process notifications.</summary>
     public async IAsyncEnumerable<WorkflowEvent> SubscribeAsync(
         Guid workflowRunId,

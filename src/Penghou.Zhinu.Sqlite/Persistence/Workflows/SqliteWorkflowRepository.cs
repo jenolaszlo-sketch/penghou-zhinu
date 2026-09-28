@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using Penghou.Zhinu.Sqlite.Persistence.Steps;
+using Penghou.Zhinu.Sqlite.Persistence.Waits;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Workflows;
 
@@ -359,6 +360,13 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
                 ? null
                 : JsonSerializer.Serialize(new { actor, reason }),
             cancellationToken).ConfigureAwait(false);
+        await SqliteWaitRepository.MarkChildWaitsReadyAsync(
+                connection,
+                transaction,
+                workflowRunId,
+                now,
+                cancellationToken)
+            .ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -431,6 +439,13 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
                 ? null
                 : JsonSerializer.Serialize(error, SqliteStoreSupport.SerializerOptions),
             cancellationToken).ConfigureAwait(false);
+        await SqliteWaitRepository.MarkChildWaitsReadyAsync(
+                connection,
+                transaction,
+                workflowRunId,
+                now,
+                cancellationToken)
+            .ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 }
