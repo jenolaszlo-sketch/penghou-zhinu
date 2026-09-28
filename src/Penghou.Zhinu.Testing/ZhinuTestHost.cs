@@ -14,6 +14,7 @@ public sealed class ZhinuTestHost : IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(registry);
         TimeProvider = timeProvider ?? TimeProvider.System;
+        Clock = TimeProvider as TestTimeProvider;
         directory = Path.Combine(Path.GetTempPath(), "penghou-zhinu", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         Store = new SqliteWorkflowStore(new ZhinuSqliteOptions
@@ -28,6 +29,9 @@ public sealed class ZhinuTestHost : IAsyncDisposable
 
     public TimeProvider TimeProvider { get; }
 
+    /// <summary>The controllable clock when one was supplied, otherwise null.</summary>
+    public TestTimeProvider? Clock { get; }
+
     public WorkflowEngine Engine { get; }
     public SqliteWorkflowStore Store { get; }
 
@@ -37,6 +41,55 @@ public sealed class ZhinuTestHost : IAsyncDisposable
         while (await Engine.RunAvailableAsync(cancellationToken).ConfigureAwait(false) > 0)
         {
         }
+    }
+
+    /// <summary>
+    /// Returns when the run has no immediately runnable work, or is terminal.
+    /// The returned waits are the precise parked reason; pair this with
+    /// <see cref="AdvanceToNextDurableTimerAsync"/> to progress deterministically.
+    /// </summary>
+    public Task<BlockedRun> RunUntilBlockedAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        Engine.WaitUntilBlockedAsync(workflowRunId, cancellationToken);
+
+    /// <summary>
+    /// Advances the supplied <see cref="TestTimeProvider"/> to the next parked
+    /// durable wait that is due in the future (retry backoff, signal deadline,
+    /// or child availability), firing any timers along the way. Returns the
+    /// amount advanced, or null when no future durable timer is parked.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// No <see cref="TestTimeProvider"/> was supplied to the host.
+    /// </exception>
+    public async Task<TimeSpan?> AdvanceToNextDurableTimerAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default)
+    {
+        if (Clock is null)
+        {
+            throw new InvalidOperationException(
+                "AdvanceToNextDurableTimerAsync requires a TestTimeProvider.");
+        }
+        var waits = await Store.ListWaitsAsync(workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+        var now = Clock.GetUtcNow();
+        DateTimeOffset? next = null;
+        foreach (var wait in waits)
+        {
+            if (wait.Status != WaitStatus.Parked)
+                continue;
+            var candidate = wait.AvailableAt ?? wait.DeadlineAt;
+            if (candidate is null || candidate <= now)
+                continue;
+            if (next is null || candidate < next)
+                next = candidate;
+        }
+        if (next is null)
+            return null;
+        var delta = next.Value - now;
+        Clock.Advance(delta);
+        return delta;
     }
 
     /// <summary>

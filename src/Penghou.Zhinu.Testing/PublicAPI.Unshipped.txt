@@ -1,3 +1,13 @@
 #nullable enable
+override Penghou.Zhinu.Testing.TestTimeProvider.CreateTimer(System.Threading.TimerCallback! callback, object? state, System.TimeSpan dueTime, System.TimeSpan period) -> System.Threading.ITimer!
+override Penghou.Zhinu.Testing.TestTimeProvider.GetTimestamp() -> long
+override Penghou.Zhinu.Testing.TestTimeProvider.GetUtcNow() -> System.DateTimeOffset
+override Penghou.Zhinu.Testing.TestTimeProvider.TimestampFrequency.get -> long
+Penghou.Zhinu.Testing.TestTimeProvider
+Penghou.Zhinu.Testing.TestTimeProvider.Advance(System.TimeSpan delta) -> void
+Penghou.Zhinu.Testing.TestTimeProvider.TestTimeProvider(System.DateTimeOffset utcNow) -> void
 Penghou.Zhinu.Testing.WorkflowConformanceCapability.IdempotentAdministration = 8 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
 Penghou.Zhinu.Testing.WorkflowConformanceCapability.Loops = 9 -> Penghou.Zhinu.Testing.WorkflowConformanceCapability
+Penghou.Zhinu.Testing.ZhinuTestHost.AdvanceToNextDurableTimerAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.TimeSpan?>!
+Penghou.Zhinu.Testing.ZhinuTestHost.Clock.get -> Penghou.Zhinu.Testing.TestTimeProvider?
+Penghou.Zhinu.Testing.ZhinuTestHost.RunUntilBlockedAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.BlockedRun!>!
