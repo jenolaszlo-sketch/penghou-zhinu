@@ -292,4 +292,89 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         if (Directory.Exists(root))
             Directory.Delete(root, recursive: true);
     }
+
+    [Fact]
+    public async Task RunAgentWorkflowAsync_FreshRestartsInNewSession()
+    {
+        var counters = new GraphCounters();
+        var checkpointStore = CreateCheckpointStore();
+        var graph = BuildGraph(counters, failFirstFinal: false);
+        var workflow = new FreshAgentWorkflow(graph, checkpointStore);
+        var engine = CreateEngine(workflow, "maf-fresh");
+
+        var result = await engine.RunAsync<string, string>(
+            "maf-fresh",
+            "1",
+            "input",
+            cancellationToken: TestContext.Current.CancellationToken);
+        result.Should().Be("b:a:p:input");
+        var firstSession = $"{workflow.RunId:D}:agent:rev1";
+        (await checkpointStore.RetrieveIndexAsync(firstSession))
+            .Should().NotBeEmpty();
+
+        await engine.RestartStepAsync(
+            workflow.RunId,
+            "agent",
+            TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(
+            workflow.RunId,
+            TestContext.Current.CancellationToken);
+        var rerun = await engine.WaitForCompletionAsync<string>(
+            workflow.RunId,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        rerun.Should().Be("b:a:p:input");
+        counters.Process.Should().Be(2);
+        // Earlier checkpoints are retained, not deleted or reused.
+        (await checkpointStore.RetrieveIndexAsync(firstSession))
+            .Should().NotBeEmpty();
+        (await checkpointStore.RetrieveIndexAsync($"{workflow.RunId:D}:agent:rev2"))
+            .Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAgentWorkflowAsync_MissingTerminalResult_Throws()
+    {
+        var checkpointStore = CreateCheckpointStore();
+        var graph = BuildGraphWithoutOutput();
+        var workflow = new AgentGraphWorkflow(graph, checkpointStore);
+        var engine = CreateEngine(workflow, "maf-no-output");
+
+        var action = () => engine.RunAsync<string, string>(
+            "maf-no-output",
+            "1",
+            "input",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        (await action.Should().ThrowAsync<WorkflowExecutionFailedException>())
+            .WithMessage("*compatible terminal result*");
+    }
+
+    private static Workflow BuildGraphWithoutOutput()
+    {
+        var executor = ((Func<string, string>)(value => $"p:{value}")).BindAsExecutor("process");
+        return new WorkflowBuilder(executor).Build();
+    }
+
+    private sealed class FreshAgentWorkflow(
+        Workflow workflow,
+        ICheckpointStore<JsonElement> checkpointStore) : IWorkflow<string, string>
+    {
+        public Guid RunId { get; private set; }
+
+        public async Task<string> RunAsync(
+            WorkflowContext context,
+            string input,
+            CancellationToken cancellationToken)
+        {
+            RunId = context.WorkflowRunId;
+            return await context.RunAgentWorkflowAsync<string, string>(
+                "agent",
+                workflow,
+                input,
+                checkpointStore,
+                new AgentStepOptions { RestartMode = AgentRestartMode.Fresh },
+                cancellationToken);
+        }
+    }
 }

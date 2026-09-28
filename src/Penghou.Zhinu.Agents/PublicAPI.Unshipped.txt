@@ -1,1 +1,8 @@
 #nullable enable
+Penghou.Zhinu.Agents.AgentRestartMode
+Penghou.Zhinu.Agents.AgentRestartMode.Fresh = 1 -> Penghou.Zhinu.Agents.AgentRestartMode
+Penghou.Zhinu.Agents.AgentRestartMode.Resume = 0 -> Penghou.Zhinu.Agents.AgentRestartMode
+Penghou.Zhinu.Agents.AgentStepOptions
+Penghou.Zhinu.Agents.AgentStepOptions.RestartMode.get -> Penghou.Zhinu.Agents.AgentRestartMode
+Penghou.Zhinu.Agents.AgentStepOptions.RestartMode.init -> void
+static Penghou.Zhinu.Agents.WorkflowContextAgentExtensions.RunAgentWorkflowAsync<TInput, TOutput>(this Penghou.Zhinu.WorkflowContext! context, string! stepKey, Microsoft.Agents.AI.Workflows.Workflow! workflow, TInput input, Microsoft.Agents.AI.Workflows.Checkpointing.ICheckpointStore<System.Text.Json.JsonElement>! checkpointStore, Penghou.Zhinu.Agents.AgentStepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!

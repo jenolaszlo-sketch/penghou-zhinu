@@ -40,18 +40,48 @@ public static class WorkflowContextAgentExtensions
         CancellationToken cancellationToken = default)
         where TInput : notnull
     {
+        return RunAgentWorkflowAsync<TInput, TOutput>(
+            context, stepKey, workflow, input, checkpointStore, null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes <paramref name="workflow"/> inside a durable Zhinu step with an
+    /// explicit restart policy. <see cref="AgentRestartMode.Resume"/> (the
+    /// default) resumes the latest checkpoint of the step session, including
+    /// across step restarts. <see cref="AgentRestartMode.Fresh"/> starts a
+    /// revision-scoped session instead, so a restarted step never reuses
+    /// abandoned-session outputs; earlier checkpoints are retained, not deleted.
+    /// A stream that ends without a compatible terminal result or a failure
+    /// throws <see cref="AgentWorkflowExecutionException"/> instead of
+    /// returning a default value.
+    /// </summary>
+    public static Task<TOutput> RunAgentWorkflowAsync<TInput, TOutput>(
+        this WorkflowContext context,
+        string stepKey,
+        Workflow workflow,
+        TInput input,
+        ICheckpointStore<JsonElement> checkpointStore,
+        AgentStepOptions? options = null,
+        CancellationToken cancellationToken = default)
+        where TInput : notnull
+    {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(workflow);
         ArgumentNullException.ThrowIfNull(checkpointStore);
         ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
+        var mode = options?.RestartMode ?? AgentRestartMode.Resume;
+        if (!Enum.IsDefined(mode))
+            throw new ArgumentOutOfRangeException(nameof(options));
         return context.StepAsync(
             stepKey,
             input,
-            (_, ct) => ExecuteAsync<TInput, TOutput>(
+            (value, step, ct) => ExecuteAsync<TInput, TOutput>(
                 context.WorkflowRunId,
                 stepKey,
+                step.Revision,
+                mode,
                 workflow,
-                input,
+                value,
                 checkpointStore,
                 ct),
             null,
@@ -61,13 +91,17 @@ public static class WorkflowContextAgentExtensions
     private static async Task<TOutput> ExecuteAsync<TInput, TOutput>(
         Guid workflowRunId,
         string stepKey,
+        int stepRevision,
+        AgentRestartMode mode,
         Workflow workflow,
         TInput input,
         ICheckpointStore<JsonElement> checkpointStore,
         CancellationToken cancellationToken)
         where TInput : notnull
     {
-        var sessionId = $"{workflowRunId:D}:{stepKey}";
+        var sessionId = mode == AgentRestartMode.Fresh
+            ? $"{workflowRunId:D}:{stepKey}:rev{stepRevision}"
+            : $"{workflowRunId:D}:{stepKey}";
         var checkpointManager = CheckpointManager.CreateJson(checkpointStore);
         var checkpoints = (await checkpointStore
             .RetrieveIndexAsync(sessionId).ConfigureAwait(false)).ToArray();
@@ -85,6 +119,7 @@ public static class WorkflowContextAgentExtensions
                 cancellationToken).ConfigureAwait(false);
 
         TOutput? output = default;
+        var hasOutput = false;
         Exception? failure = null;
         await foreach (var evt in run.WatchStreamAsync()
             .WithCancellation(cancellationToken))
@@ -92,7 +127,12 @@ public static class WorkflowContextAgentExtensions
             switch (evt)
             {
                 case WorkflowOutputEvent outputEvent:
-                    output = ConvertOutput<TOutput>(outputEvent);
+                    var converted = ConvertOutput<TOutput>(outputEvent);
+                    if (converted is not null)
+                    {
+                        output = converted;
+                        hasOutput = true;
+                    }
                     break;
                 case WorkflowErrorEvent errorEvent:
                     failure = errorEvent.Exception;
@@ -110,6 +150,11 @@ public static class WorkflowContextAgentExtensions
             throw new AgentWorkflowExecutionException(
                 $"Agent workflow step '{stepKey}' failed: {failure.Message}",
                 failure);
+        }
+        if (!hasOutput)
+        {
+            throw new AgentWorkflowExecutionException(
+                $"Agent workflow step '{stepKey}' completed without a compatible terminal result.");
         }
         return output!;
     }
