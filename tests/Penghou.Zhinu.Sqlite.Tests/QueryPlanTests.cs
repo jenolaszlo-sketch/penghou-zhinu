@@ -52,7 +52,17 @@ public sealed class QueryPlanTests : WorkflowEngineTestBase
             "ix_workflow_signals_run_name",
             "ix_workflow_step_dependencies_key",
             "ix_workflow_step_dependencies_depends_on",
-            "ix_workflow_step_compensations_run"
+            "ix_workflow_step_compensations_run",
+            "ix_workflow_generations_run",
+            "ux_workflow_generations_active",
+            "ux_workflow_generations_ordinal",
+            "ix_workflow_generation_dispositions_generation",
+            "ix_workflow_artifact_invalidations_artifact",
+            "ix_workflow_waits_status",
+            "ix_workflow_waits_signal",
+            "ix_workflow_waits_child",
+            "ux_workflow_waits_key",
+            "ix_workflow_event_consumers_run"
         ];
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%';";
@@ -81,6 +91,38 @@ public sealed class QueryPlanTests : WorkflowEngineTestBase
         var sql = $"SELECT id FROM workflow_signals WHERE workflow_run_id = '{runId}' AND signal_name = 'sig' AND delivered_step_id IS NULL ORDER BY created_at LIMIT 1;";
         var plans = await ExplainAsync(connection, sql);
         plans.Should().NotContain(plan => plan.Contains("TEMP B-TREE"));
+    }
+
+    [Fact]
+    public async Task RunnableScan_AvoidsUnindexedWaitsAccess()
+    {
+        var (connection, _) = await CreatePopulatedDatabaseAsync();
+        var sql = """
+            SELECT id FROM workflow_runs
+            WHERE status IN (0, 1, 2)
+              AND (lease_expires_at IS NULL OR lease_expires_at <= '2026-01-01T00:00:00+00:00')
+              AND (
+                NOT EXISTS (
+                    SELECT 1 FROM workflow_waits
+                    WHERE workflow_waits.workflow_run_id = workflow_runs.id
+                      AND status = 0)
+                OR EXISTS (
+                    SELECT 1 FROM workflow_waits
+                    WHERE workflow_waits.workflow_run_id = workflow_runs.id
+                      AND status = 1));
+            """;
+        var plans = await ExplainAsync(connection, sql);
+        plans.Should().NotContain(plan => plan.Contains("SCAN workflow_waits"));
+        plans.Should().NotContain(plan => plan.Contains("TEMP B-TREE"));
+    }
+
+    [Fact]
+    public async Task WaitLookup_SeeksByKey()
+    {
+        var (connection, runId) = await CreatePopulatedDatabaseAsync();
+        var sql = $"SELECT wait_id FROM workflow_waits WHERE workflow_run_id = '{runId}' AND step_key = 'wait';";
+        var plans = await ExplainAsync(connection, sql);
+        plans.Should().Contain(plan => plan.Contains("SEARCH workflow_waits"));
     }
 
     [Fact]

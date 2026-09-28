@@ -141,8 +141,9 @@ integration remain open):
     instance plus an active first generation (plan revision = definition
     fingerprint; forked runs open a fresh instance to preserve single
     ownership), with idempotent-start backfill for unbound runs and
-    `GetGenerationByRunAsync` lookup (`RunGenerationBindingTests`). Claim
-    gating on generation status still open (needs a non-failing disposition).
+   `GetGenerationByRunAsync` lookup (`RunGenerationBindingTests`). **Claim
+   gating done 2026-09-27:** `Deferred`/`Superseded` dispositions with
+   engine handling in all claim paths (`GenerationSchedulingGuardTests`).
  2. Add pause as "schedule no new work", quiescence, resume-before-cutover, and
     durable supersession. A superseded generation never becomes active again.
     **Done 2026-09-27 (store level):** `WorkflowGenerationStatus.Quiescing`
@@ -251,6 +252,26 @@ acceptance criteria, preserving an unaffected parallel branch, rejecting a
 candidate and resuming before cutover, persisting a late old-generation result
 without progression, completing an external job during pause, and returning to
 an earlier plan lineage through a new generation without erasing newer history.
+
+## Reliability review implementation (2026-09-28)
+
+A targeted review of execution, generation ownership, declarative workflows,
+child execution, dependencies, hosting, and persistence (baseline `71623d4`,
+seven reproduced defects) was implemented in packages ZH-00 through ZH-11:
+
+- Fresh-claim retries, hosted dispatch without batch barriers, recoverable
+  initial admission, pinned child contracts with generation ownership, sink
+  outputs with durable dependency edges, and isolated dependency scopes.
+- Shared acquisition loop, Starter/Reader/Operator/HostedRuntime capability
+  interfaces, aligned clocks with a time-injected test host, cooperating
+  lease loss, bounded subscriptions, keyed bounded fan-out, terminal-run
+  retention, durable parked waits (signal/retry) with persisted deadlines,
+  operator CLI, event export cursors, classified retry policies, and explicit
+  agent restart semantics.
+- The transition preview and reuse/invalidation maps (item 4 and the second
+  half of item 7) remain Fuwen-blocked. Deliberately deferred: durable-delay
+  and child-completion wait parking, `SqliteStepRepository` file reorganization,
+  and fake-timer advancement.
 
 ## Terminology
 
