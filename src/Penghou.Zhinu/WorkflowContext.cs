@@ -322,50 +322,42 @@ public sealed partial class WorkflowContext
             }
             while (true)
             {
-                var claim = await ClaimAsync(
-                    stepKey,
-                    inputJson,
-                    inputType,
-                    SerializationIdentity.Hash(inputJson),
-                    outputType,
-                    dependencies,
-                    compensationMetadata,
-                    implementationKey,
+                var claim = await ClaimAcquisition.AcquireAsync(
+                    cancellationToken => ClaimAsync(
+                        stepKey,
+                        inputJson,
+                        inputType,
+                        SerializationIdentity.Hash(inputJson),
+                        outputType,
+                        dependencies,
+                        compensationMetadata,
+                        implementationKey,
+                        cancellationToken),
+                    (waiting, waitCancellation) => WaitUntilAsync(
+                        waiting.Step.AvailableAt,
+                        waitCancellation),
+                    terminal => terminal.Disposition switch
+                    {
+                        StepClaimDisposition.Failed => new WorkflowStepFailedException(
+                            stepKey,
+                            terminal.Step.Error ?? UnknownFailure(stepKey)),
+                        StepClaimDisposition.Cancelled => new OperationCanceledException(
+                            $"Workflow step '{stepKey}' was cancelled.",
+                            linkedCancellation.Token),
+                        StepClaimDisposition.Superseded => new WorkflowStateException(
+                            $"Cannot schedule step '{stepKey}': its execution generation " +
+                            "no longer owns forward progression."),
+                        _ => new WorkflowStateException(
+                            $"Unknown claim result for step '{stepKey}'.")
+                    },
+                    timeProvider,
+                    options.PollInterval,
                     linkedCancellation.Token).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
                     case StepClaimDisposition.Reused:
                         ZhinuDiagnostics.StepsReusedCounter.Add(1);
                         return Deserialize<TOutput>(claim.Step.OutputJson, outputType);
-                    case StepClaimDisposition.Waiting:
-                        await WaitUntilAsync(
-                            claim.Step.AvailableAt,
-                            linkedCancellation.Token).ConfigureAwait(false);
-                        continue;
-                    case StepClaimDisposition.Busy:
-                        await Task.Delay(
-                            options.PollInterval,
-                            timeProvider,
-                            linkedCancellation.Token).ConfigureAwait(false);
-                        continue;
-                    case StepClaimDisposition.Deferred:
-                        await Task.Delay(
-                            options.PollInterval,
-                            timeProvider,
-                            linkedCancellation.Token).ConfigureAwait(false);
-                        continue;
-                    case StepClaimDisposition.Superseded:
-                        throw new WorkflowStateException(
-                            $"Cannot schedule step '{stepKey}': its execution generation " +
-                            "no longer owns forward progression.");
-                    case StepClaimDisposition.Failed:
-                        throw new WorkflowStepFailedException(
-                            stepKey,
-                            claim.Step.Error ?? UnknownFailure(stepKey));
-                    case StepClaimDisposition.Cancelled:
-                        throw new OperationCanceledException(
-                            $"Workflow step '{stepKey}' was cancelled.",
-                            linkedCancellation.Token);
                     case StepClaimDisposition.Acquired:
                         ZhinuDiagnostics.StepsClaimedCounter.Add(1);
                         return await ExecuteClaimedAsync(
@@ -910,36 +902,24 @@ public sealed partial class WorkflowContext
             {
                 if (!owned)
                 {
-                    // Re-acquire after backoff: only a fresh Acquired step may
-                    // enter the delegate. Waiting dispositions poll without
-                    // holding attempt renewal; terminal ones keep retry behavior.
-                    while (true)
-                    {
-                        var reclaim = await ClaimAsync(
+                    // Re-acquire after backoff through the shared acquisition
+                    // loop: only a fresh Acquired step may enter the delegate.
+                    var reacquired = await ClaimAcquisition.AcquireAsync(
+                        waitCancellation => ClaimAsync(
                             step.StepKey, step.InputJson, step.InputType, step.InputHash,
                             outputType, dependencies, compensation,
-                            step.ImplementationKey, cancellationToken)
-                            .ConfigureAwait(false);
-                        if (reclaim.Disposition == StepClaimDisposition.Acquired)
-                        {
-                            step = reclaim.Step;
-                            break;
-                        }
-                        if (reclaim.Disposition == StepClaimDisposition.Reused)
-                            return Deserialize<TOutput>(reclaim.Step.OutputJson, outputType);
-                        if (reclaim.Disposition is StepClaimDisposition.Deferred
-                            or StepClaimDisposition.Waiting
-                            or StepClaimDisposition.Busy)
-                        {
-                            await Task.Delay(
-                                options.PollInterval,
-                                timeProvider,
-                                cancellationToken).ConfigureAwait(false);
-                            continue;
-                        }
-                        throw new WorkflowStateException(
-                            $"Retry for step '{step.StepKey}' could not be acquired.");
-                    }
+                            step.ImplementationKey, waitCancellation),
+                        (waiting, waitCancellation) => WaitUntilAsync(
+                            waiting.Step.AvailableAt,
+                            waitCancellation),
+                        _ => new WorkflowStateException(
+                            $"Retry for step '{step.StepKey}' could not be acquired."),
+                        timeProvider,
+                        options.PollInterval,
+                        cancellationToken).ConfigureAwait(false);
+                    if (reacquired.Disposition == StepClaimDisposition.Reused)
+                        return Deserialize<TOutput>(reacquired.Step.OutputJson, outputType);
+                    step = reacquired.Step;
                 }
                 owned = false;
                 activity?.SetTag(ZhinuDiagnostics.Attributes.StepAttempt, step.Attempt);

@@ -2,6 +2,17 @@ using System.Text.Json;
 
 namespace Penghou.Zhinu.Declarative;
 
+/// <summary>
+/// Runtime JSON conversions for declarative activities. These deliberately use
+/// the default options: converted values feed durable input hashes, so an
+/// option change would silently reinterpret persisted step identities.
+/// </summary>
+internal static class DeclarativeJson
+{
+    public static System.Text.Json.JsonSerializerOptions Options =>
+        System.Text.Json.JsonSerializerOptions.Default;
+}
+
 /// <summary>Executes a CompiledWorkflowDefinition through the existing durable runtime.</summary>
 internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>, IWorkflowFingerprint
 {
@@ -56,14 +67,16 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>,
                     else if (inputType == typeof(string) && inp.ValueKind == JsonValueKind.String)
                         typedInput = inp.GetString();
                     else
-                        typedInput = JsonSerializer.Deserialize(inp.GetRawText(), inputType);
+                        typedInput = JsonSerializer.Deserialize(
+                            inp.GetRawText(), inputType, DeclarativeJson.Options);
 
                     var result = await executor.ExecuteAsync(typedInput, ct);
                     // Normalize result to JsonElement
                     if (result is JsonElement je) return je;
                     return JsonSerializer.SerializeToElement(
                         result,
-                        result?.GetType() ?? typeof(object));
+                        result?.GetType() ?? typeof(object),
+                        DeclarativeJson.Options);
                 },
                 new StepOptions { DependsOn = step.DependsOn },
                 cancellationToken: cancellationToken);

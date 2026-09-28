@@ -16,7 +16,8 @@ namespace Penghou.Zhinu;
 /// embedded and does not require a server, scheduler, or message broker.
 /// </summary>
 public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
-    IIdempotentWorkflowClient, IWorkflowAdministration, IAsyncDisposable
+    IIdempotentWorkflowClient, IWorkflowAdministration, IWorkflowStarter,
+    IWorkflowReader, IWorkflowOperator, IHostedWorkflowRuntime, IAsyncDisposable
 {
     private readonly IWorkflowStore store;
     private readonly IWorkflowRegistry registry;
@@ -255,98 +256,31 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     /// progression per instance, so sharing the source instance would violate
     /// single ownership.
     /// </summary>
-    private async Task BindFirstGenerationAsync(
+    private Task BindFirstGenerationAsync(
         Guid workflowRunId,
         string? planRevision,
         string workflowName,
         string workflowVersion,
-        CancellationToken cancellationToken)
-    {
-        var instance = await store.CreateInstanceAsync(
-            JsonSerializer.Serialize(
-                new { workflowName, workflowVersion }, serializerOptions),
-            cancellationToken).ConfigureAwait(false);
-        var created = await store.CreateGenerationAsync(
-            instance.InstanceId, workflowRunId, planRevision, null, null,
-            cancellationToken).ConfigureAwait(false);
-        var prepared = await store.PrepareGenerationAsync(
-            created.GenerationId, cancellationToken).ConfigureAwait(false);
-        await store.ActivateGenerationAsync(
-            prepared.GenerationId, null, cancellationToken).ConfigureAwait(false);
-    }
+        CancellationToken cancellationToken) =>
+        InitialGenerationBinding.BindAsync(
+            store, workflowRunId, planRevision, workflowName, workflowVersion,
+            cancellationToken).AsTask();
 
     /// <summary>
     /// Heals runs created without a generation binding (legacy runs, or a
     /// crash between run creation and binding on an idempotent retry), and
-    /// completes an interrupted initial admission. A partial generation is
-    /// only recovered when it is unmistakably initial admission: the sole
-    /// generation of its instance, ordinal one, no predecessor, and a plan
-    /// revision matching this definition. Anything else (review candidates,
-    /// foreign lineage) fails explicitly instead of being promoted.
+    /// completes an interrupted initial admission. See
+    /// <see cref="InitialGenerationBinding"/> for the recovery rule.
     /// </summary>
-    private async Task EnsureGenerationBindingAsync(
+    private Task EnsureGenerationBindingAsync(
         Guid workflowRunId,
         string? planRevision,
         string workflowName,
         string workflowVersion,
-        CancellationToken cancellationToken)
-    {
-        var bound = await store.GetGenerationByRunAsync(workflowRunId, cancellationToken)
-            .ConfigureAwait(false);
-        if (bound is null)
-        {
-            await BindFirstGenerationAsync(
-                workflowRunId, planRevision, workflowName, workflowVersion,
-                cancellationToken).ConfigureAwait(false);
-            return;
-        }
-        if (bound.Status is WorkflowGenerationStatus.Active or WorkflowGenerationStatus.Quiescing)
-            return;
-        if (!await IsInterruptedInitialAdmissionAsync(bound, planRevision, cancellationToken)
-            .ConfigureAwait(false))
-            throw new WorkflowStateException(
-                $"Workflow run '{workflowRunId:D}' has a prepared generation that is not an " +
-                "interrupted initial admission; StartAsync does not promote review candidates. " +
-                "Resolve it explicitly before retrying.");
-        var admitted = bound.Status == WorkflowGenerationStatus.Created
-            ? await store.PrepareGenerationAsync(bound.GenerationId, cancellationToken)
-                .ConfigureAwait(false)
-            : bound;
-        try
-        {
-            await store.ActivateGenerationAsync(admitted.GenerationId, null, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (WorkflowStateException)
-        {
-            // Lost the activation race: converge when a concurrent identical
-            // retry finished it, otherwise surface the conflict.
-            var current = await store.GetGenerationByRunAsync(workflowRunId, cancellationToken)
-                .ConfigureAwait(false);
-            if (current?.GenerationId != admitted.GenerationId ||
-                current.Status is not (WorkflowGenerationStatus.Active or WorkflowGenerationStatus.Quiescing))
-                throw;
-        }
-    }
-
-    /// <summary>
-    /// An interrupted initial admission is the sole generation of its
-    /// instance, ordinal one, predecessorless, and bound to this definition's
-    /// plan revision. The generation row itself is the admission record.
-    /// </summary>
-    private async Task<bool> IsInterruptedInitialAdmissionAsync(
-        WorkflowGeneration bound,
-        string? planRevision,
-        CancellationToken cancellationToken)
-    {
-        if (bound.PredecessorGenerationId is not null || bound.Ordinal != 1)
-            return false;
-        if (!string.Equals(bound.PlanRevision, planRevision, StringComparison.Ordinal))
-            return false;
-        var siblings = await store.ListGenerationsAsync(bound.InstanceId, cancellationToken)
-            .ConfigureAwait(false);
-        return siblings.Count == 1;
-    }
+        CancellationToken cancellationToken) =>
+        InitialGenerationBinding.EnsureAsync(
+            store, workflowRunId, planRevision, workflowName, workflowVersion,
+            cancellationToken).AsTask();
 
     /// <summary>Starts a run and returns a typed durable handle.</summary>
     public async Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(

@@ -16,6 +16,7 @@ public sealed class ZhinuHostedService(
     ILogger<ZhinuHostedService> logger)
     : BackgroundService
 {
+    private readonly IHostedWorkflowRuntime runtime = engine;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Zhinu embedded workflow execution started.");
@@ -23,7 +24,7 @@ public sealed class ZhinuHostedService(
         {
             try
             {
-                var admitted = await engine.AdmitAvailableAsync(stoppingToken)
+                var admitted = await runtime.AdmitAvailableAsync(stoppingToken)
                     .ConfigureAwait(false);
                 if (admitted == 0)
                 {
@@ -57,7 +58,7 @@ public sealed class ZhinuHostedService(
         using var bound = new CancellationTokenSource(options.ShutdownTimeout);
         try
         {
-            await engine.DrainAdmittedAsync(bound.Token).ConfigureAwait(false);
+            await runtime.DrainAdmittedAsync(bound.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {

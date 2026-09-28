@@ -3,11 +3,21 @@ namespace Penghou.Zhinu;
 /// <summary>A typed reference to a durable workflow run.</summary>
 public sealed class WorkflowHandle<TOutput>
 {
+    private readonly IWorkflowClient client;
+    private readonly IIdempotentWorkflowClient idempotentClient;
+    private readonly IWorkflowReader reader;
+    private readonly IWorkflowAdministration administration;
+    private readonly IWorkflowOperator operations;
     private readonly WorkflowEngine engine;
 
     internal WorkflowHandle(WorkflowEngine engine, Guid workflowRunId)
     {
         this.engine = engine;
+        client = engine;
+        idempotentClient = engine;
+        reader = engine;
+        administration = engine;
+        operations = engine;
         WorkflowRunId = workflowRunId;
     }
 
@@ -15,36 +25,36 @@ public sealed class WorkflowHandle<TOutput>
 
     public Task<TOutput> WaitAsync(DateTimeOffset? deadline = null,
         CancellationToken cancellationToken = default) =>
-        engine.WaitForCompletionAsync<TOutput>(WorkflowRunId, deadline, cancellationToken);
+        client.WaitForCompletionAsync<TOutput>(WorkflowRunId, deadline, cancellationToken);
 
     public Task<WorkflowResult<TOutput>> GetResultAsync(
         CancellationToken cancellationToken = default) =>
         engine.GetResultAsync<TOutput>(WorkflowRunId, cancellationToken);
 
     public Task CancelAsync(CancellationToken cancellationToken = default) =>
-        engine.CancelAsync(WorkflowRunId, cancellationToken);
+        administration.CancelAsync(WorkflowRunId, null, null, cancellationToken);
 
     public Task CancelAsync(string? actor, string? reason,
         CancellationToken cancellationToken = default) =>
-        engine.CancelAsync(WorkflowRunId, actor, reason, cancellationToken);
+        administration.CancelAsync(WorkflowRunId, actor, reason, cancellationToken);
 
     public Task<WorkflowRun?> GetRunAsync(CancellationToken cancellationToken = default) =>
-        engine.GetRunAsync(WorkflowRunId, cancellationToken);
+        reader.GetRunAsync(WorkflowRunId, cancellationToken);
 
     public Task<IReadOnlyList<WorkflowStepRun>> GetStepsAsync(
         CancellationToken cancellationToken = default) =>
-        engine.GetStepsAsync(WorkflowRunId, cancellationToken);
+        reader.GetStepsAsync(WorkflowRunId, cancellationToken);
 
     public Task<WorkflowLoopProgress?> GetLoopProgressAsync(
         WorkflowLoopReference loop,
         CancellationToken cancellationToken = default) =>
-        engine.GetLoopProgressAsync(WorkflowRunId, loop, cancellationToken);
+        reader.GetLoopProgressAsync(WorkflowRunId, loop, cancellationToken);
 
     public Task<RestartPlan> PlanLoopRestartAsync(
         WorkflowLoopStepReference target,
         StepRestartMode mode = StepRestartMode.Dependents,
         CancellationToken cancellationToken = default) =>
-        engine.PlanLoopRestartAsync(
+        operations.PlanLoopRestartAsync(
             WorkflowRunId,
             target,
             mode,
@@ -54,7 +64,7 @@ public sealed class WorkflowHandle<TOutput>
         WorkflowLoopStepReference target,
         RestartStepOptions? options = null,
         CancellationToken cancellationToken = default) =>
-        engine.RestartLoopStepAsync(
+        operations.RestartLoopStepAsync(
             WorkflowRunId,
             target,
             options,
@@ -64,7 +74,7 @@ public sealed class WorkflowHandle<TOutput>
         WorkflowLoopStepReference target,
         RestartStepOptions options,
         CancellationToken cancellationToken = default) =>
-        engine.RestartLoopStepWithReceiptAsync(
+        operations.RestartLoopStepWithReceiptAsync(
             WorkflowRunId,
             target,
             options,
@@ -73,31 +83,31 @@ public sealed class WorkflowHandle<TOutput>
     public Task<WorkflowRunProgress?> GetRunProgressAsync(
         RunProgressOptions? options = null,
         CancellationToken cancellationToken = default) =>
-        engine.GetRunProgressAsync(WorkflowRunId, options, cancellationToken);
+        reader.GetRunProgressAsync(WorkflowRunId, options, cancellationToken);
 
     public Task<RunDiagnosis?> DiagnoseAsync(CancellationToken cancellationToken = default) =>
-        engine.DiagnoseAsync(WorkflowRunId, cancellationToken);
+        reader.DiagnoseAsync(WorkflowRunId, cancellationToken);
 
     public Task<IReadOnlyList<WorkflowEvent>> GetEventsAsync(
         long afterSequence = 0, int limit = 100,
         CancellationToken cancellationToken = default) =>
-        engine.GetEventsAsync(WorkflowRunId, afterSequence, limit, cancellationToken);
+        reader.GetEventsAsync(WorkflowRunId, afterSequence, limit, cancellationToken);
 
     public Task<IReadOnlyList<WorkflowArtifactReference>> GetArtifactsAsync(
         CancellationToken cancellationToken = default) =>
-        engine.GetArtifactsAsync(WorkflowRunId, cancellationToken);
+        reader.GetArtifactsAsync(WorkflowRunId, cancellationToken);
 
     public Task<IReadOnlyList<WorkflowArtifactReference>> QueryArtifactsAsync(
         ArtifactQuery query, CancellationToken cancellationToken = default) =>
-        engine.QueryArtifactsAsync(WorkflowRunId, query, cancellationToken);
+        reader.QueryArtifactsAsync(WorkflowRunId, query, cancellationToken);
 
     public Task<WorkflowArtifactReference?> GetLatestArtifactAsync(
         string name, CancellationToken cancellationToken = default) =>
-        engine.GetLatestArtifactAsync(WorkflowRunId, name, cancellationToken);
+        reader.GetLatestArtifactAsync(WorkflowRunId, name, cancellationToken);
 
     public Task SendSignalAsync(string signalName, object? data = null,
         CancellationToken cancellationToken = default) =>
-        engine.SendSignalAsync(WorkflowRunId, signalName, data, cancellationToken);
+        client.SendSignalAsync(WorkflowRunId, signalName, data, cancellationToken);
 
     public Task SendSignalAsync<TPayload>(SignalDefinition<TPayload> signal, TPayload? data = default,
         CancellationToken cancellationToken = default) =>
@@ -106,7 +116,7 @@ public sealed class WorkflowHandle<TOutput>
     public Task<SignalSendReceipt> SendSignalWithReceiptAsync(
         string signalName, SignalSendOptions options, object? data = null,
         CancellationToken cancellationToken = default) =>
-        engine.SendSignalWithReceiptAsync(
+        idempotentClient.SendSignalWithReceiptAsync(
             WorkflowRunId, signalName, options, data, cancellationToken);
 
     public Task<SignalSendReceipt> SendSignalWithReceiptAsync<TPayload>(
@@ -117,15 +127,15 @@ public sealed class WorkflowHandle<TOutput>
 
     public Task<IReadOnlyList<WorkflowSignalRecord>> GetSignalsAsync(
         SignalQuery? query = null, CancellationToken cancellationToken = default) =>
-        engine.GetSignalsAsync(WorkflowRunId, query, cancellationToken);
+        reader.GetSignalsAsync(WorkflowRunId, query, cancellationToken);
 
     public Task<int> PurgeSignalsAsync(
         SignalPurgeOptions? options = null, CancellationToken cancellationToken = default) =>
-        engine.PurgeSignalsAsync(WorkflowRunId, options, cancellationToken);
+        operations.PurgeSignalsAsync(WorkflowRunId, options, cancellationToken);
 
     public Task<WorkflowRun?> UpdateRunMetadataAsync(object? metadata,
         CancellationToken cancellationToken = default) =>
-        engine.UpdateRunMetadataAsync(WorkflowRunId, metadata, cancellationToken);
+        operations.UpdateRunMetadataAsync(WorkflowRunId, metadata, cancellationToken);
 
     public IAsyncEnumerable<WorkflowEvent> SubscribeAsync(long afterSequence = 0,
         CancellationToken cancellationToken = default) =>

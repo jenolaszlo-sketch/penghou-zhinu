@@ -61,6 +61,14 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<WorkflowEngine>());
         services.TryAddSingleton<IWorkflowAdministration>(provider =>
             provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IWorkflowStarter>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IWorkflowReader>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IWorkflowOperator>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
+        services.TryAddSingleton<IHostedWorkflowRuntime>(provider =>
+            provider.GetRequiredService<WorkflowEngine>());
         services.AddHostedService<ZhinuHostedService>();
         return services;
     }
@@ -128,6 +136,13 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers a workflow implementation and its definition registration.
+    /// The implementation is a singleton shared by every run: keep it
+    /// stateless and put per-run state in step inputs, outputs, or scoped
+    /// step dependencies instead of instance fields. Mutable per-run fields
+    /// are shared across concurrent runs and are never persisted.
+    /// </summary>
     public static IServiceCollection AddZhinuWorkflow<TWorkflow, TInput, TOutput>(
         this IServiceCollection services,
         string name,
