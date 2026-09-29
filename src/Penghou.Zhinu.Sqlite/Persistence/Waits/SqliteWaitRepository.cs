@@ -30,14 +30,17 @@ internal sealed class SqliteWaitRepository : IWorkflowWaitRepository
         await using var connection = await database.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
-        var runGeneration = await ReadRunGenerationAsync(
+        var runState = await ReadRunStateAsync(
                 connection, transaction, request.WorkflowRunId, cancellationToken)
             .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
                 $"Workflow '{request.WorkflowRunId:D}' does not exist.");
-        if (runGeneration != request.LeaseGeneration)
+        if (runState.Generation != request.LeaseGeneration)
             throw new LeaseLostException(
                 $"Workflow '{request.WorkflowRunId:D}' generation {request.LeaseGeneration} " +
-                $"no longer matches the current generation {runGeneration}; parking refused.");
+                $"no longer matches the current generation {runState.Generation}; parking refused.");
+        if (runState.Status is not (WorkflowStatus.Pending or WorkflowStatus.Running))
+            throw new WorkflowStateException(
+                $"Workflow '{request.WorkflowRunId:D}' is not executable in state '{runState.Status}'; parking refused.");
         var existing = await ReadAsync(
                 connection, transaction, request.WorkflowRunId, request.StepKey, cancellationToken)
             .ConfigureAwait(false);
@@ -230,20 +233,20 @@ internal sealed class SqliteWaitRepository : IWorkflowWaitRepository
                 System.Globalization.CultureInfo.InvariantCulture) == 1;
     }
 
-    private async ValueTask<long?> ReadRunGenerationAsync(
+    private async ValueTask<(long Generation, WorkflowStatus Status)?> ReadRunStateAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
         Guid workflowRunId,
         CancellationToken cancellationToken)
     {
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
-            SELECT lease_generation FROM workflow_runs WHERE id = $id;
+            SELECT lease_generation, status FROM workflow_runs WHERE id = $id;
             """);
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(workflowRunId));
-        var value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-        return value is null or DBNull
-            ? null
-            : Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? (reader.GetInt64(0), (WorkflowStatus)reader.GetInt32(1))
+            : null;
     }
 
     private static async ValueTask<WorkflowWait?> ReadAsync(
@@ -308,6 +311,27 @@ internal sealed class SqliteWaitRepository : IWorkflowWaitRepository
         command.Parameters.AddWithValue("$signal", signalName);
         command.Parameters.AddWithValue("$kind", (int)WaitKind.Signal);
         command.Parameters.AddWithValue("$parked", (int)WaitStatus.Parked);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Cancels active waits with their run in the caller's transaction.</summary>
+    internal static async ValueTask CancelRunWaitsAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid workflowRunId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_waits
+            SET status = $cancelled, updated_at = $now
+            WHERE workflow_run_id = $run AND status IN ($parked, $ready);
+            """);
+        command.Parameters.AddWithValue("$cancelled", (int)WaitStatus.Cancelled);
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(now));
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$parked", (int)WaitStatus.Parked);
+        command.Parameters.AddWithValue("$ready", (int)WaitStatus.Ready);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 

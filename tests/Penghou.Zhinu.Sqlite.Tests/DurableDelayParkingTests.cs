@@ -48,6 +48,23 @@ public sealed class DurableDelayParkingTests
     }
 
     [Fact]
+    public async Task Cancellation_clears_parked_delay_without_a_due_timer()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var clock = new TestTimeProvider(Start);
+        await using var host = new ZhinuTestHost(
+            new WorkflowRegistry().Register("delay-cancel", "1", new LongDelayWorkflow()),
+            timeProvider: clock);
+        var runId = await host.Engine.StartAsync("delay-cancel", "1", "x", cancellationToken: ct);
+        await host.Engine.ExecuteAsync(runId, ct);
+        (await host.Store.GetWaitAsync(runId, "pause", ct))!.Status.Should().Be(WaitStatus.Parked);
+
+        await host.Engine.CancelAsync(runId, ct);
+        (await host.Store.GetWaitAsync(runId, "pause", ct))!.Status.Should().Be(WaitStatus.Cancelled);
+        (await host.AdvanceToNextDurableTimerAsync(runId, ct)).Should().BeNull();
+    }
+
+    [Fact]
     public async Task DurableDelay_SurvivesCrashAndResumesOnDue()
     {
         var ct = TestContext.Current.CancellationToken;

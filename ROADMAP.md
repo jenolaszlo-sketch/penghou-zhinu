@@ -1229,3 +1229,26 @@ parallel starts/cancellation cannot silently evade aggregate allowances.
 
 Historical ranking, dead-end policy, topology learning and knowledge promotion
 remain outside Zhinu.
+
+## Follow-on candidates from the 2026-09-29 review
+
+These refine existing operations and evidence work without changing current
+release gates. Lower-priority proposals are recorded in [ideas for later](docs/ideas.md).
+
+- [ ] **Add a read-only run graph view (Phase 8).** Extend the CLI's existing
+  run/wait diagnostics with a bounded text and JSON projection of recorded
+  dependency edges, step attempts, current leases, and parked waits. Mark
+  missing or incomplete evidence explicitly. Rendering must not claim steps,
+  invoke workflow code, or retrieve payloads by default; test the same graph
+  before and after process restart.
+- [ ] **Deliver forward-only event dispatch from durable cursors.** Build on
+  the existing committed workflow events and evidence-export plan so an
+  optional background dispatcher can retry delivery to external brokers after
+  crashes or outages. Persist an idempotent cursor/receipt, expose projection
+  lag, and prove a broker failure cannot change the committed workflow result.
+  Keep the current event log authoritative; do not add a second event truth.
+- [ ] **Prove child trace continuity across workers.** Child runs already
+  inherit the parent's durable trace ID. Add a cross-process trace test and
+  document the intended parent/link relation for execution segments so
+  OpenTelemetry exporters can join the graph without putting a live span
+  context into workflow correctness or arbitrary metadata.

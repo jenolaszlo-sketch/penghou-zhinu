@@ -63,6 +63,45 @@ public sealed class DependencyCycleTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task Concurrent_opposite_claims_cannot_commit_a_dependency_cycle()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var left = CreateStore();
+        var right = CreateStore();
+        var now = DateTimeOffset.UtcNow;
+        var runId = await CreateRunAsync(left, "cycle-claims", now, null, ct);
+
+        async Task<bool> ClaimAsync(SqliteWorkflowStore store, string step, string dependency)
+        {
+            try
+            {
+                var claim = await store.ClaimStepAsync(new StepClaimRequest
+                {
+                    WorkflowRunId = runId,
+                    StepKey = step,
+                    OutputType = "string",
+                    OwnerId = step,
+                    Now = now,
+                    LeaseExpiresAt = now.AddMinutes(1),
+                    DependsOn = [dependency]
+                }, ct);
+                return claim.Disposition == StepClaimDisposition.Acquired;
+            }
+            catch (WorkflowStateException)
+            {
+                return false;
+            }
+        }
+
+        var claimed = await Task.WhenAll(
+            ClaimAsync(left, "a", "b"), ClaimAsync(right, "b", "a"));
+        claimed.Should().ContainSingle(value => value);
+        var edges = await left.GetStepDependenciesAsync(runId, ct);
+        edges.Should().ContainSingle();
+        WorkflowDependencyValidator.HasCycle(edges).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task FanOut_Dependencies_AreIndependent()
     {
         var workflow = new FanOutWorkflow();

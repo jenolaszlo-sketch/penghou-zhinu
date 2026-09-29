@@ -444,6 +444,12 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
             workflowRunId,
             now,
             cancellationToken).ConfigureAwait(false);
+        await SqliteWaitRepository.CancelRunWaitsAsync(
+            connection,
+            transaction,
+            workflowRunId,
+            now,
+            cancellationToken).ConfigureAwait(false);
         await insertEvent.ExecuteAsync(
             connection,
             transaction,

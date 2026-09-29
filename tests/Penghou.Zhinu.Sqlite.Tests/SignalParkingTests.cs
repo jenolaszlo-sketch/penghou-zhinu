@@ -35,6 +35,34 @@ public sealed class SignalParkingTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task Cancellation_clears_parked_wait_and_prevents_late_reparking()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var engine = CreateEngine(new DeadlineWorkflow(), "park-cancel");
+        var store = PeerStore();
+        var runId = await engine.StartAsync("park-cancel", "1", "x", cancellationToken: ct);
+        await engine.ExecuteAsync(runId, ct);
+        var parked = (await store.GetWaitAsync(runId, "wait", ct))!;
+        parked.Status.Should().Be(WaitStatus.Parked);
+
+        await engine.CancelAsync(runId, ct);
+        (await store.GetWaitAsync(runId, "wait", ct))!.Status.Should().Be(WaitStatus.Cancelled);
+        var repark = async () => await store.ParkWaitAsync(new ParkWaitRequest
+        {
+            WorkflowRunId = runId,
+            StepKey = parked.StepKey,
+            StepRevision = parked.StepRevision,
+            StepId = parked.StepId,
+            Kind = parked.Kind,
+            SignalName = parked.SignalName,
+            LeaseGeneration = parked.LeaseGeneration,
+            Now = DateTimeOffset.UtcNow
+        }, ct);
+        await repark.Should().ThrowAsync<WorkflowStateException>().WithMessage("*parking refused*");
+        (await store.GetWaitAsync(runId, "wait", ct))!.Status.Should().Be(WaitStatus.Cancelled);
+    }
+
+    [Fact]
     public async Task TimelySignal_WinsDeadlineRace()
     {
         var ct = TestContext.Current.CancellationToken;

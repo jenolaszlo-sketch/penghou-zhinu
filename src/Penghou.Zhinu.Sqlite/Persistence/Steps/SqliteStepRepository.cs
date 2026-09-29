@@ -241,10 +241,17 @@ internal sealed partial class SqliteStepRepository :
     {
         if (dependsOn is null || dependsOn.Count == 0)
             return;
-        foreach (var dependency in dependsOn.Distinct(StringComparer.Ordinal))
+        var additions = dependsOn.Distinct(StringComparer.Ordinal).ToArray();
+        if (additions.Contains(stepKey, StringComparer.Ordinal))
+            throw new WorkflowStateException($"Step '{stepKey}' cannot depend on itself.");
+        var existing = await getStepDependencies.ExecuteAsync(
+            connection, transaction, workflowRunId, cancellationToken).ConfigureAwait(false);
+        var combined = new List<StepDependency>(existing);
+        combined.AddRange(additions.Select(dependency => new StepDependency(stepKey, dependency)));
+        if (WorkflowDependencyValidator.HasCycle(combined))
+            throw new WorkflowStateException($"Adding dependencies for step '{stepKey}' would create a cycle.");
+        foreach (var dependency in additions)
         {
-            if (string.Equals(dependency, stepKey, StringComparison.Ordinal))
-                continue;
             await insertStepDependency.ExecuteAsync(
                 connection,
                 transaction,

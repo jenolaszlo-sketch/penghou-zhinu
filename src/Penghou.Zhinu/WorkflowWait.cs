@@ -22,7 +22,7 @@ public enum WaitStatus
     Ready = 1,
     /// <summary>Consumed by delivery or a due retry.</summary>
     Completed = 2,
-    /// <summary>Abandoned by expiry without delivery.</summary>
+    /// <summary>Abandoned by cancellation or expiry without delivery.</summary>
     Cancelled = 3
 }
 
