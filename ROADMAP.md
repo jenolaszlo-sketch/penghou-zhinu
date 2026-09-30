@@ -1230,6 +1230,13 @@ parallel starts/cancellation cannot silently evade aggregate allowances.
 Historical ranking, dead-end policy, topology learning and knowledge promotion
 remain outside Zhinu.
 
+## Pending dependency: Penghou.Hufu
+
+Recorded 2026-09-28. Hufu is currently a scaffold; its authority contracts, store,
+and enforcement integration are pending. Bind Hufu authority to durable activation, activity execution, and recovery.
+See [the project-specific integration note](docs/hufu-integration.md) for scope, dependencies,
+and completion evidence. This records future work without changing current release gates.
+
 ## Follow-on candidates from the 2026-09-29 review
 
 These refine existing operations and evidence work without changing current

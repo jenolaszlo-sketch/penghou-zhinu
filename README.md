@@ -652,3 +652,8 @@ validation.
 [Apache-2.0](LICENSE)
 
 Copyright (c) 2026 Jenő Konrád László
+
+## Pending Hufu integration
+
+Penghou.Hufu integration is planned and not implemented. Bind Hufu authority to durable activation, activity execution, and recovery.
+See [pending work and ownership boundaries](docs/hufu-integration.md).
