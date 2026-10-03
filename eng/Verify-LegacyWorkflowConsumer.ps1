@@ -389,14 +389,19 @@ foreach ($framework in @('net8.0', 'net10.0')) {
         throw "Neutral workflow contract assembly changed during the runtime swap on $framework."
     }
 
+    # NuGet's global cache lowercases package IDs in both directories and archive names.
     # Restore only the original published binaries from the fresh public-feed package cache.
-    $originalCoreNupkg = Join-Path $cacheDirectory "$($corePackageId.ToLowerInvariant())/$expectedLegacyVersion/$corePackageId.$expectedLegacyVersion.nupkg"
-    $originalSqliteNupkg = Join-Path $cacheDirectory "$($sqlitePackageId.ToLowerInvariant())/$expectedLegacyVersion/$sqlitePackageId.$expectedLegacyVersion.nupkg"
+    $originalCoreNupkg = Join-Path $cacheDirectory "$($corePackageId.ToLowerInvariant())/$expectedLegacyVersion/$($corePackageId.ToLowerInvariant()).$expectedLegacyVersion.nupkg"
+    $originalSqliteNupkg = Join-Path $cacheDirectory "$($sqlitePackageId.ToLowerInvariant())/$expectedLegacyVersion/$($sqlitePackageId.ToLowerInvariant()).$expectedLegacyVersion.nupkg"
     $originalCoreDll = Get-NupkgRuntimeAssembly -PackagePath $originalCoreNupkg -Framework $framework -AssemblyName 'Penghou.Zhinu.dll'
     $originalSqliteDll = Get-NupkgRuntimeAssembly -PackagePath $originalSqliteNupkg -Framework $framework -AssemblyName 'Penghou.Zhinu.Sqlite.dll'
     Copy-Item -LiteralPath $originalCoreDll -Destination $appCoreDll -Force
     Copy-Item -LiteralPath $originalSqliteDll -Destination $appSqliteDll -Force
 
+    if ((Get-FileHash -LiteralPath $appCoreDll -Algorithm SHA256).Hash -cne $oldCoreHash -or
+        (Get-FileHash -LiteralPath $appSqliteDll -Algorithm SHA256).Hash -cne $oldSqliteHash) {
+        throw "Restored published runtime assemblies differ from the original binaries on $framework."
+    }
     if ((Get-FileHash -LiteralPath $applicationPath -Algorithm SHA256).Hash -cne $compiledHash) {
         throw "Compiled consumer changed while restoring published assemblies on $framework."
     }

@@ -43,6 +43,17 @@ after the deadline. The four signal-parking tests pass on both frameworks.
 These corrections change qualification tooling and a test, not runtime behavior.
 A successful rerun for the corrected release commit remains required.
 
+The follow-up [run 37135986361](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/runs/37135986361)
+passed the complete Windows job. Ubuntu passed build, format, tests, pack and
+package closure, then exposed mixed-case archive filenames in the legacy
+probe's NuGet cache lookup. Both lookup filenames now use the lowercase package
+ID, matching the restored cache on case-sensitive filesystems. The corrected
+legacy probe passes locally on .NET 8/10 with a fresh cache, unchanged consumer
+binaries, schema-5-to-6 migration and old-worker rejection. Restored old DLLs
+are also checked against their original hashes. An explicit filename-case check
+rejects both prior paths and accepts both corrected paths. These checks are
+local Windows evidence; the new Ubuntu CI run remains the Linux qualification.
+
 After CI passes, the user publishes the seven-package release set from the
 existing main workflow. See [release and upgrade instructions](../releasing.md).
 Verify the public artifacts before starting Hufu HA-1/2/3.
