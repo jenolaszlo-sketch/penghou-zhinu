@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Penghou.Zhinu;
 using Penghou.Zhinu.Sqlite;
+using Penghou.Zhinu.Testing;
 
 namespace Penghou.Zhinu.Sqlite.Tests;
 
@@ -66,12 +67,23 @@ public sealed class SignalParkingTests : WorkflowEngineTestBase
     public async Task TimelySignal_WinsDeadlineRace()
     {
         var ct = TestContext.Current.CancellationToken;
-        var engine = CreateEngine(new ShortDeadlineWorkflow(), "park-race");
+        var clock = new TestTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        await using var host = new ZhinuTestHost(
+            new WorkflowRegistry().Register("park-race", "1", new ShortDeadlineWorkflow()),
+            timeProvider: clock);
+        var engine = host.Engine;
         var runId = await engine.StartAsync("park-race", "1", "x", cancellationToken: ct);
         await engine.ExecuteAsync(runId, ct);
-        await engine.SendSignalAsync(runId, "release", "late-but-timely", ct);
-        await Task.Delay(TimeSpan.FromMilliseconds(500), ct);
+        var parked = (await host.Store.GetWaitAsync(runId, "wait", ct))!;
+        parked.Status.Should().Be(WaitStatus.Parked);
+        parked.DeadlineAt.Should().Be(clock.GetUtcNow().AddMilliseconds(300));
 
+        clock.Advance(TimeSpan.FromMilliseconds(100));
+        await engine.SendSignalAsync(runId, "release", "late-but-timely", ct);
+        clock.Advance(TimeSpan.FromMilliseconds(500));
+        clock.GetUtcNow().Should().BeAfter(parked.DeadlineAt!.Value);
+
+        await engine.ExecuteAsync(runId, ct);
         var result = await engine.WaitForCompletionAsync<string>(runId, cancellationToken: ct);
 
         result.Should().Be("late-but-timely");

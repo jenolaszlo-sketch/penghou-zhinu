@@ -198,6 +198,10 @@ $referencesXml
 "@
 $projectPath = Join-Path $consumerDirectory 'ClosureConsumer.csproj'
 Set-Content -LiteralPath $projectPath -Value $projectFile -Encoding utf8
+# CI writes this consumer beneath the repository. Do not inherit its library
+# versioning, packability, analyzers or future build targets into a package-only app.
+Set-Content -LiteralPath (Join-Path $consumerDirectory 'Directory.Build.props') -Value '<Project />' -Encoding utf8
+Set-Content -LiteralPath (Join-Path $consumerDirectory 'Directory.Build.targets') -Value '<Project />' -Encoding utf8
 if (Select-String -LiteralPath $projectPath -Pattern '<ProjectReference\b' -Quiet) {
     throw 'The package closure consumer must not contain a ProjectReference.'
 }
