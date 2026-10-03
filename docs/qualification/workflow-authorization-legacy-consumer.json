@@ -1,0 +1,90 @@
+{
+  "SchemaVersion": 1,
+  "PackageVersion": "0.2.0-preview.1-ci.za3.20261003",
+  "NeutralPackage": {
+    "Id": "Penghou.Workflow.Abstractions",
+    "ExactVersion": "0.1.0-preview.2"
+  },
+  "CandidateArtifacts": [
+    {
+      "Id": "Penghou.Zhinu",
+      "File": "Penghou.Zhinu.0.2.0-preview.1-ci.za3.20261003.nupkg"
+    },
+    {
+      "Id": "Penghou.Zhinu.Sqlite",
+      "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.1-ci.za3.20261003.nupkg"
+    }
+  ],
+  "PublicRestore": {
+    "PackageSources": [
+      "https://api.nuget.org/v3/index.json"
+    ],
+    "FreshPackageCache": "C:\\Users\\Laszlos\\AppData\\Local\\Temp\\pzl-e256285b9b0b4d2f86102693ee82997b",
+    "AssetsFile": "consumer\\obj\\project.assets.json",
+    "ResolvedPackages": [
+      "Microsoft.Data.Sqlite/10.0.10",
+      "Microsoft.Data.Sqlite.Core/10.0.10",
+      "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+      "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+      "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+      "Penghou.Zhinu/0.1.0-preview.15",
+      "Penghou.Zhinu.Sqlite/0.1.0-preview.15",
+      "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+      "SQLitePCLRaw.core/2.1.12",
+      "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+      "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+      "System.Diagnostics.DiagnosticSource/10.0.9"
+    ],
+    "ForbiddenHufuDependencyScan": "passed",
+    "ProjectReferences": 0
+  },
+  "TargetFrameworkResults": [
+    {
+      "TargetFramework": "net8.0",
+      "PublishedRun": {
+        "ExitCode": 0,
+        "SchemaVersion": 5,
+        "RetainedStepRows": 2,
+        "CoreAssemblyHash": "475F9A6A70851701FB2FD91C441C577481664B8039AD0CB51FA1C7B92BCC6229",
+        "SqliteAssemblyHash": "22B1FF1015F5BE150B9E994CF36F8D341F382D293919D01E4001586667125467"
+      },
+      "CandidateRuntimeRun": {
+        "ExitCode": 0,
+        "SchemaVersion": 6,
+        "RetainedStepRows": 4
+      },
+      "CompiledConsumerSha256": "FA45429A6AD3D4F605426007D0293667035204A34358969AEAEF7A0AB430F908",
+      "ContractAssemblySha256": "81F2DE8AEF7FA1B103036BD7839CCC13AA7486B89ED5B6783EE0FC2A433E112D",
+      "OldWorkerOnNewSchema": {
+        "ExitCode": -532462766,
+        "RejectedAsIncompatible": true,
+        "SchemaVersionAfterRejection": 6,
+        "RetainedStepRowsAfterRejection": 4
+      }
+    },
+    {
+      "TargetFramework": "net10.0",
+      "PublishedRun": {
+        "ExitCode": 0,
+        "SchemaVersion": 5,
+        "RetainedStepRows": 2,
+        "CoreAssemblyHash": "3AE5BD44F8122653C6E6D8BBC063015916405C159749E49FEBA743F11C394ED5",
+        "SqliteAssemblyHash": "6D32F574B8A3E2089CF1E4B214E763FA7EB8D35B977E12597ECAF6BAB3ACAB85"
+      },
+      "CandidateRuntimeRun": {
+        "ExitCode": 0,
+        "SchemaVersion": 6,
+        "RetainedStepRows": 4
+      },
+      "CompiledConsumerSha256": "2BBCFE28F31A1866B6DD4616022F3AD7287EE7B5E849F9AB3C25BCE4A8AB3CBB",
+      "ContractAssemblySha256": "D1B6168049CB05F49BE10849A190993603A21F4E086C93DC656FC100DFD73020",
+      "OldWorkerOnNewSchema": {
+        "ExitCode": -532462766,
+        "RejectedAsIncompatible": true,
+        "SchemaVersionAfterRejection": 6,
+        "RetainedStepRowsAfterRejection": 4
+      }
+    }
+  ],
+  "Status": "passed"
+}

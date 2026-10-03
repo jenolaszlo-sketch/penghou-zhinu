@@ -10,19 +10,23 @@ internal sealed class InsertRunCommand
         WorkflowRun run,
         CancellationToken cancellationToken)
     {
+        if ((run.AuthorizationProviderId is null) != (run.AuthorizationBindingId is null))
+            throw new WorkflowAuthorizationException("Protected runs must persist provider and binding IDs together.");
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             INSERT INTO workflow_runs
             (id, workflow_name, workflow_version, status, input_json,
              input_type, output_json, output_type, error_json, created_at,
              updated_at, completed_at, deadline, metadata_json, parent_run_id,
              source_run_id, trace_id, lease_owner, lease_expires_at,
-             definition_fingerprint)
+             definition_fingerprint, authorization_provider_id,
+             authorization_binding_id)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
              $updatedAt, $completedAt, $deadline, $metadataJson, $parentRunId,
              $sourceRunId, $traceId, $leaseOwner, $leaseExpiresAt,
-             $definitionFingerprint);
+             $definitionFingerprint, $authorizationProviderId,
+             $authorizationBindingId);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -64,5 +68,7 @@ internal sealed class InsertRunCommand
         command.Parameters.AddWithValue(
             "$definitionFingerprint",
             SqliteStoreSupport.DbValue(run.DefinitionFingerprint));
+        command.Parameters.AddWithValue("$authorizationProviderId", SqliteStoreSupport.DbValue(run.AuthorizationProviderId));
+        command.Parameters.AddWithValue("$authorizationBindingId", SqliteStoreSupport.DbValue(run.AuthorizationBindingId));
     }
 }

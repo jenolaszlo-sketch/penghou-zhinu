@@ -19,7 +19,13 @@ internal sealed class ClaimCompensationCommand
     {
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             UPDATE workflow_step_compensations
-            SET status = $running, attempt = attempt + 1,
+            SET status = $running, attempt = CASE
+                    WHEN authorization_declaration_json IS NULL THEN attempt + 1
+                    ELSE COALESCE((SELECT last_started_attempt + 1
+                        FROM workflow_authorization_dispatches d
+                        WHERE d.workflow_run_id=workflow_step_compensations.workflow_run_id
+                          AND d.claim_id=workflow_step_compensations.id AND d.is_compensation=1), 1)
+                END,
                 started_at = $now, lease_owner = $owner,
                 lease_expires_at = $expires, lease_generation = $generation,
                 actor = $actor, reason = $reason,

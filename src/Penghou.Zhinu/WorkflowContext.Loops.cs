@@ -13,6 +13,12 @@ public sealed partial class WorkflowContext
     /// The body must perform durable work through the supplied
     /// <see cref="WorkflowLoopIteration{TState}"/>. Independent collection work
     /// belongs in <see cref="FanOutAsync{TInput,TOutput}(string,IReadOnlyList{TInput},Func{TInput,WorkflowStepContext,CancellationToken,Task{TOutput}},StepOptions?,CancellationToken)"/>.
+    /// The continuation predicate runs as a durable condition step and can be
+    /// declared through <see cref="LoopOptions.ContinueWhileAuthorization"/>.
+    /// The body, loop key/state selection and other orchestration code run
+    /// outside activity preflight; each nested protected step must declare its
+    /// own authorization, and external effects still require resource-level
+    /// authorization.
     /// </remarks>
     public Task<TState> LoopAsync<TState>(
         string loopKey,
@@ -87,8 +93,14 @@ public sealed partial class WorkflowContext
                     cancellationToken).ConfigureAwait(false);
             }
             var conditionOptions = conditionDependency is null
-                ? null
-                : new StepOptions { DependsOn = [conditionDependency] };
+                ? loopOptions.ContinueWhileAuthorization is null
+                    ? null
+                    : new StepOptions { Authorization = loopOptions.ContinueWhileAuthorization }
+                : new StepOptions
+                {
+                    DependsOn = [conditionDependency],
+                    Authorization = loopOptions.ContinueWhileAuthorization
+                };
             var shouldContinue = await StepAsync(
                 conditionStepKey,
                 new LoopConditionInput<TState>(state, loopOptions.MaxIterations),

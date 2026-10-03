@@ -1,5 +1,31 @@
 # Penghou.Zhinu: pending Penghou.Hufu integration
 
+## Superseding direction - 2026-10-03
+
+Follow the [neutral authority-extension plan](authority-extension-plan.md).
+Use the [activity queue](authority-extension-activities.md) for the current
+execution order; independent Hufu staged-work review and test separation start
+now. Publish the [Penghou-owned neutral contracts](../../Penghou/docs/workflow-abstractions-plan.md)
+first, complete the Zhinu runtime phase, then implement the Hufu adapter.
+Zhinu consumes `Penghou.Workflow.Abstractions` as one workflow implementation; an
+optional `Hufu.Workflow` adapter implements it with no full-runtime dependency.
+Zhinu's default remains usable without Hufu. ZA-3A/3B/4 authorization and
+durable-approval paths are locally qualified in candidate `0.2.0-preview.1`;
+the unchanged preview.15 legacy compatibility suite also passed on .NET 8/10.
+Commit/push and remote CI publication remain pending. The candidate boundary
+and unsupported orchestration/effect cases are described in the
+[authorization guide](workflow-authorization.md) and
+[qualification record](qualification/workflow-authorization.json). The user
+runs ZA-6 publication after review. Keep HA-1/2/3 held until that package is
+published. Per-resource enforcement and governed host integration remain
+separate and open.
+
+The shared-SQLite description below is legacy implementation/qualification
+context. Its narrow start ordering is not the new activity-preflight gate and
+does not qualify final effect authorization, terminal-outcome recovery, or a
+governed host. ZA-5 governs its retention/retirement without silently weakening
+existing resource checks.
+
 Status: **Narrow co-located SQLite start adapter implemented in Hufu; complete governed host integration pending.** Updated 2026-10-01.
 
 Penghou.Hufu is the new reusable authority library and authority-store boundary.
@@ -24,7 +50,7 @@ attenuation, revocation, and durable authority records. Hosts retain identity,
 policy, credentials, resource resolution, and approval surfaces. Zhinu retains
 execution state and recovery; existing budget services retain accounting.
 
-## Zhinu's planned integration
+## New Hufu.Workflow adapter (held until ZA-6 publication)
 
 - Persist exact authority admission references alongside run, revision,
   node/item, attempt, and execution-generation identities.
@@ -38,7 +64,9 @@ execution state and recovery; existing budget services retain accounting.
 Zhinu remains authoritative for execution, active revisions, leases/fences,
 operation history, and recovery. Hufu owns live grant/decision/revocation state.
 Do not infer current authorization from an old workflow receipt or assume that
-reads from two independent stores form one atomic decision.
+reads from two independent stores form one atomic decision. The locally
+implemented Zhinu preflight gate records and fences callback intent; it does not
+make final resource checks or external effects atomic with policy revocation.
 
 ## Completion evidence
 

@@ -52,13 +52,13 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>,
 
             var stepInput = step.DependsOn.Count == 0 ? inputJson : outputs[step.DependsOn[0]];
             var descriptor = step.Descriptor;
-            var executor = catalogue.Resolve(step.Activity);
-
             var output = await context.StepAsync(
                 step.Id,
                 stepInput,
                 async (JsonElement inp, CancellationToken ct) =>
                 {
+                    // Resolver activation is protected by StepAsync's authorization gate.
+                    var executor = catalogue.Resolve(step.Activity);
                     // Convert JsonElement input to the activity's expected CLR type
                     var inputType = executor.InputType;
                     object? typedInput;
@@ -78,7 +78,16 @@ internal sealed class DeclarativeWorkflow : IWorkflow<JsonElement, JsonElement>,
                         result?.GetType() ?? typeof(object),
                         DeclarativeJson.Options);
                 },
-                new StepOptions { DependsOn = step.DependsOn },
+                new StepOptions
+                {
+                    DependsOn = step.DependsOn,
+                    Authorization = descriptor.Authorization is { } declaration
+                        ? new Penghou.Zhinu.WorkflowAuthorizationDeclaration(
+                            declaration.Requirements,
+                            compiled.Name,
+                            compiled.Version)
+                        : null
+                },
                 cancellationToken: cancellationToken);
 
             outputs[step.Id] = output;

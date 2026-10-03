@@ -20,7 +20,7 @@ public static class WorkflowCompiler
         var compiledSteps = new List<CompiledWorkflowStep>();
         foreach (var step in definition.Steps.OrderBy(s => s.Id, StringComparer.Ordinal))
         {
-            var descriptor = catalogue.GetDescriptor(step.Activity);
+            var descriptor = SnapshotDescriptor(catalogue.GetDescriptor(step.Activity));
             compiledSteps.Add(new CompiledWorkflowStep
             {
                 Id = step.Id,
@@ -49,5 +49,28 @@ public static class WorkflowCompiler
         };
 
         return new WorkflowCompilationResult { Compiled = compiled, Diagnostics = Array.Empty<WorkflowValidationDiagnostic>() };
+    }
+
+    private static ActivityDescriptor SnapshotDescriptor(ActivityDescriptor descriptor)
+    {
+        ArgumentNullException.ThrowIfNull(descriptor);
+        var authorization = descriptor.Authorization;
+        if (authorization?.PlanId is not null || authorization?.PlanRevision is not null)
+        {
+            throw new WorkflowConfigurationException(
+                "Declarative activity declarations contain requirements only; the compiled workflow binds the plan name and version.");
+        }
+        return new ActivityDescriptor
+        {
+            Reference = descriptor.Reference,
+            Input = new ActivityContract { TypeId = descriptor.Input.TypeId },
+            Output = new ActivityContract { TypeId = descriptor.Output.TypeId },
+            Authorization = authorization is null
+                ? null
+                : new WorkflowAuthorizationDeclaration(
+                    authorization.Requirements.ToArray(),
+                    planId: null,
+                    planRevision: null)
+        };
     }
 }

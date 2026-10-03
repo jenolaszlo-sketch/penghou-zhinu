@@ -139,6 +139,11 @@ internal sealed class RollbackCoordinator
                 CancellationToken.None).ConfigureAwait(false);
             throw;
         }
+        catch (ParkedExecutionException)
+        {
+            await store.ReleaseRollbackLeaseAsync(workflowRunId, ownerId, timeProvider.GetUtcNow(),
+                CancellationToken.None).ConfigureAwait(false);
+        }
         catch (Exception exception)
         {
             ZhinuDiagnostics.RecordException(activity, exception);

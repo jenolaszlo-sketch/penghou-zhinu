@@ -15,6 +15,9 @@ public sealed class LoopOptions
     /// <summary>The maximum number of loop-body executions.</summary>
     public int MaxIterations { get; }
 
+    /// <summary>Optional authorization for each continuation-predicate evaluation.</summary>
+    public WorkflowAuthorizationDeclaration? ContinueWhileAuthorization { get; init; }
+
     /// <summary>
     /// Optional absolute wall-clock boundary after which the loop may not
     /// begin or commit more work.

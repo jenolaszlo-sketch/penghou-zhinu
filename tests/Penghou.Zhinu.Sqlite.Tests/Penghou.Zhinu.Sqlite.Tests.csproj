@@ -21,4 +21,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Fixtures\zhinu-schema-v5.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

@@ -54,6 +54,7 @@ internal sealed class ChildRunCoordinator
             .ConfigureAwait(false) ??
             throw new WorkflowStateException(
                 $"Parent workflow '{parentRunId:D}' does not exist.");
+        WorkflowAuthorizationGate.ValidateBinding(parent, options);
         var childDepth = await GetRunDepthAsync(parentRunId, cancellationToken)
             .ConfigureAwait(false) + 1;
         if (childDepth > options.MaxNestingDepth)
@@ -68,6 +69,7 @@ internal sealed class ChildRunCoordinator
         ValidateContract(request, registration, stepKey);
         if (existing is not null)
         {
+            WorkflowAuthorizationGate.ValidateBinding(existing, options);
             if (!string.Equals(existing.WorkflowName, request.WorkflowName, StringComparison.Ordinal) ||
                 !string.Equals(existing.WorkflowVersion, request.WorkflowVersion, StringComparison.Ordinal) ||
                 !string.Equals(existing.InputJson, request.InputJson, StringComparison.Ordinal) ||
@@ -116,6 +118,9 @@ internal sealed class ChildRunCoordinator
                 InputType = request.InputType,
                 OutputType = request.OutputType,
                 ParentRunId = parentRunId,
+                AuthorizationProviderId = options.ExecutionAuthorization?.ProviderId,
+                AuthorizationBindingId = options.ExecutionAuthorization is { } authority
+                    ? WorkflowAuthorizationCodec.Binding(authority) : null,
                 Deadline = deadline,
                 MetadataJson = metadataJson,
                 DefinitionFingerprint = registration.DefinitionFingerprint,

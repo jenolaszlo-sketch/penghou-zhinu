@@ -79,4 +79,7 @@ public sealed record WorkflowStepCompensation
 
     /// <summary>Stable downstream idempotency key for the compensating call.</summary>
     public string? IdempotencyKey { get; init; }
+
+    /// <summary>Canonical authorization declaration retained for this compensation revision.</summary>
+    public string? AuthorizationDeclarationJson { get; init; }
 }

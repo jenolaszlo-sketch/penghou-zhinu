@@ -43,7 +43,22 @@ internal static class WorkflowCanonicalizer
                     activity = new { name = s.Activity.Name, version = s.Activity.Version },
                     dependsOn = s.DependsOn.OrderBy(d => d, StringComparer.Ordinal).ToArray(),
                     inputContract = s.Descriptor.Input.TypeId,
-                    outputContract = s.Descriptor.Output.TypeId
+                    outputContract = s.Descriptor.Output.TypeId,
+                    authorization = s.Descriptor.Authorization is { } declaration
+                        ? new
+                        {
+                            planId = declaration.PlanId,
+                            planRevision = declaration.PlanRevision,
+                            requirements = declaration.Requirements.Select(requirement => new
+                            {
+                                requirement.SchemaId,
+                                requirement.SchemaVersion,
+                                requirement.Capability,
+                                requirement.Resource,
+                                requirement.ScopeReference
+                            }).ToArray()
+                        }
+                        : null
                 }).ToArray()
         };
         var options = new JsonSerializerOptions

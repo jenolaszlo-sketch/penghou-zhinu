@@ -92,7 +92,9 @@ internal static class SqliteStoreSupport
         LeaseOwner = GetNullableString(reader, 17),
         LeaseExpiresAt = ParseNullableTimestamp(reader, 18),
         LeaseGeneration = reader.GetInt64(19),
-        DefinitionFingerprint = GetNullableString(reader, 20)
+        DefinitionFingerprint = GetNullableString(reader, 20),
+        AuthorizationProviderId = GetNullableString(reader, 21),
+        AuthorizationBindingId = GetNullableString(reader, 22)
     };
 
     internal static WorkflowStepRun ReadStep(SqliteDataReader reader) => new()
@@ -117,7 +119,8 @@ internal static class SqliteStoreSupport
         LeaseExpiresAt = ParseNullableTimestamp(reader, 17),
         Revision = reader.GetInt32(18),
         LeaseGeneration = reader.GetInt64(19),
-        ImplementationKey = GetNullableString(reader, 20)
+        ImplementationKey = GetNullableString(reader, 20),
+        AuthorizationDeclarationHash = GetNullableString(reader, 21)
     };
 
     internal static WorkflowStepCompensation ReadCompensation(SqliteDataReader reader) => new()
@@ -147,7 +150,8 @@ internal static class SqliteStoreSupport
         CreatedAt = ParseTimestamp(reader.GetString(20)),
         Actor = GetNullableString(reader, 21),
         Reason = GetNullableString(reader, 22),
-        IdempotencyKey = GetNullableString(reader, 23)
+        IdempotencyKey = GetNullableString(reader, 23),
+        AuthorizationDeclarationJson = GetNullableString(reader, 24)
     };
 
     internal static WorkflowRunOperation ReadOperation(SqliteDataReader reader) => new()
@@ -179,14 +183,14 @@ internal static class SqliteStoreSupport
         output_json, output_type, error_json, created_at, updated_at,
         completed_at, deadline, metadata_json, parent_run_id, source_run_id,
         trace_id, lease_owner, lease_expires_at, lease_generation,
-        definition_fingerprint
+        definition_fingerprint, authorization_provider_id, authorization_binding_id
         """;
 
     internal const string StepColumns = """
         id, workflow_run_id, step_key, status, attempt, input_json, input_type,
         input_hash, output_json, output_type, error_json, signal_name, created_at,
         started_at, completed_at, available_at, lease_owner, lease_expires_at,
-        revision, lease_generation, implementation_key
+        revision, lease_generation, implementation_key, authorization_declaration_hash
         """;
 
     internal const string CompensationColumns = """
@@ -194,7 +198,8 @@ internal static class SqliteStoreSupport
         attempt, input_json, input_type, output_json, error_json,
         retry_policy_json, timeout_ticks, available_at, timeout_at,
         lease_owner, lease_expires_at, lease_generation, started_at,
-        completed_at, created_at, actor, reason, idempotency_key
+        completed_at, created_at, actor, reason, idempotency_key,
+        authorization_declaration_json
         """;
 
     internal const string OperationColumns = """

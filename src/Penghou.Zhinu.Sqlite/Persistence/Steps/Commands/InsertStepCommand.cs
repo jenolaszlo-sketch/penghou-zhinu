@@ -16,13 +16,13 @@ internal sealed class InsertStepCommand
              input_type, input_hash, output_json, output_type, error_json,
              signal_name, created_at, started_at, completed_at, available_at,
              lease_owner, lease_expires_at, revision, lease_generation,
-             implementation_key)
+             implementation_key, authorization_declaration_hash)
             VALUES
             ($id, $runId, $stepKey, $status, $attempt, $inputJson,
              $inputType, $inputHash, $outputJson, $outputType, $errorJson,
              $signalName, $createdAt, $startedAt, $completedAt, $availableAt,
              $leaseOwner, $leaseExpiresAt, $revision, $leaseGeneration,
-             $implementationKey);
+             $implementationKey, $authorizationDeclarationHash);
             """);
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(step.Id));
         command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(step.WorkflowRunId));
@@ -57,6 +57,7 @@ internal sealed class InsertStepCommand
         command.Parameters.AddWithValue(
             "$implementationKey",
             SqliteStoreSupport.DbValue(step.ImplementationKey));
+        command.Parameters.AddWithValue("$authorizationDeclarationHash", SqliteStoreSupport.DbValue(step.AuthorizationDeclarationHash));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 }

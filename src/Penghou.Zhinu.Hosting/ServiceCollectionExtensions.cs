@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Penghou.Workflow.Abstractions;
 using System.Reflection;
 using System.Text.Json;
 
@@ -9,6 +10,58 @@ namespace Penghou.Zhinu.Hosting;
 /// <summary>Registers the optional embedded hosted execution loop.</summary>
 public static class ServiceCollectionExtensions
 {
+    private sealed record AuthorizationRegistration(WorkflowExecutionAuthorizationOptions Options);
+    private sealed record BaseOptionsRegistration(ZhinuOptions Options);
+
+    private static ZhinuOptions CreateConfiguredOptions(IServiceProvider provider)
+    {
+        var configured = provider.GetRequiredService<BaseOptionsRegistration>().Options.Clone();
+        var authorization = provider.GetService<AuthorizationRegistration>();
+        if (authorization is not null)
+            configured.ExecutionAuthorization = authorization.Options;
+        return configured;
+    }
+
+    private static bool IsZhinuOwnedOptionsFactory(ServiceDescriptor descriptor) =>
+        descriptor.ImplementationFactory?.Method ==
+        ((Func<IServiceProvider, ZhinuOptions>)CreateConfiguredOptions).Method;
+
+    private static ZhinuOptions ResolveZhinuOptions(IServiceProvider provider)
+    {
+        var options = provider.GetServices<ZhinuOptions>().ToArray();
+        if (options.Length != 1)
+            throw new InvalidOperationException("AddZhinu requires exactly one effective ZhinuOptions registration; duplicate or shadowing registrations are rejected.");
+        return options[0];
+    }
+
+    /// <summary>Registers the one explicit authority configuration for this Zhinu host.</summary>
+    public static IServiceCollection AddZhinuExecutionAuthorization(
+        this IServiceCollection services,
+        string providerId,
+        string bindingId,
+        IExecutionAuthorizer authorizer,
+        IWorkflowAuthorizationEvidenceVerifier? evidenceVerifier = null,
+        TimeSpan? evaluationTimeout = null,
+        TimeSpan? maximumDecisionLifetime = null,
+        TimeSpan? maximumClockSkew = null)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        if (services.Any(d => d.ServiceType == typeof(AuthorizationRegistration)))
+            throw new InvalidOperationException("Zhinu execution authorization is already registered; exactly one provider is allowed.");
+        var optionDescriptors = services.Where(d => d.ServiceType == typeof(ZhinuOptions)).ToArray();
+        if (optionDescriptors.Length > 0 &&
+            !optionDescriptors.All(IsZhinuOwnedOptionsFactory))
+            throw new InvalidOperationException("A custom ZhinuOptions DI registration conflicts with AddZhinuExecutionAuthorization.");
+        if (services.Any(d => d.ServiceType == typeof(Microsoft.Extensions.Options.IConfigureOptions<ZhinuOptions>) ||
+                              d.ServiceType == typeof(Microsoft.Extensions.Options.IPostConfigureOptions<ZhinuOptions>)))
+            throw new InvalidOperationException("Microsoft options configuration for ZhinuOptions conflicts with AddZhinuExecutionAuthorization.");
+
+        var options = new WorkflowExecutionAuthorizationOptions(providerId, bindingId,
+            authorizer, evidenceVerifier, evaluationTimeout, maximumDecisionLifetime, maximumClockSkew);
+        services.AddSingleton(new AuthorizationRegistration(options));
+        return services;
+    }
+
     public static IServiceCollection AddZhinu(
         this IServiceCollection services,
         Action<ZhinuOptions>? configure = null,
@@ -18,7 +71,16 @@ public static class ServiceCollectionExtensions
         var options = new ZhinuOptions();
         configure?.Invoke(options);
         options.Validate();
-        services.TryAddSingleton(options);
+        if (options.ExecutionAuthorization is not null && services.Any(d => d.ServiceType == typeof(AuthorizationRegistration)))
+            throw new InvalidOperationException("Configure execution authorization with AddZhinuExecutionAuthorization, not through AddZhinu's ZhinuOptions callback.");
+        if (options.ExecutionAuthorization is not null)
+            throw new InvalidOperationException("Configure execution authorization with AddZhinuExecutionAuthorization, not through AddZhinu's ZhinuOptions callback.");
+        if (!services.Any(d => d.ServiceType == typeof(BaseOptionsRegistration)))
+            services.AddSingleton(new BaseOptionsRegistration(options));
+        if (services.Any(d => d.ServiceType == typeof(AuthorizationRegistration)) &&
+            services.Any(d => d.ServiceType == typeof(ZhinuOptions) && !IsZhinuOwnedOptionsFactory(d)))
+            throw new InvalidOperationException("A custom ZhinuOptions DI registration conflicts with AddZhinuExecutionAuthorization.");
+        services.TryAddSingleton<ZhinuOptions>(CreateConfiguredOptions);
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<WorkflowRegistry>(provider =>
         {
@@ -47,7 +109,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(provider => new WorkflowEngine(
             provider.GetRequiredService<IWorkflowStore>(),
             provider.GetRequiredService<IWorkflowRegistry>(),
-            provider.GetRequiredService<ZhinuOptions>(),
+            ResolveZhinuOptions(provider),
             serializerOptions,
             provider.GetRequiredService<TimeProvider>(),
             provider.GetService<ILogger<WorkflowEngine>>(),

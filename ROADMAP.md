@@ -1,5 +1,70 @@
 # Penghou.Zhinu Roadmap
 
+## Current priority: neutral authority extension - 2026-10-03
+
+The [authority-extension plan](docs/authority-extension-plan.md) is the canonical
+work order for the user's package-separation pivot. It supersedes older Hufu
+integration ordering, while preserving existing release/qualification history.
+Penghou owns `Penghou.Workflow.Abstractions` in the Penghou repository; Zhinu consumes that neutral contract;
+`Hufu.Workflow` optionally implements it without referencing the runtime.
+The [current activities](docs/authority-extension-activities.md) define concrete
+outputs, dependencies and ready/held status. WA-1/2/3 are complete: version
+`0.1.0-preview.2` is public, and all four publishing/verification jobs passed.
+Zhinu ZA-2 source adoption and package qualification are complete; its historical
+927-case evidence remains in the [adoption record](docs/workflow-package-adoption.md).
+ZA-3A/3B/4 are locally qualified in candidate `0.2.0-preview.1`: 1,017 runtime
+tests passed (506 on .NET 8 and 511 on .NET 10), and the isolated seven-package
+consumer passed on both TFMs, and the unchanged preview.15 legacy compatibility
+suite passed on .NET 8/10. Commit/push and remote CI publication remain pending.
+See the [authorization boundary](docs/workflow-authorization.md) and
+[qualification record](docs/qualification/workflow-authorization.json). ZA-6
+publication remains the user's CI step. Hufu's optional adapter is held
+until that published Zhinu phase. Independent Hufu HA-0A/B cleanup remains available. Luban LW-1 is a separate optional host-integration track
+with a neutral boundary; Zhinu, Hufu and Luban must not acquire mandatory
+dependencies on one another through it. Read the
+[shared contract plan](../Penghou/docs/workflow-abstractions-plan.md).
+
+- [x] **ZA-0:** archive the proposal, inventory current coupling and record the plan.
+- [x] **ZA-1 design:** bounded contracts, additive compatibility,
+  source dispatch and failure/approval state design selected in Penghou's
+  [review](../Penghou/docs/workflow-contract-review.md) and
+  [contract manual](../Penghou/docs/workflow-authorization-contract.md), then
+  implemented across step, declarative, compensation, child and loop-predicate
+  callbacks. Loop body/orchestration and external effects remain outside activity
+  preflight; those steps and resources require their own controls.
+- [x] **WA-1/2/3, Penghou-owned:** `Penghou.Workflow.Abstractions`
+  `0.1.0-preview.2` is published. All four publishing/verification jobs passed;
+  exact public-feed package evidence is recorded in the
+  [adoption record](docs/workflow-package-adoption.md).
+- [x] **ZA-2:** exact-package source adoption, declared-TFM suites, API and
+  namespace compatibility, old-binary probe, and seven-package fresh-cache
+  closure consumer all pass. Keep Zhinu independently usable. See the
+  [adoption record](docs/workflow-package-adoption.md).
+- [x] **ZA-3A/3B/4 implementation and runtime qualification:** one effective authorizer and named
+  unprotected profile; per-attempt callback gates, durable approval park/wake,
+  fresh retry/resume decisions, mandatory evidence, and post-await dispatch
+  fencing. Locally qualified in `0.2.0-preview.1`; commit/push and ZA-6 remote
+  CI publication remain pending. See the [qualification record](docs/qualification/workflow-authorization.json).
+- [x] **ZA-5A:** retain the frozen isolated legacy profile; its implementation
+  remains unchanged. An activity preflight hook does not replace concrete
+  effect checks.
+- [ ] **ZA-5B, deferred:** apply any retirement/replacement only with integration
+  evidence and preserve qualified atomic-start/effect guarantees.
+- [ ] **ZA-6:** commit/push the locally qualified candidate and have the user run
+  the Zhinu NuGet publication workflow with remote CI.
+  Preview.15 and the published neutral contracts remain immutable. Hufu adapter
+  gates HA-1/2/3 follow the published Zhinu release. No publication is claimed.
+  Luban LW-1 remains a separate optional host-integration task at a neutral boundary.
+
+The neutral contract package is published and its isolated public-feed consumer
+has been verified. Zhinu runtime authorization and durable approval are present
+in the locally qualified candidate; commit/push and remote CI publication remain
+open. Resume
+from the [candidate qualification record](docs/qualification/workflow-authorization.json),
+the [adoption record](docs/workflow-package-adoption.md), and the
+[release checkpoint](../Penghou/docs/workflow-package-release-handoff.md).
+Luban/IO contracts and deferred VFS/WhatIf scope remain unchanged by this plan.
+
 ## Resource abstractions and simulated execution — 2026-10-02
 
 Direction: [resource-abstractions architecture](../Penghou/docs/resource-abstractions-architecture.md).

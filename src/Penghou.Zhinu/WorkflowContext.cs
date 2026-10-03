@@ -16,6 +16,7 @@ public sealed partial class WorkflowContext
         SerializationIdentity.TypeId(typeof(DurableDelayMarker));
     private readonly IWorkflowStore store;
     private readonly string ownerId;
+    private readonly WorkflowAuthorizationGate authorizationGate;
     private readonly ZhinuOptions options;
     private readonly JsonSerializerOptions serializerOptions;
     private readonly TimeProvider timeProvider;
@@ -33,6 +34,13 @@ public sealed partial class WorkflowContext
     private readonly IReadOnlyDictionary<string, WorkflowStepCompensation>?
         rollbackCompensations;
     private readonly List<CompensationInvocation> rollbackInvocations = [];
+    private int authorizationBlocked;
+
+    internal void ThrowIfAuthorizationBlocked()
+    {
+        if (Volatile.Read(ref authorizationBlocked) != 0)
+            throw new WorkflowAuthorizationException("A terminal authorization failure cannot be bypassed by the workflow.");
+    }
 
     private static readonly AsyncLocal<List<PendingWorkflowEvent>?> PendingStepEmits = new();
 
@@ -58,6 +66,7 @@ public sealed partial class WorkflowContext
         this.allowStepSupersede = allowStepSupersede;
         this.store = store;
         this.ownerId = ownerId;
+        authorizationGate = new WorkflowAuthorizationGate(store, options, timeProvider, ownerId);
         this.options = options;
         this.serializerOptions = serializerOptions;
         this.timeProvider = timeProvider;
@@ -284,7 +293,11 @@ public sealed partial class WorkflowContext
             : new CompensationMetadata(
                 stepKey,
                 JsonSerializer.Serialize(configured.Retry, serializerOptions),
-                configured.ExecutionTimeout);
+                configured.ExecutionTimeout)
+            {
+                AuthorizationDeclarationJson = options.ExecutionAuthorization is null ? null :
+                    WorkflowAuthorizationCodec.SerializeDeclaration(configured.CompensationAuthorization)
+            };
         var inputJson = JsonSerializer.Serialize(input, serializerOptions);
         var inputType = SerializationIdentity.TypeId(typeof(TInput));
         var outputType = SerializationIdentity.TypeId(typeof(TOutput));
@@ -301,7 +314,8 @@ public sealed partial class WorkflowContext
                     stepKey,
                     outputType,
                     compensation,
-                    implementationKey);
+                    implementationKey,
+                    configured);
             }
             if (dependencies is not null)
             {
@@ -335,7 +349,9 @@ public sealed partial class WorkflowContext
                         dependencies,
                         compensationMetadata,
                         implementationKey,
-                        cancellationToken),
+                        cancellationToken,
+                        options.ExecutionAuthorization is null ? null :
+                            WorkflowAuthorizationCodec.Declaration(configured.Authorization, configured.CompensationAuthorization)),
                     (waiting, waitCancellation) => WaitUntilAsync(
                         waiting.Step.AvailableAt,
                         waitCancellation),
@@ -1179,6 +1195,7 @@ public sealed partial class WorkflowContext
                 step.Revision,
                 value,
                 ct),
+            new StepOptions { Authorization = options?.StartAuthorization },
             cancellationToken: cancellationToken).ConfigureAwait(false);
         return await StepAsync(
             $"{stepKey}:wait",
@@ -1189,7 +1206,7 @@ public sealed partial class WorkflowContext
                 step.Revision,
                 step.StepExecutionId,
                 ct),
-            new StepOptions { DependsOn = [$"{stepKey}:start"] },
+            new StepOptions { DependsOn = [$"{stepKey}:start"], Authorization = options?.WaitAuthorization },
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -1226,7 +1243,7 @@ public sealed partial class WorkflowContext
                         waitCancellation => ClaimAsync(
                             step.StepKey, step.InputJson, step.InputType, step.InputHash,
                             outputType, dependencies, compensation,
-                            step.ImplementationKey, waitCancellation),
+                            step.ImplementationKey, waitCancellation, step.AuthorizationDeclarationHash),
                         (waiting, waitCancellation) => WaitUntilAsync(
                             waiting.Step.AvailableAt,
                             waitCancellation),
@@ -1243,12 +1260,31 @@ public sealed partial class WorkflowContext
                 activity?.SetTag(ZhinuDiagnostics.Attributes.StepAttempt, step.Attempt);
                 var completed = false;
                 TOutput? completedOutput = default;
+                using var authorizationCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                await using var authorizationRenewal = options.ExecutionAuthorization is null ? null :
+                    new LeaseRenewal(timeProvider, options.LeaseRenewalInterval,
+                        token => ((IWorkflowAuthorizationRepository)store).RenewAuthorizationClaimLeaseAsync(
+                            WorkflowRunId, step.Id, false, ownerId, leaseGeneration, timeProvider.GetUtcNow(),
+                            timeProvider.GetUtcNow() + options.LeaseDuration, token),
+                        _ => { authorizationCancellation.Cancel(); return ValueTask.CompletedTask; });
+                try
+                {
+                    await authorizationGate.AuthorizeAsync(WorkflowRunId, step.Id, step.StepKey, step.Revision,
+                        leaseGeneration, step.Attempt, false, step.AuthorizationDeclarationHash ??
+                            WorkflowAuthorizationCodec.Declaration(configured.Authorization, configured.CompensationAuthorization),
+                        configured.Authorization, authorizationCancellation.Token).ConfigureAwait(false);
+                }
+                catch (WorkflowAuthorizationException)
+                {
+                    Interlocked.Exchange(ref authorizationBlocked, 1);
+                    throw;
+                }
                 using (var timeoutCancellation = configured.ExecutionTimeout is null
                     ? null
                     : new CancellationTokenSource(configured.ExecutionTimeout.Value, timeProvider))
                 using (var executionCancellation = timeoutCancellation is null
-                    ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                    : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancellation.Token))
+                    ? CancellationTokenSource.CreateLinkedTokenSource(authorizationCancellation.Token)
+                    : CancellationTokenSource.CreateLinkedTokenSource(authorizationCancellation.Token, timeoutCancellation.Token))
                 await using (var renewal = new LeaseRenewal(
                     timeProvider,
                     options.LeaseRenewalInterval,
@@ -1332,7 +1368,7 @@ public sealed partial class WorkflowContext
                             step, timeout, configured.Retry, outputType, cancellationToken)
                             .ConfigureAwait(false);
                     }
-                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    catch (OperationCanceledException) when (authorizationCancellation.IsCancellationRequested)
                     {
                         throw;
                     }
@@ -1435,7 +1471,8 @@ public sealed partial class WorkflowContext
         IReadOnlyCollection<string>? dependencies,
         CompensationMetadata? compensation,
         string? implementationKey,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? authorizationDeclarationHash = null)
     {
         var now = timeProvider.GetUtcNow();
         return store.ClaimStepAsync(
@@ -1454,7 +1491,8 @@ public sealed partial class WorkflowContext
                 LeaseGeneration = leaseGeneration,
                 DependsOn = dependencies,
                 Compensation = compensation,
-                AllowSupersede = allowStepSupersede
+                AllowSupersede = allowStepSupersede,
+                AuthorizationDeclarationHash = authorizationDeclarationHash
             },
             cancellationToken);
     }
@@ -1468,7 +1506,7 @@ public sealed partial class WorkflowContext
     internal sealed record CompensationInvocation(
         string StepKey,
         WorkflowStepCompensation Compensation,
-        Func<CancellationToken, Task> Execute);
+        Func<WorkflowStepCompensation, CancellationToken, Task> Execute);
 
     /// <summary>Compensations registered while the workflow replayed in rollback mode.</summary>
     internal IReadOnlyList<CompensationInvocation> RollbackInvocations =>
@@ -1478,7 +1516,8 @@ public sealed partial class WorkflowContext
         string stepKey,
         string outputType,
         Func<TOutput, WorkflowStepContext, CancellationToken, Task>? compensation,
-        string? implementationKey)
+        string? implementationKey,
+        StepOptions? configured = null)
     {
         if (!replaySteps!.TryGetValue(stepKey, out var stored))
         {
@@ -1502,18 +1541,15 @@ public sealed partial class WorkflowContext
                 throw new WorkflowStateException(
                     $"Workflow definition no longer registers a compensation for step '{stepKey}'.");
             }
+            if (options.ExecutionAuthorization is not null &&
+                row.AuthorizationDeclarationJson != WorkflowAuthorizationCodec.SerializeDeclaration(configured?.CompensationAuthorization))
+                throw new WorkflowAuthorizationException("Durable compensation declaration no longer matches its registered definition.");
             var result = Deserialize<TOutput>(row.InputJson, outputType);
-            var stepContext = new WorkflowStepContext(
-                WorkflowRunId,
-                row.Id,
-                stepKey,
-                row.Attempt,
-                row.Revision,
-                isCompensation: true);
             rollbackInvocations.Add(new CompensationInvocation(
                 stepKey,
                 row,
-                ct => compensation(result, stepContext, ct)));
+                (claim, ct) => compensation(result, new WorkflowStepContext(
+                    WorkflowRunId, claim.Id, stepKey, claim.Attempt, claim.Revision, isCompensation: true), ct)));
             return result;
         }
         return Deserialize<TOutput>(stored.OutputJson, outputType);

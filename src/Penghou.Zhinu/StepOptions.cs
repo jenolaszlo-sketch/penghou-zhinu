@@ -3,6 +3,12 @@ namespace Penghou.Zhinu;
 /// <summary>Configures retry and execution behavior for one durable step.</summary>
 public sealed record StepOptions
 {
+    /// <summary>Immutable declared authority and approved plan identity for the forward callback.</summary>
+    public WorkflowAuthorizationDeclaration? Authorization { get; init; }
+
+    /// <summary>Separate declarations for compensation; forward permission never covers compensation.</summary>
+    public WorkflowAuthorizationDeclaration? CompensationAuthorization { get; init; }
+
     public RetryPolicy Retry { get; init; } = new();
 
     public TimeSpan? ExecutionTimeout { get; init; }

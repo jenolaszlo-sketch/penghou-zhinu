@@ -1,0 +1,307 @@
+{
+  "SchemaVersion": 1,
+  "PackageVersion": "0.2.0-preview.1-ci.za3.20261003",
+  "NeutralPackage": {
+    "Id": "Penghou.Workflow.Abstractions",
+    "ExactVersion": "0.1.0-preview.2"
+  },
+  "ArtifactsDirectory": "C:\\Users\\Laszlos\\source\\repos\\Solo\\.tmp\\zhinu-authorization\\artifacts",
+  "PackageArtifacts": [
+    {
+      "Id": "Penghou.Zhinu",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Microsoft.Extensions.Logging.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Penghou.Workflow.Abstractions",
+          "Version": "[0.1.0-preview.2]"
+        },
+        {
+          "Id": "Microsoft.Extensions.Logging.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Penghou.Workflow.Abstractions",
+          "Version": "[0.1.0-preview.2]"
+        }
+      ]
+    },
+    {
+      "Id": "Penghou.Zhinu.Agents",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.Agents.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Microsoft.Agents.AI.Workflows",
+          "Version": "1.17.0"
+        },
+        {
+          "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Microsoft.Agents.AI.Workflows",
+          "Version": "1.17.0"
+        },
+        {
+          "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+          "Version": "10.0.9"
+        }
+      ]
+    },
+    {
+      "Id": "Penghou.Zhinu.Hosting",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.Hosting.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Microsoft.Extensions.Hosting.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Microsoft.Extensions.Options",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Microsoft.Extensions.Hosting.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "Microsoft.Extensions.Options",
+          "Version": "10.0.9"
+        }
+      ]
+    },
+    {
+      "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        }
+      ]
+    },
+    {
+      "Id": "Penghou.Zhinu.OpenTelemetry",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "OpenTelemetry.Extensions.Hosting",
+          "Version": "1.17.0"
+        },
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "OpenTelemetry.Extensions.Hosting",
+          "Version": "1.17.0"
+        }
+      ]
+    },
+    {
+      "Id": "Penghou.Zhinu.Sqlite",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Microsoft.Data.Sqlite",
+          "Version": "10.0.10"
+        },
+        {
+          "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+          "Version": "2.1.12"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Microsoft.Data.Sqlite",
+          "Version": "10.0.10"
+        },
+        {
+          "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+          "Version": "10.0.9"
+        },
+        {
+          "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+          "Version": "2.1.12"
+        }
+      ]
+    },
+    {
+      "Id": "Penghou.Zhinu.Testing",
+      "Version": "0.2.0-preview.1-ci.za3.20261003",
+      "File": "Penghou.Zhinu.Testing.0.2.0-preview.1-ci.za3.20261003.nupkg",
+      "DirectDependencies": [
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.1-ci.za3.20261003"
+        }
+      ]
+    }
+  ],
+  "Consumer": {
+    "Project": "NuGet package references only; no project references",
+    "PackageSourceMapping": {
+      "ZhinuPackages": "Local artifacts directory, exact package ID patterns",
+      "NeutralAndExternalPackages": "nuget.org"
+    },
+    "PackageCache": "C:\\Users\\Laszlos\\AppData\\Local\\Temp\\pzc-7faa1d1db6ab449585fbac1a895a7972",
+    "AssetsFile": "consumer\\obj\\project.assets.json",
+    "ResolvedPackageIds": [
+      "Google.Protobuf/3.30.2",
+      "Microsoft.Agents.AI/1.17.0",
+      "Microsoft.Agents.AI.Abstractions/1.17.0",
+      "Microsoft.Agents.AI.Workflows/1.17.0",
+      "Microsoft.Data.Sqlite/10.0.10",
+      "Microsoft.Data.Sqlite.Core/10.0.10",
+      "Microsoft.Extensions.AI/10.7.0",
+      "Microsoft.Extensions.AI.Abstractions/10.7.0",
+      "Microsoft.Extensions.AI.Evaluation/10.7.0",
+      "Microsoft.Extensions.Caching.Abstractions/10.0.9",
+      "Microsoft.Extensions.Compliance.Abstractions/10.5.0",
+      "Microsoft.Extensions.Configuration/8.0.0",
+      "Microsoft.Extensions.Configuration/10.0.0",
+      "Microsoft.Extensions.Configuration.Abstractions/10.0.9",
+      "Microsoft.Extensions.Configuration.Binder/8.0.0",
+      "Microsoft.Extensions.Configuration.Binder/10.0.0",
+      "Microsoft.Extensions.Configuration.EnvironmentVariables/8.0.0",
+      "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+      "Microsoft.Extensions.DependencyInjection/8.0.0",
+      "Microsoft.Extensions.DependencyInjection/10.0.0",
+      "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+      "Microsoft.Extensions.Diagnostics.Abstractions/10.0.9",
+      "Microsoft.Extensions.FileProviders.Abstractions/10.0.9",
+      "Microsoft.Extensions.FileSystemGlobbing/10.0.6",
+      "Microsoft.Extensions.Hosting.Abstractions/10.0.9",
+      "Microsoft.Extensions.Logging/8.0.0",
+      "Microsoft.Extensions.Logging/10.0.0",
+      "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+      "Microsoft.Extensions.Logging.Configuration/8.0.0",
+      "Microsoft.Extensions.Logging.Configuration/10.0.0",
+      "Microsoft.Extensions.ObjectPool/8.0.26",
+      "Microsoft.Extensions.ObjectPool/10.0.6",
+      "Microsoft.Extensions.Options/10.0.9",
+      "Microsoft.Extensions.Options.ConfigurationExtensions/8.0.0",
+      "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+      "Microsoft.Extensions.Primitives/10.0.9",
+      "Microsoft.Extensions.VectorData.Abstractions/10.7.0",
+      "Microsoft.ML.Tokenizers/2.0.0",
+      "OpenTelemetry/1.17.0",
+      "OpenTelemetry.Api/1.17.0",
+      "OpenTelemetry.Api.ProviderBuilderExtensions/1.17.0",
+      "OpenTelemetry.Extensions.Hosting/1.17.0",
+      "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+      "Penghou.Zhinu/0.2.0-preview.1-ci.za3.20261003",
+      "Penghou.Zhinu.Agents/0.2.0-preview.1-ci.za3.20261003",
+      "Penghou.Zhinu.Hosting/0.2.0-preview.1-ci.za3.20261003",
+      "Penghou.Zhinu.Hosting.AspNetCore/0.2.0-preview.1-ci.za3.20261003",
+      "Penghou.Zhinu.OpenTelemetry/0.2.0-preview.1-ci.za3.20261003",
+      "Penghou.Zhinu.Sqlite/0.2.0-preview.1-ci.za3.20261003",
+      "Penghou.Zhinu.Testing/0.2.0-preview.1-ci.za3.20261003",
+      "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+      "SQLitePCLRaw.core/2.1.12",
+      "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+      "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+      "System.Diagnostics.DiagnosticSource/10.0.9",
+      "System.IO.Pipelines/10.0.9",
+      "System.Numerics.Tensors/10.0.9",
+      "System.Text.Encodings.Web/10.0.9",
+      "System.Text.Json/10.0.9",
+      "System.Threading.Channels/10.0.9"
+    ],
+    "ForbiddenHufuDependencyScan": "passed"
+  },
+  "TargetFrameworkResults": [
+    {
+      "TargetFramework": "net8.0",
+      "Result": "passed",
+      "AssetsTarget": "net8.0",
+      "Log": "run-net8.0.log"
+    },
+    {
+      "TargetFramework": "net10.0",
+      "Result": "passed",
+      "AssetsTarget": "net10.0",
+      "Log": "run-net10.0.log"
+    }
+  ],
+  "Status": "passed"
+}

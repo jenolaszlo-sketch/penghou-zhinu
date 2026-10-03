@@ -19,14 +19,15 @@ internal sealed class InsertCompensationCommand
             INSERT INTO workflow_step_compensations
             (id, workflow_run_id, step_key, revision, compensation_name, status,
              attempt, retry_policy_json, timeout_ticks, idempotency_key,
-             lease_generation, created_at)
+             lease_generation, created_at, authorization_declaration_json)
             VALUES
             ($id, $runId, $stepKey, $revision, $name, $pending, 0,
-             $retryJson, $timeoutTicks, $idempotencyKey, $generation, $createdAt)
+             $retryJson, $timeoutTicks, $idempotencyKey, $generation, $createdAt, $authorizationDeclarationJson)
             ON CONFLICT(workflow_run_id, step_key, revision) DO UPDATE
             SET status = $pending, compensation_name = $name,
                 retry_policy_json = $retryJson, timeout_ticks = $timeoutTicks,
-                lease_generation = $generation;
+                lease_generation = $generation,
+                authorization_declaration_json = $authorizationDeclarationJson;
             """);
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(Guid.NewGuid()));
         command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(workflowRunId));
@@ -47,6 +48,7 @@ internal sealed class InsertCompensationCommand
             $"{workflowRunId:D}:{stepKey}:{revision}:compensation");
         command.Parameters.AddWithValue("$generation", leaseGeneration);
         command.Parameters.AddWithValue("$createdAt", SqliteStoreSupport.FormatTimestamp(now));
+        command.Parameters.AddWithValue("$authorizationDeclarationJson", SqliteStoreSupport.DbValue(compensation.AuthorizationDeclarationJson));
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 }

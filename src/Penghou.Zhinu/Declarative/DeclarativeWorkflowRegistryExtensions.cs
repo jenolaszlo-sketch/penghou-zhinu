@@ -25,7 +25,7 @@ public static class DeclarativeWorkflowRegistryExtensions
         foreach (var step in definition.Steps)
         {
             var registeredDescriptor = catalogue.GetDescriptor(step.Activity);
-            if (registeredDescriptor != step.Descriptor)
+            if (!DescriptorMatches(registeredDescriptor, step.Descriptor))
             {
                 throw new ArgumentException(
                     $"Compiled contract for step '{step.Id}' does not match registered activity '{step.Activity}'.",
@@ -50,5 +50,24 @@ public static class DeclarativeWorkflowRegistryExtensions
             definition.Name,
             definition.Version,
             new DeclarativeWorkflow(definition, executorResolver));
+    }
+
+    private static bool DescriptorMatches(ActivityDescriptor registered, ActivityDescriptor compiled)
+    {
+        if (registered.Reference != compiled.Reference ||
+            registered.Input.TypeId != compiled.Input.TypeId ||
+            registered.Output.TypeId != compiled.Output.TypeId)
+        {
+            return false;
+        }
+
+        var left = registered.Authorization;
+        var right = compiled.Authorization;
+        if (left is null || right is null)
+            return left is null && right is null;
+
+        return left.PlanId == right.PlanId &&
+               left.PlanRevision == right.PlanRevision &&
+               left.Requirements.SequenceEqual(right.Requirements);
     }
 }

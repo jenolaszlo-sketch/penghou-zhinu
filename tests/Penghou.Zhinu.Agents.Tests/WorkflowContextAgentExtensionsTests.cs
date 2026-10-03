@@ -5,6 +5,7 @@ using Microsoft.Data.Sqlite;
 using Penghou.Zhinu;
 using Penghou.Zhinu.Sqlite;
 using System.Text.Json;
+using AgentFrameworkWorkflow = Microsoft.Agents.AI.Workflows.Workflow;
 
 namespace Penghou.Zhinu.Agents.Tests;
 
@@ -155,7 +156,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         counters.Final.Should().Be(2);
     }
 
-    private static Workflow BuildGraph(GraphCounters counters, bool failFirstFinal)
+    private static AgentFrameworkWorkflow BuildGraph(GraphCounters counters, bool failFirstFinal)
     {
         Func<string, string> process = value =>
         {
@@ -192,7 +193,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
     }
 
     private sealed class AgentGraphWorkflow(
-        Workflow workflow,
+        AgentFrameworkWorkflow workflow,
         ICheckpointStore<JsonElement> checkpointStore) : IWorkflow<string, string>
     {
         public Guid RunId { get; private set; }
@@ -213,7 +214,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
     }
 
     private sealed class AgentThenDoneWorkflow(
-        Workflow workflow,
+        AgentFrameworkWorkflow workflow,
         ICheckpointStore<JsonElement> checkpointStore) : IWorkflow<string, string>
     {
         public Guid RunId { get; private set; }
@@ -350,14 +351,14 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
             .WithMessage("*compatible terminal result*");
     }
 
-    private static Workflow BuildGraphWithoutOutput()
+    private static AgentFrameworkWorkflow BuildGraphWithoutOutput()
     {
         var executor = ((Func<string, string>)(value => $"p:{value}")).BindAsExecutor("process");
         return new WorkflowBuilder(executor).Build();
     }
 
     private sealed class FreshAgentWorkflow(
-        Workflow workflow,
+        AgentFrameworkWorkflow workflow,
         ICheckpointStore<JsonElement> checkpointStore) : IWorkflow<string, string>
     {
         public Guid RunId { get; private set; }

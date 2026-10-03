@@ -92,7 +92,8 @@ internal sealed partial class SqliteStepRepository
                 OutputType = request.OutputType,
                 LeaseOwner = request.OwnerId,
                 LeaseExpiresAt = request.LeaseExpiresAt,
-                LeaseGeneration = request.LeaseGeneration
+                LeaseGeneration = request.LeaseGeneration,
+                AuthorizationDeclarationHash = request.AuthorizationDeclarationHash
             };
             await insertStep.ExecuteAsync(connection, transaction, created, cancellationToken)
                 .ConfigureAwait(false);
@@ -174,7 +175,11 @@ internal sealed partial class SqliteStepRepository
             return new StepClaimResult(StepClaimDisposition.Busy, existing);
         }
 
-        var attempt = existing.Attempt < 1 ? 1 : existing.Attempt + 1;
+        var attempt = request.AuthorizationDeclarationHash is null
+            ? (existing.Attempt < 1 ? 1 : existing.Attempt + 1)
+            : await GetNextAuthorizedAttemptAsync(
+                connection, transaction, existing.Id, false, request.WorkflowRunId, cancellationToken)
+                .ConfigureAwait(false);
         StepStateMachine.AssertCanTransition(existing.Status, StepStatus.Running, existing.Id);
         await claimStep.ExecuteAsync(
             connection,
@@ -250,7 +255,8 @@ internal sealed partial class SqliteStepRepository
             InputHash = request.InputHash,
             OutputType = request.OutputType,
             Revision = existing.Revision + 1,
-            LeaseGeneration = leaseGeneration
+            LeaseGeneration = leaseGeneration,
+            AuthorizationDeclarationHash = request.AuthorizationDeclarationHash
         };
         await insertStep.ExecuteAsync(connection, transaction, superseding, cancellationToken)
             .ConfigureAwait(false);
@@ -273,4 +279,20 @@ internal sealed partial class SqliteStepRepository
             CreatedAt = request.Now,
             OutputType = request.OutputType
         };
+
+    private static async ValueTask<int> GetNextAuthorizedAttemptAsync(
+        SqliteConnection connection, SqliteTransaction transaction, Guid claimId,
+        bool compensation, Guid runId, CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT last_started_attempt + 1
+            FROM workflow_authorization_dispatches
+            WHERE workflow_run_id = $run AND claim_id = $claim AND is_compensation = $comp;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        command.Parameters.AddWithValue("$claim", SqliteStoreSupport.Format(claimId));
+        command.Parameters.AddWithValue("$comp", compensation ? 1 : 0);
+        var value = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        return value is null or DBNull ? 1 : Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
+    }
 }

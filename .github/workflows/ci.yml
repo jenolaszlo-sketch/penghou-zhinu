@@ -31,6 +31,26 @@ jobs:
 
       - run: dotnet format Penghou.Zhinu.slnx --verify-no-changes --no-restore
 
-      - run: dotnet test Penghou.Zhinu.slnx -c Release --no-build --no-restore
+      - run: dotnet test Penghou.Zhinu.slnx -c Release --no-build --no-restore --logger trx --results-directory test-results
 
       - run: dotnet pack Penghou.Zhinu.slnx -c Release --no-build --no-restore -o artifacts
+
+      - name: Verify isolated package closure and legacy binary compatibility
+        shell: pwsh
+        run: |
+          [xml]$properties = Get-Content Directory.Build.props
+          $version = [string]$properties.Project.PropertyGroup.Version
+          ./eng/Verify-WorkflowPackageClosure.ps1 -ArtifactsDirectory artifacts -PackageVersion $version -OutputDirectory qualification
+          ./eng/Verify-LegacyWorkflowConsumer.ps1 -ArtifactsDirectory artifacts -PackageVersion $version -OutputDirectory qualification
+
+      - name: Retain qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zhinu-qualification-${{ matrix.os }}
+          path: |
+            test-results/*.trx
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            qualification/**/qualification.json
+            qualification/**/logs/*.log

@@ -1,0 +1,332 @@
+CREATE TABLE IF NOT EXISTS zhinu_schema
+(
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    version INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO zhinu_schema (id, version) VALUES (1, 5);
+
+CREATE TABLE IF NOT EXISTS workflow_runs
+(
+    id TEXT PRIMARY KEY,
+    workflow_name TEXT NOT NULL,
+    workflow_version TEXT NOT NULL,
+    status INTEGER NOT NULL,
+    input_json TEXT NULL,
+    input_type TEXT NULL,
+    output_json TEXT NULL,
+    output_type TEXT NULL,
+    error_json TEXT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    completed_at TEXT NULL,
+    deadline TEXT NULL,
+    metadata_json TEXT NULL,
+    parent_run_id TEXT NULL,
+    source_run_id TEXT NULL,
+    trace_id TEXT NULL,
+    lease_owner TEXT NULL,
+    lease_expires_at TEXT NULL,
+    lease_generation INTEGER NOT NULL DEFAULT 1,
+    definition_fingerprint TEXT NULL,
+    CHECK (status BETWEEN 0 AND 6),
+    CHECK (lease_generation >= 1)
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_runs_runnable
+    ON workflow_runs(status, lease_expires_at, created_at);
+CREATE INDEX IF NOT EXISTS ix_workflow_runs_created
+    ON workflow_runs(created_at, id);
+CREATE INDEX IF NOT EXISTS ix_workflow_runs_source
+    ON workflow_runs(source_run_id);
+
+CREATE TABLE IF NOT EXISTS workflow_steps
+(
+    id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    step_key TEXT NOT NULL,
+    status INTEGER NOT NULL,
+    attempt INTEGER NOT NULL,
+    input_json TEXT NULL,
+    input_type TEXT NULL,
+    input_hash TEXT NULL,
+    output_json TEXT NULL,
+    output_type TEXT NULL,
+    error_json TEXT NULL,
+    signal_name TEXT NULL,
+    created_at TEXT NOT NULL,
+    started_at TEXT NULL,
+    completed_at TEXT NULL,
+    available_at TEXT NULL,
+    lease_owner TEXT NULL,
+    lease_expires_at TEXT NULL,
+    revision INTEGER NOT NULL DEFAULT 1,
+    lease_generation INTEGER NOT NULL DEFAULT 1,
+    implementation_key TEXT NULL,
+    UNIQUE(workflow_run_id, step_key, revision),
+    CHECK (status BETWEEN 0 AND 5),
+    CHECK (attempt >= 0),
+    CHECK (revision >= 1),
+    CHECK (lease_generation >= 1),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_steps_run
+    ON workflow_steps(workflow_run_id, created_at);
+CREATE INDEX IF NOT EXISTS ix_workflow_steps_runnable
+    ON workflow_steps(status, available_at, lease_expires_at);
+CREATE INDEX IF NOT EXISTS ix_workflow_steps_current
+    ON workflow_steps(workflow_run_id, step_key, revision);
+
+CREATE TABLE IF NOT EXISTS workflow_step_dependencies
+(
+    run_id TEXT NOT NULL,
+    step_key TEXT NOT NULL,
+    depends_on_step_key TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (run_id, step_key, depends_on_step_key),
+    CHECK (step_key <> depends_on_step_key),
+    FOREIGN KEY(run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_step_dependencies_key
+    ON workflow_step_dependencies(run_id, step_key);
+CREATE INDEX IF NOT EXISTS ix_workflow_step_dependencies_depends_on
+    ON workflow_step_dependencies(run_id, depends_on_step_key);
+
+CREATE TABLE IF NOT EXISTS workflow_artifacts
+(
+    id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    revision INTEGER NOT NULL,
+    artifact_type TEXT NOT NULL,
+    artifact_version TEXT NULL,
+    location TEXT NOT NULL,
+    content_hash TEXT NULL,
+    metadata_json TEXT NULL,
+    producer_step_key TEXT NULL,
+    producer_step_revision INTEGER NULL,
+    effective_inputs_hash TEXT NULL,
+    producer_semantics TEXT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE(workflow_run_id, name, revision),
+    CHECK (revision >= 1),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_run
+    ON workflow_artifacts(workflow_run_id, name, revision);
+CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_created
+    ON workflow_artifacts(workflow_run_id, created_at, name, revision);
+CREATE INDEX IF NOT EXISTS ix_workflow_artifacts_producer
+    ON workflow_artifacts(workflow_run_id, producer_step_key,
+        producer_step_revision);
+
+CREATE TABLE IF NOT EXISTS workflow_artifact_invalidations
+(
+    invalidation_id TEXT PRIMARY KEY,
+    artifact_id TEXT NOT NULL,
+    kind INTEGER NOT NULL,
+    reason TEXT NULL,
+    actor TEXT NULL,
+    created_at TEXT NOT NULL,
+    CHECK (kind BETWEEN 0 AND 1),
+    FOREIGN KEY(artifact_id) REFERENCES workflow_artifacts(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_artifact_invalidations_artifact
+    ON workflow_artifact_invalidations(artifact_id, created_at);
+
+CREATE TABLE IF NOT EXISTS workflow_waits
+(
+    wait_id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    step_key TEXT NOT NULL,
+    step_revision INTEGER NOT NULL,
+    step_id TEXT NOT NULL,
+    kind INTEGER NOT NULL,
+    signal_name TEXT NULL,
+    child_run_id TEXT NULL,
+    deadline_at TEXT NULL,
+    available_at TEXT NULL,
+    status INTEGER NOT NULL,
+    lease_generation INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    CHECK (kind BETWEEN 0 AND 3),
+    CHECK (status BETWEEN 0 AND 3),
+    CHECK (step_revision >= 1),
+    CHECK (lease_generation >= 1),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_waits_key
+    ON workflow_waits(workflow_run_id, step_key);
+CREATE INDEX IF NOT EXISTS ix_workflow_waits_status
+    ON workflow_waits(status, available_at, workflow_run_id);
+CREATE INDEX IF NOT EXISTS ix_workflow_waits_signal
+    ON workflow_waits(workflow_run_id, signal_name, status);
+CREATE INDEX IF NOT EXISTS ix_workflow_waits_child
+    ON workflow_waits(child_run_id, status);
+
+CREATE TABLE IF NOT EXISTS workflow_event_consumers
+(
+    consumer_id TEXT NOT NULL,
+    workflow_run_id TEXT NOT NULL,
+    last_sequence INTEGER NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (consumer_id, workflow_run_id),
+    CHECK (last_sequence >= 0),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_event_consumers_run
+    ON workflow_event_consumers(workflow_run_id, last_sequence);
+
+CREATE TABLE IF NOT EXISTS workflow_events
+(
+    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+    workflow_run_id TEXT NOT NULL,
+    step_key TEXT NULL,
+    event_type TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    attempt INTEGER NULL,
+    data_json TEXT NULL,
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_events_run_sequence
+    ON workflow_events(workflow_run_id, sequence);
+
+CREATE TABLE IF NOT EXISTS workflow_signals
+(
+    id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    signal_name TEXT NOT NULL,
+    data_json TEXT NULL,
+    delivered_step_id TEXT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_signals_run_name
+    ON workflow_signals(workflow_run_id, signal_name, delivered_step_id, created_at);
+
+CREATE TABLE IF NOT EXISTS workflow_step_compensations
+(
+    id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    step_key TEXT NOT NULL,
+    revision INTEGER NOT NULL,
+    compensation_name TEXT NOT NULL,
+    status INTEGER NOT NULL,
+    attempt INTEGER NOT NULL,
+    input_json TEXT NULL,
+    input_type TEXT NULL,
+    output_json TEXT NULL,
+    error_json TEXT NULL,
+    retry_policy_json TEXT NULL,
+    timeout_ticks INTEGER NULL,
+    available_at TEXT NULL,
+    timeout_at TEXT NULL,
+    lease_owner TEXT NULL,
+    lease_expires_at TEXT NULL,
+    lease_generation INTEGER NOT NULL DEFAULT 1,
+    started_at TEXT NULL,
+    completed_at TEXT NULL,
+    created_at TEXT NOT NULL,
+    actor TEXT NULL,
+    reason TEXT NULL,
+    idempotency_key TEXT NULL,
+    UNIQUE(workflow_run_id, step_key, revision),
+    CHECK (status BETWEEN 0 AND 4),
+    CHECK (attempt >= 0),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_step_compensations_run
+    ON workflow_step_compensations(workflow_run_id, step_key);
+
+CREATE TABLE IF NOT EXISTS workflow_run_operations
+(
+    operation_id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    operation_type TEXT NOT NULL,
+    status INTEGER NOT NULL,
+    payload_json TEXT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    completed_at TEXT NULL,
+    CHECK (status BETWEEN 0 AND 5),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_run_operations_run
+    ON workflow_run_operations(workflow_run_id, status, created_at);
+
+CREATE TABLE IF NOT EXISTS workflow_external_operations
+(
+    operation_id TEXT PRIMARY KEY,
+    workflow_run_id TEXT NOT NULL,
+    step_id TEXT NULL,
+    step_key TEXT NULL,
+    step_revision INTEGER NULL,
+    attempt INTEGER NULL,
+    idempotency_key TEXT NULL,
+    provider TEXT NOT NULL,
+    external_id TEXT NULL,
+    owner TEXT NULL,
+    lease_generation INTEGER NOT NULL,
+    status INTEGER NOT NULL,
+    recovery_intent TEXT NOT NULL,
+    payload_json TEXT NULL,
+    error TEXT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    completed_at TEXT NULL,
+    CHECK (status BETWEEN 0 AND 4),
+    CHECK (lease_generation >= 1),
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_external_operations_idempotency
+    ON workflow_external_operations(workflow_run_id, idempotency_key)
+    WHERE idempotency_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS ix_workflow_external_operations_run
+    ON workflow_external_operations(workflow_run_id, status, created_at);
+
+CREATE TABLE IF NOT EXISTS workflow_instances
+(
+    instance_id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    metadata_json TEXT NULL
+);
+
+CREATE TABLE IF NOT EXISTS workflow_generations
+(
+    generation_id TEXT PRIMARY KEY,
+    instance_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL,
+    workflow_run_id TEXT NOT NULL,
+    plan_revision TEXT NULL,
+    execution_fingerprint TEXT NULL,
+    status INTEGER NOT NULL,
+    predecessor_generation_id TEXT NULL,
+    created_at TEXT NOT NULL,
+    activated_at TEXT NULL,
+    superseded_at TEXT NULL,
+    activation_preview_json TEXT NULL,
+    CHECK (status BETWEEN 0 AND 5),
+    CHECK (ordinal >= 1),
+    FOREIGN KEY(instance_id) REFERENCES workflow_instances(instance_id) ON DELETE CASCADE,
+    FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_generations_ordinal
+    ON workflow_generations(instance_id, ordinal);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_generations_active
+    ON workflow_generations(instance_id)
+    WHERE status IN (2, 5);
+CREATE INDEX IF NOT EXISTS ix_workflow_generations_run
+    ON workflow_generations(workflow_run_id, ordinal);
+
+CREATE TABLE IF NOT EXISTS workflow_generation_dispositions
+(
+    disposition_id TEXT PRIMARY KEY,
+    generation_id TEXT NOT NULL,
+    disposition INTEGER NOT NULL,
+    reason TEXT NULL,
+    actor TEXT NULL,
+    created_at TEXT NOT NULL,
+    CHECK (disposition BETWEEN 0 AND 2),
+    FOREIGN KEY(generation_id) REFERENCES workflow_generations(generation_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS ix_workflow_generation_dispositions_generation
+    ON workflow_generation_dispositions(generation_id, created_at);

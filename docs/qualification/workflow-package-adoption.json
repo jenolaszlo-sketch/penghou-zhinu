@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-10-03T11:04:53.2636852+00:00",
+  "gate": "ZA-2",
+  "status": "qualified source adoption; runtime gates remain open",
+  "publishedContract": {
+    "id": "Penghou.Workflow.Abstractions",
+    "sourceCommit": "5a76b7ca20bc2bd0d79434c9b0878d2d437ee1e4",
+    "referenceRange": "[0.1.0-preview.2]",
+    "publicArtifactParity": "verified against exact CI artifact excluding repository signature",
+    "contractDependencies": [],
+    "publicFeedConsumerFrameworks": [
+      "net8.0",
+      "net10.0"
+    ],
+    "publishRun": "https://github.com/jenolaszlo-sketch/penghou/actions/runs/37116694209",
+    "version": "0.1.0-preview.2"
+  },
+  "sourceChanges": [
+    "src/Penghou.Zhinu/Penghou.Zhinu.csproj: exact package pin",
+    "src/Penghou.Zhinu.Agents/WorkflowContextAgentExtensions.cs: explicit Microsoft Workflow alias",
+    "tests/Penghou.Zhinu.Agents.Tests/WorkflowContextAgentExtensionsTests.cs: same alias"
+  ],
+  "tests": {
+    "net10": 466,
+    "note": "ASP.NET Core has five .NET 10-only cases; all other suites cover both frameworks.",
+    "skipped": 0,
+    "net8": 461,
+    "failed": 0,
+    "total": 927,
+    "commands": [
+      "dotnet test Penghou.Zhinu.slnx -c Release",
+      "dotnet test tests/Penghou.Zhinu.Agents.Tests/Penghou.Zhinu.Agents.Tests.csproj -c Release after test alias fix"
+    ]
+  },
+  "api": {
+    "publicTypesMoved": false,
+    "formatting": "both alias files pass verification",
+    "analyzerEnforcedBuilds": "passed",
+    "inventoriesChanged": false,
+    "aliasType": "Microsoft.Agents.AI.Workflows.Workflow",
+    "binaryProbe": {
+      "compiledAgainst": "Penghou.Zhinu and Penghou.Zhinu.Sqlite 0.1.0-preview.15",
+      "scope": "bounded compatibility probe, not every downstream application",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "paths": [
+        "legacy direct constructor",
+        "WorkflowEngineBuilder",
+        "StepAsync"
+      ],
+      "candidateCoreReplacement": "executed without recompiling consumer"
+    }
+  },
+  "localPackages": {
+    "inspectedIdentitiesSymbolsAndBothTfmDllXml": true,
+    "published": false,
+    "exactWorkflowDependency": [
+      {
+        "framework": "net8.0",
+        "package": "Penghou.Workflow.Abstractions",
+        "version": "[0.1.0-preview.2]"
+      },
+      {
+        "framework": "net10.0",
+        "package": "Penghou.Workflow.Abstractions",
+        "version": "[0.1.0-preview.2]"
+      }
+    ],
+    "version": "0.1.0-preview.15-ci.wa3.20261003",
+    "packageIds": [
+      "Penghou.Zhinu",
+      "Penghou.Zhinu.Sqlite",
+      "Penghou.Zhinu.Hosting",
+      "Penghou.Zhinu.Hosting.AspNetCore",
+      "Penghou.Zhinu.Agents",
+      "Penghou.Zhinu.Testing",
+      "Penghou.Zhinu.OpenTelemetry"
+    ]
+  },
+  "packageConsumer": {
+    "cacheSeeded": false,
+    "resolvedHufuPackages": [],
+    "resolvedWorkflowPackages": [
+      "Penghou.Workflow.Abstractions/0.1.0-preview.2"
+    ],
+    "buildAndRunFrameworks": [
+      "net8.0",
+      "net10.0"
+    ],
+    "sourceMapping": "exact seven Zhinu IDs: local candidate feed; Workflow and external packages: nuget.org",
+    "onlyPackageLibraries": true,
+    "resolvedZhinuPackages": [
+      "Penghou.Zhinu.Agents/0.1.0-preview.15-ci.wa3.20261003",
+      "Penghou.Zhinu.Hosting.AspNetCore/0.1.0-preview.15-ci.wa3.20261003",
+      "Penghou.Zhinu.Hosting/0.1.0-preview.15-ci.wa3.20261003",
+      "Penghou.Zhinu.OpenTelemetry/0.1.0-preview.15-ci.wa3.20261003",
+      "Penghou.Zhinu.Sqlite/0.1.0-preview.15-ci.wa3.20261003",
+      "Penghou.Zhinu.Testing/0.1.0-preview.15-ci.wa3.20261003",
+      "Penghou.Zhinu/0.1.0-preview.15-ci.wa3.20261003"
+    ],
+    "freshEmptyCache": true
+  },
+  "nextGates": [
+    "ZA-3A effective authorizer and protected mode binding",
+    "ZA-3B dispatch/evidence/post-await fence",
+    "ZA-4 durable approval/recovery",
+    "ZA-6 Zhinu qualification and user publication",
+    "HA-1/2/3 Hufu.Workflow after ZA-6",
+    "LW-1 optional neutral Luban host integration"
+  ],
+  "scope": "Dependency adoption and compatibility only; no Zhinu runtime authorization, approval persistence, Hufu adapter or Luban integration is implemented. Published Zhinu preview.15 is immutable; a later release needs a new version."
+}

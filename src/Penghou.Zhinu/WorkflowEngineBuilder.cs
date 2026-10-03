@@ -41,6 +41,14 @@ public sealed class WorkflowEngineBuilder
         return this;
     }
 
+    /// <summary>Configures the single explicit authority used for protected execution.</summary>
+    public WorkflowEngineBuilder WithExecutionAuthorization(WorkflowExecutionAuthorizationOptions value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        options.ExecutionAuthorization = value;
+        return this;
+    }
+
     public WorkflowEngineBuilder WithSerializerOptions(JsonSerializerOptions value)
     {
         ArgumentNullException.ThrowIfNull(value);

@@ -51,7 +51,7 @@ internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
             transaction,
             workflowRunId,
             cancellationToken).ConfigureAwait(false);
-        if (status is not (WorkflowStatus.Pending or WorkflowStatus.Running))
+        if (status is not (WorkflowStatus.Pending or WorkflowStatus.Running or WorkflowStatus.RollingBack))
             return null;
         var generation = await claimRun.ExecuteAsync(
             connection,
@@ -63,7 +63,7 @@ internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
             cancellationToken).ConfigureAwait(false);
         if (generation is null)
             return null;
-        if (status == WorkflowStatus.Running)
+        if (status is WorkflowStatus.Running or WorkflowStatus.RollingBack)
         {
             await insertEvent.ExecuteAsync(
                 connection,

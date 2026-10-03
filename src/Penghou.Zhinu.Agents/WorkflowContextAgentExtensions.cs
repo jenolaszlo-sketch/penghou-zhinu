@@ -1,6 +1,7 @@
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Checkpointing;
 using System.Text.Json;
+using AgentFrameworkWorkflow = Microsoft.Agents.AI.Workflows.Workflow;
 
 namespace Penghou.Zhinu.Agents;
 
@@ -34,7 +35,7 @@ public static class WorkflowContextAgentExtensions
     public static Task<TOutput> RunAgentWorkflowAsync<TInput, TOutput>(
         this WorkflowContext context,
         string stepKey,
-        Workflow workflow,
+        AgentFrameworkWorkflow workflow,
         TInput input,
         ICheckpointStore<JsonElement> checkpointStore,
         CancellationToken cancellationToken = default)
@@ -58,7 +59,7 @@ public static class WorkflowContextAgentExtensions
     public static Task<TOutput> RunAgentWorkflowAsync<TInput, TOutput>(
         this WorkflowContext context,
         string stepKey,
-        Workflow workflow,
+        AgentFrameworkWorkflow workflow,
         TInput input,
         ICheckpointStore<JsonElement> checkpointStore,
         AgentStepOptions? options = null,
@@ -93,7 +94,7 @@ public static class WorkflowContextAgentExtensions
         string stepKey,
         int stepRevision,
         AgentRestartMode mode,
-        Workflow workflow,
+        AgentFrameworkWorkflow workflow,
         TInput input,
         ICheckpointStore<JsonElement> checkpointStore,
         CancellationToken cancellationToken)

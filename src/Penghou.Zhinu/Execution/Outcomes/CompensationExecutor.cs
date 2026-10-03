@@ -49,6 +49,7 @@ internal sealed class CompensationExecutor
         string? reason,
         CancellationToken cancellationToken)
     {
+        WorkflowAuthorizationGate.ValidateBinding(run, options);
         if (compensateKeys.Count == 0)
             return;
         var steps = (await store.GetStepsAsync(
@@ -156,9 +157,21 @@ internal sealed class CompensationExecutor
                 cancellationToken).ConfigureAwait(false);
             if (claim is null)
                 return;
+            using var claimCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            await using var claimRenewal = options.ExecutionAuthorization is null ? null :
+                new LeaseRenewal(timeProvider, options.LeaseRenewalInterval,
+                    token => ((IWorkflowAuthorizationRepository)store).RenewAuthorizationClaimLeaseAsync(
+                        claim.WorkflowRunId, claim.Id, true, ownerId, generation, timeProvider.GetUtcNow(),
+                        timeProvider.GetUtcNow() + options.LeaseDuration, token),
+                    _ => { claimCancellation.Cancel(); return ValueTask.CompletedTask; });
             activity?.SetTag(ZhinuDiagnostics.Attributes.StepAttempt, claim.Attempt);
             activity?.SetTag(ZhinuDiagnostics.Attributes.StepRevision, claim.Revision);
 
+            var declaration = claim.AuthorizationDeclarationJson is null ? null :
+                WorkflowAuthorizationCodec.ReadDeclaration(claim.AuthorizationDeclarationJson);
+            await new WorkflowAuthorizationGate(store, options, timeProvider, ownerId).AuthorizeAsync(
+                claim.WorkflowRunId, claim.Id, claim.StepKey, claim.Revision, generation, claim.Attempt, true,
+                WorkflowAuthorizationCodec.Declaration(null, declaration), declaration, claimCancellation.Token).ConfigureAwait(false);
             await store.AppendEventAsync(
                 claim.WorkflowRunId,
                 WorkflowEventTypes.CompensationStarted,
@@ -172,13 +185,13 @@ internal sealed class CompensationExecutor
                 ? new CancellationTokenSource(executionTimeout, timeProvider)
                 : null;
             using var executionCancellation = timeoutCancellation is null
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+                ? CancellationTokenSource.CreateLinkedTokenSource(claimCancellation.Token)
                 : CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
+                    claimCancellation.Token,
                     timeoutCancellation.Token);
             try
             {
-                await invocation.Execute(executionCancellation.Token)
+                await invocation.Execute(claim, executionCancellation.Token)
                     .ConfigureAwait(false);
                 await store.CompleteCompensationAsync(
                     claim.Id,
@@ -217,7 +230,7 @@ internal sealed class CompensationExecutor
                 }
                 await WaitUntilAsync(retryAt.Value, cancellationToken).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (claimCancellation.IsCancellationRequested)
             {
                 throw;
             }

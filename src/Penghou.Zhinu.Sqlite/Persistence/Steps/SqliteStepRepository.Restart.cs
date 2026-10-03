@@ -311,7 +311,8 @@ internal sealed partial class SqliteStepRepository
                 OutputType = latest.OutputType,
                 SignalName = latest.SignalName,
                 Revision = latest.Revision + 1,
-                LeaseGeneration = generation
+                LeaseGeneration = generation,
+                AuthorizationDeclarationHash = latest.AuthorizationDeclarationHash
             };
             await insertStep.ExecuteAsync(connection, transaction, next, cancellationToken)
                 .ConfigureAwait(false);

@@ -24,6 +24,7 @@ public sealed class SqliteWorkflowStore :
     IWorkflowRetentionRepository,
     IWorkflowWaitRepository,
     IWorkflowEventExportRepository
+    , IWorkflowAuthorizationRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -35,6 +36,7 @@ public sealed class SqliteWorkflowStore :
     private readonly SqliteExternalOperationRepository externalOperations;
     private readonly SqliteWorkflowInstanceRepository instances;
     private readonly SqliteWaitRepository waits;
+    private readonly SqliteWorkflowAuthorizationRepository authorizations;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -61,10 +63,38 @@ public sealed class SqliteWorkflowStore :
         externalOperations = new SqliteExternalOperationRepository(factory);
         instances = new SqliteWorkflowInstanceRepository(factory);
         waits = new SqliteWaitRepository(factory);
+        authorizations = new SqliteWorkflowAuthorizationRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
         ObserveAsync("initialize", () => workflows.InitializeAsync(cancellationToken));
+
+    public ValueTask<WorkflowAuthorizationPending?> GetPendingAuthorizationAsync(Guid workflowRunId,
+        Guid claimId, bool isCompensation, CancellationToken cancellationToken = default) =>
+        ObserveAsync("authorization.pending.get", () => authorizations.GetPendingAuthorizationAsync(
+            workflowRunId, claimId, isCompensation, cancellationToken));
+
+    public ValueTask CommitAuthorizationAsync(WorkflowAuthorizationCommit request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("authorization.commit", () => authorizations.CommitAuthorizationAsync(request, cancellationToken));
+
+    public ValueTask<bool> WakeAuthorizationAsync(WorkflowAuthorizationWake request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("authorization.wake", () => authorizations.WakeAuthorizationAsync(request, cancellationToken));
+
+    public ValueTask<bool> HasPendingAuthorizationsAsync(Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("authorization.pending.exists", () => authorizations.HasPendingAuthorizationsAsync(workflowRunId, cancellationToken));
+
+    public ValueTask<bool> ValidateAuthorizationDispatchAsync(WorkflowAuthorizationCommit request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("authorization.dispatch.validate", () => authorizations.ValidateAuthorizationDispatchAsync(request, cancellationToken));
+
+    public ValueTask<bool> RenewAuthorizationClaimLeaseAsync(Guid workflowRunId, Guid claimId,
+        bool isCompensation, string ownerId, long leaseGeneration, DateTimeOffset now,
+        DateTimeOffset expiresAt, CancellationToken cancellationToken = default) =>
+        ObserveAsync("authorization.claim.lease.renew", () => authorizations.RenewAuthorizationClaimLeaseAsync(
+            workflowRunId, claimId, isCompensation, ownerId, leaseGeneration, now, expiresAt, cancellationToken));
 
     public ValueTask CreateRunAsync(
         WorkflowRun run,

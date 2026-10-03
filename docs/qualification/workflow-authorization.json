@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUtc": "2026-10-03T12:37:03.761913+00:00",
+  "gates": [
+    "ZA-3A",
+    "ZA-3B",
+    "ZA-4"
+  ],
+  "status": "locally qualified; ZA-6 publication pending",
+  "candidateVersion": "0.2.0-preview.1",
+  "localArtifactVersion": "0.2.0-preview.1-ci.za3.20261003",
+  "contract": {
+    "id": "Penghou.Workflow.Abstractions",
+    "exactVersion": "0.1.0-preview.2"
+  },
+  "build": {
+    "configuration": "Release",
+    "analyzersEnabled": true,
+    "warnings": 0,
+    "errors": 0,
+    "formatVerifyNoChanges": "passed",
+    "host": "Windows x64",
+    "remoteCI": "not run for these uncommitted changes"
+  },
+  "tests": {
+    "total": 1017,
+    "net8": 506,
+    "net10": 511,
+    "matrix": [
+      {
+        "project": "Penghou.Zhinu.Tests",
+        "framework": "net8.0",
+        "passed": 49,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_12_net8.0.trx",
+        "trxSha256": "6a6d5f96e89c3ee01c790c54c4c9552f063c6226a193f5523585381b6d047340"
+      },
+      {
+        "project": "Penghou.Zhinu.Tests",
+        "framework": "net10.0",
+        "passed": 49,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_13_net10.0.trx",
+        "trxSha256": "b447d6078b68b01a960e77a5abc0b1d42c884138c761809c0bf35bac1c49d20a"
+      },
+      {
+        "project": "Penghou.Zhinu.OpenTelemetry.Tests",
+        "framework": "net8.0",
+        "passed": 1,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_14_net8.0.trx",
+        "trxSha256": "4d4b38430598a913d2c7f34b6975af6d1c2a84ab5b98b42427fe5a72c40a85fb"
+      },
+      {
+        "project": "Penghou.Zhinu.OpenTelemetry.Tests",
+        "framework": "net10.0",
+        "passed": 1,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_15_net10.0.trx",
+        "trxSha256": "6de9cdeebb0a9da02c743d8487daf75699e7d7bd67029fa07af2442b0669b057"
+      },
+      {
+        "project": "Penghou.Zhinu.Agents.Tests",
+        "framework": "net10.0",
+        "passed": 13,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_15_net10.0[1].trx",
+        "trxSha256": "a8581e63cc92a853ee5c06357306f5f0239591818d6b116bec231fdd6c53cc3e"
+      },
+      {
+        "project": "Penghou.Zhinu.Hosting.Tests",
+        "framework": "net10.0",
+        "passed": 29,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_15_net10.0[2].trx",
+        "trxSha256": "3b3832489c4ca405a94524937fdeb7f418ec8b44f19b85ac17d1cc99a0bfc905"
+      },
+      {
+        "project": "Penghou.Zhinu.Agents.Tests",
+        "framework": "net8.0",
+        "passed": 13,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_15_net8.0.trx",
+        "trxSha256": "a4398efd867fbbb4d39c5820407f713fc9f57d4281c3813a9955cd1088755442"
+      },
+      {
+        "project": "Penghou.Zhinu.Hosting.Tests",
+        "framework": "net8.0",
+        "passed": 29,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_15_net8.0[1].trx",
+        "trxSha256": "d876e66416f3dfb59ea6ab92e6d88eb5760360c384698d6aabba585abd65f06d"
+      },
+      {
+        "project": "Penghou.Zhinu.Hosting.AspNetCore.Tests",
+        "framework": "net10.0",
+        "passed": 5,
+        "failed": 0,
+        "trx": "results/full-final/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_14_16_net10.0.trx",
+        "trxSha256": "823f0cd6d73e0cbba0c6139ec9b4c4b3f7560bced52826c5283408ebe586dea2"
+      },
+      {
+        "project": "Penghou.Zhinu.Sqlite.Tests",
+        "framework": "net8.0",
+        "passed": 414,
+        "failed": 0,
+        "trx": "results/sqlite-qualified/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_19_23_net8.0.trx",
+        "trxSha256": "ac6402560b92f319c1aaa79ef24c24d9373b7b207eea1ba3a8952ee27409fc07"
+      },
+      {
+        "project": "Penghou.Zhinu.Sqlite.Tests",
+        "framework": "net10.0",
+        "passed": 414,
+        "failed": 0,
+        "trx": "results/sqlite-qualified/Laszlos_LAPTOP-KBD8D8JG_2026-10-03_20_19_25_net10.0.trx",
+        "trxSha256": "3b37970854b087dbfa2f64a6e347d09a639ff7d0fcc4500cd7204c783932c3ed"
+      }
+    ]
+  },
+  "shippedPublicApi": [
+    {
+      "path": "src/Penghou.Zhinu/PublicAPI.Shipped.txt",
+      "sha256": "11f9c15e0f37ff569c21065eaa2d0af6d970a7b8da5740b84189a7bcb4aca315",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/Penghou.Zhinu.Agents/PublicAPI.Shipped.txt",
+      "sha256": "a81539ad21c673adc66d302bf1d16d1e1ebab1a56429a410031edca4c82c6466",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/Penghou.Zhinu.Hosting/PublicAPI.Shipped.txt",
+      "sha256": "b3fb270598d9e01fc423bf1eed8d7f512093443609199c3881a0a14fcf455d0c",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/Penghou.Zhinu.Hosting.AspNetCore/PublicAPI.Shipped.txt",
+      "sha256": "58fa93a057366299bab105489f5913c6acf8ba5129dbc7f80609d551d149e71c",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/Penghou.Zhinu.OpenTelemetry/PublicAPI.Shipped.txt",
+      "sha256": "f739a4ae086fa5d7f9297bdd5736c0a70d415b5fe9337ab2c47b9597d79df1a2",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/Penghou.Zhinu.Sqlite/PublicAPI.Shipped.txt",
+      "sha256": "f0addde5f29e3897f26d6bb3fb99ab9b479078dd55a8192f16cd27723f561199",
+      "baselineUnchanged": true
+    },
+    {
+      "path": "src/Penghou.Zhinu.Testing/PublicAPI.Shipped.txt",
+      "sha256": "c54837f32152fc213b9220701b9160b5eefe6310a3155c2f2cb4390febb94b07",
+      "baselineUnchanged": true
+    }
+  ],
+  "publicApiAnalysis": "passed; additive unshipped API plus schema-version constant removal marker",
+  "packages": [
+    {
+      "id": "Penghou.Zhinu",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "nupkgSha256": "5132795446475fafa7b1254841d9d34c33eed6c112d92b2fc40fb4d0a8bab825",
+      "snupkgSha256": "730af9a5e38f2fefe0d384b88311d395c1bb30a817d81c9661377c330701986f",
+      "xmlReadmeSymbolsVerified": true
+    },
+    {
+      "id": "Penghou.Zhinu.Agents",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "nupkgSha256": "e0b4e9fdf9d995b25a229b4f77a3e1e2bb2f5237ccdc68b2a956a49f007608bf",
+      "snupkgSha256": "3b7c09712c3604e651c191089761d4cab308fa2a645e41457d332b52ac659323",
+      "xmlReadmeSymbolsVerified": true
+    },
+    {
+      "id": "Penghou.Zhinu.Hosting",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "nupkgSha256": "09dbd8c70621ffe9738b8524b288c97b992148b8c5f2ddf0c9faacfd3267509f",
+      "snupkgSha256": "8a688afd4f1dc62a00725be46bc06366f42fea12f69e5be638a820162600b50c",
+      "xmlReadmeSymbolsVerified": true
+    },
+    {
+      "id": "Penghou.Zhinu.Hosting.AspNetCore",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net10.0"
+      ],
+      "nupkgSha256": "d6354764ddb20d62a4c55efed52c7579bfb87e85be2800aa9e296bb587ad2d76",
+      "snupkgSha256": "8b683539d28e242e6f5891e33ae6a59db9031142a6faeefc585d7c07ac0592a7",
+      "xmlReadmeSymbolsVerified": true
+    },
+    {
+      "id": "Penghou.Zhinu.OpenTelemetry",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "nupkgSha256": "c0b74be70f5a37c4527897575e78df4c779a2c86520e556553ef9deb03ba53da",
+      "snupkgSha256": "f21d7907cbfa15cac6cd36da1025699558ed6e6b278113e0e798d178b493def8",
+      "xmlReadmeSymbolsVerified": true
+    },
+    {
+      "id": "Penghou.Zhinu.Sqlite",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "nupkgSha256": "2ed02d9df41b779de04d15f05a69dd21785be3c90e8443e351a85c2bde32d7b2",
+      "snupkgSha256": "3c1f4e7ac908b46ce8b6a7878b604fd663a37c47d368cf81b900d6f4b59ec613",
+      "xmlReadmeSymbolsVerified": true
+    },
+    {
+      "id": "Penghou.Zhinu.Testing",
+      "version": "0.2.0-preview.1-ci.za3.20261003",
+      "frameworks": [
+        "net8.0",
+        "net10.0"
+      ],
+      "nupkgSha256": "6ecab65371bf28c21ed6bc1e4ccab1c582dbfaf61fd19449988a7e1053a3b459",
+      "snupkgSha256": "895a06e66ea49d09feaf980382a6531474e4bb54402fac7abc7b051975090031",
+      "xmlReadmeSymbolsVerified": true
+    }
+  ],
+  "isolatedPackageConsumer": {
+    "record": "workflow-authorization-package-closure.json",
+    "recordSha256": "38ab8d6bf09281aaf66594b186e93a7ff63d8d1c3f8b16e3dcd3318f4d61db87",
+    "frameworks": [
+      "net8.0",
+      "net10.0"
+    ],
+    "freshCache": true,
+    "projectReferences": 0,
+    "hufuDependencies": 0
+  },
+  "legacyBinaryConsumer": {
+    "record": "workflow-authorization-legacy-consumer.json",
+    "recordSha256": "60bf448c41b735cd0b6a504519d86d73ab48b21b94d8c1892448960fbcc2e97b",
+    "compiledAgainst": "0.1.0-preview.15",
+    "frameworks": [
+      "net8.0",
+      "net10.0"
+    ],
+    "unchangedApplicationBinary": true,
+    "schema5To6RetainedRowComparison": "passed",
+    "oldRuntimeRejectsSchema6": "passed"
+  },
+  "scope": {
+    "dispatch": "activity callback preflight; no atomic external-effect transaction",
+    "hufuWorkflowAdapter": "held until ZA-6 publication",
+    "luban": "independent; optional neutral host mapping deferred"
+  },
+  "next": [
+    "Commit and push the reviewed Zhinu candidate",
+    "User publishes 0.2.0-preview.1 via existing main workflow",
+    "Verify public artifact closure, then implement Hufu.Workflow against the neutral contracts"
+  ]
+}

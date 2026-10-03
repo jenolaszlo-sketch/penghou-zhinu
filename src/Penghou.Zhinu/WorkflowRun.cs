@@ -69,6 +69,12 @@ public sealed record WorkflowRun
     /// </summary>
     public string? DefinitionFingerprint { get; init; }
 
+    /// <summary>Configured authorization provider bound when this run was admitted.</summary>
+    public string? AuthorizationProviderId { get; init; }
+
+    /// <summary>Trusted host binding profile paired with <see cref="AuthorizationProviderId"/>.</summary>
+    public string? AuthorizationBindingId { get; init; }
+
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }

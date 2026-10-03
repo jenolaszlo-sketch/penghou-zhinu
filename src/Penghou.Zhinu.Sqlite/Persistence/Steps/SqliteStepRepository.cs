@@ -309,6 +309,9 @@ internal sealed partial class SqliteStepRepository :
                 "Compensation name must not be blank.",
                 nameof(request));
         }
+        if (request.AuthorizationDeclarationHash is { } authorizationHash &&
+            (authorizationHash.Length != 64 || authorizationHash.Any(character => !Uri.IsHexDigit(character))))
+            throw new ArgumentException("Authorization declaration hash must be a SHA-256 hex digest.", nameof(request));
     }
 
     private static void ValidateStepContract(
@@ -341,6 +344,8 @@ internal sealed partial class SqliteStepRepository :
             string.Equals(
                 existing.ImplementationKey,
                 request.ImplementationKey,
-                StringComparison.Ordinal);
+                StringComparison.Ordinal) &&
+            string.Equals(existing.AuthorizationDeclarationHash,
+                request.AuthorizationDeclarationHash, StringComparison.Ordinal);
     }
 }

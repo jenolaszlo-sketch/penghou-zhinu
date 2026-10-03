@@ -110,6 +110,11 @@ internal sealed class RollbackAndRestartCoordinator
                 CancellationToken.None).ConfigureAwait(false);
             throw;
         }
+        catch (ParkedExecutionException)
+        {
+            await store.ReleaseRollbackAndRestartLeaseAsync(workflowRunId, ownerId, timeProvider.GetUtcNow(),
+                CancellationToken.None).ConfigureAwait(false);
+        }
         catch (Exception exception)
         {
             ZhinuDiagnostics.RecordException(activity, exception);
@@ -192,6 +197,11 @@ internal sealed class RollbackAndRestartCoordinator
                 timeProvider.GetUtcNow(),
                 CancellationToken.None).ConfigureAwait(false);
             throw;
+        }
+        catch (ParkedExecutionException)
+        {
+            await store.ReleaseRollbackAndRestartLeaseAsync(workflowRunId, ownerId, timeProvider.GetUtcNow(),
+                CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

@@ -4,6 +4,8 @@ namespace Penghou.Zhinu.Declarative;
 public interface IActivityCatalogue
 {
     void Register<TInput, TOutput>(ActivityReference reference, IActivity<TInput, TOutput> implementation);
+    void Register<TInput, TOutput>(ActivityReference reference, IActivity<TInput, TOutput> implementation,
+        WorkflowAuthorizationDeclaration authorization);
     ActivityDescriptor GetDescriptor(ActivityReference reference);
     IReadOnlyList<ActivityDescriptor> ListDescriptors();
     bool TryGetDescriptor(ActivityReference reference, out ActivityDescriptor descriptor);

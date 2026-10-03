@@ -77,6 +77,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
         this.options = (options ?? new ZhinuOptions()).Clone();
         this.options.Validate();
+        if (this.options.ExecutionAuthorization is not null && store is not IWorkflowAuthorizationRepository)
+            throw new WorkflowConfigurationException("Protected execution requires an authorization-capable workflow store.");
         this.serializerOptions = serializerOptions is null
             ? ZhinuJsonDefaults.CreateDefault()
             : ZhinuJsonDefaults.CloneAndFreeze(serializerOptions);
@@ -185,6 +187,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         registration.DefinitionFingerprint,
                         StringComparison.Ordinal))
                 {
+                    WorkflowAuthorizationGate.ValidateBinding(existing, this.options);
                     await EnsureGenerationBindingAsync(
                         id,
                         registration.DefinitionFingerprint,
@@ -218,6 +221,9 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         ? null
                         : JsonSerializer.Serialize(metadata, serializerOptions),
                     DefinitionFingerprint = fingerprint,
+                    AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
+                    AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
+                        ? WorkflowAuthorizationCodec.Binding(authority) : null,
                     TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                         .ToHexString()
                 },
@@ -904,6 +910,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             .ConfigureAwait(false) ??
             throw new WorkflowNotFoundException(
                 $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
+        WorkflowAuthorizationGate.ValidateBinding(source, this.options);
         var registration = registry.Get(source.WorkflowName, source.WorkflowVersion);
         if (source.InputType != SerializationIdentity.TypeId(registration.InputType) ||
             source.OutputType != SerializationIdentity.TypeId(registration.OutputType))
@@ -941,6 +948,9 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             MetadataJson = source.MetadataJson,
             DefinitionFingerprint = targetRegistration.DefinitionFingerprint,
             SourceRunId = sourceWorkflowRunId,
+            AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
+            AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
+                ? WorkflowAuthorizationCodec.Binding(authority) : null,
             TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                 .ToHexString()
         };

@@ -131,6 +131,7 @@ internal sealed class RunExecutionPipeline
             });
         try
         {
+            WorkflowAuthorizationGate.ValidateBinding(run, options);
             if (!registry.TryGet(
                     run.WorkflowName,
                     run.WorkflowVersion,
@@ -171,6 +172,7 @@ internal sealed class RunExecutionPipeline
                 run.InputJson ?? "null",
                 serializerOptions,
                 runCancellation.Token).ConfigureAwait(false);
+            context.ThrowIfAuthorizationBlocked();
             if (store is IWorkflowWaitRepository waits &&
                 await waits.HasParkedWaitsAsync(
                     workflowRunId, leaseGeneration.Value, CancellationToken.None)
@@ -186,6 +188,9 @@ internal sealed class RunExecutionPipeline
                         "a parked wait primitive must not be bypassed.")).ConfigureAwait(false);
                 return;
             }
+            if (store is IWorkflowAuthorizationRepository approvals &&
+                await approvals.HasPendingAuthorizationsAsync(workflowRunId, CancellationToken.None).ConfigureAwait(false))
+                throw new WorkflowAuthorizationException("Workflow completed with unconsumed authorization approvals.");
             await outcomeHandler.CompleteAsync(
                 workflowRunId,
                 outputJson,

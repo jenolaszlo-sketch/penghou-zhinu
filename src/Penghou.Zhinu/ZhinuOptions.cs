@@ -38,6 +38,9 @@ public sealed class ZhinuOptions
     /// <summary>Maximum lexical depth of durable state loops, including the root loop.</summary>
     public int MaxLoopNestingDepth { get; set; } = 16;
 
+    /// <summary>Explicit authority configuration for protected activity execution.</summary>
+    public WorkflowExecutionAuthorizationOptions? ExecutionAuthorization { get; set; }
+
     private readonly List<IWorkflowArtifactValidator> artifactValidators = [];
 
     /// <summary>
@@ -69,7 +72,8 @@ public sealed class ZhinuOptions
             LeaseRecoveryInterval = LeaseRecoveryInterval,
             ScanBatchSize = ScanBatchSize,
             MaxNestingDepth = MaxNestingDepth,
-            MaxLoopNestingDepth = MaxLoopNestingDepth
+            MaxLoopNestingDepth = MaxLoopNestingDepth,
+            ExecutionAuthorization = ExecutionAuthorization
         };
         foreach (var v in artifactValidators) clone.artifactValidators.Add(v);
         return clone;

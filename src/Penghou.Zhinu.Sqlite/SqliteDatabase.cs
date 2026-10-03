@@ -55,7 +55,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 : null;
             await using var connection = await OpenAsync(cancellationToken)
                 .ConfigureAwait(false);
-            await VerifySchemaCompatibilityAsync(connection, cancellationToken)
+            var databaseVersion = await VerifySchemaCompatibilityAsync(connection, cancellationToken)
                 .ConfigureAwait(false);
             if (Options.EnableWal)
             {
@@ -65,25 +65,28 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                     "PRAGMA journal_mode = WAL;",
                     cancellationToken).ConfigureAwait(false);
             }
-            // Schema creation is idempotent for databases created by this
-            // package version. Pre-release schema upgrades are not supported.
-            await SqliteStoreSupport.ExecuteAsync(
-                connection,
-                null,
-                Schema,
-                cancellationToken).ConfigureAwait(false);
-            await SqliteStoreSupport.ExecuteAsync(
-                connection,
-                null,
-                "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent" +
-                " ON workflow_runs(parent_run_id);",
-                cancellationToken).ConfigureAwait(false);
-            await SqliteStoreSupport.ExecuteAsync(
-                connection,
-                null,
-                "CREATE INDEX IF NOT EXISTS ix_workflow_runs_name_version" +
-                " ON workflow_runs(workflow_name, workflow_version);",
-                cancellationToken).ConfigureAwait(false);
+            using var schemaTransaction = connection.BeginTransaction(deferred: false);
+            try
+            {
+                // Schema creation and the additive v5->v6 change are one durable step.
+                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction, Schema, cancellationToken)
+                    .ConfigureAwait(false);
+                if (databaseVersion == 5)
+                    await MigrateAuthorizationColumnsAsync(connection, schemaTransaction, cancellationToken)
+                        .ConfigureAwait(false);
+                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
+                    "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
+                    cancellationToken).ConfigureAwait(false);
+                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
+                    "CREATE INDEX IF NOT EXISTS ix_workflow_runs_name_version ON workflow_runs(workflow_name, workflow_version);",
+                    cancellationToken).ConfigureAwait(false);
+                await schemaTransaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                await schemaTransaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+                throw;
+            }
             initialized = true;
         }
         finally
@@ -153,7 +156,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         }
     }
 
-    private static async ValueTask VerifySchemaCompatibilityAsync(
+    private static async ValueTask<int> VerifySchemaCompatibilityAsync(
         SqliteConnection connection,
         CancellationToken cancellationToken)
     {
@@ -164,7 +167,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var tableCount = Convert.ToInt32(
             await countCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
         if (tableCount == 0)
-            return;
+            return ZhinuSqliteSchema.CurrentVersion;
 
         await using var metadataCommand = SqliteStoreSupport.CreateCommand(connection, null, """
             SELECT COUNT(*) FROM sqlite_master
@@ -184,12 +187,38 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
             .ConfigureAwait(false);
         var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
-        if (version != ZhinuSqliteSchema.CurrentVersion)
+        if (version is not (5 or ZhinuSqliteSchema.CurrentVersion))
         {
             throw new ZhinuSchemaCompatibilityException(
                 ZhinuSqliteSchema.CurrentVersion,
                 version);
         }
+        return version.Value;
+    }
+
+    private static async ValueTask MigrateAuthorizationColumnsAsync(
+        SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        foreach (var (table, column, definition) in new[]
+        {
+            ("workflow_runs", "authorization_provider_id", "TEXT NULL"),
+            ("workflow_runs", "authorization_binding_id", "TEXT NULL"),
+            ("workflow_steps", "authorization_declaration_hash", "TEXT NULL"),
+            ("workflow_step_compensations", "authorization_declaration_json", "TEXT NULL")
+        })
+        {
+            await using var inspect = SqliteStoreSupport.CreateCommand(connection, transaction,
+                "SELECT COUNT(*) FROM pragma_table_info($table) WHERE name=$column;");
+            inspect.Parameters.AddWithValue("$table", table);
+            inspect.Parameters.AddWithValue("$column", column);
+            var found = Convert.ToInt32(await inspect.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) > 0;
+            if (!found)
+                await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+                    $"ALTER TABLE {table} ADD COLUMN {column} {definition};", cancellationToken).ConfigureAwait(false);
+        }
+        await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+            $"UPDATE zhinu_schema SET version = {ZhinuSqliteSchema.CurrentVersion} WHERE id = 1;", cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private static readonly string Schema = $"""
@@ -223,6 +252,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             lease_expires_at TEXT NULL,
             lease_generation INTEGER NOT NULL DEFAULT 1,
             definition_fingerprint TEXT NULL,
+            authorization_provider_id TEXT NULL,
+            authorization_binding_id TEXT NULL,
             CHECK (status BETWEEN 0 AND 6),
             CHECK (lease_generation >= 1)
         );
@@ -256,6 +287,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             revision INTEGER NOT NULL DEFAULT 1,
             lease_generation INTEGER NOT NULL DEFAULT 1,
             implementation_key TEXT NULL,
+            authorization_declaration_hash TEXT NULL,
             UNIQUE(workflow_run_id, step_key, revision),
             CHECK (status BETWEEN 0 AND 5),
             CHECK (attempt >= 0),
@@ -424,6 +456,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             actor TEXT NULL,
             reason TEXT NULL,
             idempotency_key TEXT NULL,
+            authorization_declaration_json TEXT NULL,
             UNIQUE(workflow_run_id, step_key, revision),
             CHECK (status BETWEEN 0 AND 4),
             CHECK (attempt >= 0),
@@ -525,5 +558,84 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_generation_dispositions_generation
             ON workflow_generation_dispositions(generation_id, created_at);
+
+        CREATE TABLE IF NOT EXISTS workflow_authorization_checkpoints
+        (
+            workflow_run_id TEXT NOT NULL,
+            claim_id TEXT NOT NULL,
+            is_compensation INTEGER NOT NULL,
+            step_key TEXT NOT NULL,
+            revision INTEGER NOT NULL,
+            lease_generation INTEGER NOT NULL,
+            provider_id TEXT NOT NULL,
+            binding_id TEXT NOT NULL,
+            declaration_hash TEXT NOT NULL,
+            context_hash TEXT NOT NULL,
+            authorization_request_id TEXT NOT NULL,
+            approval_request_id TEXT NULL,
+            decision INTEGER NOT NULL,
+            ready INTEGER NOT NULL DEFAULT 0,
+            context_json TEXT NOT NULL,
+            result_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY(workflow_run_id, claim_id, is_compensation),
+            CHECK (is_compensation IN (0,1)),
+            CHECK (decision BETWEEN 0 AND 4),
+            CHECK (ready IN (0,1)),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_authorization_parked
+            ON workflow_authorization_checkpoints(workflow_run_id, ready, decision);
+
+        CREATE TABLE IF NOT EXISTS workflow_authorization_evidence
+        (
+            sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+            workflow_run_id TEXT NOT NULL,
+            claim_id TEXT NOT NULL,
+            is_compensation INTEGER NOT NULL,
+            step_key TEXT NOT NULL,
+            revision INTEGER NOT NULL,
+            lease_generation INTEGER NOT NULL,
+            attempt INTEGER NOT NULL,
+            provider_id TEXT NOT NULL,
+            binding_id TEXT NOT NULL,
+            declaration_hash TEXT NOT NULL,
+            context_hash TEXT NOT NULL,
+            authorization_request_id TEXT NOT NULL,
+            decision INTEGER NOT NULL,
+            context_json TEXT NOT NULL,
+            result_json TEXT NOT NULL,
+            committed_at TEXT NOT NULL,
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_authorization_evidence_claim
+            ON workflow_authorization_evidence(workflow_run_id, claim_id, is_compensation, sequence);
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_authorization_request
+            ON workflow_authorization_evidence(workflow_run_id, authorization_request_id);
+
+        CREATE TABLE IF NOT EXISTS workflow_authorization_wake_receipts
+        (
+            workflow_run_id TEXT NOT NULL,
+            authorization_request_id TEXT NOT NULL,
+            approval_request_id TEXT NOT NULL,
+            provider_id TEXT NOT NULL,
+            binding_id TEXT NOT NULL,
+            context_hash TEXT NOT NULL,
+            accepted INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            PRIMARY KEY(workflow_run_id, authorization_request_id, approval_request_id),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS workflow_authorization_dispatches
+        (
+            workflow_run_id TEXT NOT NULL,
+            claim_id TEXT NOT NULL,
+            is_compensation INTEGER NOT NULL,
+            last_started_attempt INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(workflow_run_id, claim_id, is_compensation),
+            CHECK (last_started_attempt >= 0),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
         """;
 }

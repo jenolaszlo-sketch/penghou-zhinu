@@ -54,4 +54,7 @@ public sealed record StepClaimRequest
     /// as history. Defaults to false, preserving strict durable reuse.
     /// </summary>
     public bool AllowSupersede { get; init; }
+
+    /// <summary>Digest of the immutable declaration for this logical operation.</summary>
+    public string? AuthorizationDeclarationHash { get; init; }
 }

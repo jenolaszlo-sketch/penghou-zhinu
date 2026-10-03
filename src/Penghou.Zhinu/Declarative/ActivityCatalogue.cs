@@ -5,6 +5,18 @@ public sealed class ActivityCatalogue : IActivityCatalogue, IActivityExecutorRes
     private readonly Dictionary<ActivityReference, (ActivityDescriptor Descriptor, IActivityExecutor Executor)> entries = new();
 
     public void Register<TInput, TOutput>(ActivityReference reference, IActivity<TInput, TOutput> implementation)
+        => RegisterCore(reference, implementation, authorization: null);
+
+    /// <summary>Registers an activity with explicit immutable execution requirements.</summary>
+    public void Register<TInput, TOutput>(ActivityReference reference, IActivity<TInput, TOutput> implementation,
+        WorkflowAuthorizationDeclaration authorization)
+    {
+        ArgumentNullException.ThrowIfNull(authorization);
+        RegisterCore(reference, implementation, authorization);
+    }
+
+    private void RegisterCore<TInput, TOutput>(ActivityReference reference, IActivity<TInput, TOutput> implementation,
+        WorkflowAuthorizationDeclaration? authorization)
     {
         ArgumentNullException.ThrowIfNull(reference);
         ArgumentNullException.ThrowIfNull(implementation);
@@ -15,7 +27,11 @@ public sealed class ActivityCatalogue : IActivityCatalogue, IActivityExecutorRes
         {
             Reference = reference,
             Input = new ActivityContract { TypeId = ActivityContractIdentity.Create(typeof(TInput)) },
-            Output = new ActivityContract { TypeId = ActivityContractIdentity.Create(typeof(TOutput)) }
+            Output = new ActivityContract { TypeId = ActivityContractIdentity.Create(typeof(TOutput)) },
+            Authorization = authorization is null
+                ? null
+                : new WorkflowAuthorizationDeclaration(
+                    authorization.Requirements.ToArray(), authorization.PlanId, authorization.PlanRevision)
         };
         entries[reference] = (descriptor, new ActivityExecutor<TInput, TOutput>(implementation));
     }

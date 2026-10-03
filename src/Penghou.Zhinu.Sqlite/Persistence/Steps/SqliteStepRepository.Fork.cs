@@ -219,7 +219,8 @@ internal sealed partial class SqliteStepRepository
             StartedAt = source.StartedAt,
             CompletedAt = source.CompletedAt,
             Revision = 1,
-            LeaseGeneration = destination.LeaseGeneration
+            LeaseGeneration = destination.LeaseGeneration,
+            AuthorizationDeclarationHash = source.AuthorizationDeclarationHash
         };
 
     private static ForkStepReason MapForkReason(RestartReason reason) =>

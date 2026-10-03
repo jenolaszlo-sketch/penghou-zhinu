@@ -10,4 +10,8 @@ namespace Penghou.Zhinu;
 public sealed record CompensationMetadata(
     string Name,
     string RetryPolicyJson,
-    TimeSpan? ExecutionTimeout);
+    TimeSpan? ExecutionTimeout)
+{
+    /// <summary>Canonical immutable authorization declaration JSON for compensation.</summary>
+    public string? AuthorizationDeclarationJson { get; init; }
+}

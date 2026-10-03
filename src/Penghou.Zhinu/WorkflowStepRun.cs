@@ -62,4 +62,7 @@ public sealed record WorkflowStepRun
     /// this matches the run's current generation.
     /// </summary>
     public long LeaseGeneration { get; init; } = 1;
+
+    /// <summary>Immutable digest of the declaration bound to this step revision.</summary>
+    public string? AuthorizationDeclarationHash { get; init; }
 }

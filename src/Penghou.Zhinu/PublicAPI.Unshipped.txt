@@ -28,18 +28,27 @@ Penghou.Zhinu.BlockedRun.BlockingWaits.get -> System.Collections.Generic.IReadOn
 Penghou.Zhinu.BlockedRun.BlockingWaits.init -> void
 Penghou.Zhinu.BlockedRun.Run.get -> Penghou.Zhinu.WorkflowRun!
 Penghou.Zhinu.BlockedRun.Run.init -> void
+Penghou.Zhinu.ChildRunOptions.StartAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
+Penghou.Zhinu.ChildRunOptions.StartAuthorization.init -> void
+Penghou.Zhinu.ChildRunOptions.WaitAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
+Penghou.Zhinu.ChildRunOptions.WaitAuthorization.init -> void
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
+Penghou.Zhinu.CompensationMetadata.AuthorizationDeclarationJson.get -> string?
+Penghou.Zhinu.CompensationMetadata.AuthorizationDeclarationJson.init -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue
 Penghou.Zhinu.Declarative.ActivityCatalogue.ActivityCatalogue() -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
 Penghou.Zhinu.Declarative.ActivityCatalogue.ListDescriptors() -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.ActivityDescriptor!>!
 Penghou.Zhinu.Declarative.ActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation) -> void
+Penghou.Zhinu.Declarative.ActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation, Penghou.Zhinu.WorkflowAuthorizationDeclaration! authorization) -> void
 Penghou.Zhinu.Declarative.ActivityCatalogue.TryGetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference, out Penghou.Zhinu.Declarative.ActivityDescriptor! descriptor) -> bool
 Penghou.Zhinu.Declarative.ActivityContract
 Penghou.Zhinu.Declarative.ActivityContract.TypeId.get -> string!
 Penghou.Zhinu.Declarative.ActivityContract.TypeId.init -> void
 Penghou.Zhinu.Declarative.ActivityDescriptor
+Penghou.Zhinu.Declarative.ActivityDescriptor.Authorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
+Penghou.Zhinu.Declarative.ActivityDescriptor.Authorization.init -> void
 Penghou.Zhinu.Declarative.ActivityDescriptor.Input.get -> Penghou.Zhinu.Declarative.ActivityContract!
 Penghou.Zhinu.Declarative.ActivityDescriptor.Input.init -> void
 Penghou.Zhinu.Declarative.ActivityDescriptor.Output.get -> Penghou.Zhinu.Declarative.ActivityContract!
@@ -92,6 +101,7 @@ Penghou.Zhinu.Declarative.IActivityCatalogue
 Penghou.Zhinu.Declarative.IActivityCatalogue.GetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference) -> Penghou.Zhinu.Declarative.ActivityDescriptor!
 Penghou.Zhinu.Declarative.IActivityCatalogue.ListDescriptors() -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.Declarative.ActivityDescriptor!>!
 Penghou.Zhinu.Declarative.IActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation) -> void
+Penghou.Zhinu.Declarative.IActivityCatalogue.Register<TInput, TOutput>(Penghou.Zhinu.Declarative.ActivityReference! reference, Penghou.Zhinu.Declarative.IActivity<TInput, TOutput>! implementation, Penghou.Zhinu.WorkflowAuthorizationDeclaration! authorization) -> void
 Penghou.Zhinu.Declarative.IActivityCatalogue.TryGetDescriptor(Penghou.Zhinu.Declarative.ActivityReference! reference, out Penghou.Zhinu.Declarative.ActivityDescriptor! descriptor) -> bool
 Penghou.Zhinu.Declarative.WorkflowCompilationResult
 Penghou.Zhinu.Declarative.WorkflowCompilationResult.Compiled.get -> Penghou.Zhinu.Declarative.CompiledWorkflowDefinition?
@@ -178,6 +188,15 @@ Penghou.Zhinu.IIdempotentWorkflowSignalRepository
 Penghou.Zhinu.IIdempotentWorkflowSignalRepository.SendSignalIdempotentlyAsync(System.Guid workflowRunId, string! signalName, string? dataJson, System.Guid signalId, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.SignalSendReceipt!>
 Penghou.Zhinu.IWorkflowAdministration
 Penghou.Zhinu.IWorkflowAdministration.CancelAsync(System.Guid workflowRunId, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.IWorkflowAuthorizationEvidenceVerifier
+Penghou.Zhinu.IWorkflowAuthorizationEvidenceVerifier.VerifyAsync(Penghou.Workflow.Abstractions.ExecutionAuthorizationContext! context, Penghou.Workflow.Abstractions.ExecutionAuthorizationResult! result, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Penghou.Zhinu.IWorkflowAuthorizationRepository
+Penghou.Zhinu.IWorkflowAuthorizationRepository.CommitAuthorizationAsync(Penghou.Zhinu.WorkflowAuthorizationCommit! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.IWorkflowAuthorizationRepository.GetPendingAuthorizationAsync(System.Guid workflowRunId, System.Guid claimId, bool isCompensation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowAuthorizationPending?>
+Penghou.Zhinu.IWorkflowAuthorizationRepository.HasPendingAuthorizationsAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Penghou.Zhinu.IWorkflowAuthorizationRepository.RenewAuthorizationClaimLeaseAsync(System.Guid workflowRunId, System.Guid claimId, bool isCompensation, string! ownerId, long leaseGeneration, System.DateTimeOffset now, System.DateTimeOffset expiresAt, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Penghou.Zhinu.IWorkflowAuthorizationRepository.ValidateAuthorizationDispatchAsync(Penghou.Zhinu.WorkflowAuthorizationCommit! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Penghou.Zhinu.IWorkflowAuthorizationRepository.WakeAuthorizationAsync(Penghou.Zhinu.WorkflowAuthorizationWake! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Penghou.Zhinu.IWorkflowClient
 Penghou.Zhinu.IWorkflowClient.GetRunAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRun?>!
 Penghou.Zhinu.IWorkflowClient.SendSignalAsync(System.Guid workflowRunId, string! signalName, object? data = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -301,6 +320,8 @@ Penghou.Zhinu.LoopNestingLimitExceededException.LoopNestingLimitExceededExceptio
 Penghou.Zhinu.LoopNestingLimitExceededException.LoopPath.get -> string!
 Penghou.Zhinu.LoopNestingLimitExceededException.MaximumDepth.get -> int
 Penghou.Zhinu.LoopOptions
+Penghou.Zhinu.LoopOptions.ContinueWhileAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
+Penghou.Zhinu.LoopOptions.ContinueWhileAuthorization.init -> void
 Penghou.Zhinu.LoopOptions.Deadline.get -> System.DateTimeOffset?
 Penghou.Zhinu.LoopOptions.Deadline.init -> void
 Penghou.Zhinu.LoopOptions.LoopOptions(int maxIterations) -> void
@@ -395,6 +416,8 @@ Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.get -> System.Guid
 Penghou.Zhinu.SignalSendReceipt.WorkflowRunId.init -> void
 Penghou.Zhinu.StepClaimRequest.AllowSupersede.get -> bool
 Penghou.Zhinu.StepClaimRequest.AllowSupersede.init -> void
+Penghou.Zhinu.StepClaimRequest.AuthorizationDeclarationHash.get -> string?
+Penghou.Zhinu.StepClaimRequest.AuthorizationDeclarationHash.init -> void
 Penghou.Zhinu.StepClaimRequest.ImplementationKey.get -> string?
 Penghou.Zhinu.StepClaimRequest.ImplementationKey.init -> void
 Penghou.Zhinu.StepCompensationMode
@@ -404,6 +427,10 @@ Penghou.Zhinu.StepImplementationKey
 Penghou.Zhinu.StepImplementationKey.StepImplementationKey() -> void
 Penghou.Zhinu.StepImplementationKey.StepImplementationKey(string! value) -> void
 Penghou.Zhinu.StepImplementationKey.Value.get -> string!
+Penghou.Zhinu.StepOptions.Authorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
+Penghou.Zhinu.StepOptions.Authorization.init -> void
+Penghou.Zhinu.StepOptions.CompensationAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
+Penghou.Zhinu.StepOptions.CompensationAuthorization.init -> void
 Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Child = 2 -> Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Delay = 3 -> Penghou.Zhinu.WaitKind
@@ -414,6 +441,80 @@ Penghou.Zhinu.WaitStatus.Cancelled = 3 -> Penghou.Zhinu.WaitStatus
 Penghou.Zhinu.WaitStatus.Completed = 2 -> Penghou.Zhinu.WaitStatus
 Penghou.Zhinu.WaitStatus.Parked = 0 -> Penghou.Zhinu.WaitStatus
 Penghou.Zhinu.WaitStatus.Ready = 1 -> Penghou.Zhinu.WaitStatus
+Penghou.Zhinu.WorkflowAuthorizationCommit
+Penghou.Zhinu.WorkflowAuthorizationCommit.BindingId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationCommit.BindingId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.ClaimId.get -> System.Guid
+Penghou.Zhinu.WorkflowAuthorizationCommit.ClaimId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.Context.get -> Penghou.Workflow.Abstractions.ExecutionAuthorizationContext!
+Penghou.Zhinu.WorkflowAuthorizationCommit.Context.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.ContextHash.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationCommit.ContextHash.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.DeclarationHash.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationCommit.DeclarationHash.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.IsCompensation.get -> bool
+Penghou.Zhinu.WorkflowAuthorizationCommit.IsCompensation.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.LeaseGeneration.get -> long
+Penghou.Zhinu.WorkflowAuthorizationCommit.LeaseGeneration.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.Now.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowAuthorizationCommit.Now.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.OwnerId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationCommit.OwnerId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.Result.get -> Penghou.Workflow.Abstractions.ExecutionAuthorizationResult!
+Penghou.Zhinu.WorkflowAuthorizationCommit.Result.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.Revision.get -> int
+Penghou.Zhinu.WorkflowAuthorizationCommit.Revision.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.StepKey.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationCommit.StepKey.init -> void
+Penghou.Zhinu.WorkflowAuthorizationCommit.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowAuthorizationCommit.WorkflowRunId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationDeclaration
+Penghou.Zhinu.WorkflowAuthorizationDeclaration.PlanId.get -> string?
+Penghou.Zhinu.WorkflowAuthorizationDeclaration.PlanRevision.get -> string?
+Penghou.Zhinu.WorkflowAuthorizationDeclaration.Requirements.get -> System.Collections.Generic.IReadOnlyCollection<Penghou.Workflow.Abstractions.ExecutionRequirement!>!
+Penghou.Zhinu.WorkflowAuthorizationDeclaration.WorkflowAuthorizationDeclaration(System.Collections.Generic.IReadOnlyCollection<Penghou.Workflow.Abstractions.ExecutionRequirement!>! requirements, string? planId = null, string? planRevision = null) -> void
+Penghou.Zhinu.WorkflowAuthorizationException
+Penghou.Zhinu.WorkflowAuthorizationException.WorkflowAuthorizationException(string! message) -> void
+Penghou.Zhinu.WorkflowAuthorizationPending
+Penghou.Zhinu.WorkflowAuthorizationPending.BindingId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationPending.BindingId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.ClaimId.get -> System.Guid
+Penghou.Zhinu.WorkflowAuthorizationPending.ClaimId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.Context.get -> Penghou.Workflow.Abstractions.ExecutionAuthorizationContext!
+Penghou.Zhinu.WorkflowAuthorizationPending.Context.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.ContextHash.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationPending.ContextHash.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.DeclarationHash.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationPending.DeclarationHash.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.IsCompensation.get -> bool
+Penghou.Zhinu.WorkflowAuthorizationPending.IsCompensation.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.LeaseGeneration.get -> long
+Penghou.Zhinu.WorkflowAuthorizationPending.LeaseGeneration.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.Ready.get -> bool
+Penghou.Zhinu.WorkflowAuthorizationPending.Ready.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.Result.get -> Penghou.Workflow.Abstractions.ExecutionAuthorizationResult!
+Penghou.Zhinu.WorkflowAuthorizationPending.Result.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.Revision.get -> int
+Penghou.Zhinu.WorkflowAuthorizationPending.Revision.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.StepKey.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationPending.StepKey.init -> void
+Penghou.Zhinu.WorkflowAuthorizationPending.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowAuthorizationPending.WorkflowRunId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake
+Penghou.Zhinu.WorkflowAuthorizationWake.ApprovalRequestId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationWake.ApprovalRequestId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake.AuthorizationRequestId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationWake.AuthorizationRequestId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake.BindingId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationWake.BindingId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake.ContextHash.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationWake.ContextHash.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake.Now.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowAuthorizationWake.Now.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake.ProviderId.get -> string!
+Penghou.Zhinu.WorkflowAuthorizationWake.ProviderId.init -> void
+Penghou.Zhinu.WorkflowAuthorizationWake.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.WorkflowAuthorizationWake.WorkflowRunId.init -> void
 Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(string! message, System.Exception! innerException) -> void
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
@@ -430,6 +531,15 @@ Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync(System.Guid workflowRunI
 Penghou.Zhinu.WorkflowEngine.SendSignalWithReceiptAsync<TPayload>(System.Guid workflowRunId, Penghou.Zhinu.SignalDefinition<TPayload>! signal, Penghou.Zhinu.SignalSendOptions! options, TPayload? data = default(TPayload?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.SignalSendReceipt!>!
 Penghou.Zhinu.WorkflowEngine.WorkflowEngine(Penghou.Zhinu.IWorkflowStore! store, Penghou.Zhinu.IWorkflowRegistry! registry, Penghou.Zhinu.ZhinuOptions? options, System.Text.Json.JsonSerializerOptions? serializerOptions, System.TimeProvider? timeProvider, Microsoft.Extensions.Logging.ILogger<Penghou.Zhinu.WorkflowEngine!>? logger, Penghou.Zhinu.IWorkflowEventPublisher? eventPublisher, Penghou.Zhinu.IWorkflowStepResolver? workflowStepResolver) -> void
 Penghou.Zhinu.WorkflowEngineBuilder.WithStepResolver(Penghou.Zhinu.IWorkflowStepResolver! value) -> Penghou.Zhinu.WorkflowEngineBuilder!
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.Authorizer.get -> Penghou.Workflow.Abstractions.IExecutionAuthorizer!
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.BindingId.get -> string!
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.EvaluationTimeout.get -> System.TimeSpan
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.EvidenceVerifier.get -> Penghou.Zhinu.IWorkflowAuthorizationEvidenceVerifier?
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.MaximumClockSkew.get -> System.TimeSpan
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.MaximumDecisionLifetime.get -> System.TimeSpan
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.ProviderId.get -> string!
+Penghou.Zhinu.WorkflowExecutionAuthorizationOptions.WorkflowExecutionAuthorizationOptions(string! providerId, string! bindingId, Penghou.Workflow.Abstractions.IExecutionAuthorizer! authorizer, Penghou.Zhinu.IWorkflowAuthorizationEvidenceVerifier? evidenceVerifier = null, System.TimeSpan? evaluationTimeout = null, System.TimeSpan? maximumDecisionLifetime = null, System.TimeSpan? maximumClockSkew = null) -> void
 Penghou.Zhinu.WorkflowExternalOperation
 Penghou.Zhinu.WorkflowExternalOperation.Attempt.get -> int?
 Penghou.Zhinu.WorkflowExternalOperation.Attempt.init -> void
@@ -589,10 +699,16 @@ Penghou.Zhinu.WorkflowOperationConflictException.WorkflowOperationConflictExcept
 Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.WorkflowRegistrationException
 Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
+Penghou.Zhinu.WorkflowRun.AuthorizationBindingId.get -> string?
+Penghou.Zhinu.WorkflowRun.AuthorizationBindingId.init -> void
+Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.get -> string?
+Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.init -> void
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>.WorkflowStep() -> void
+Penghou.Zhinu.WorkflowStepCompensation.AuthorizationDeclarationJson.get -> string?
+Penghou.Zhinu.WorkflowStepCompensation.AuthorizationDeclarationJson.init -> void
 Penghou.Zhinu.WorkflowStepContext.EmitAsync<TData>(string! eventType, TData? data = default(TData?), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.WorkflowStepReference
 Penghou.Zhinu.WorkflowStepReference.ImplementationKey.get -> Penghou.Zhinu.StepImplementationKey
@@ -600,6 +716,8 @@ Penghou.Zhinu.WorkflowStepReference.InputType.get -> System.Type!
 Penghou.Zhinu.WorkflowStepReference.OutputType.get -> System.Type!
 Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>
 Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>.WorkflowStepReference(Penghou.Zhinu.StepImplementationKey implementationKey) -> void
+Penghou.Zhinu.WorkflowStepRun.AuthorizationDeclarationHash.get -> string?
+Penghou.Zhinu.WorkflowStepRun.AuthorizationDeclarationHash.init -> void
 Penghou.Zhinu.WorkflowStepRun.ImplementationKey.get -> string?
 Penghou.Zhinu.WorkflowStepRun.ImplementationKey.init -> void
 Penghou.Zhinu.WorkflowStoreHealth
@@ -659,6 +777,9 @@ Penghou.Zhinu.WorkflowTransitionPreview.ReusableSteps.get -> System.Collections.
 Penghou.Zhinu.WorkflowTransitionPreview.ReusableSteps.init -> void
 Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.get -> int
 Penghou.Zhinu.ZhinuOptions.MaxLoopNestingDepth.set -> void
+Penghou.Zhinu.ZhinuOptions.ExecutionAuthorization.get -> Penghou.Zhinu.WorkflowExecutionAuthorizationOptions?
+Penghou.Zhinu.ZhinuOptions.ExecutionAuthorization.set -> void
+Penghou.Zhinu.WorkflowEngineBuilder.WithExecutionAuthorization(Penghou.Zhinu.WorkflowExecutionAuthorizationOptions! value) -> Penghou.Zhinu.WorkflowEngineBuilder!
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.set -> void
 static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!

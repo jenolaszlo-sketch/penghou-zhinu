@@ -41,6 +41,16 @@ execution until the first unfinished boundary.
 
 ## Packages
 
+Zhinu consumes `Penghou.Workflow.Abstractions`, a product-neutral contract
+package owned by the [Penghou repository](../Penghou/docs/workflow-abstractions-plan.md).
+Version `0.1.0-preview.2` is published on NuGet, and Zhinu's exact-package
+source adoption and qualification are complete; see the [package adoption
+record](docs/workflow-package-adoption.md) and [neutral authority extension
+plan](docs/authority-extension-plan.md). Runtime authorization remains future
+work. An optional Hufu adapter follows Zhinu's runtime implementation and
+release.
+The package list below describes the current published Zhinu structure.
+
 All packages target .NET 8 and .NET 10.
 
 | Package | Purpose |
@@ -647,7 +657,7 @@ The API is currently preview and may evolve between preview releases. Public
 surface changes are tracked through shipped/unshipped API baselines and package
 validation.
 
-The next candidate is [0.1.0-preview.15](docs/releases/0.1.0-preview.15.md), which fixes generation fencing for external-operation acquisition.
+The local runtime candidate is [0.2.0-preview.1](docs/releases/0.2.0-preview.1.md). It adopts `Penghou.Workflow.Abstractions` 0.1.0-preview.2 and adds per-attempt authorization, durable approval, and compensation declarations. The preview minor is intentional: schema 6 persists authorization and approval state needed by the new runtime behavior. ZA-3A/3B/4 are locally qualified: the full runtime matrix passed (1,017 tests: 506 on .NET 8 and 511 on .NET 10), the isolated seven-package consumer passed on both TFMs, and the unchanged preview.15 legacy compatibility suite passed on .NET 8/10. The candidate has not been published; commit/push and the user's NuGet CI publication with remote CI remain pending. See the [authorization boundary](docs/workflow-authorization.md) and [qualification record](docs/qualification/workflow-authorization.json).
 
 ## License
 
@@ -657,5 +667,4 @@ Copyright (c) 2026 Jenő Konrád László
 
 ## Pending Hufu integration
 
-The separate experimental Penghou.Hufu.Zhinu.Sqlite composition now supplies a co-located authority/runtime operation-start gate. Complete governed activation, activity execution and terminal-outcome recovery remain pending; Zhinu core has no Hufu dependency.
-See [pending work and ownership boundaries](docs/hufu-integration.md).
+The separate experimental Penghou.Hufu.Zhinu.Sqlite composition retains its narrow legacy shared-database start profile. The new neutral Hufu.Workflow adapter is held until the Zhinu candidate is qualified and published; neither profile closes final resource authorization, external-effect recovery, or a governed host integration. Zhinu core has no Hufu dependency. See [integration phases and ownership boundaries](docs/hufu-integration.md).
