@@ -152,24 +152,27 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
         var runGeneration = await ReadRunGenerationAsync(
             connection, transaction, current.WorkflowRunId, cancellationToken)
             .ConfigureAwait(false);
-        if (runGeneration != leaseGeneration)
+        if (current.LeaseGeneration != leaseGeneration || runGeneration != leaseGeneration)
         {
             ZhinuDiagnostics.FencingRejectionsCounter.Add(1);
             throw new LeaseLostException(
-                $"Caller generation {leaseGeneration} no longer matches run generation " +
-                $"{runGeneration}; acquisition refused.");
+                $"Caller generation {leaseGeneration} must match both the operation's captured " +
+                $"generation {current.LeaseGeneration} and current run generation {runGeneration}; " +
+                "acquisition refused.");
         }
 
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             UPDATE workflow_external_operations
             SET status = $running, owner = $owner, updated_at = $now
-            WHERE operation_id = $id AND status = $requested;
+            WHERE operation_id = $id AND status = $requested
+                AND lease_generation = $generation;
             """);
         command.Parameters.AddWithValue("$running", (int)ExternalOperationStatus.Running);
         command.Parameters.AddWithValue("$owner", ownerId);
         command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(database.TimeProvider.GetUtcNow()));
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(operationId));
         command.Parameters.AddWithValue("$requested", (int)ExternalOperationStatus.Requested);
+        command.Parameters.AddWithValue("$generation", leaseGeneration);
         if (await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false) != 1)
         {
             ZhinuDiagnostics.FencingRejectionsCounter.Add(1);

@@ -1,5 +1,25 @@
 # Penghou.Zhinu Roadmap
 
+## Resource abstractions and simulated execution — 2026-10-02
+
+Direction: [resource-abstractions architecture](../Penghou/docs/resource-abstractions-architecture.md).
+IO/Luban/Hufu own the immediate RA correction; Zhinu retains durable runtime
+ownership and does not implement a filesystem or require Hufu in core.
+
+- [ ] **VFS-4/5, deferred:** distinguish simulation run/view/attempt identities
+  and receipts from real execution. Keep durable evidence, ordering and recovery
+  separate from an optional provider journal or diagnostic log.
+- [ ] **VFS-7, deferred:** execute an exact approved delta through fresh real
+  starts, current fences and preconditions. Define partial/ambiguous application,
+  reconciliation and explicit compensation; no replay of simulation receipts as
+  real completion, implicit rollback or blind retry.
+- [ ] Verify crash/restart/response-loss cases with the Hufu/host/provider
+  composition after RA-G1/G7 decisions. Existing block-new-starts guarantees
+  cannot silently become drain-before-revocation guarantees.
+
+These are deferred integration gates, not a SQLite provider restructuring or a
+new current release claim. Handoffs cite the canonical RA/VFS IDs.
+
 ## Vision
 
 Penghou.Zhinu is an embedded durable workflow runtime for .NET and will evolve
@@ -348,7 +368,7 @@ workflow policy:
   identity, owner/generation fencing, lifecycle status, and recovery intent in
   a new `workflow_external_operations` table (no schema-version bump; created
   idempotently). Registration is idempotent on idempotency keys with conflict
-  detection; acquisition enforces caller-vs-run generation; completion
+  detection; acquisition enforces caller-vs-captured-operation and current-run generation; completion
   enforces owner plus atomic status transition while late results stay
   visible with their original generation. Crash-before/acquire, crash-after/
   resume-complete, ambiguous-retry, restart-abandonment, and missing-entity
@@ -1232,8 +1252,7 @@ remain outside Zhinu.
 
 ## Pending dependency: Penghou.Hufu
 
-Recorded 2026-09-28. Hufu is currently a scaffold; its authority contracts, store,
-and enforcement integration are pending. Bind Hufu authority to durable activation, activity execution, and recovery.
+Updated 2026-10-03. Hufu has a separate experimental co-located SQLite operation-start adapter; complete governed activation, activity execution and terminal-outcome recovery remain pending. Zhinu core stays independent of Hufu.
 See [the project-specific integration note](docs/hufu-integration.md) for scope, dependencies,
 and completion evidence. This records future work without changing current release gates.
 

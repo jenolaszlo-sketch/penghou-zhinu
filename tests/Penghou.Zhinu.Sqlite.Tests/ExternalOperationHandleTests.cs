@@ -290,6 +290,43 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task Restart_RejectsCurrentGenerationForPreRestartHandle()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var engine = CreateEngine(new SignalWorkflow(), "fence-op-current-generation");
+        var runId = await engine.StartAsync(
+            "fence-op-current-generation", "1", "x", cancellationToken: ct);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var execution = engine.ExecuteAsync(runId, cts.Token);
+        await WaitUntilAsync(
+            () => HasStepStatusAsync(engine, runId, "approval", StepStatus.Waiting, cts.Token),
+            cts.Token);
+
+        var repository = Store();
+        var registered = await repository.RegisterAsync(new ExternalOperationRegistration
+        {
+            WorkflowRunId = runId,
+            Provider = "codex",
+            RecoveryIntent = ExternalOperationRecoveryIntent.Resume
+        }, ct);
+
+        await engine.RestartStepAsync(runId, "approval", cts.Token);
+        var restartedRun = (await repository.GetRunAsync(runId, ct))!;
+        restartedRun.LeaseGeneration.Should().BeGreaterThan(registered.LeaseGeneration);
+        await cts.CancelAsync();
+        try { await execution; } catch { }
+
+        var act = () => repository.AcquireAsync(
+            registered.OperationId, "worker-new-generation", restartedRun.LeaseGeneration, ct).AsTask();
+
+        await act.Should().ThrowAsync<LeaseLostException>();
+        var unchanged = (await repository.GetAsync(registered.OperationId, ct))!;
+        unchanged.Status.Should().Be(ExternalOperationStatus.Requested);
+        unchanged.OwnerId.Should().BeNull();
+        unchanged.LeaseGeneration.Should().Be(registered.LeaseGeneration);
+    }
+
+    [Fact]
     public async Task MissingRun_Register_Fails()
     {
         var ct = TestContext.Current.CancellationToken;

@@ -32,9 +32,12 @@ public interface IWorkflowExternalOperationRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Claims a requested handle for an owner. Only the transition from
-    /// <see cref="ExternalOperationStatus.Requested"/> succeeds; anything
-    /// else fails with <see cref="LeaseLostException"/>.
+    /// Claims a requested handle for an owner. The supplied generation must
+    /// match both the generation captured when the handle was registered and
+    /// the workflow run's current generation; only the transition from
+    /// <see cref="ExternalOperationStatus.Requested"/> succeeds. A stale,
+    /// mismatched, or already-claimed handle fails with
+    /// <see cref="LeaseLostException"/>.
     /// </summary>
     ValueTask<WorkflowExternalOperation> AcquireAsync(
         Guid operationId,

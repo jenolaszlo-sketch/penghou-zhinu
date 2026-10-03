@@ -647,6 +647,8 @@ The API is currently preview and may evolve between preview releases. Public
 surface changes are tracked through shipped/unshipped API baselines and package
 validation.
 
+The next candidate is [0.1.0-preview.15](docs/releases/0.1.0-preview.15.md), which fixes generation fencing for external-operation acquisition.
+
 ## License
 
 [Apache-2.0](LICENSE)
@@ -655,5 +657,5 @@ Copyright (c) 2026 Jenő Konrád László
 
 ## Pending Hufu integration
 
-Penghou.Hufu integration is planned and not implemented. Bind Hufu authority to durable activation, activity execution, and recovery.
+The separate experimental Penghou.Hufu.Zhinu.Sqlite composition now supplies a co-located authority/runtime operation-start gate. Complete governed activation, activity execution and terminal-outcome recovery remain pending; Zhinu core has no Hufu dependency.
 See [pending work and ownership boundaries](docs/hufu-integration.md).

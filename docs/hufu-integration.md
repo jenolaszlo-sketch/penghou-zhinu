@@ -1,12 +1,23 @@
 # Penghou.Zhinu: pending Penghou.Hufu integration
 
-Status: **Pending integration; not implemented.** Recorded 2026-09-28.
+Status: **Narrow co-located SQLite start adapter implemented in Hufu; complete governed host integration pending.** Updated 2026-10-01.
 
 Penghou.Hufu is the new reusable authority library and authority-store boundary.
-It currently contains a buildable scaffold and design documents, with no public
-authority API, enforcement implementation, or persistent authority store.
-This note records future consumer work; it does not announce a package dependency,
-a shipped security guarantee, or an additional current-release acceptance gate.
+It now supplies bounded snapshot/Cedar/read APIs, an optional current-state/evidence
+SQLite store and a separate experimental Penghou.Hufu.Zhinu.Sqlite composition.
+That adapter checks actual runtime generation, revision, step/attempt/owner and
+lease facts, acquires the requested handle, and records Hufu start evidence in
+one shared-database writer transaction. It does not add a Zhinu core dependency,
+publish a package or complete a governed mutation host.
+
+The [start profile](../../Penghou.Hufu/docs/operation-start-profile.md) chooses
+block-new-starts semantics: earlier committed starts may finish after revocation
+acknowledgement. Exact replay returns AlreadyStarted and cannot dispatch again.
+Use one Zhinu-owned physical database for all participating repositories/Hufu
+mutations; separate files and sequential lookup/AcquireAsync do not provide that
+order. Standalone AcquireAsync does not create Hufu start evidence or imply Hufu
+governance. Full semantic admission, provider binding and exact terminal outcome/
+recovery integration remain pending. See the [qualification](../../Penghou.Hufu/docs/operation-start-qualification.md).
 
 Hufu will own reusable grants, envelopes, authority requests and decisions,
 attenuation, revocation, and durable authority records. Hosts retain identity,
