@@ -5,18 +5,18 @@ both roadmaps, the original proposal and current source. This is the execution
 queue for that plan, not another architecture. WA-1/2/3, ZA-1 design input and
 ZA-2 exact-package source adoption and qualification are complete. See the
 [package adoption record](workflow-package-adoption.md) and Penghou's
-[release checkpoint](../../Penghou/docs/workflow-package-release-handoff.md).
+[release checkpoint](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-package-release-handoff.md).
 ZA-0/ZA-1 design is complete. ZA-3A/3B/4 are implemented and locally qualified
 in candidate `0.2.0-preview.1`: 1,017 runtime tests passed (506 on .NET 8 and
 511 on .NET 10), the isolated seven-package consumer passed on both TFMs, and
 the unchanged preview.15 legacy compatibility suite passed on .NET 8/10.
-Commit/push and remote CI publication remain pending. See the
+Source delivery is pushed. Remote CI and user-run NuGet publication remain pending. See the
 [qualification record](qualification/workflow-authorization.json).
 The implementation boundary is [documented here](workflow-authorization.md).
 
 ## Product-neutral ownership and sequential phases
 
-The [Penghou workflow contract plan](../../Penghou/docs/workflow-abstractions-plan.md)
+The [Penghou workflow contract plan](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-abstractions-plan.md)
 supersedes the proposal's product-named abstractions. **Penghou owns
 Penghou.Workflow.Abstractions**; it has no Zhinu/Hufu dependency and can be
 implemented by other engines and authority providers. Use WA-1/2/3 for the
@@ -33,7 +33,7 @@ and independent Hufu cleanup are not completion of later integration phases.
 | ZA-1B | Zhinu | Complete | Bounded declarations, identity, failure/cancellation, callback-attempt accounting and explicit no-provider profile selected under the neutral contract manual |
 | ZA-1C | Zhinu | Implemented and locally qualified | Code-first, declarative resolver, compensation, child start/wait and loop-predicate callback paths pass through per-attempt gates; post-await dispatch validation and mandatory evidence are implemented |
 | ZA-1D | Zhinu | Implemented and locally qualified | Approval parks and releases the claim; exact idempotent wakes trigger fresh evaluation; restart/recovery, stale generation and declaration drift fail closed |
-| HA-0A | Hufu | Ready, independent of ZA-2 | Reconcile the separate completion snapshot by change group. Reuse reviewed generic issuance/concurrency, IO/Luban, patch-journal and release tooling in bounded changes. Preserve original uncommitted package migration; no bulk install |
+| HA-0A | Hufu | Ready, independent of ZA-2 | Reconcile the separate completion snapshot by change group. Reuse reviewed generic issuance/concurrency, IO/Luban, patch-journal and release tooling in bounded changes. Preserve the committed preview.15 package adoption; no bulk install |
 | HA-0B | Hufu | Ready, independent of new adapter | Move existing Zhinu operation-start/process-worker tests into a dedicated integration suite. Prove core/Cedar/Biscuit projects and normal core test graph have no direct/transitive Zhinu dependency; preserve integration regressions and historical counts |
 | ZA-5A | Zhinu + Hufu | Selected: retain frozen isolated legacy profile | Record legacy SQLite adapter retention/retirement scope and required actual-effect/start guarantees. Its implementation remains frozen. The new preflight contract must not inherit a false atomicity claim |
 
@@ -56,7 +56,7 @@ is qualified. Do not wait for a new Zhinu publication to start either HA-0 activ
 | HA-1 | Hufu | WA-3, completed Zhinu phase ZA-6 | Optional translation adapter references only Hufu + exact published Penghou.Workflow.Abstractions. Map exact identities and declared requirements; use trusted approval orchestration for ApprovalRequired, not parsing denial reasons |
 | HA-2 | Integration owner | HA-0B, ZA-4, HA-1 candidates | Package-backed adapter/runtime tests from local candidate feeds on .NET 8/10; denial, approved resume, revoked retry, compensation, fencing, evidence and crash/replay cases |
 | ZA-5B | Integration owner | ZA-5A; integration evidence for any replacement | Apply the reviewed legacy disposition; retain qualified atomic-start/effect guarantees or explicitly keep the isolated legacy profile. No runtime SQL in the new translation adapter |
-| ZA-6 | Zhinu release owner | ZA-2/3A/3B/4 and preview.15 compatibility qualification complete | Commit/push and publish the `0.2.0-preview.1` candidate through the user's NuGet CI workflow with remote CI. Preview.15 and published WA-3 contracts stay immutable. Publication is pending |
+| ZA-6 | Zhinu release owner | ZA-2/3A/3B/4 and preview.15 compatibility qualification complete | After remote CI passes, publish the `0.2.0-preview.1` candidate through the user's NuGet CI workflow with remote CI. Preview.15 and published WA-3 contracts stay immutable. Publication is pending |
 | HA-3 | Hufu release owner | WA-3, ZA-6, HA-2, scoped ZA-5B | Verify exact published contract references; fresh-cache consumer/dependency checks, reviewed Hufu release set and CI. User runs Hufu publication |
 
 The exact published package remains the Zhinu contract reference. ZA-2 remains
@@ -97,7 +97,7 @@ idempotency/recovery semantics. Test and proof evidence is recorded in the
 
 ## Resume instruction
 
-Commit/push the locally qualified candidate and complete ZA-6 publication
+Complete remote CI and ZA-6 publication for the pushed candidate
 through user-run remote CI; runtime and compatibility evidence are recorded in
 [workflow-authorization qualification](qualification/workflow-authorization.json).
 The exact shared-contract package and historical ZA-2 evidence remain in the

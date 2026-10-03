@@ -33,6 +33,8 @@ ordinary async workflow code
 - **Honest about side effects:** interrupted delegates are at-least-once;
   stable idempotency keys support downstream deduplication.
 - **Host-independent:** use direct construction or the optional hosted worker.
+- **Optional authorization:** check each protected activity attempt through
+  neutral contracts, with durable approval and fresh checks after retry or resume.
 
 Zhinu stores current durable state rather than replaying an event history. When
 a process restarts, the workflow method runs again from its entry point.
@@ -42,26 +44,25 @@ execution until the first unfinished boundary.
 ## Packages
 
 Zhinu consumes `Penghou.Workflow.Abstractions`, a product-neutral contract
-package owned by the [Penghou repository](../Penghou/docs/workflow-abstractions-plan.md).
-Version `0.1.0-preview.2` is published on NuGet, and Zhinu's exact-package
-source adoption and qualification are complete; see the [package adoption
-record](docs/workflow-package-adoption.md) and [neutral authority extension
-plan](docs/authority-extension-plan.md). Runtime authorization remains future
-work. An optional Hufu adapter follows Zhinu's runtime implementation and
-release.
-The package list below describes the current published Zhinu structure.
+package owned by the [Penghou repository](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-abstractions-plan.md).
+Version `0.1.0-preview.2` is published on NuGet. Zhinu's `0.2.0-preview.1`
+source candidate implements per-attempt authorization and durable approval
+against that exact contract version. Hufu or another authority implementation
+can supply the policy; Zhinu has no Hufu dependency. The optional
+`Penghou.Hufu.Workflow` adapter is a subsequent integration phase.
 
-All packages target .NET 8 and .NET 10.
+Six packages target .NET 8 and .NET 10. The ASP.NET Core integration targets
+.NET 10 only. Publish the seven packages together at the same Zhinu version.
 
-| Package | Purpose |
-| --- | --- |
-| `Penghou.Zhinu` | Core workflow engine and contracts |
-| `Penghou.Zhinu.Sqlite` | Transactional SQLite store, leases, and recovery |
-| `Penghou.Zhinu.Hosting` | `Microsoft.Extensions.Hosting` execution loop and DI |
-| `Penghou.Zhinu.Hosting.AspNetCore` | Liveness, readiness, and diagnostics endpoints |
-| `Penghou.Zhinu.OpenTelemetry` | Trace and metric registration helpers |
-| `Penghou.Zhinu.Testing` | Isolated workflow test host and store conformance suite |
-| `Penghou.Zhinu.Agents` | Optional Microsoft Agent Framework checkpoint integration |
+| Package | Purpose | Frameworks |
+| --- | --- | --- |
+| `Penghou.Zhinu` | Core engine, runtime contracts and authorization hooks | .NET 8/10 |
+| `Penghou.Zhinu.Sqlite` | SQLite state, leases, recovery and authorization checkpoints | .NET 8/10 |
+| `Penghou.Zhinu.Hosting` | Hosted execution loop and DI | .NET 8/10 |
+| `Penghou.Zhinu.Hosting.AspNetCore` | Liveness, readiness and diagnostics endpoints | .NET 10 |
+| `Penghou.Zhinu.OpenTelemetry` | Trace and metric registration helpers | .NET 8/10 |
+| `Penghou.Zhinu.Testing` | Isolated test host and store conformance suite | .NET 8/10 |
+| `Penghou.Zhinu.Agents` | Microsoft Agent Framework checkpoint integration | .NET 8/10 |
 
 For the common hosted setup:
 
@@ -69,6 +70,11 @@ For the common hosted setup:
 dotnet add package Penghou.Zhinu.Sqlite --prerelease
 dotnet add package Penghou.Zhinu.Hosting --prerelease
 ```
+
+These commands select the latest published preview. The authorization APIs
+below require `0.2.0-preview.1` or later; a `main` push and ordinary CI do not
+publish NuGet packages. See [release and upgrade instructions](docs/releasing.md)
+for the input-free publish workflow and schema migration.
 
 ## Five-minute quick start
 
@@ -601,6 +607,65 @@ The code-first runtime also supports:
 - run metadata, querying, pagination, retention, and bulk operations;
 - schema compatibility checks and failure diagnosis.
 
+## Optional execution authorization
+
+Configure one application-supplied `IExecutionAuthorizer` from
+`Penghou.Workflow.Abstractions`. The host supplies the trusted subject mapping,
+policy, store and workflow registry:
+
+```csharp
+using Penghou.Workflow.Abstractions;
+using Penghou.Zhinu;
+
+var authority = new WorkflowExecutionAuthorizationOptions(
+    providerId: "application-policy",
+    bindingId: "tenant-and-policy-mapping-v1",
+    authorizer: authorizer);
+
+var engine = new WorkflowEngineBuilder()
+    .WithStore(store)
+    .WithRegistry(registry)
+    .WithExecutionAuthorization(authority)
+    .Build();
+```
+
+Within the workflow, declare the requirements of each activity separately:
+
+```csharp
+var output = await context.StepAsync(
+    "invoke-tool",
+    input,
+    (value, token) => tool.InvokeAsync(value, token),
+    new StepOptions
+    {
+        Authorization = new WorkflowAuthorizationDeclaration(
+            [new ExecutionRequirement("application.tools", 1, "invoke", "approved-tool")],
+            planId: "retained-plan", planRevision: "exact-revision")
+    },
+    cancellationToken);
+```
+
+The requirement vocabulary is defined by the authority adapter. Empty or
+unsupported declarations confer no permission. Hosted applications use
+`AddZhinuExecutionAuthorization(...)` alongside `AddZhinu`; SQLite supplies the
+required store capability. Custom stores must implement
+`IWorkflowAuthorizationRepository` for protected execution.
+
+Allowed decisions permit the claimed attempt after current lease, generation,
+revision and expiry checks. Denied, Error and Unavailable decisions prevent
+callback execution. ApprovalRequired parks durably and releases the worker;
+an authenticated approval wake only makes it ready for a fresh decision.
+Retries and new compensation attempts also require fresh authorization.
+Compensation requirements belong in `StepOptions.CompensationAuthorization`.
+
+Without a provider, Zhinu preserves its existing unprotected execution profile.
+A protected run cannot silently resume with a missing or changed provider.
+Completed-step reconstruction returns history without dispatching the activity
+again. Orchestration code, loop bodies and arbitrary native effects remain
+outside activity preflight; actual tool/resource access still needs current
+provider checks. Read the [authorization guide](docs/workflow-authorization.md)
+for configuration, declarations, approval and the exact boundary.
+
 The runnable [hosted sample](samples/Penghou.Zhinu.Sample/Program.cs) demonstrates
 process recovery. The [direct-construction sample](samples/Penghou.Zhinu.Direct/Program.cs)
 demonstrates typed handles, signals, child workflows, artifacts, and
@@ -627,6 +692,8 @@ Detailed contracts:
 - [Idempotency](docs/idempotency.md)
 - [Trimming and Native AOT](docs/trimming.md)
 - [Public API policy](docs/public-api-policy.md)
+- [Workflow authorization](docs/workflow-authorization.md)
+- [Release and upgrade instructions](docs/releasing.md)
 - [Roadmap](ROADMAP.md)
 
 ## When not to use Zhinu
@@ -647,9 +714,10 @@ useful, compose it with Zhinu at explicit durable step boundaries.
 
 ## Project direction
 
-Zhinu is independently useful as a code-first durable workflow engine. Its
-roadmap adds validated declarative workflow definitions, activity catalogues,
-capability enforcement, revision-bound evidence, and bounded AI activities.
+Zhinu is independently useful as a code-first durable workflow engine. It also
+implements validated declarative definitions, activity catalogues, optional
+authorization and durable approval. Its roadmap separates future workflow
+features, authority adapters and production host qualification.
 Natural-language methodology compilation belongs above the runtime and will be
 pursued only after hand-authored declarative workflows are proven.
 
@@ -657,14 +725,25 @@ The API is currently preview and may evolve between preview releases. Public
 surface changes are tracked through shipped/unshipped API baselines and package
 validation.
 
-The local runtime candidate is [0.2.0-preview.1](docs/releases/0.2.0-preview.1.md). It adopts `Penghou.Workflow.Abstractions` 0.1.0-preview.2 and adds per-attempt authorization, durable approval, and compensation declarations. The preview minor is intentional: schema 6 persists authorization and approval state needed by the new runtime behavior. ZA-3A/3B/4 are locally qualified: the full runtime matrix passed (1,017 tests: 506 on .NET 8 and 511 on .NET 10), the isolated seven-package consumer passed on both TFMs, and the unchanged preview.15 legacy compatibility suite passed on .NET 8/10. The candidate has not been published; commit/push and the user's NuGet CI publication with remote CI remain pending. See the [authorization boundary](docs/workflow-authorization.md) and [qualification record](docs/qualification/workflow-authorization.json).
+The [0.2.0-preview.1 candidate](docs/releases/0.2.0-preview.1.md) is committed
+and pushed in `e91804a`. Local qualification passed 1,017 tests, isolated
+seven-package consumers, old-binary compatibility and schema 5→6 migration
+checks. SQLite upgrades require a backup and stopping older workers before
+opening the database. Remote CI and user-run NuGet publication are the remaining
+release gates; see the [qualification record](docs/qualification/workflow-authorization.md)
+and [release instructions](docs/releasing.md).
+
+## Pending Hufu integration
+
+The separate experimental `Penghou.Hufu.Zhinu.Sqlite` composition retains its
+narrow legacy shared-database start profile. The new neutral
+`Penghou.Hufu.Workflow` adapter follows qualification and publication of the
+Zhinu candidate. Final resource authorization, external-effect recovery and a
+governed host integration remain open. Zhinu core has no Hufu dependency. See
+[integration phases and ownership boundaries](docs/hufu-integration.md).
 
 ## License
 
 [Apache-2.0](LICENSE)
 
 Copyright (c) 2026 Jenő Konrád László
-
-## Pending Hufu integration
-
-The separate experimental Penghou.Hufu.Zhinu.Sqlite composition retains its narrow legacy shared-database start profile. The new neutral Hufu.Workflow adapter is held until the Zhinu candidate is qualified and published; neither profile closes final resource authorization, external-effect recovery, or a governed host integration. Zhinu core has no Hufu dependency. See [integration phases and ownership boundaries](docs/hufu-integration.md).

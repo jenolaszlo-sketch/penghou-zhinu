@@ -12,7 +12,7 @@ repeated call is safe.
 | Operation | Category | Behavior on repeat |
 | --- | --- | --- |
 | `StartAsync` (no run id) | Creates another run | A fresh pending run is created each call. |
-| `StartAsync` (with `workflowRunId`) | Idempotent / rejected | Same name+version+input → returns the existing run id. Different workflow or input for the same id → `WorkflowStateException`. |
+| `StartAsync` (with `workflowRunId`) | Idempotent / rejected | Same workflow/input/fingerprint and matching authority profile → returns the existing run id. Workflow/input conflicts are rejected; a changed or missing protected profile fails closed. |
 | `CancelAsync` | Idempotent | Cancelling an already-cancelled run is a no-op; terminal runs are untouched. |
 | `SendSignalAsync` | Creates another signal | Each call buffers a new signal. Delivery is exactly-once per signal, but sending is additive. |
 | `SendSignalWithReceiptAsync` | Idempotent / rejected | Identical run, name, and canonical JSON payload under one `SignalId` return the original durable receipt. Conflicting reuse throws `WorkflowOperationConflictException`. |
@@ -25,6 +25,7 @@ repeated call is safe.
 | `StartChildAsync` | Idempotent on replay | The child id is deterministic (`parent + step key + revision`); replaying reuses the child. Restarting `child:start` creates a fresh child. |
 | `CompleteStepAsync` | Effectively-once | A completed step returns its committed result without re-running its delegate. Completion itself is fenced by lease/generation. |
 | `CompleteCompensationAsync` | At-least-once | A completed compensation is never executed again. |
+| `WakeAuthorizationAsync` | Idempotent exact correlation | An identical accepted approval wake returns accepted again without another readiness transition. Stale or mismatched correlation cannot wake a newer request. Acceptance is not an Allowed decision. |
 
 ## Stable downstream keys
 
@@ -38,6 +39,11 @@ compensation        <run>:<step>:<revision>:compensation
 
 These keys are unchanged across retries and change only when a restart creates a
 new revision.
+
+Authorization request IDs serve a different purpose: every new provider
+evaluation has a fresh request ID, including approval resume and retry.
+Never use a recorded Allowed result or an approval wake as an external-effect
+idempotency receipt or bearer permission. See [authorization](workflow-authorization.md).
 
 ## Administrative restart receipts
 

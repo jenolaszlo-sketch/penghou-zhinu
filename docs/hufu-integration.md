@@ -5,14 +5,15 @@
 Follow the [neutral authority-extension plan](authority-extension-plan.md).
 Use the [activity queue](authority-extension-activities.md) for the current
 execution order; independent Hufu staged-work review and test separation start
-now. Publish the [Penghou-owned neutral contracts](../../Penghou/docs/workflow-abstractions-plan.md)
-first, complete the Zhinu runtime phase, then implement the Hufu adapter.
+now. The [Penghou-owned neutral contracts](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-abstractions-plan.md)
+are published. Complete remote CI and publication of the Zhinu runtime phase,
+then implement the Hufu adapter.
 Zhinu consumes `Penghou.Workflow.Abstractions` as one workflow implementation; an
 optional `Hufu.Workflow` adapter implements it with no full-runtime dependency.
 Zhinu's default remains usable without Hufu. ZA-3A/3B/4 authorization and
 durable-approval paths are locally qualified in candidate `0.2.0-preview.1`;
 the unchanged preview.15 legacy compatibility suite also passed on .NET 8/10.
-Commit/push and remote CI publication remain pending. The candidate boundary
+Source delivery is pushed. Remote CI and user-run NuGet publication remain pending. The candidate boundary
 and unsupported orchestration/effect cases are described in the
 [authorization guide](workflow-authorization.md) and
 [qualification record](qualification/workflow-authorization.json). The user
@@ -36,14 +37,14 @@ lease facts, acquires the requested handle, and records Hufu start evidence in
 one shared-database writer transaction. It does not add a Zhinu core dependency,
 publish a package or complete a governed mutation host.
 
-The [start profile](../../Penghou.Hufu/docs/operation-start-profile.md) chooses
+The [start profile](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/operation-start-profile.md) chooses
 block-new-starts semantics: earlier committed starts may finish after revocation
 acknowledgement. Exact replay returns AlreadyStarted and cannot dispatch again.
 Use one Zhinu-owned physical database for all participating repositories/Hufu
 mutations; separate files and sequential lookup/AcquireAsync do not provide that
 order. Standalone AcquireAsync does not create Hufu start evidence or imply Hufu
 governance. Full semantic admission, provider binding and exact terminal outcome/
-recovery integration remain pending. See the [qualification](../../Penghou.Hufu/docs/operation-start-qualification.md).
+recovery integration remain pending. See the [qualification](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/operation-start-qualification.md).
 
 Hufu will own reusable grants, envelopes, authority requests and decisions,
 attenuation, revocation, and durable authority records. Hosts retain identity,
@@ -82,8 +83,8 @@ and a proven host/resource-broker enforcement path. Continue current correctness
 work independently; do not add placeholder dependencies or infer security from
 the existence of Hufu's scaffold.
 
-Canonical design (links assume sibling checkouts):
+Canonical design:
 
-- [Hufu architecture](../../Penghou.Hufu/docs/architecture.md)
-- [Authority specification](../../Penghou.Hufu/docs/workflow-authority-spec.md)
-- [Hufu implementation roadmap](../../Penghou.Hufu/docs/roadmap.md)
+- [Hufu architecture](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/architecture.md)
+- [Authority specification](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/workflow-authority-spec.md)
+- [Hufu implementation roadmap](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/roadmap.md)

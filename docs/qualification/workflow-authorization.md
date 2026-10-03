@@ -28,13 +28,24 @@ to schema 6 and preserves the selected fields of every prior step row. Restoring
 the old runtime assemblies then produces the expected incompatible-schema
 failure. See [binary and migration evidence](workflow-authorization-legacy-consumer.json).
 
-CI now repeats the declared-framework tests, isolated consumer and old-binary
-probe on Windows and Ubuntu, retaining TRX, packages and consumer logs. Remote
-CI results for these changes are still pending commit/push; the local proof is
-Windows qualification, not a claim that the new remote jobs already passed.
+Implementation was committed and pushed in `e91804a`. The JSON and artifact
+hashes above retain the original local proof taken before that commit.
+CI repeats the tests and consumer probes on Windows and Ubuntu, retaining TRX,
+packages and consumer logs. The first [remote run](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/runs/37132951810)
+passed Ubuntu build, format, tests and pack, then failed because the generated
+consumer inherited library public-API analyzer settings. The script now creates
+its own empty build props/targets. The corrected consumer passes locally on
+both frameworks with output nested beneath the repository, matching CI layout.
+Windows CI also found that `TimelySignal_WinsDeadlineRace` depended on sending
+a signal within 300 milliseconds of real time. The test now uses the existing
+controllable clock: it persists the signal before the deadline, then resumes
+after the deadline. The four signal-parking tests pass on both frameworks.
+These corrections change qualification tooling and a test, not runtime behavior.
+A successful rerun for the corrected release commit remains required.
 
-Next commit and push the reviewed candidate, then let the user publish from the
-existing main workflow. Verify the public artifacts before starting Hufu HA-1/2/3.
+After CI passes, the user publishes the seven-package release set from the
+existing main workflow. See [release and upgrade instructions](../releasing.md).
+Verify the public artifacts before starting Hufu HA-1/2/3.
 Keep [the canonical activity queue](../authority-extension-activities.md) and
 [the runtime boundary](../workflow-authorization.md) as the implementation
 handoff. Final concrete resource checks remain provider-owned; this callback

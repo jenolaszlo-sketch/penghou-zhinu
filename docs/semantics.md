@@ -22,7 +22,8 @@ rather than only implied by code.
 
 - Completed step results, retry schedules (next eligible time), durable delays
   (absolute deadline), signal waits, child links, compensations, rollback
-  operations, artifact references, run metadata, and the full event history.
+  operations, artifact references, run metadata, event history, and protected
+  provider bindings, authorization evidence and pending approval checkpoints.
 - The workflow **method runs again from its entry point**. Code outside durable
   steps may re-execute. Completed `StepAsync` calls deserialize committed results
   without invoking delegates, reconstructing values until execution reaches the
@@ -75,6 +76,32 @@ rather than only implied by code.
 Use an execution token for host shutdown or worker handoff. Use `CancelAsync`
 when a user or administrator intends to terminate the durable workflow.
 
+## Optional execution authorization
+
+The configured provider runs after an activity claim exists and before its
+callback or resolver is activated. Each acquired forward or compensation
+attempt obtains a fresh request. Completed-step reconstruction returns retained
+results without reevaluating execution permission; hosts separately control
+disclosure of those results.
+
+Denied, Error and Unavailable outcomes settle the claim without invoking user
+code or consuming its callback retry allowance. Provider failure never falls
+back to the unprotected profile. Caller cancellation remains cancellation.
+Allowed outcome evidence and an intended dispatch-start marker are persisted
+before final current expiry/fence validation. A marker does not prove that the
+callback entered or that an external effect completed.
+
+ApprovalRequired parks durably, releases leases and worker capacity, and avoids
+repeated polling of the provider. A trusted wake changes readiness only; a fresh
+evaluation may still deny a revoked approval. New generations, declaration
+changes, stale leases, expired decisions or failed required evidence block
+dispatch. The runtime also blocks completion when workflow code swallows a
+denial or pending approval.
+
+Loop predicates and durable steps are covered; loop bodies, key/state selectors
+and orchestration code are outside activity preflight. External effects always
+retain resource/provider checks. See [the exact boundary](workflow-authorization.md).
+
 ## Workflow version disappears
 
 - If a registered workflow name/version is removed, runs of it fail with
@@ -99,6 +126,8 @@ when a user or administrator intends to terminate the durable workflow.
 | Fork (new run + copied steps + source lineage) | one transaction |
 | Rollback completion (`Compensated`) | one transaction |
 | Rollback-and-restart phase transitions | one transaction per phase |
+| Protected authorization evidence + dispatch marker / approval park / terminal claim failure | one fenced transaction |
+| Accepted approval wake + readiness change + wake receipt | one transaction |
 
 `EmitAsync` called inside a step delegate commits with that step (one
 transaction); called outside a step it appends its own event in a separate
@@ -256,6 +285,9 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
 - On success the run reaches `Compensated` (terminal). A failing compensation
   leaves the run `Failed` and claimable by a later rollback attempt; already
   completed compensations are reused.
+- Protected compensation obtains a separate declaration and a fresh decision.
+  ApprovalRequired can suspend rollback durably; forward permission does not
+  authorize compensation, and resource checks still apply to its actual effects.
 
 ## What the deadline applies to
 
@@ -311,3 +343,9 @@ deliberately **not** inherited. The fork records `SourceRunId` lineage.
 - Run deadlines bound admission and claiming; `WaitForCompletionAsync` and
   `WaitUntilBlockedAsync` deadlines bound only the caller. Parking never
   extends any deadline.
+
+Authorization approval checkpoints are separate from ordinary `workflow_waits`.
+Use `IWorkflowAuthorizationRepository.GetPendingAuthorizationAsync` for the
+current approval state. Ordinary wait inspection and `WaitUntilBlockedAsync`
+do not expose those checkpoints; a timed-out ordinary wait inspection is not
+proof that a protected callback has permission to run.

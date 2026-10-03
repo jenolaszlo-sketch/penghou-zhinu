@@ -84,6 +84,15 @@ Application events emitted through `WorkflowStepContext.EmitAsync` are durable
 workflow data, not built-in telemetry. Their event type and payload are selected
 by the application and must follow its own privacy and cardinality policy.
 
+Protected execution also persists bounded authorization context/result evidence
+and separate approval checkpoints in SQLite. These are application audit data,
+not ordinary `WorkflowEvent` entries or built-in OpenTelemetry payloads.
+`GetEventsAsync` alone is not a complete authorization audit. Use the optional
+repository's pending-checkpoint API for current approval state and a trusted,
+store-aware audit reader for retained outcomes. Keep credentials and policy
+tokens out of declarations, provider results and correlation values. A recorded
+Allowed result is history, never a transferable permission.
+
 Operationally useful counters and histograms the runtime maintains:
 
 ```text

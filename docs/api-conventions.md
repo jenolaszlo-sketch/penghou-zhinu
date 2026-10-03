@@ -52,8 +52,14 @@ histories. Those belong on the runtime/query/admin surface.
 
 ## Exceptions
 
-All Zhinu exceptions derive from `ZhinuException`. Catch `WorkflowStateException`
+The existing runtime exception family derives from `ZhinuException`. Catch `WorkflowStateException`
 to cover fencing/lease and not-found errors; `WorkflowPersistenceException`
 covers store failures; `WorkflowSerializationException` covers contract
 mismatches. Raw provider exceptions (for example SQLite) do not escape public
 APIs.
+
+`WorkflowAuthorizationException` is a separate public exception deriving from
+`Exception`; a `catch (ZhinuException)` does not catch it. It represents a
+terminal authorization/configuration or dispatch-fence failure. Public
+execution APIs may persist it as a workflow error or expose it through their
+normal failure wrappers; do not treat it as an activity retry signal.

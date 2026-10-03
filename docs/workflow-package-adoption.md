@@ -1,5 +1,11 @@
 # Neutral workflow package adoption record
 
+This is the historical ZA-2 dependency-adoption checkpoint. Runtime authorization
+was subsequently implemented and pushed in `e91804a`; current release status is
+in [the authorization qualification](qualification/workflow-authorization.md)
+and [release instructions](releasing.md). The 927-case figures below belong to
+the earlier adoption proof, not the current 1,017-case runtime matrix.
+
 ## Published package evidence
 
 - Package: `Penghou.Workflow.Abstractions` version `0.1.0-preview.2`.
@@ -44,11 +50,10 @@ for both alias files.
 ZA-2 source adoption and package qualification are complete. Machine-readable
 evidence is recorded in the
 [workflow package adoption record](qualification/workflow-package-adoption.json).
-The next implementation, ZA-3A/3B/4,
-owns runtime authorization, activity dispatch gating, durable approvals and
-their required evidence. No Hufu adapter, Luban LW-1 integration implementation
-or Zhinu package release is completed by the package adoption work; preview.15
-remains immutable.
+At that checkpoint, ZA-3A/3B/4 remained separate runtime implementation gates;
+they are now locally qualified and pushed. Package adoption itself did not
+implement the Hufu adapter, Luban LW-1 or publish a Zhinu release. Preview.15
+remains immutable; release `0.2.0-preview.1` separately after CI passes.
 
 Adding the `Penghou.Workflow` namespace can make unqualified `Workflow` type
 references ambiguous in consumers under `Penghou` that import another workflow

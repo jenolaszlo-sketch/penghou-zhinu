@@ -24,10 +24,12 @@ WorkflowResult / WorkflowArtifactReference
 | `WorkflowRun` | A durable execution instance of a compiled definition. Retains `WorkflowName`, `WorkflowVersion`, and `DefinitionFingerprint` so recovery is exact. |
 | `WorkflowArtifact` | Output produced by a run: the workflow result (`WorkflowResult`) and any durable external-artifact references (`WorkflowArtifactReference`) published by activities. |
 
-Source vs compiled: the source model is the human/authoring contract; the
-compiled model is what the runtime executes. Only compiled definitions are
-registered and persisted; the source can be recompiled, but a run resumes from
-its recorded fingerprint, not from source.
+Source vs compiled: the source model is the authoring contract; the compiled
+model is what the host registers for execution. SQLite retains the run's
+name/version, definition fingerprint and durable execution state. The host must
+retain or reproduce the exact compiled artifact and matching catalogue for
+recovery; SQLite does not persist executable implementations. Recompiling
+changed source cannot silently replace a run's retained fingerprint.
 
 ## Activity catalogue
 
@@ -59,7 +61,7 @@ CompiledWorkflowDefinition
 ```
 
 Compilation is deterministic and has no LLM involvement. It either yields a
-valid compiled definition or a `WorkflowValidationResult` with structured
+valid compiled definition or a `WorkflowCompilationResult` with structured
 diagnostics (`Code`, `Severity`, `Message`, `StepId`); it never yields a
 partially valid artifact.
 
@@ -80,6 +82,17 @@ The declarative layer depends on the stable runtime contracts it actually uses:
 repositories, `WorkflowContext` internals, or persistence-specific types.
 
 ## Fingerprint and recovery semantics
+
+Activity descriptors may carry immutable authorization requirements. Registration
+and compilation snapshot them; the canonical fingerprint includes the declaration.
+Descriptors supply requirements only, while execution maps compiled name/version
+to the neutral plan identity. A mismatched declaration at registration is rejected.
+
+With a configured authorizer, executor resolution happens inside the gated durable
+callback. Completed-result reuse does not resolve the executor. New attempts
+require fresh decisions and may park for approval. See
+[workflow authorization](workflow-authorization.md). Policy evaluation and durable
+approval are runtime capabilities; the declarative compiler is not a policy engine.
 
 - A run records the compiled definition's fingerprint at start.
 - On resume, the runtime verifies the registered definition's fingerprint
@@ -122,8 +135,10 @@ implementation details.
 
 ## What this vertical deliberately does not include
 
-Conditionals, loops, parallelism, generated activities, capability policy,
-evidence, AI orchestration, scripting, schema migration between compiled
-versions, a broad JSON Schema, a CLI, or a durable polling primitive. Those are
-later P3 increments; the purpose here was to prove the compile → execute →
-recover path on the real runtime.
+The declarative adapter remains a minimal sequential dependency graph. It does
+not add declarative conditionals/loops/parallel scheduling, generated activities,
+an embedded policy engine, AI orchestration, scripting, live migration between
+compiled versions or a broad JSON Schema. The code-first runtime separately
+supports loops, fan-out, durable waits and optional authorization; the operator
+CLI is also separate. Those runtime features do not imply equivalent syntax or
+behavior in the compiled declarative model.

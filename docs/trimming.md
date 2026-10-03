@@ -1,27 +1,27 @@
 # Trimming and NativeAOT friendliness
 
-Zhinu does not target NativeAOT yet, but this audit records what would block it
-so future work (especially the P3 catalogue/compiled-workflow phase) does not
-introduce unnecessary obstacles.
+Zhinu does not claim NativeAOT or trimming safety. This page records current
+constraints for hosts and future improvements, including the implemented
+declarative and authorization paths.
 
 ## Current state
 
-- **JSON** uses `System.Text.Json` with a centralized `ZhinuJsonDefaults`
-  (`Web` + `JsonStringEnumConverter` + `DefaultJsonTypeInfoResolver`). The
-  reflection-based resolver is trimming-compatible at runtime but not NativeAOT
-  trim-safe by itself; the shared, frozen `JsonSerializerOptions` means a future
-  switch to a source-generated context is a single-point change.
-- **Reflection** is confined to `AddZhinuWorkflowsFromAssembly` (assembly
-  scanning). It is an ergonomic convenience, not the only registration path;
-  explicit `AddZhinuWorkflow<T>` remains. Scanning requires reflection but the
-  rest of the runtime does not.
-- **No** `Activator.CreateInstance`, dynamic code generation, or runtime generic
-  construction of user types outside the scanner.
+- **JSON** uses reflection-based `System.Text.Json` contract resolution.
+  `ZhinuJsonDefaults` covers ordinary runtime payloads. Declarative activity
+  conversion uses default JSON options with runtime CLR types; authorization
+  codecs use separate fixed, versioned options. A source-generated replacement
+  therefore requires reviewing each path, not changing one options instance.
+- **Reflection** includes assembly scanning and validation of Type-based step
+  registrations through `MakeGenericType`; the scanner also uses
+  `MakeGenericMethod`. Explicit generic registrations avoid assembly discovery
+  but do not prove the entire application is trim-safe.
+- Hosts must retain metadata for their workflow payloads, registered activity
+  types and DI construction. No trimmed or NativeAOT qualification is recorded.
 
-## Constraints for P3
+## Constraints for future work
 
-The compiler/catalogue phase must not introduce new reflection-heavy machinery as
-a requirement:
+The compiler/catalogue boundary should continue to avoid requiring discovery of
+arbitrary executable types:
 
 - Activity identities resolve from a typed catalogue, not by reflecting over
   assemblies at runtime.
@@ -32,5 +32,6 @@ a requirement:
 - Keep `AddZhinuWorkflowsFromAssembly` as an opt-in convenience; never make it
   the only way to register.
 
-This keeps Zhinu friendly to trimmed apps, containers, and small services, with
-NativeAOT as a future possibility rather than a promise.
+NativeAOT remains future work requiring explicit serialization/registration
+profiles and real publish-and-run checks. Ordinary container deployment does
+not itself establish trimming or NativeAOT support.

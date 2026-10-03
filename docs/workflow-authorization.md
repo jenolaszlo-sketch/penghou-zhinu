@@ -1,8 +1,10 @@
 # Workflow authorization boundary
 
 Zhinu consumes the published `Penghou.Workflow.Abstractions` contract and owns
-its runtime checks and SQLite evidence. An `IExecutionAuthorizer` can come from
-Hufu.Workflow or another trusted policy implementation. Zhinu has no Hufu dependency.
+its runtime checks and SQLite evidence. Applications supply an
+`IExecutionAuthorizer` from a trusted policy implementation. The planned
+`Penghou.Hufu.Workflow` adapter will implement that neutral contract; it has
+not yet shipped. Zhinu has no Hufu dependency.
 
 ## Host configuration and declarations
 
@@ -28,10 +30,27 @@ conflicting options registrations fail explicitly. A protected store must
 implement `IWorkflowAuthorizationRepository`; SQLite implements it. Existing
 custom stores remain usable without a provider.
 
+Hosted registration takes the provider/profile identity and authorizer instance:
+
+```csharp
+services.AddZhinuExecutionAuthorization(
+    providerId: "my-policy",
+    bindingId: "tenant-namespace-and-mapping-v1",
+    authorizer: authorizer);
+```
+
+Do not set `ExecutionAuthorization` inside the `AddZhinu` options callback;
+that path is explicitly rejected. Direct constructors may use
+`new ZhinuOptions { ExecutionAuthorization = authority }`; the builder uses
+`WithExecutionAuthorization(authority)`.
+
 Every protected durable activity evaluates its explicit declaration, including
 an empty declaration if omitted. Empty declarations confer no permission; the
 configured provider decides whether its vocabulary and policy recognize them.
 Hufu's protected mapping is intended to reject empty or unsupported declarations.
+Framework-generated durable helper steps can also present empty declarations.
+An adapter with that default must define a reviewed, trusted mapping for those
+helpers; an empty list or a caller-controlled step key alone must not imply Allow.
 Provide forward and compensation requirements separately:
 
 ```csharp
@@ -59,6 +78,28 @@ binding, evidence requirement and timing profile. Recovery, children, forks and
 rollback cannot silently change that profile. The host must change `BindingId`
 when its trusted principal/tenant mapping or policy interpretation changes;
 workflow IDs, plan labels and diagnostic metadata do not authenticate actors.
+
+## Neutral identity mapping
+
+The engine derives these facts from the actual run and acquired claim:
+
+| Neutral field | Zhinu mapping |
+| --- | --- |
+| `ExecutionId` | Run GUID in `N` format |
+| `ParentExecutionId` | Parent run GUID in `N` format, when present |
+| `OperationId` | `step:<claim-guid-N>` or `compensation:<claim-guid-N>` |
+| `OperationPath` | Durable step key |
+| `Attempt` | Current intended dispatch attempt |
+| `ExecutionRevision` | `g<lease-generation>:r<step-revision>` |
+| `PlanId`, `PlanRevision` | Declared retained plan identity; declarative activities use compiled name and version |
+| `AuthorizationRequestId` | Fresh GUID in `N` format for each evaluation |
+| `Requirements` | Immutable snapshot of the operation's declaration |
+
+Declarative recovery also checks the separately retained definition fingerprint.
+It is not placed in `PlanRevision`. Provider/binding identity and required
+evidence belong to trusted host configuration. Correlation IDs and resource
+labels are data; adapters must authenticate actors and interpret requirement
+schemas explicitly.
 
 Provider checks have a bounded timeout (30 seconds by default), a finite Allowed
 lifetime limit (five minutes), and bounded future clock skew (five seconds).
@@ -88,8 +129,10 @@ the callback or spending its retry allowance. Caller cancellation remains
 cancellation. Authorization infrastructure has no automatic retry loop; an
 operator can explicitly restart failed work. Actual callback failure uses the
 existing durable retry policy, and every acquired retry obtains a fresh decision.
-The attempt counter records callback dispatch starts, including interrupted
-starts; it is not proof of completion of an external effect.
+The attempt counter is based on persisted intended dispatch-start markers,
+including interrupted starts. Allowed evidence and the marker commit before
+final dispatch validation; the marker alone does not prove the callback entered
+or that an external effect completed.
 
 ApprovalRequired persists a separate pending checkpoint and releases worker
 capacity and leases. The scheduler and direct execution do not repeatedly

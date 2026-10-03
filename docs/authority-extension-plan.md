@@ -7,15 +7,15 @@ complete, with its 927-case evidence retained as historical ZA-2 proof. ZA-3A,
 ZA-3B and ZA-4 are locally qualified in candidate `0.2.0-preview.1`: the full
 runtime matrix passed (1,017 tests: 506 on .NET 8 and 511 on .NET 10), and the
 isolated seven-package consumer passed on both TFMs; the unchanged preview.15
-legacy compatibility suite passed on .NET 8/10. Commit/push and remote CI
+legacy compatibility suite passed on .NET 8/10. Source delivery is pushed. Remote CI and user-run NuGet
 publication remain pending. The qualification record is
 [here](qualification/workflow-authorization.json), and
 the runtime boundary is [documented](workflow-authorization.md). ZA-6
 publication remains the user's CI step. The Hufu adapter remains held until
 after that publication. Read
 the [package adoption record](workflow-package-adoption.md), [Penghou release
-checkpoint](../../Penghou/docs/workflow-package-release-handoff.md) and
-[contract manual](../../Penghou/docs/workflow-authorization-contract.md). The [original proposal](
+checkpoint](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-package-release-handoff.md) and
+[contract manual](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-authorization-contract.md). The [original proposal](
 proposals/2026-10-03-authority-extension.md) is preserved verbatim. This plan
 operationalizes it and supersedes earlier Hufu/Zhinu integration delivery order.
 The 927-case qualification describes historical ZA-2 package adoption; it does
@@ -31,11 +31,12 @@ Hufu phases.
 ## Shared-contract ownership clarification - 2026-10-03
 
 The user's clarification supersedes the original proposal's package name and
-ownership. Read [Penghou's workflow contract plan](../../Penghou/docs/workflow-abstractions-plan.md):
+ownership. Read [Penghou's workflow contract plan](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-abstractions-plan.md):
 `Penghou.Workflow.Abstractions` lives in the Penghou repository and defines
 product-neutral contracts usable by alternative runtimes and authority adapters.
-The contract package was published first (WA-1/2/3); next qualify and
-implement/release Zhinu, then implement/qualify the Hufu workflow adapter. The archived proposal is
+The contract package was published first (WA-1/2/3). Zhinu implementation and
+local qualification are complete; remote CI and publication precede Hufu adapter
+implementation and qualification. The archived proposal is
 historical input; it is not authority to recreate a Zhinu-named abstractions package.
 
 ## Outcome and dependency rules
@@ -184,13 +185,13 @@ These refine the supplied examples under Penghou-owned, product-neutral contract
 | HA-1 | Hufu | WA-3, completed Zhinu phase ZA-6 | Optional `Hufu.Workflow` translation adapter referencing only Hufu and exact published Penghou.Workflow.Abstractions; independent authentication, explicit requirement mappings, decision/error/approval mapping and attributable evidence |
 | HA-2 | Hufu + Zhinu | HA-0 test split, ZA-4, HA-1 candidates | Package-backed adapter/runtime tests; no-policy default, denied start, revoked retry, approved resume, compensation and crash/replay regressions. Test separation does not wait for this gate |
 | ZA-5 | Integration owner | ZA-1 dispatch review for early disposition; HA-2 for any replacement evidence | ZA-5A selects legacy retention/retirement scope early; ZA-5B applies it without weakening actual-effect/start guarantees. No SQL/runtime dependency leaks into the translation adapter |
-| ZA-6 | Zhinu release owner | ZA-2/3A/3B/4 and legacy compatibility qualification complete | Commit/push and publish the `0.2.0-preview.1` candidate through the user's CI workflow; preview.15 and WA-3 contracts remain immutable. Publication is pending |
+| ZA-6 | Zhinu release owner | ZA-2/3A/3B/4 and legacy compatibility qualification complete | After remote CI passes, publish the `0.2.0-preview.1` candidate through the user's CI workflow; preview.15 and WA-3 contracts remain immutable. Publication is pending |
 | HA-3 | Hufu release owner | WA-3, ZA-6, HA-2; scoped ZA-5 decision | Reconfirm exact published contract adoption, inspect NuGet graphs, update release set/roadmaps, then publish Hufu packages through the user's release workflow |
 
 WA-1/2/3 close against the published `0.1.0-preview.2` package. Zhinu ZA-2
 adoption qualification remains separately documented. ZA-3A/3B/4 runtime and
 durable approval and the unchanged preview.15 legacy compatibility suite are
-locally qualified; commit/push and publication remain pending. Hufu workflow adapter implementation follows the published Zhinu
+locally qualified and pushed; remote CI and publication remain pending. Hufu workflow adapter implementation follows the published Zhinu
 phase ZA-6.
 Do not pick the next version until checking the release state. The initial Hufu core/provider packages can progress without
 Zhinu; adapter completion must not become a prerequisite for unrelated Luban/IO
@@ -225,7 +226,7 @@ or Hufu core functionality.
 ## Handoff and scope
 
 ZA-2 is complete and ZA-3A/3B/4 plus legacy compatibility are locally
-qualified; commit/push, then user-run ZA-6 publication with remote CI.
+qualified and pushed; complete remote CI, then user-run ZA-6 publication.
 Independent HA-0A/B remain available from
 the [activity queue](authority-extension-activities.md). ZA-1 design, WA-1/2/3
 publication and ZA-5A retention scope are complete; do not redo them. Hufu
@@ -234,8 +235,8 @@ integration on a neutral boundary, with no mandatory Hufu/Zhinu dependencies.
 Do not continue the old shared-SQLite composition as the default integration
 plan. Do not remove working legacy guarantees merely to satisfy a dependency
 graph. Read this plan, the original proposal, Zhinu's current execution/store
-semantics and [Hufu ADR 0011](../../Penghou.Hufu/docs/decisions/0011-neutral-zhinu-authority-extension.md)
+semantics and [Hufu ADR 0011](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/decisions/0011-neutral-zhinu-authority-extension.md)
 before implementation. Update both roadmaps with exact gate IDs and evidence.
-See [Hufu handoff](../../Penghou.Hufu/docs/zhinu-authority-handoff.md) for local
+See [Hufu handoff](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/zhinu-authority-handoff.md) for local
 staging precautions and reusable work. Each implementation and release closes
 only with the corresponding evidence required by the gates above.
