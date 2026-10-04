@@ -1,18 +1,33 @@
 # Neutral workflow authorization: delivery plan
 
-Status: selected architectural direction and planning update, 2026-10-03.
-`Penghou.Workflow.Abstractions` `0.1.0-preview.2` is published and WA-1/2/3
-are complete. Zhinu ZA-2 exact-package source adoption and qualification are
-complete, with its 927-case evidence retained as historical ZA-2 proof. ZA-3A,
-ZA-3B and ZA-4 are locally qualified in candidate `0.2.0-preview.1`: the full
-runtime matrix passed (1,017 tests: 506 on .NET 8 and 511 on .NET 10), and the
-isolated seven-package consumer passed on both TFMs; the unchanged preview.15
-legacy compatibility suite passed on .NET 8/10. Source delivery is pushed. Remote CI and user-run NuGet
-publication remain pending. The qualification record is
-[here](qualification/workflow-authorization.json), and
-the runtime boundary is [documented](workflow-authorization.md). ZA-6
-publication remains the user's CI step. The Hufu adapter remains held until
-after that publication. Read
+Updated 2026-10-04. WA-1/2/3 and Zhinu ZA-2/3A/3B/4/6 are complete.
+`Penghou.Workflow.Abstractions` 0.1.0-preview.2 and all seven Zhinu
+0.2.0-preview.1 packages are published and indexed. Zhinu source commit
+`2f02a2e91d87e6429fd17a3819308301ab91f17c` passed both OS jobs in
+[CI 37137640422](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/runs/37137640422)
+and [publication 37138352675](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/runs/37138352675).
+All seven public packages were downloaded; hashes and exact repository commit
+metadata are recorded in [public-release evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/zhinu-public-release.json).
+
+Hufu HA-0A/B review and test isolation are complete; HA-1 is implemented.
+The optional adapter depends only on Hufu and the exact neutral contract.
+The current local source suite passed 764 cases, 382 per .NET 8/10 framework
+(184 core, 93 Biscuit, 19 IO, 22 legacy, 52 Workflow unit, 12 integration).
+The bounded typed-path explanation slice adds 32 cases per framework, with
+actual evaluator capture and separately authorized redacted disclosure. See
+[profile](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/decision-explanations.md)
+and [current evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/decision-explanations.json).
+The earlier 700-case core checkpoint remains historical evidence.
+Independent core admission/issuance adds 73 cases per framework and no engine
+dependency; see [the profile](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/core-admission-and-issuance.md)
+and [earlier core qualification](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/core-hardening.json).
+The earlier 554-case workflow qualification remains historical evidence.
+HA-2 fresh candidate-package qualification passed on both frameworks; HA-3
+remote CI and user-run Hufu publication remain open. No Hufu package or production
+host is claimed published. See the [Hufu handoff](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/zhinu-authority-handoff.md) and
+[qualification ledger](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/workflow-authorization.json).
+
+Read
 the [package adoption record](workflow-package-adoption.md), [Penghou release
 checkpoint](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-package-release-handoff.md) and
 [contract manual](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-authorization-contract.md). The [original proposal](
@@ -176,23 +191,24 @@ These refine the supplied examples under Penghou-owned, product-neutral contract
 | --- | --- | --- | --- |
 | ZA-0 | Zhinu + Hufu | None | This plan, source inventory and staged-work disposition; no implementation claim |
 | ZA-1 | Zhinu | ZA-0 | Reviewed bounded context/result/requirements contracts, exact dispatch paths, compatibility and failure/wait/retry state transitions from decisions 1-7 |
-| HA-0 | Hufu | ZA-0; independent of ZA-2 | Review/reuse independent staged changes and split legacy runtime integration tests from core; preserve regression evidence and prove standalone core test/build graph |
+| HA-0 | Hufu | Complete | Old snapshot reviewed by change group; legacy tests isolated with unchanged 22 cases per framework and independent core graph verified. |
 | WA-1/2/3 | Penghou | Complete | Design, implement, qualify and publish `Penghou.Workflow.Abstractions` from Penghou CI; isolated neutral consumer and compatibility/dependency checks. Evidence is in the [adoption record](workflow-package-adoption.md) |
 | ZA-2 | Zhinu | WA-1/2/3, ZA-1; complete | Exact package pin and `Agents` source/test aliases; declared-TFM matrix, API/namespace compatibility, old-binary probe and seven-package fresh-cache closure consumer qualified |
 | ZA-3A | Zhinu | ZA-2; implemented and locally qualified | One effective authorizer; named no-provider profile; protected-run provider binding and direct/hosted configuration |
 | ZA-3B | Zhinu | ZA-2/ZA-3A; implemented and locally qualified | Gate actual attempts before protected callback/resolver activation; denial/failure invokes zero protected callbacks; post-await dispatch validation and persisted outcome evidence |
 | ZA-4 | Zhinu | ZA-3A/3B; implemented and locally qualified | Durable ApprovalRequired park/release, exact idempotent wake, restart/recovery and fresh resume/retry decisions |
-| HA-1 | Hufu | WA-3, completed Zhinu phase ZA-6 | Optional `Hufu.Workflow` translation adapter referencing only Hufu and exact published Penghou.Workflow.Abstractions; independent authentication, explicit requirement mappings, decision/error/approval mapping and attributable evidence |
-| HA-2 | Hufu + Zhinu | HA-0 test split, ZA-4, HA-1 candidates | Package-backed adapter/runtime tests; no-policy default, denied start, revoked retry, approved resume, compensation and crash/replay regressions. Test separation does not wait for this gate |
+| HA-1 | Hufu | Complete after WA-3/ZA-6 | Optional Hufu.Workflow references only Hufu and exact neutral contracts; trusted binding, finite declaration mapping, explicit approval and mandatory evidence implemented. |
+| HA-2 | Integration owner | Locally qualified after HA-0B/ZA-4/HA-1 | Fresh-cache candidate Hufu packages plus exact published neutral/Zhinu packages pass 12 integration cases per framework, without project references. Approval/store recreation, revocation/retry, compensation, restart cancellation, evidence and replay are covered. |
 | ZA-5 | Integration owner | ZA-1 dispatch review for early disposition; HA-2 for any replacement evidence | ZA-5A selects legacy retention/retirement scope early; ZA-5B applies it without weakening actual-effect/start guarantees. No SQL/runtime dependency leaks into the translation adapter |
-| ZA-6 | Zhinu release owner | ZA-2/3A/3B/4 and legacy compatibility qualification complete | After remote CI passes, publish the `0.2.0-preview.1` candidate through the user's CI workflow; preview.15 and WA-3 contracts remain immutable. Publication is pending |
+| ZA-6 | Zhinu release owner | Complete | Seven 0.2.0-preview.1 packages public; both OS CI and user-run publication passed. See [exact evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/zhinu-public-release.json). |
 | HA-3 | Hufu release owner | WA-3, ZA-6, HA-2; scoped ZA-5 decision | Reconfirm exact published contract adoption, inspect NuGet graphs, update release set/roadmaps, then publish Hufu packages through the user's release workflow |
 
 WA-1/2/3 close against the published `0.1.0-preview.2` package. Zhinu ZA-2
 adoption qualification remains separately documented. ZA-3A/3B/4 runtime and
 durable approval and the unchanged preview.15 legacy compatibility suite are
-locally qualified and pushed; remote CI and publication remain pending. Hufu workflow adapter implementation follows the published Zhinu
-phase ZA-6.
+qualified and published in 0.2.0-preview.1; ZA-6 is complete. Hufu HA-0A/B
+and HA-1 are complete. HA-2 fresh candidate qualification passed locally;
+HA-3 remote CI/user publication is the remaining Hufu release gate.
 Do not pick the next version until checking the release state. The initial Hufu core/provider packages can progress without
 Zhinu; adapter completion must not become a prerequisite for unrelated Luban/IO
 or Hufu core functionality.
@@ -225,18 +241,14 @@ or Hufu core functionality.
 
 ## Handoff and scope
 
-ZA-2 is complete and ZA-3A/3B/4 plus legacy compatibility are locally
-qualified and pushed; complete remote CI, then user-run ZA-6 publication.
-Independent HA-0A/B remain available from
-the [activity queue](authority-extension-activities.md). ZA-1 design, WA-1/2/3
-publication and ZA-5A retention scope are complete; do not redo them. Hufu
-HA-1/2/3 follows Zhinu ZA-6. Luban LW-1 remains a separate optional host
-integration on a neutral boundary, with no mandatory Hufu/Zhinu dependencies.
-Do not continue the old shared-SQLite composition as the default integration
-plan. Do not remove working legacy guarantees merely to satisfy a dependency
-graph. Read this plan, the original proposal, Zhinu's current execution/store
-semantics and [Hufu ADR 0011](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/decisions/0011-neutral-zhinu-authority-extension.md)
-before implementation. Update both roadmaps with exact gate IDs and evidence.
-See [Hufu handoff](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/zhinu-authority-handoff.md) for local
-staging precautions and reusable work. Each implementation and release closes
-only with the corresponding evidence required by the gates above.
+WA-1/2/3 and Zhinu ZA-2/3A/3B/4/6 are complete and published. Resume
+Hufu HA-0A/B, HA-1 and local HA-2 are complete. Close the separate
+HA-3 remote CI/user publication gate. Use the [activity queue](authority-extension-activities.md)
+and [Hufu handoff](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/zhinu-authority-handoff.md) rather than old held-publication prompts.
+
+Keep the new adapter neutral and independently usable. Preserve the frozen
+legacy preview.15 atomic-start profile; any ZA-5B replacement/retirement needs
+separate effect-boundary evidence. Luban LW-1 remains optional host integration.
+Do not bulk-install the old completion snapshot or interpret retained approval
+and outcome history as fresh permission. Production identity, approval custody,
+resource checks and actual mutation start remain separately qualified host duties.
