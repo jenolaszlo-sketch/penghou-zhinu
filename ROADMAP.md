@@ -13,12 +13,20 @@ metadata are recorded in [public-release evidence](https://github.com/jenolaszlo
 
 Hufu HA-0A/B review and test isolation are complete; HA-1 is implemented.
 The optional adapter depends only on Hufu and the exact neutral contract.
-The current local source suite passed 764 cases, 382 per .NET 8/10 framework
-(184 core, 93 Biscuit, 19 IO, 22 legacy, 52 Workflow unit, 12 integration).
+The current local source suite passed 816 cases, 408 per .NET 8/10 framework
+(210 core, 93 Biscuit, 19 IO, 22 legacy, 52 Workflow unit, 12 integration).
+The bounded request-preflight telemetry slice adds 26 cases per framework.
+A finite worker queue emits closed categories/timing without request metadata;
+listener loss, saturation and shutdown preserve mandatory evidence/results. See
+[telemetry profile](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/optional-telemetry.md)
+and [current evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/optional-telemetry.json).
+The 764-case explanation checkpoint remains historical evidence. Earlier work
+was committed as Hufu 42a045b, Penghou 77bac95 and Zhinu a1df6e9; the telemetry
+delivery is local, with push/remote CI and user-controlled Hufu publication open.
 The bounded typed-path explanation slice adds 32 cases per framework, with
 actual evaluator capture and separately authorized redacted disclosure. See
 [profile](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/decision-explanations.md)
-and [current evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/decision-explanations.json).
+and [explanation evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/decision-explanations.json).
 The earlier 700-case core checkpoint remains historical evidence.
 Independent core admission/issuance adds 73 cases per framework and no engine
 dependency; see [the profile](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/core-admission-and-issuance.md)
