@@ -369,7 +369,9 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
-            WorkflowRunId = runId, IdempotencyKey = "op:cancel-req", Provider = "codex",
+            WorkflowRunId = runId,
+            IdempotencyKey = "op:cancel-req",
+            Provider = "codex",
             RecoveryIntent = ExternalOperationRecoveryIntent.Retry
         }, ct);
 
@@ -391,7 +393,8 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
-            WorkflowRunId = runId, Provider = "codex",
+            WorkflowRunId = runId,
+            Provider = "codex",
             RecoveryIntent = ExternalOperationRecoveryIntent.Resume
         }, ct);
         await repository.AcquireAsync(registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
@@ -411,7 +414,8 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
-            WorkflowRunId = runId, Provider = "codex",
+            WorkflowRunId = runId,
+            Provider = "codex",
             RecoveryIntent = ExternalOperationRecoveryIntent.Resume
         }, ct);
         await repository.AcquireAsync(registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
@@ -431,7 +435,8 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
         var runId = await StartRunAsync(ct);
         var registered = await repository.RegisterAsync(new ExternalOperationRegistration
         {
-            WorkflowRunId = runId, Provider = "codex",
+            WorkflowRunId = runId,
+            Provider = "codex",
             RecoveryIntent = ExternalOperationRecoveryIntent.Resume
         }, ct);
         await repository.AcquireAsync(registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
