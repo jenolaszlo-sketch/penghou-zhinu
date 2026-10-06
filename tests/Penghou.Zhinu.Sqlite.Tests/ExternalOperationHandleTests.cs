@@ -361,6 +361,97 @@ public sealed class ExternalOperationHandleTests : WorkflowEngineTestBase
             .Should().ThrowAsync<WorkflowNotFoundException>();
     }
 
+    [Fact]
+    public async Task Cancel_Requested_BecomesCancelled_PreservesReason_Idempotent()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        var runId = await StartRunAsync(ct);
+        var registered = await repository.RegisterAsync(new ExternalOperationRegistration
+        {
+            WorkflowRunId = runId, IdempotencyKey = "op:cancel-req", Provider = "codex",
+            RecoveryIntent = ExternalOperationRecoveryIntent.Retry
+        }, ct);
+
+        var cancelled = await repository.CancelAsync(registered.OperationId, "WorkflowCancelled", ct);
+        cancelled.Status.Should().Be(ExternalOperationStatus.Cancelled);
+        cancelled.Error.Should().Be("WorkflowCancelled");
+        cancelled.CompletedAt.Should().NotBeNull();
+
+        var repeat = await repository.CancelAsync(registered.OperationId, "AuthorityRevoked", ct);
+        repeat.Status.Should().Be(ExternalOperationStatus.Cancelled);
+        repeat.Error.Should().Be("WorkflowCancelled"); // idempotent: first reason retained
+    }
+
+    [Fact]
+    public async Task Cancel_Running_BecomesCancelled_AndBlocksCompletion()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        var runId = await StartRunAsync(ct);
+        var registered = await repository.RegisterAsync(new ExternalOperationRegistration
+        {
+            WorkflowRunId = runId, Provider = "codex",
+            RecoveryIntent = ExternalOperationRecoveryIntent.Resume
+        }, ct);
+        await repository.AcquireAsync(registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
+
+        var cancelled = await repository.CancelAsync(registered.OperationId, "AuthorityRevoked", ct);
+        cancelled.Status.Should().Be(ExternalOperationStatus.Cancelled);
+
+        var act = () => repository.CompleteAsync(registered.OperationId, "worker-1", null, ct).AsTask();
+        await act.Should().ThrowAsync<LeaseLostException>();
+    }
+
+    [Fact]
+    public async Task Cancel_Completed_IsNotOverwritten()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        var runId = await StartRunAsync(ct);
+        var registered = await repository.RegisterAsync(new ExternalOperationRegistration
+        {
+            WorkflowRunId = runId, Provider = "codex",
+            RecoveryIntent = ExternalOperationRecoveryIntent.Resume
+        }, ct);
+        await repository.AcquireAsync(registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
+        await repository.CompleteAsync(registered.OperationId, "worker-1", "{\"ok\":true}", ct);
+
+        var cancelled = await repository.CancelAsync(registered.OperationId, "WorkflowCancelled", ct);
+
+        cancelled.Status.Should().Be(ExternalOperationStatus.Completed);
+        cancelled.Error.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Cancel_Failed_IsNotTurnedIntoCancelled()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        var runId = await StartRunAsync(ct);
+        var registered = await repository.RegisterAsync(new ExternalOperationRegistration
+        {
+            WorkflowRunId = runId, Provider = "codex",
+            RecoveryIntent = ExternalOperationRecoveryIntent.Resume
+        }, ct);
+        await repository.AcquireAsync(registered.OperationId, "worker-1", registered.LeaseGeneration, ct);
+        await repository.FailAsync(registered.OperationId, "worker-1", "boom", ct);
+
+        var cancelled = await repository.CancelAsync(registered.OperationId, "WorkflowCancelled", ct);
+
+        cancelled.Status.Should().Be(ExternalOperationStatus.Failed);
+        cancelled.Error.Should().Be("boom");
+    }
+
+    [Fact]
+    public async Task Cancel_Missing_Throws()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = Store();
+        await repository.Invoking(value => value.CancelAsync(Guid.NewGuid(), "x", ct).AsTask())
+            .Should().ThrowAsync<WorkflowNotFoundException>();
+    }
+
     private SqliteWorkflowStore Store() =>
         new(new SqliteDatabase(new ZhinuSqliteOptions
         {

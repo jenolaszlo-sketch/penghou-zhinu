@@ -347,6 +347,7 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
     public ValueTask<WorkflowExternalOperation> CompleteAsync(Guid operationId, string ownerId, string? payloadJson, CancellationToken ct = default) => inner.CompleteAsync(operationId, ownerId, payloadJson, ct);
 
     public ValueTask<WorkflowExternalOperation> FailAsync(Guid operationId, string ownerId, string? error, CancellationToken ct = default) => inner.FailAsync(operationId, ownerId, error, ct);
+    public ValueTask<WorkflowExternalOperation> CancelAsync(Guid operationId, string? reason, CancellationToken ct = default) => inner.CancelAsync(operationId, reason, ct);
 
     public ValueTask<WorkflowInstance> CreateInstanceAsync(string? metadataJson, CancellationToken ct = default) => inner.CreateInstanceAsync(metadataJson, ct);
 

@@ -67,4 +67,22 @@ public interface IWorkflowExternalOperationRepository
         string ownerId,
         string? error,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cancels a non-terminal handle. Idempotent and terminal: a
+    /// <see cref="ExternalOperationStatus.Completed"/> or
+    /// <see cref="ExternalOperationStatus.Failed"/> handle is returned
+    /// unchanged (a terminal result is never overwritten), an already
+    /// cancelled handle is returned unchanged, and a
+    /// <see cref="ExternalOperationStatus.Requested"/> or
+    /// <see cref="ExternalOperationStatus.Running"/> handle becomes
+    /// <see cref="ExternalOperationStatus.Cancelled"/> with the caller-supplied
+    /// neutral reason preserved. The reason is opaque evidence; Zhinu attaches
+    /// no product-specific meaning to it. Missing handles fail with
+    /// <see cref="WorkflowNotFoundException"/>.
+    /// </summary>
+    ValueTask<WorkflowExternalOperation> CancelAsync(
+        Guid operationId,
+        string? reason,
+        CancellationToken cancellationToken = default);
 }

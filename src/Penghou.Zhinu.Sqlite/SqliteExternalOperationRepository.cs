@@ -206,6 +206,46 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
                 payloadJson: null, error, cancellationToken)
             .ConfigureAwait(false);
 
+    /// <inheritdoc />
+    public async ValueTask<WorkflowExternalOperation> CancelAsync(
+        Guid operationId,
+        string? reason,
+        CancellationToken cancellationToken = default)
+    {
+        await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await database.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: false);
+        var current = await ReadAsync(connection, transaction, operationId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new WorkflowNotFoundException(
+                $"External operation '{operationId:D}' does not exist.");
+        // Terminal (Completed/Failed/Cancelled) is returned unchanged: a result
+        // is never overwritten by cancellation.
+        if (current.Status is ExternalOperationStatus.Completed
+            or ExternalOperationStatus.Failed or ExternalOperationStatus.Cancelled)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return current;
+        }
+
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            UPDATE workflow_external_operations
+            SET status = $cancelled, error = COALESCE($reason, error),
+                updated_at = $now, completed_at = $now
+            WHERE operation_id = $id AND status IN ($requested, $running);
+            """);
+        command.Parameters.AddWithValue("$cancelled", (int)ExternalOperationStatus.Cancelled);
+        command.Parameters.AddWithValue("$reason", SqliteStoreSupport.DbValue(reason));
+        command.Parameters.AddWithValue("$now", SqliteStoreSupport.FormatTimestamp(database.TimeProvider.GetUtcNow()));
+        command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(operationId));
+        command.Parameters.AddWithValue("$requested", (int)ExternalOperationStatus.Requested);
+        command.Parameters.AddWithValue("$running", (int)ExternalOperationStatus.Running);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return (await GetAsync(operationId, cancellationToken).ConfigureAwait(false))!;
+    }
+
     private async ValueTask<WorkflowExternalOperation> FinishAsync(
         Guid operationId,
         string ownerId,

@@ -413,6 +413,14 @@ public sealed class SqliteWorkflowStore :
             () => externalOperations.FailAsync(
                 operationId, ownerId, error, cancellationToken));
 
+    public ValueTask<WorkflowExternalOperation> CancelAsync(
+        Guid operationId,
+        string? reason,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "external-operations.cancel",
+            () => externalOperations.CancelAsync(operationId, reason, cancellationToken));
+
     public ValueTask<WorkflowInstance> CreateInstanceAsync(
         string? metadataJson,
         CancellationToken cancellationToken = default) =>
