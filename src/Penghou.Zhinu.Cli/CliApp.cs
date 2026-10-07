@@ -50,7 +50,7 @@ internal static class CliApp
             !string.Equals(options.Positionals[0], "runs", StringComparison.Ordinal))
         {
             await output.WriteLineAsync(
-                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops> ...")
+                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel> ...")
                 .ConfigureAwait(false);
             return 1;
         }
@@ -258,9 +258,34 @@ internal static class CliApp
                         writer.Render(writer.ExternalOperationModel(operation))).ConfigureAwait(false);
                     return 0;
                 }
+            case "cancel":
+                {
+                    if (!options.RequireId(2, output, out var id))
+                        return 1;
+                    var run = await engine.GetRunAsync(id, cancellationToken).ConfigureAwait(false) ??
+                        throw new WorkflowNotFoundException($"Workflow '{id:D}' does not exist.");
+                    if (run.Status is WorkflowStatus.Completed or WorkflowStatus.Failed
+                        or WorkflowStatus.Cancelled or WorkflowStatus.Compensated)
+                    {
+                        await output.WriteLineAsync(writer.Render(
+                            new CliOutput.RunCancelResult(
+                                "already", id.ToString("D"), run.Status.ToString()))).ConfigureAwait(false);
+                        return 0;
+                    }
+                    await engine.CancelAsync(
+                        id, options.Value("actor"), options.Value("reason"), cancellationToken)
+                        .ConfigureAwait(false);
+                    var current = await engine.GetRunAsync(id, cancellationToken).ConfigureAwait(false);
+                    await output.WriteLineAsync(writer.Render(
+                        new CliOutput.RunCancelResult(
+                            "cancelled",
+                            id.ToString("D"),
+                            current?.Status.ToString() ?? "unknown"))).ConfigureAwait(false);
+                    return 0;
+                }
             default:
                 await output.WriteLineAsync(
-                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops> ...")
+                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel> ...")
                     .ConfigureAwait(false);
                 return 1;
         }

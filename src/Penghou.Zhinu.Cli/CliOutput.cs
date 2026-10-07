@@ -55,6 +55,7 @@ internal sealed class CliOutput
                 $"eligible: {retention.Eligible}\n" +
                 string.Join("\n", retention.Sample.Select(id => $"  {id}")),
             SignalResult signal => $"buffered signal '{signal.Name}' for run {signal.RunId}",
+            RunCancelResult cancel => $"{cancel.Action} {cancel.RunId} {cancel.Status}",
             string text => text,
             null => "(none)",
             _ => JsonSerializer.Serialize(value, JsonOptions)
@@ -209,6 +210,7 @@ internal sealed class CliOutput
     internal sealed record PlanRow(string Step, string Reason);
     internal sealed record RetentionSummary(int Eligible, List<string> Sample);
     internal sealed record SignalResult(string RunId, string Name);
+    internal sealed record RunCancelResult(string Action, string RunId, string Status);
     internal sealed record RunDetail(
         string Id, string Name, string Version, string Status,
         string Input, string Output, string Error,
