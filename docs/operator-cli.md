@@ -65,6 +65,15 @@ will not synthesize receipt guarantees the store does not provide. Until
 that store primitive exists, forking stays a plan-then-manual path; this is
 a recorded capability boundary, not a missing flag.
 
+The same rule holds `retention-preview` without an executing counterpart.
+The store can purge eligible runs durably and idempotently in bounded
+batches, but the operation carries no actor, no reason, and no receipt.
+Exposing irreversible bulk deletion through the operator surface without
+attribution would regress the evidence posture this CLI is built to
+protect, so there is no `runs retention` command until purge itself is an
+audited operation. That is a product decision about destructive operations,
+not a gap in the CLI.
+
 `why-waiting` reports parked waits with their kind, status, signal, deadline,
 and availability, plus whether the run currently has runnable work. Only
 `runs signal` mutates state, through the normal audited signal API; every
