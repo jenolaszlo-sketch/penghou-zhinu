@@ -50,7 +50,7 @@ internal static class CliApp
             !string.Equals(options.Positionals[0], "runs", StringComparison.Ordinal))
         {
             await output.WriteLineAsync(
-                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal> ...")
+                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops> ...")
                 .ConfigureAwait(false);
             return 1;
         }
@@ -205,9 +205,62 @@ internal static class CliApp
                         .ConfigureAwait(false);
                     return 0;
                 }
+            case "external-ops":
+                {
+                    if (options.Positionals.Count < 4 ||
+                        options.Positionals[2] is not ("list" or "show"))
+                    {
+                        await output.WriteLineAsync(
+                            "usage: runs external-ops <list <id> [--status Status] [--limit N]|show <operation-id>>.")
+                            .ConfigureAwait(false);
+                        return 1;
+                    }
+                    if (string.Equals(options.Positionals[2], "list", StringComparison.Ordinal))
+                    {
+                        if (!options.RequireId(3, output, out var id))
+                            return 1;
+                        _ = await engine.GetRunAsync(id, cancellationToken).ConfigureAwait(false) ??
+                            throw new WorkflowNotFoundException($"Workflow '{id:D}' does not exist.");
+                        var operations = await store.ListAsync(
+                            id, options.Int("limit", 100), cancellationToken).ConfigureAwait(false);
+                        var status = options.Value("status");
+                        if (status is not null)
+                        {
+                            if (!Enum.TryParse<ExternalOperationStatus>(
+                                    status, ignoreCase: true, out var parsed))
+                            {
+                                await output.WriteLineAsync($"error: unknown operation status '{status}'.")
+                                    .ConfigureAwait(false);
+                                return 1;
+                            }
+                            operations = operations
+                                .Where(operation => operation.Status == parsed)
+                                .ToList();
+                        }
+                        await output.WriteLineAsync(
+                            writer.Render(writer.ExternalOperationModels(operations))).ConfigureAwait(false);
+                        return 0;
+                    }
+                    if (!Guid.TryParse(options.Positionals[3], out var operationId))
+                    {
+                        await output.WriteLineAsync("error: expected an operation id argument.")
+                            .ConfigureAwait(false);
+                        return 1;
+                    }
+                    var operation = await store.GetAsync(operationId, cancellationToken).ConfigureAwait(false);
+                    if (operation is null)
+                    {
+                        await output.WriteLineAsync(
+                            $"not found: operation '{operationId:D}' does not exist.").ConfigureAwait(false);
+                        return 2;
+                    }
+                    await output.WriteLineAsync(
+                        writer.Render(writer.ExternalOperationModel(operation))).ConfigureAwait(false);
+                    return 0;
+                }
             default:
                 await output.WriteLineAsync(
-                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal> ...")
+                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops> ...")
                     .ConfigureAwait(false);
                 return 1;
         }
