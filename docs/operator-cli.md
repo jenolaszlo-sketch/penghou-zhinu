@@ -57,6 +57,14 @@ waits, non-completed external operations with reasons, and the
 cancellation/restart/fork/failure audit events. Correlation payloads stay
 redacted unless `--include-payloads` is passed explicitly.
 
+Starting a workflow is deliberately **not** a CLI command. Creating a run
+from an admitted Fuwen plan requires a host that owns trusted catalogue and
+policy state; a generic CLI over a database cannot reconstruct that safely.
+The trusted start operation lives in the catalogue-owning host
+(`Penghou.Hufu.Fuwen`'s `AdmittedPlanStarter`), which emits a run ID that the
+operator surfaces above then operate on. The CLI's job is the run's
+lifecycle, not its admission.
+
 `fork-preview` has no executing counterpart yet, deliberately. Executing a
 fork requires the same idempotent receipt semantics `restart` enjoys, and
 the store has no idempotent fork operation: repeating a fork with the same
