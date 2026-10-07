@@ -20,6 +20,7 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs r
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs retention-preview --older-than-days 7
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops list <run-id>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops show <operation-id>
+dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs restart <run-id> <step> --operation-id <guid>
 ```
 
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
@@ -38,6 +39,13 @@ must not require authority expansion: read-only inspection through the
 existing repository APIs is preferable to adding engine or storage
 capabilities, and correlation payloads stay redacted unless
 `--include-payloads` is passed explicitly.
+
+Remediation follows the same doctrine. `runs restart` executes a
+`restart-preview` plan through the idempotent receipt API: `--operation-id`
+is mandatory, so repeating identical intent returns the original receipt
+instead of applying the restart twice, while a conflicting reuse is
+rejected. The run returns to `Pending` for a worker to resume; the CLI
+itself never executes workflow work.
 
 `why-waiting` reports parked waits with their kind, status, signal, deadline,
 and availability, plus whether the run currently has runnable work. Only

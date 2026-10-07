@@ -56,6 +56,7 @@ internal sealed class CliOutput
                 string.Join("\n", retention.Sample.Select(id => $"  {id}")),
             SignalResult signal => $"buffered signal '{signal.Name}' for run {signal.RunId}",
             RunCancelResult cancel => $"{cancel.Action} {cancel.RunId} {cancel.Status}",
+            RestartOutcome restart => RenderRestart(restart),
             string text => text,
             null => "(none)",
             _ => JsonSerializer.Serialize(value, JsonOptions)
@@ -150,6 +151,14 @@ internal sealed class CliOutput
                 item.StepKey, item.Reason.ToString())).ToList()
         };
 
+    public object RestartOutcomeModel(Guid operationId, bool applied, RestartPlan plan) =>
+        new RestartOutcome(
+            operationId.ToString("D"),
+            applied ? "applied" : "replayed",
+            plan.StepsToInvalidate
+                .Select(item => new PlanRow(item.StepKey, item.Reason.ToString()))
+                .ToList());
+
     public object RetentionModel(RunRetentionPreview preview) => new RetentionSummary(
         preview.EligibleRunCount,
         preview.SampleRunIds.Select(id => id.ToString("D")).ToList());
@@ -158,6 +167,16 @@ internal sealed class CliOutput
     {
         var lines = new List<string> { string.Join("  ", headers) };
         lines.AddRange(rows.Select(cells => string.Join("  ", cells)));
+        return string.Join("\n", lines);
+    }
+
+    private static string RenderRestart(RestartOutcome restart)
+    {
+        var lines = new List<string>
+        {
+            $"restart {restart.OperationId} {restart.Disposition} ({restart.Steps.Count} invalidated)"
+        };
+        lines.AddRange(restart.Steps.Select(step => $"  {step.Step} {step.Reason}"));
         return string.Join("\n", lines);
     }
 
@@ -211,6 +230,7 @@ internal sealed class CliOutput
     internal sealed record RetentionSummary(int Eligible, List<string> Sample);
     internal sealed record SignalResult(string RunId, string Name);
     internal sealed record RunCancelResult(string Action, string RunId, string Status);
+    internal sealed record RestartOutcome(string OperationId, string Disposition, List<PlanRow> Steps);
     internal sealed record RunDetail(
         string Id, string Name, string Version, string Status,
         string Input, string Output, string Error,

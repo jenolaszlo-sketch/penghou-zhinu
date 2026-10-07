@@ -50,7 +50,7 @@ internal static class CliApp
             !string.Equals(options.Positionals[0], "runs", StringComparison.Ordinal))
         {
             await output.WriteLineAsync(
-                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel> ...")
+                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart> ...")
                 .ConfigureAwait(false);
             return 1;
         }
@@ -283,9 +283,45 @@ internal static class CliApp
                             current?.Status.ToString() ?? "unknown"))).ConfigureAwait(false);
                     return 0;
                 }
+            case "restart":
+                {
+                    if (!options.RequireId(2, output, out var id) ||
+                        options.Positionals.Count < 4)
+                    {
+                        await output.WriteLineAsync("usage: runs restart <id> <step> --operation-id <guid> [--mode Dependents|StepOnly] [--actor NAME] [--reason TEXT].")
+                            .ConfigureAwait(false);
+                        return 1;
+                    }
+                    var operationFlag = options.Value("operation-id");
+                    if (operationFlag is null || !Guid.TryParse(operationFlag, out var operationId) ||
+                        operationId == Guid.Empty)
+                    {
+                        await output.WriteLineAsync(
+                            "error: runs restart requires --operation-id <guid>: repeating identical intent " +
+                            "returns the original receipt instead of applying the restart twice.")
+                            .ConfigureAwait(false);
+                        return 1;
+                    }
+                    var receipt = await engine.RestartStepWithReceiptAsync(
+                        id,
+                        options.Positionals[3],
+                        new RestartStepOptions
+                        {
+                            OperationId = operationId,
+                            Mode = options.EnumValue("mode", StepRestartMode.Dependents),
+                            Actor = options.Value("actor"),
+                            Reason = options.Value("reason")
+                        },
+                        cancellationToken).ConfigureAwait(false);
+                    await output.WriteLineAsync(writer.Render(writer.RestartOutcomeModel(
+                        receipt.OperationId,
+                        receipt.WasApplied,
+                        receipt.Plan))).ConfigureAwait(false);
+                    return 0;
+                }
             default:
                 await output.WriteLineAsync(
-                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel> ...")
+                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart> ...")
                     .ConfigureAwait(false);
                 return 1;
         }
