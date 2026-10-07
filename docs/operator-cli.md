@@ -18,7 +18,26 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs s
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs events <run-id>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs restart-preview <run-id> approve
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs retention-preview --older-than-days 7
+dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops list <run-id>
+dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops show <operation-id>
 ```
+
+`external-ops list <run-id> [--status Status] [--limit N]` shows a run's
+durable external-operation handles oldest first (step, attempt, provider,
+status, recovery intent); `show` renders one handle with its correlation
+payload, error, lease generation, and timestamps. These are the records a
+durable activity registers before any external effect, so a stuck `Running`
+handle, a `Cancelled` handle with its neutral reason (for example an
+authority revocation), or a `Failed` handle with its exit code is visible
+without opening SQLite directly.
+
+Two durable rules follow from this command. Operational evidence is part of
+the product surface: when durable execution creates external-operation
+records, operators need a supported way to inspect them. And observability
+must not require authority expansion: read-only inspection through the
+existing repository APIs is preferable to adding engine or storage
+capabilities, and correlation payloads stay redacted unless
+`--include-payloads` is passed explicitly.
 
 `why-waiting` reports parked waits with their kind, status, signal, deadline,
 and availability, plus whether the run currently has runnable work. Only
