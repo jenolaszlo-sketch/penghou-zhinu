@@ -50,7 +50,7 @@ internal static class CliApp
             !string.Equals(options.Positionals[0], "runs", StringComparison.Ordinal))
         {
             await output.WriteLineAsync(
-                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart> ...")
+                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait> ...")
                 .ConfigureAwait(false);
             return 1;
         }
@@ -319,9 +319,43 @@ internal static class CliApp
                         receipt.Plan))).ConfigureAwait(false);
                     return 0;
                 }
+            case "wait":
+                {
+                    if (!options.RequireId(2, output, out var id))
+                        return 1;
+                    var timeoutSeconds = options.Int("timeout-seconds", 300);
+                    if (timeoutSeconds <= 0)
+                    {
+                        await output.WriteLineAsync("error: --timeout-seconds must be positive.")
+                            .ConfigureAwait(false);
+                        return 1;
+                    }
+                    var deadline = DateTimeOffset.UtcNow.AddSeconds(timeoutSeconds);
+                    while (true)
+                    {
+                        var run = await engine.GetRunAsync(id, cancellationToken).ConfigureAwait(false) ??
+                            throw new WorkflowNotFoundException($"Workflow '{id:D}' does not exist.");
+                        if (run.Status is WorkflowStatus.Completed or WorkflowStatus.Failed
+                            or WorkflowStatus.Cancelled or WorkflowStatus.Compensated)
+                        {
+                            await output.WriteLineAsync(writer.Render(
+                                new CliOutput.RunWaitResult(
+                                    "terminal", id.ToString("D"), run.Status.ToString()))).ConfigureAwait(false);
+                            return 0;
+                        }
+                        if (DateTimeOffset.UtcNow >= deadline)
+                        {
+                            await output.WriteLineAsync(writer.Render(
+                                new CliOutput.RunWaitResult(
+                                    "timeout", id.ToString("D"), run.Status.ToString()))).ConfigureAwait(false);
+                            return 2;
+                        }
+                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken).ConfigureAwait(false);
+                    }
+                }
             default:
                 await output.WriteLineAsync(
-                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart> ...")
+                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait> ...")
                     .ConfigureAwait(false);
                 return 1;
         }

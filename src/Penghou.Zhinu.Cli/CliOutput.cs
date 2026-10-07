@@ -56,6 +56,7 @@ internal sealed class CliOutput
                 string.Join("\n", retention.Sample.Select(id => $"  {id}")),
             SignalResult signal => $"buffered signal '{signal.Name}' for run {signal.RunId}",
             RunCancelResult cancel => $"{cancel.Action} {cancel.RunId} {cancel.Status}",
+            RunWaitResult wait => $"{wait.Action} {wait.RunId} {wait.Status}",
             RestartOutcome restart => RenderRestart(restart),
             string text => text,
             null => "(none)",
@@ -230,6 +231,7 @@ internal sealed class CliOutput
     internal sealed record RetentionSummary(int Eligible, List<string> Sample);
     internal sealed record SignalResult(string RunId, string Name);
     internal sealed record RunCancelResult(string Action, string RunId, string Status);
+    internal sealed record RunWaitResult(string Action, string RunId, string Status);
     internal sealed record RestartOutcome(string OperationId, string Disposition, List<PlanRow> Steps);
     internal sealed record RunDetail(
         string Id, string Name, string Version, string Status,

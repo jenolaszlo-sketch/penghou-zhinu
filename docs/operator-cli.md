@@ -21,6 +21,7 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs r
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops list <run-id>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops show <operation-id>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs restart <run-id> <step> --operation-id <guid>
+dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs wait <run-id> [--timeout-seconds 300]
 ```
 
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
@@ -45,7 +46,17 @@ Remediation follows the same doctrine. `runs restart` executes a
 is mandatory, so repeating identical intent returns the original receipt
 instead of applying the restart twice, while a conflicting reuse is
 rejected. The run returns to `Pending` for a worker to resume; the CLI
-itself never executes workflow work.
+itself never executes workflow work. `runs wait` blocks until the run
+reaches a terminal state (or the bounded timeout elapses) so scripts and
+operators stop polling `show` by hand; terminal runs report immediately.
+
+`fork-preview` has no executing counterpart yet, deliberately. Executing a
+fork requires the same idempotent receipt semantics `restart` enjoys, and
+the store has no idempotent fork operation: repeating a fork with the same
+destination run ID fails instead of returning the original fork, and the CLI
+will not synthesize receipt guarantees the store does not provide. Until
+that store primitive exists, forking stays a plan-then-manual path; this is
+a recorded capability boundary, not a missing flag.
 
 `why-waiting` reports parked waits with their kind, status, signal, deadline,
 and availability, plus whether the run currently has runnable work. Only
