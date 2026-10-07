@@ -50,7 +50,7 @@ internal static class CliApp
             !string.Equals(options.Positionals[0], "runs", StringComparison.Ordinal))
         {
             await output.WriteLineAsync(
-                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait> ...")
+                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait|evidence> ...")
                 .ConfigureAwait(false);
             return 1;
         }
@@ -353,9 +353,26 @@ internal static class CliApp
                         await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken).ConfigureAwait(false);
                     }
                 }
+            case "evidence":
+                {
+                    if (!options.RequireId(2, output, out var id))
+                        return 1;
+                    var run = await engine.GetRunAsync(id, cancellationToken).ConfigureAwait(false) ??
+                        throw new WorkflowNotFoundException($"Workflow '{id:D}' does not exist.");
+                    var steps = await engine.GetStepsAsync(id, cancellationToken).ConfigureAwait(false);
+                    var waits = await engine.GetWaitsAsync(id, cancellationToken).ConfigureAwait(false);
+                    var operations = await store.ListAsync(
+                        id, options.Int("limit", 100), cancellationToken).ConfigureAwait(false);
+                    var events = await engine.GetEventsAsync(
+                        id, options.Long("after", 0), options.Int("event-limit", 200),
+                        cancellationToken).ConfigureAwait(false);
+                    await output.WriteLineAsync(writer.Render(writer.EvidenceModel(
+                        run, steps, waits, operations, events))).ConfigureAwait(false);
+                    return 0;
+                }
             default:
                 await output.WriteLineAsync(
-                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait> ...")
+                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait|evidence> ...")
                     .ConfigureAwait(false);
                 return 1;
         }

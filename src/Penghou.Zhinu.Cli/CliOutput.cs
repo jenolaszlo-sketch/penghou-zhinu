@@ -57,6 +57,7 @@ internal sealed class CliOutput
             SignalResult signal => $"buffered signal '{signal.Name}' for run {signal.RunId}",
             RunCancelResult cancel => $"{cancel.Action} {cancel.RunId} {cancel.Status}",
             RunWaitResult wait => $"{wait.Action} {wait.RunId} {wait.Status}",
+            EvidenceDetail evidence => RenderEvidence(evidence),
             RestartOutcome restart => RenderRestart(restart),
             string text => text,
             null => "(none)",
@@ -164,6 +165,59 @@ internal sealed class CliOutput
         preview.EligibleRunCount,
         preview.SampleRunIds.Select(id => id.ToString("D")).ToList());
 
+    public object EvidenceModel(
+        WorkflowRun run,
+        IReadOnlyList<WorkflowStepRun> steps,
+        IReadOnlyList<WorkflowWait> waits,
+        IReadOnlyList<WorkflowExternalOperation> operations,
+        IReadOnlyList<WorkflowEvent> events) => new EvidenceDetail(
+        run.Id.ToString("D"),
+        run.WorkflowName,
+        run.WorkflowVersion,
+        run.Status.ToString(),
+        run.DefinitionFingerprint ?? "-",
+        run.Error?.Message ?? "(none)",
+        Payload(run.OutputJson),
+        steps
+            .Where(step => step.Status != StepStatus.Completed)
+            .Select(step => new EvidenceStep(
+                step.StepKey,
+                step.Revision.ToString(),
+                step.Status.ToString(),
+                step.Attempt.ToString(),
+                step.Error?.Message ?? "-"))
+            .ToList(),
+        waits
+            .Select(wait => new WaitRow(
+                wait.StepKey,
+                wait.Kind.ToString(),
+                wait.Status.ToString(),
+                wait.SignalName ?? "-",
+                wait.DeadlineAt?.ToString("O") ?? "-",
+                wait.AvailableAt?.ToString("O") ?? "-"))
+            .ToList(),
+        operations
+            .Where(operation => operation.Status != ExternalOperationStatus.Completed)
+            .Select(operation => new EvidenceOperation(
+                operation.OperationId.ToString("D"),
+                operation.StepKey ?? "-",
+                operation.Status.ToString(),
+                operation.Provider,
+                EvidenceOperationDetail(operation)))
+            .ToList(),
+        events.Count,
+        events
+            .Where(item => item.EventType is WorkflowEventTypes.WorkflowCancelled
+                or WorkflowEventTypes.StepRestarted
+                or WorkflowEventTypes.RunForked
+                or WorkflowEventTypes.WorkflowFailed
+                or WorkflowEventTypes.StepFailed)
+            .Select(item => new EvidenceAudit(
+                item.EventType,
+                item.Timestamp.ToString("O"),
+                Payload(item.DataJson)))
+            .ToList());
+
     private static string RenderTable(string[] headers, IEnumerable<string[]> rows)
     {
         var lines = new List<string> { string.Join("  ", headers) };
@@ -180,6 +234,44 @@ internal sealed class CliOutput
         lines.AddRange(restart.Steps.Select(step => $"  {step.Step} {step.Reason}"));
         return string.Join("\n", lines);
     }
+
+    private string RenderEvidence(EvidenceDetail evidence)
+    {
+        var lines = new List<string>
+        {
+            $"run: {evidence.Id} {evidence.Name} version {evidence.Version} {evidence.Status}",
+            $"fingerprint: {evidence.Fingerprint}",
+            $"error: {evidence.Error}",
+            $"output: {evidence.Output}",
+            $"attention steps ({evidence.Steps.Count}):"
+        };
+        lines.AddRange(evidence.Steps.Select(step =>
+            $"  {step.Key} rev {step.Revision} {step.Status} attempt {step.Attempt} error: {step.Error}"));
+        lines.Add($"waits ({evidence.Waits.Count}):");
+        lines.AddRange(evidence.Waits.Select(wait =>
+            $"  {wait.Step} {wait.Kind} {wait.Status} signal={wait.Signal} deadline={wait.Deadline}"));
+        lines.Add($"external operations ({evidence.Operations.Count}):");
+        lines.AddRange(evidence.Operations.Select(operation =>
+            $"  {operation.Id} {operation.Step} {operation.Status} {operation.Provider} {operation.Detail}"));
+        lines.Add($"audit ({evidence.Audit.Count} of {evidence.EventCount} events):");
+        lines.AddRange(evidence.Audit.Select(item => $"  {item.Type} {item.At} {item.Data}"));
+        return string.Join("\n", lines);
+    }
+
+    private string EvidenceOperationDetail(WorkflowExternalOperation operation) =>
+        operation.Status switch
+        {
+            ExternalOperationStatus.Failed =>
+                "error: " + Truncate(operation.Error ?? "-", 300),
+            ExternalOperationStatus.Cancelled =>
+                "reason: " + Truncate(operation.Error ?? "-", 300) +
+                " payload: " + Payload(operation.PayloadJson),
+            _ => "recovery: " + operation.RecoveryIntent +
+                " payload: " + Payload(operation.PayloadJson),
+        };
+
+    private static string Truncate(string value, int maximum) =>
+        value.Length <= maximum ? value : value[..maximum] + "...";
 
     private string RenderExternalOperation(ExternalOperationDetail operation) =>
         string.Join("\n", new[]
@@ -233,6 +325,13 @@ internal sealed class CliOutput
     internal sealed record RunCancelResult(string Action, string RunId, string Status);
     internal sealed record RunWaitResult(string Action, string RunId, string Status);
     internal sealed record RestartOutcome(string OperationId, string Disposition, List<PlanRow> Steps);
+    internal sealed record EvidenceStep(string Key, string Revision, string Status, string Attempt, string Error);
+    internal sealed record EvidenceOperation(string Id, string Step, string Status, string Provider, string Detail);
+    internal sealed record EvidenceAudit(string Type, string At, string Data);
+    internal sealed record EvidenceDetail(
+        string Id, string Name, string Version, string Status, string Fingerprint, string Error, string Output,
+        List<EvidenceStep> Steps, List<WaitRow> Waits, List<EvidenceOperation> Operations,
+        int EventCount, List<EvidenceAudit> Audit);
     internal sealed record RunDetail(
         string Id, string Name, string Version, string Status,
         string Input, string Output, string Error,

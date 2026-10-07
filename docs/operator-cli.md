@@ -22,6 +22,7 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs e
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs external-ops show <operation-id>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs restart <run-id> <step> --operation-id <guid>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs wait <run-id> [--timeout-seconds 300]
+dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs evidence <run-id>
 ```
 
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
@@ -49,6 +50,12 @@ rejected. The run returns to `Pending` for a worker to resume; the CLI
 itself never executes workflow work. `runs wait` blocks until the run
 reaches a terminal state (or the bounded timeout elapses) so scripts and
 operators stop polling `show` by hand; terminal runs report immediately.
+
+`runs evidence` assembles one diagnostic view from the existing query
+surfaces only: run identity and status, non-completed steps with errors,
+waits, non-completed external operations with reasons, and the
+cancellation/restart/fork/failure audit events. Correlation payloads stay
+redacted unless `--include-payloads` is passed explicitly.
 
 `fork-preview` has no executing counterpart yet, deliberately. Executing a
 fork requires the same idempotent receipt semantics `restart` enjoys, and
