@@ -22,7 +22,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         var checkpointStore = CreateCheckpointStore();
         var graph = BuildGraph(counters, failFirstFinal: false);
         var workflow = new AgentGraphWorkflow(graph, checkpointStore);
-        var engine = CreateEngine(workflow, "maf-graph");
+        await using var engine = CreateEngine(workflow, "maf-graph");
 
         var result = await engine.RunAsync<string, string>(
             "maf-graph",
@@ -54,7 +54,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         var checkpointStore = CreateCheckpointStore();
         var graph = BuildGraph(counters, failFirstFinal: false);
         var workflow = new AgentThenDoneWorkflow(graph, checkpointStore);
-        var engine = CreateEngine(workflow, "maf-restart");
+        await using var engine = CreateEngine(workflow, "maf-restart");
 
         var result = await engine.RunAsync<string, string>(
             "maf-restart",
@@ -88,7 +88,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         var checkpointStore = CreateCheckpointStore();
         var graph = BuildGraph(counters, failFirstFinal: true);
         var workflow = new AgentGraphWorkflow(graph, checkpointStore);
-        var engine = CreateEngine(workflow, "maf-fail");
+        await using var engine = CreateEngine(workflow, "maf-fail");
 
         var runId = await engine.StartAsync(
             "maf-fail",
@@ -121,7 +121,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         var checkpointStore = CreateCheckpointStore();
         var graph = BuildGraph(counters, failFirstFinal: true);
         var workflow = new AgentGraphWorkflow(graph, checkpointStore);
-        var engine = CreateEngine(workflow, "maf-resume");
+        await using var engine = CreateEngine(workflow, "maf-resume");
 
         var runId = await engine.StartAsync(
             "maf-resume",
@@ -298,7 +298,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         var checkpointStore = CreateCheckpointStore();
         var graph = BuildGraph(counters, failFirstFinal: false);
         var workflow = new FreshAgentWorkflow(graph, checkpointStore);
-        var engine = CreateEngine(workflow, "maf-fresh");
+        await using var engine = CreateEngine(workflow, "maf-fresh");
 
         var result = await engine.RunAsync<string, string>(
             "maf-fresh",
@@ -336,7 +336,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
         var checkpointStore = CreateCheckpointStore();
         var graph = BuildGraphWithoutOutput();
         var workflow = new AgentGraphWorkflow(graph, checkpointStore);
-        var engine = CreateEngine(workflow, "maf-no-output");
+        await using var engine = CreateEngine(workflow, "maf-no-output");
 
         var action = () => engine.RunAsync<string, string>(
             "maf-no-output",
