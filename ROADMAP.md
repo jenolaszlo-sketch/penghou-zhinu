@@ -1157,19 +1157,23 @@ rank models, or learn workflow policy.
 - [ ] Prove adapters can rebuild a mechanical execution view without treating
   diagnostic events as replay authority or copying provider payloads into
   workflow state.
-  **Blocked 2026-10-08 — recorded as a genuine Zhinu↔Hongxian cross-project
-  boundary; not built.** The four items above are all open, so Zhinu exposes no
-  bounded ordered *execution-evidence* export/cursor contract; Hongxian
-  deliberately exposes only a generic evidence contract
-  (`ISessionEventStore.AppendAsync`/`ReadAsync`/`ReadPageAsync`/
-  `ReadVerifiedHistoryAsync` plus envelope-v3 `SessionEvidenceDescriptor`, which
-  can mark `diagnostic`), and its ecosystem guide requires the execution mapping
-  to live in a host adapter. Neither side defines a run/step/attempt/operation/
-  actor identity contract. Building this proof would mean inventing that export
-  contract and a mechanical-view model, so it stays parked until the four
-  prerequisites exist or a host adapter is specified. See Hongxian
-  [ecosystem integration](https://github.com/jenolaszlo-sketch/penghou-hongxian/blob/main/docs/ecosystem-integration.md)
-  and [evidence authority inventory](https://github.com/jenolaszlo-sketch/penghou-hongxian/blob/main/docs/evidence-authority-inventory.md).
+  **Corrected 2026-10-08 — narrow read-contract gap, not a missing seam or
+  subsystem.** An earlier note the same day claimed no execution-evidence export
+  contract existed. A follow-up survey shows Zhinu already provides stable
+  run/step/generation/operation identities, persisted run/step/wait/operation/
+  generation state, per-run ordered durable events, existing per-consumer
+  cursor/export semantics ([`IWorkflowEventExportRepository`](src/Penghou.Zhinu/WorkflowEventExport.cs)),
+  and plan/execution correlation (`WorkflowGeneration.ExecutionFingerprint`/
+  `PlanRevision`, `WorkflowRun.DefinitionFingerprint`). The remaining M5
+  dependency is a narrow read-contract gap: (a) a snapshot carrying a durable
+  watermark, (b) an explicit durable/advisory event classification, (c) bounded
+  event-page metadata (`nextCursor`/`hasMore`/`throughDurableSequence`/retention
+  floor/`resyncRequired`), and (d) an explicit decision whether generation/
+  operation transitions are stream-visible or snapshot-only. No new execution
+  model and no new identity scheme is required. Hongxian stays generic and
+  unchanged; Marang adapts Zhinu execution evidence into its existing envelopes.
+  The authoritative dependency assessment lives in Marang's
+  [M5 execution-evidence contract](https://github.com/jenolaszlo-sketch/marang/blob/main/docs/m5-execution-evidence-contract.md).
 
 Non-goals are retrospective interpretation, model reputation, context
 selection, procedural learning, or automatic plan mutation. Those belong to
