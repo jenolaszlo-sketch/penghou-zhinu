@@ -23,6 +23,7 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs e
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs restart <run-id> <step> --operation-id <guid>
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs wait <run-id> [--timeout-seconds 300]
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs evidence <run-id>
+dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs graph <run-id>
 ```
 
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
@@ -56,6 +57,16 @@ surfaces only: run identity and status, non-completed steps with errors,
 waits, non-completed external operations with reasons, and the
 cancellation/restart/fork/failure audit events. Correlation payloads stay
 redacted unless `--include-payloads` is passed explicitly.
+
+`runs graph` renders a bounded read-only projection of the recorded run
+structure: dependency edges, per-step revision, status, and attempt, current
+leases (owner and expiry, with elapsed expiries marked rather than reported as
+active), and parked waits, all in a stable order. It reads the same durable
+records as `show`, `events`, and `why-waiting` through the existing dependency,
+step, and wait query surfaces; it never retrieves payloads, and it produces the
+same graph before and after a process restart. Missing structure is stated
+explicitly (for example `edges (0): (none recorded)`) instead of implying an
+empty graph is complete.
 
 Starting a workflow is deliberately **not** a CLI command. Creating a run
 from an admitted Fuwen plan requires a host that owns trusted catalogue and

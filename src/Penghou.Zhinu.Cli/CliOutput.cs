@@ -59,6 +59,7 @@ internal sealed class CliOutput
             RunWaitResult wait => $"{wait.Action} {wait.RunId} {wait.Status}",
             EvidenceDetail evidence => RenderEvidence(evidence),
             RestartOutcome restart => RenderRestart(restart),
+            GraphDetail graph => RenderGraph(graph),
             string text => text,
             null => "(none)",
             _ => JsonSerializer.Serialize(value, JsonOptions)
@@ -218,6 +219,52 @@ internal sealed class CliOutput
                 Payload(item.DataJson)))
             .ToList());
 
+    public object GraphModel(
+        WorkflowRun run,
+        IReadOnlyList<WorkflowStepRun> steps,
+        IReadOnlyList<WorkflowWait> waits,
+        IReadOnlyList<StepDependency> dependencies) => new GraphDetail(
+        run.Id.ToString("D"),
+        run.WorkflowName,
+        run.WorkflowVersion,
+        run.Status.ToString(),
+        run.DefinitionFingerprint ?? "(not recorded)",
+        steps
+            .OrderBy(step => step.StepKey, StringComparer.Ordinal)
+            .Select(step => new GraphNode(
+                step.StepKey,
+                step.Revision.ToString(),
+                step.Status.ToString(),
+                step.Attempt.ToString(),
+                Lease(step),
+                step.SignalName ?? "-"))
+            .ToList(),
+        dependencies
+            .OrderBy(edge => edge.StepKey, StringComparer.Ordinal)
+            .ThenBy(edge => edge.DependsOnStepKey, StringComparer.Ordinal)
+            .Select(edge => new GraphEdge(edge.StepKey, edge.DependsOnStepKey))
+            .ToList(),
+        waits.Select(wait => new WaitRow(
+            wait.StepKey,
+            wait.Kind.ToString(),
+            wait.Status.ToString(),
+            wait.SignalName ?? "-",
+            wait.DeadlineAt?.ToString("O") ?? "-",
+            wait.AvailableAt?.ToString("O") ?? "-")).ToList());
+
+    // Read-only summary of a step's current lease. A leased row is evidence, not a
+    // claim: a step with no owner is unleased, and an elapsed expiry is marked so a
+    // stale row is never read as active.
+    private static string Lease(WorkflowStepRun step)
+    {
+        if (step.LeaseOwner is null)
+            return "-";
+        if (step.LeaseExpiresAt is not { } expires)
+            return $"{step.LeaseOwner} (expiry not recorded)";
+        var expired = expires <= DateTimeOffset.UtcNow ? " (expired)" : "";
+        return $"{step.LeaseOwner} until {expires:O}{expired}";
+    }
+
     private static string RenderTable(string[] headers, IEnumerable<string[]> rows)
     {
         var lines = new List<string> { string.Join("  ", headers) };
@@ -232,6 +279,36 @@ internal sealed class CliOutput
             $"restart {restart.OperationId} {restart.Disposition} ({restart.Steps.Count} invalidated)"
         };
         lines.AddRange(restart.Steps.Select(step => $"  {step.Step} {step.Reason}"));
+        return string.Join("\n", lines);
+    }
+
+    private static string RenderGraph(GraphDetail graph)
+    {
+        var lines = new List<string>
+        {
+            $"run: {graph.Id}",
+            $"workflow: {graph.Name} version {graph.Version}",
+            $"status: {graph.Status}",
+            $"fingerprint: {graph.Fingerprint}",
+            $"steps ({graph.Nodes.Count}):"
+        };
+        if (graph.Nodes.Count == 0)
+            lines.Add("  (none recorded)");
+        else
+            lines.AddRange(graph.Nodes.Select(node =>
+                $"  {node.Key} rev {node.Revision} {node.Status} attempt {node.Attempt} " +
+                $"lease {node.Lease} signal={node.Signal}"));
+        lines.Add($"edges ({graph.Edges.Count}):");
+        if (graph.Edges.Count == 0)
+            lines.Add("  (none recorded)");
+        else
+            lines.AddRange(graph.Edges.Select(edge => $"  {edge.Step} -> {edge.DependsOn}"));
+        lines.Add($"waits ({graph.Waits.Count}):");
+        if (graph.Waits.Count == 0)
+            lines.Add("  (none recorded)");
+        else
+            lines.AddRange(graph.Waits.Select(wait =>
+                $"  {wait.Step} {wait.Kind} {wait.Status} signal={wait.Signal} deadline={wait.Deadline}"));
         return string.Join("\n", lines);
     }
 
@@ -332,6 +409,12 @@ internal sealed class CliOutput
         string Id, string Name, string Version, string Status, string Fingerprint, string Error, string Output,
         List<EvidenceStep> Steps, List<WaitRow> Waits, List<EvidenceOperation> Operations,
         int EventCount, List<EvidenceAudit> Audit);
+    internal sealed record GraphNode(
+        string Key, string Revision, string Status, string Attempt, string Lease, string Signal);
+    internal sealed record GraphEdge(string Step, string DependsOn);
+    internal sealed record GraphDetail(
+        string Id, string Name, string Version, string Status, string Fingerprint,
+        List<GraphNode> Nodes, List<GraphEdge> Edges, List<WaitRow> Waits);
     internal sealed record RunDetail(
         string Id, string Name, string Version, string Status,
         string Input, string Output, string Error,

@@ -50,7 +50,7 @@ internal static class CliApp
             !string.Equals(options.Positionals[0], "runs", StringComparison.Ordinal))
         {
             await output.WriteLineAsync(
-                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait|evidence> ...")
+                "usage: zhinu --db <path> [--format text|json] runs <list|show|events|graph|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait|evidence> ...")
                 .ConfigureAwait(false);
             return 1;
         }
@@ -370,9 +370,24 @@ internal static class CliApp
                         run, steps, waits, operations, events))).ConfigureAwait(false);
                     return 0;
                 }
+            case "graph":
+                {
+                    if (!options.RequireId(2, output, out var id))
+                        return 1;
+                    var run = await engine.GetRunAsync(id, cancellationToken).ConfigureAwait(false) ??
+                        throw new WorkflowNotFoundException($"Workflow '{id:D}' does not exist.");
+                    var steps = await engine.GetStepsAsync(id, cancellationToken).ConfigureAwait(false);
+                    var waits = await engine.GetWaitsAsync(id, cancellationToken).ConfigureAwait(false);
+                    var dependencies = await engine.GetDependencyGraphAsync(id, cancellationToken)
+                        .ConfigureAwait(false);
+                    await output.WriteLineAsync(
+                        writer.Render(writer.GraphModel(run, steps, waits, dependencies)))
+                        .ConfigureAwait(false);
+                    return 0;
+                }
             default:
                 await output.WriteLineAsync(
-                    "usage: runs <list|show|events|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait|evidence> ...")
+                    "usage: runs <list|show|events|graph|why-waiting|restart-preview|fork-preview|retention-preview|signal|external-ops|cancel|restart|wait|evidence> ...")
                     .ConfigureAwait(false);
                 return 1;
         }

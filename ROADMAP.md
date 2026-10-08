@@ -1319,12 +1319,11 @@ and completion evidence. This records future work without changing current relea
 These refine existing operations and evidence work without changing current
 release gates. Lower-priority proposals are recorded in [ideas for later](docs/ideas.md).
 
-- [ ] **Add a read-only run graph view (Phase 8).** Extend the CLI's existing
-  run/wait diagnostics with a bounded text and JSON projection of recorded
-  dependency edges, step attempts, current leases, and parked waits. Mark
-  missing or incomplete evidence explicitly. Rendering must not claim steps,
-  invoke workflow code, or retrieve payloads by default; test the same graph
-  before and after process restart.
+- [x] **Add a read-only run graph view (Phase 8).** Delivered as `runs graph`
+  (text and JSON), a bounded projection of recorded dependency edges, per-step
+  revision/status/attempt, current leases, and parked waits. Missing structure is
+  marked explicitly, payloads are never retrieved, and the graph is identical
+  before and after a store reopen.
 - [ ] **Deliver forward-only event dispatch from durable cursors.** Build on
   the existing committed workflow events and evidence-export plan so an
   optional background dispatcher can retry delivery to external brokers after
