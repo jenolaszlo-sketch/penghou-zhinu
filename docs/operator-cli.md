@@ -26,6 +26,11 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs e
 dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs graph <run-id>
 ```
 
+`runs list [--status Status] [--workflow NAME] [--version V] [--limit N]
+[--after ID]` narrows the run database by recorded status, workflow name, and
+workflow version; the filters compose, and `--after` pages stably by creation
+order.
+
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
 durable external-operation handles oldest first (step, attempt, provider,
 status, recovery intent); `show` renders one handle with its correlation

@@ -74,7 +74,9 @@ internal static class CliApp
                     var query = new RunQuery
                     {
                         Limit = options.Int("limit", 100),
-                        AfterId = options.GuidValue("after")
+                        AfterId = options.GuidValue("after"),
+                        WorkflowName = options.Value("workflow"),
+                        WorkflowVersion = options.Value("version")
                     };
                     var status = options.Value("status");
                     if (status is not null)
