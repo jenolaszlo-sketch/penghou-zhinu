@@ -80,6 +80,9 @@ internal sealed class CliOutput
         run.WorkflowName,
         run.WorkflowVersion,
         run.Status.ToString(),
+        run.ParentRunId?.ToString("D") ?? "-",
+        run.SourceRunId?.ToString("D") ?? "-",
+        run.Deadline?.ToString("O") ?? "(none)",
         Payload(run.InputJson),
         Payload(run.OutputJson),
         run.Error?.Message ?? "(none)",
@@ -372,6 +375,9 @@ internal sealed class CliOutput
             $"run: {detail.Id}",
             $"workflow: {detail.Name} version {detail.Version}",
             $"status: {detail.Status}",
+            $"parent: {detail.Parent}",
+            $"source: {detail.Source}",
+            $"deadline: {detail.Deadline}",
             $"input: {detail.Input}",
             $"output: {detail.Output}",
             $"error: {detail.Error}",
@@ -417,6 +423,7 @@ internal sealed class CliOutput
         List<GraphNode> Nodes, List<GraphEdge> Edges, List<WaitRow> Waits);
     internal sealed record RunDetail(
         string Id, string Name, string Version, string Status,
+        string Parent, string Source, string Deadline,
         string Input, string Output, string Error,
         List<StepRow> Steps, List<WaitRow> Waits);
 }

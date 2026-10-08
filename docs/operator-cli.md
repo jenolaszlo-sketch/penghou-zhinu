@@ -35,6 +35,11 @@ UTC before comparison; either bound may be given alone, and a range whose start
 is later than its end is rejected as a usage error rather than returning an
 empty result.
 
+`runs show <run-id>` summarizes one run: identity and status, its parent
+(child-workflow ancestry) and source (fork lineage) links, deadline, redacted
+input/output and error, steps, and waits. Missing lineage or deadline is shown
+as `-` or `(none)` so it is distinguishable from an absent field.
+
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
 durable external-operation handles oldest first (step, attempt, provider,
 status, recovery intent); `show` renders one handle with its correlation
