@@ -1157,6 +1157,19 @@ rank models, or learn workflow policy.
 - [ ] Prove adapters can rebuild a mechanical execution view without treating
   diagnostic events as replay authority or copying provider payloads into
   workflow state.
+  **Blocked 2026-10-08 — recorded as a genuine Zhinu↔Hongxian cross-project
+  boundary; not built.** The four items above are all open, so Zhinu exposes no
+  bounded ordered *execution-evidence* export/cursor contract; Hongxian
+  deliberately exposes only a generic evidence contract
+  (`ISessionEventStore.AppendAsync`/`ReadAsync`/`ReadPageAsync`/
+  `ReadVerifiedHistoryAsync` plus envelope-v3 `SessionEvidenceDescriptor`, which
+  can mark `diagnostic`), and its ecosystem guide requires the execution mapping
+  to live in a host adapter. Neither side defines a run/step/attempt/operation/
+  actor identity contract. Building this proof would mean inventing that export
+  contract and a mechanical-view model, so it stays parked until the four
+  prerequisites exist or a host adapter is specified. See Hongxian
+  [ecosystem integration](https://github.com/jenolaszlo-sketch/penghou-hongxian/blob/main/docs/ecosystem-integration.md)
+  and [evidence authority inventory](https://github.com/jenolaszlo-sketch/penghou-hongxian/blob/main/docs/evidence-authority-inventory.md).
 
 Non-goals are retrospective interpretation, model reputation, context
 selection, procedural learning, or automatic plan mutation. Those belong to
