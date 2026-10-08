@@ -27,9 +27,13 @@ dotnet run --project src/Penghou.Zhinu.Cli -- --db C:\Temp\walkthrough.db runs g
 ```
 
 `runs list [--status Status] [--workflow NAME] [--version V] [--limit N]
-[--after ID]` narrows the run database by recorded status, workflow name, and
-workflow version; the filters compose, and `--after` pages stably by creation
-order.
+[--after ID] [--created-after ISO8601] [--created-before ISO8601]` narrows the
+run database by recorded status, workflow name, workflow version, and creation
+time; the filters compose, and `--after` pages stably by creation order. Both
+creation bounds are inclusive and accept an ISO 8601 timestamp, normalized to
+UTC before comparison; either bound may be given alone, and a range whose start
+is later than its end is rejected as a usage error rather than returning an
+empty result.
 
 `external-ops list <run-id> [--status Status] [--limit N]` shows a run's
 durable external-operation handles oldest first (step, attempt, provider,

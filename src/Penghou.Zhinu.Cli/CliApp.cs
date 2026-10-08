@@ -1,3 +1,4 @@
+using System.Globalization;
 using Penghou.Zhinu;
 using Penghou.Zhinu.Sqlite;
 
@@ -71,12 +72,24 @@ internal static class CliApp
         {
             case "list":
                 {
+                    if (!options.TryTimestamp("created-after", output, out var createdAfter) ||
+                        !options.TryTimestamp("created-before", output, out var createdBefore))
+                        return 1;
+                    if (createdAfter is { } after && createdBefore is { } before && after > before)
+                    {
+                        await output.WriteLineAsync(
+                            "error: --created-after must not be later than --created-before.")
+                            .ConfigureAwait(false);
+                        return 1;
+                    }
                     var query = new RunQuery
                     {
                         Limit = options.Int("limit", 100),
                         AfterId = options.GuidValue("after"),
                         WorkflowName = options.Value("workflow"),
-                        WorkflowVersion = options.Value("version")
+                        WorkflowVersion = options.Value("version"),
+                        CreatedAfter = createdAfter,
+                        CreatedBefore = createdBefore
                     };
                     var status = options.Value("status");
                     if (status is not null)
@@ -465,6 +478,32 @@ internal static class CliApp
 
         public Guid? GuidValue(string name) =>
             Value(name) is { } raw && System.Guid.TryParse(raw, out var parsed) ? parsed : null;
+
+        private static readonly string[] TimestampFormats =
+        [
+            "yyyy-MM-dd'T'HH:mm:sszzz",
+            "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFzzz",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF"
+        ];
+
+        public bool TryTimestamp(string name, TextWriter output, out DateTimeOffset? value)
+        {
+            value = null;
+            if (Value(name) is not { } raw)
+                return true;
+            if (!DateTimeOffset.TryParseExact(raw, TimestampFormats, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal, out var parsed))
+            {
+                output.WriteLine(
+                    $"error: --{name} must be an ISO 8601 timestamp such as 2026-10-01T12:00:00Z.");
+                return false;
+            }
+            value = parsed.ToUniversalTime();
+            return true;
+        }
 
         public TEnum EnumValue<TEnum>(string name, TEnum fallback) where TEnum : struct =>
             Value(name) is { } raw && Enum.TryParse<TEnum>(raw, ignoreCase: true, out var parsed)
