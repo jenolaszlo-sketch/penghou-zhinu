@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.Agents.AI.Workflows;
-using Microsoft.Data.Sqlite;
 using Penghou.Zhinu.Sqlite;
 using System.Text.Json;
 
@@ -119,8 +118,6 @@ public sealed class SqliteJsonCheckpointStoreTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
+        TestDirectory.DeleteResilient(root);
     }
 }

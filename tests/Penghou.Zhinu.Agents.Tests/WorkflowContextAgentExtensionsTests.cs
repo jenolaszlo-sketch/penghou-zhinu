@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Agents.AI.Workflows.Checkpointing;
-using Microsoft.Data.Sqlite;
 using Penghou.Zhinu;
 using Penghou.Zhinu.Sqlite;
 using System.Text.Json;
@@ -289,9 +288,7 @@ public sealed class WorkflowContextAgentExtensionsTests : IDisposable
 
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
+        TestDirectory.DeleteResilient(root);
     }
 
     [Fact]
