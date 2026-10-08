@@ -17,6 +17,49 @@ via `WorkflowEventTypes.Durability`, so it is stable across reopen and does not
 change event ordering or export/cursor semantics; application-defined event
 types default to durable.
 
+## Event page reads
+
+`IWorkflowEventPageReader.GetEventPageAsync(workflowRunId, afterSequence, limit)`
+(and the store-level `IWorkflowEventPageRepository.ReadEventPageAsync`) returns a
+`WorkflowEventPage` over the same per-run `WorkflowEvent.Sequence` ordering as
+`GetEventsAsync`. It is a **stateless** read: the caller holds the cursor. It is
+independent of durable export acknowledgement
+(`IWorkflowEventExportRepository`); the two share ordering but not state.
+
+- **Cursor:** the last sequence already consumed. A read after cursor `N`
+  returns events with `Sequence > N` — the boundary is strictly exclusive, so a
+  page never repeats the event at `N`.
+- **`nextCursor`:** the final returned event's sequence, or the supplied cursor
+  when the page is empty. It is monotonic (never decreases); pass it back as the
+  next `afterSequence`.
+- **`hasMore`:** whether more events exist beyond this page. Reported explicitly
+  by reading one row past `limit`; callers must not infer it from
+  `Events.Count == limit`.
+- **Empty page:** when no events exist after the cursor (including a run that
+  does not exist), `Events` is empty, `nextCursor` equals the supplied cursor,
+  and `hasMore` is false.
+- **`throughDurableSequence`:** the highest sequence at or before `nextCursor`
+  that is a `Durable` event. It never advances on advisory events and never
+  regresses across pages (an advisory-only tail keeps the prior durable
+  position). It is distinct from `nextCursor`.
+- **Retention floor:** the earliest cursor from which incremental continuation
+  remains valid. Zhinu does not truncate events within a run (purge removes whole
+  runs), so this is `0` today.
+- **`resyncRequired`:** whether the supplied cursor can no longer be safely
+  continued because required history is unavailable. With no intra-run
+  truncation this is always `false` today, and it is never set for empty pages,
+  no-new-events, or advisory-only tails.
+- **Page read vs export acknowledgement:** a page read is stateless and changes
+  no durable state; export
+  (`ReadExportBatchAsync`/`AcknowledgeExportAsync`) carries a durable per-consumer
+  cursor that also gates retention. The page API neither reads nor advances
+  export state.
+
+This is **not** the snapshot-at-watermark handshake and does not imply snapshot
+atomicity. `throughDurableSequence` is the highest durable event sequence known
+from the event stream, not a projection watermark; the atomic snapshot plus
+watermark primitive remains future work.
+
 ## Sources
 
 ```text

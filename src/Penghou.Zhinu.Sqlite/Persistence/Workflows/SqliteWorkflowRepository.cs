@@ -337,6 +337,77 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
             cancellationToken).ConfigureAwait(false);
     }
 
+    public async ValueTask<WorkflowEventPage> ReadEventPageAsync(
+        Guid workflowRunId,
+        long afterSequence,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        if (afterSequence < 0)
+            throw new ArgumentOutOfRangeException(nameof(afterSequence));
+        if (limit is < 1 or > 1000)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        // Fetch one extra row to report HasMore without a second query.
+        var fetched = await getEvents.ExecuteAsync(
+            connection,
+            workflowRunId,
+            afterSequence,
+            limit + 1,
+            cancellationToken).ConfigureAwait(false);
+        var hasMore = fetched.Count > limit;
+        IReadOnlyList<WorkflowEvent> events = hasMore ? fetched.Take(limit).ToArray() : fetched;
+        var nextCursor = events.Count > 0 ? events[^1].Sequence : afterSequence;
+        long pageDurable = 0;
+        foreach (var item in events)
+        {
+            if (item.Durability == WorkflowEventDurability.Durable && item.Sequence > pageDurable)
+                pageDurable = item.Sequence;
+        }
+        // When the page carries no durable event, the durable position is the
+        // highest durable sequence at or before the cursor, so it never regresses
+        // across pages and advisory events never advance it.
+        var throughDurable = pageDurable > 0
+            ? pageDurable
+            : await GetDurableSequenceAtOrBeforeAsync(
+                connection, workflowRunId, afterSequence, cancellationToken).ConfigureAwait(false);
+        return new WorkflowEventPage
+        {
+            Events = events,
+            NextCursor = nextCursor,
+            HasMore = hasMore,
+            ThroughDurableSequence = throughDurable,
+            RetentionFloor = 0,
+            ResyncRequired = false
+        };
+    }
+
+    private static async ValueTask<long> GetDurableSequenceAtOrBeforeAsync(
+        SqliteConnection connection,
+        Guid workflowRunId,
+        long sequence,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
+            SELECT sequence, event_type
+            FROM workflow_events
+            WHERE workflow_run_id = $runId AND sequence <= $sequence
+            ORDER BY sequence DESC;
+            """);
+        command.Parameters.AddWithValue("$runId", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$sequence", sequence);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken)
+            .ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if (WorkflowEventTypes.Durability(reader.GetString(1)) == WorkflowEventDurability.Durable)
+                return reader.GetInt64(0);
+        }
+        return 0;
+    }
+
     public async ValueTask<WorkflowEvent> AppendEventAsync(
         Guid workflowRunId,
         string eventType,

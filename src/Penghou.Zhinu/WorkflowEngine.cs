@@ -17,7 +17,8 @@ namespace Penghou.Zhinu;
 /// </summary>
 public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     IIdempotentWorkflowClient, IWorkflowAdministration, IWorkflowStarter,
-    IWorkflowReader, IWorkflowOperator, IHostedWorkflowRuntime, IAsyncDisposable
+    IWorkflowReader, IWorkflowOperator, IHostedWorkflowRuntime, IWorkflowEventPageReader,
+    IAsyncDisposable
 {
     private readonly IWorkflowStore store;
     private readonly IWorkflowRegistry registry;
@@ -1450,6 +1451,27 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         if (limit is < 1 or > 1000)
             throw new ArgumentOutOfRangeException(nameof(limit));
         return await store.GetEventsAsync(
+            workflowRunId,
+            afterSequence,
+            limit,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<WorkflowEventPage> GetEventPageAsync(
+        Guid workflowRunId,
+        long afterSequence = 0,
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        if (afterSequence < 0)
+            throw new ArgumentOutOfRangeException(nameof(afterSequence));
+        if (limit is < 1 or > 1000)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        if (store is not IWorkflowEventPageRepository pages)
+            throw new NotSupportedException(
+                "The configured workflow store does not support event-page reads.");
+        return await pages.ReadEventPageAsync(
             workflowRunId,
             afterSequence,
             limit,

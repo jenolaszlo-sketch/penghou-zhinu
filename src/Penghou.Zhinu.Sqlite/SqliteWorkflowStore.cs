@@ -25,6 +25,7 @@ public sealed class SqliteWorkflowStore :
     IWorkflowWaitRepository,
     IWorkflowEventExportRepository
     , IWorkflowAuthorizationRepository
+    , IWorkflowEventPageRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -137,6 +138,15 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "events.get",
             () => workflows.GetEventsAsync(workflowRunId, afterSequence, limit, cancellationToken));
+
+    public ValueTask<WorkflowEventPage> ReadEventPageAsync(
+        Guid workflowRunId,
+        long afterSequence,
+        int limit,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "events.page",
+            () => workflows.ReadEventPageAsync(workflowRunId, afterSequence, limit, cancellationToken));
 
     public ValueTask<WorkflowEvent> AppendEventAsync(
         Guid workflowRunId,

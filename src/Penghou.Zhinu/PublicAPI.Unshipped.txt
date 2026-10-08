@@ -791,3 +791,21 @@ Penghou.Zhinu.WorkflowEventDurability
 Penghou.Zhinu.WorkflowEventDurability.Advisory = 1 -> Penghou.Zhinu.WorkflowEventDurability
 Penghou.Zhinu.WorkflowEventDurability.Durable = 0 -> Penghou.Zhinu.WorkflowEventDurability
 static Penghou.Zhinu.WorkflowEventTypes.Durability(string! eventType) -> Penghou.Zhinu.WorkflowEventDurability
+Penghou.Zhinu.IWorkflowEventPageReader
+Penghou.Zhinu.IWorkflowEventPageReader.GetEventPageAsync(System.Guid workflowRunId, long afterSequence = 0, int limit = 100, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowEventPage!>!
+Penghou.Zhinu.IWorkflowEventPageRepository
+Penghou.Zhinu.IWorkflowEventPageRepository.ReadEventPageAsync(System.Guid workflowRunId, long afterSequence, int limit, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowEventPage!>
+Penghou.Zhinu.WorkflowEngine.GetEventPageAsync(System.Guid workflowRunId, long afterSequence = 0, int limit = 100, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowEventPage!>!
+Penghou.Zhinu.WorkflowEventPage
+Penghou.Zhinu.WorkflowEventPage.Events.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowEvent!>!
+Penghou.Zhinu.WorkflowEventPage.Events.init -> void
+Penghou.Zhinu.WorkflowEventPage.HasMore.get -> bool
+Penghou.Zhinu.WorkflowEventPage.HasMore.init -> void
+Penghou.Zhinu.WorkflowEventPage.NextCursor.get -> long
+Penghou.Zhinu.WorkflowEventPage.NextCursor.init -> void
+Penghou.Zhinu.WorkflowEventPage.ResyncRequired.get -> bool
+Penghou.Zhinu.WorkflowEventPage.ResyncRequired.init -> void
+Penghou.Zhinu.WorkflowEventPage.RetentionFloor.get -> long
+Penghou.Zhinu.WorkflowEventPage.RetentionFloor.init -> void
+Penghou.Zhinu.WorkflowEventPage.ThroughDurableSequence.get -> long
+Penghou.Zhinu.WorkflowEventPage.ThroughDurableSequence.init -> void
