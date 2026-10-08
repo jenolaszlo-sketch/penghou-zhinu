@@ -1330,8 +1330,9 @@ release gates. Lower-priority proposals are recorded in [ideas for later](docs/i
   crashes or outages. Persist an idempotent cursor/receipt, expose projection
   lag, and prove a broker failure cannot change the committed workflow result.
   Keep the current event log authoritative; do not add a second event truth.
-- [ ] **Prove child trace continuity across workers.** Child runs already
-  inherit the parent's durable trace ID. Add a cross-process trace test and
-  document the intended parent/link relation for execution segments so
-  OpenTelemetry exporters can join the graph without putting a live span
-  context into workflow correctness or arbitrary metadata.
+- [x] **Prove child trace continuity across workers.** Child runs inherit the
+  parent's durable trace ID. `ChildTraceContinuityTests` proves it across a real
+  process boundary: a second process reopens the database with no inherited
+  `Activity` context and reads the child's exact trace ID. The parent/link
+  relation is documented in [observability](docs/observability.md); trace
+  correlation is durable and distinct from execution identity.

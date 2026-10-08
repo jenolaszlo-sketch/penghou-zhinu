@@ -35,10 +35,18 @@ Applications may instead call `AddSource` and `AddMeter` directly.
 
 ## Durable correlation
 
-Each run stores a W3C trace ID. A resumed execution creates a new span segment
-with the same trace ID. If execution resumes under a different ambient trace,
-the workflow span links to it. The stored trace ID is diagnostic only and is
-never used for claims, recovery, or state transitions.
+Each run stores a W3C trace ID. A child run started through `StartChildAsync`
+inherits the parent run's durable trace ID, so a parent and its child segments
+join one trace. A resumed execution creates a new span segment with the same
+trace ID. If execution resumes under a different ambient trace, the workflow
+span links to it. The stored trace ID is diagnostic only and is never used for
+claims, recovery, or state transitions.
+
+Continuity is durable and process-independent: the trace ID is persisted with
+the run and read back after the store is reopened, without any in-process
+`Activity` context. Trace correlation is not execution identity — a child keeps
+its own run and step identities, and unrelated runs carry distinct trace IDs.
+`ChildTraceContinuityTests` proves this across a real process boundary.
 
 ## Privacy and cardinality
 

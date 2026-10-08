@@ -1,4 +1,5 @@
 using System.Globalization;
+using Penghou.Zhinu.Sqlite;
 using Penghou.Zhinu.Sqlite.Tests;
 
 namespace Penghou.Zhinu.Sqlite.ProcessProbe;
@@ -7,9 +8,32 @@ internal static class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        if (args.Length != 4 || args[0] != "--zhinu-loop-probe")
-            return 2;
+        if (args.Length == 4 && args[0] == "--zhinu-trace-probe")
+            return await TraceProbeAsync(args[1], args[2], args[3]).ConfigureAwait(false);
+        if (args.Length == 4 && args[0] == "--zhinu-loop-probe")
+            return await LoopProbeAsync(args).ConfigureAwait(false);
+        return 2;
+    }
 
+    // Reads a run's durable trace id from a freshly opened store in a separate
+    // process, with no inherited Activity context, and writes it to a file.
+    // This proves trace correlation lives in durable storage rather than in
+    // process-local state.
+    private static async Task<int> TraceProbeAsync(string databasePath, string runId, string outputPath)
+    {
+        var store = new SqliteWorkflowStore(new ZhinuSqliteOptions
+        {
+            DatabasePath = databasePath,
+            BusyTimeout = TimeSpan.FromSeconds(5),
+            Pooling = false
+        });
+        var run = await store.GetRunAsync(Guid.Parse(runId), CancellationToken.None).ConfigureAwait(false);
+        File.WriteAllText(outputPath, run?.TraceId ?? "(no-trace)");
+        return run is null ? 3 : 0;
+    }
+
+    private static async Task<int> LoopProbeAsync(string[] args)
+    {
         var databasePath = args[1];
         var runIdPath = args[2];
         var mode = args[3];
