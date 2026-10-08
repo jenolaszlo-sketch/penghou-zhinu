@@ -110,6 +110,23 @@ retain resource/provider checks. See [the exact boundary](workflow-authorization
 - Restarting or rolling back a run whose definition is gone also fails, because
   those operations replay the definition.
 
+## Event durability classification
+
+The event stream is a committed-transition journal; **state rows remain
+authoritative** and events are never used to rebuild execution state. Each
+`WorkflowEvent` carries a `Durability`:
+
+- `Durable` — a committed execution transition that state rows reflect (for
+  example `step-completed`, `workflow-failed`, `signal-delivered`).
+- `Advisory` — non-authoritative progress or diagnostics that never determine
+  execution state (for example `progress`).
+
+The classification is derived from the persisted event type via
+`WorkflowEventTypes.Durability`, so it is stable across store reopen and does
+not change event ordering or export/cursor semantics. Application-defined event
+types default to durable because emitted events are committed-transition
+evidence.
+
 ## Which operations are atomic
 
 | Operation | Atomicity |

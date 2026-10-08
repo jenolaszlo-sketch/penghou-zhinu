@@ -8,6 +8,15 @@ Use durable workflow events to determine what committed. Use traces to explain
 how an execution segment unfolded, metrics for aggregate health, and logs for
 detailed messages.
 
+State rows remain authoritative; the event stream is a committed-transition
+journal, not a replacement execution model. Every `WorkflowEvent` carries a
+`Durability`: `Durable` marks a committed execution transition that state rows
+reflect, and `Advisory` marks non-authoritative progress or diagnostics (for
+example `progress`). The classification is derived from the persisted event type
+via `WorkflowEventTypes.Durability`, so it is stable across reopen and does not
+change event ordering or export/cursor semantics; application-defined event
+types default to durable.
+
 ## Sources
 
 ```text

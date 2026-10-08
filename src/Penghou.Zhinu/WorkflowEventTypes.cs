@@ -1,6 +1,11 @@
+using System.Collections.Frozen;
+
 namespace Penghou.Zhinu;
 
-/// <summary>Provides stable identifiers for built-in workflow execution events.</summary>
+/// <summary>
+/// Provides stable identifiers for built-in workflow execution events and
+/// classifies an event type by its durability authority.
+/// </summary>
 public static class WorkflowEventTypes
 {
     public const string WorkflowStarted = "workflow-started";
@@ -31,4 +36,25 @@ public static class WorkflowEventTypes
     public const string LoopIterationCommitted = "loop-iteration-committed";
     public const string LoopCompleted = "loop-completed";
     public const string LoopLimitExceeded = "loop-limit-exceeded";
+
+    /// <summary>
+    /// Classifies a workflow event type by durability authority.
+    /// <see cref="WorkflowEventDurability.Advisory"/> is a closed, versioned set of
+    /// informational types (currently only <see cref="Progress"/>); every other
+    /// type, including application-defined types emitted through
+    /// <c>EmitAsync</c>, is <see cref="WorkflowEventDurability.Durable"/> because
+    /// emitted events are committed-transition evidence. The classification is a
+    /// pure function of the persisted event type, so it is stable across store
+    /// reopen and does not alter event ordering or cursor/export semantics.
+    /// </summary>
+    public static WorkflowEventDurability Durability(string eventType)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+        return AdvisoryTypes.Contains(eventType)
+            ? WorkflowEventDurability.Advisory
+            : WorkflowEventDurability.Durable;
+    }
+
+    private static readonly FrozenSet<string> AdvisoryTypes =
+        new[] { Progress }.ToFrozenSet(StringComparer.Ordinal);
 }

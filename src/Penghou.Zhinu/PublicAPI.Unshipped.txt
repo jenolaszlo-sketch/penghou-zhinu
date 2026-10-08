@@ -786,3 +786,8 @@ Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.set -> void
 static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!
 static Penghou.Zhinu.Declarative.WorkflowCompiler.Compile(Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.Declarative.WorkflowCompilationResult!
 static Penghou.Zhinu.WorkflowLoopReference.Root(string! name) -> Penghou.Zhinu.WorkflowLoopReference!
+Penghou.Zhinu.WorkflowEvent.Durability.get -> Penghou.Zhinu.WorkflowEventDurability
+Penghou.Zhinu.WorkflowEventDurability
+Penghou.Zhinu.WorkflowEventDurability.Advisory = 1 -> Penghou.Zhinu.WorkflowEventDurability
+Penghou.Zhinu.WorkflowEventDurability.Durable = 0 -> Penghou.Zhinu.WorkflowEventDurability
+static Penghou.Zhinu.WorkflowEventTypes.Durability(string! eventType) -> Penghou.Zhinu.WorkflowEventDurability
