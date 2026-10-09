@@ -57,8 +57,67 @@ independent of durable export acknowledgement
 
 This is **not** the snapshot-at-watermark handshake and does not imply snapshot
 atomicity. `throughDurableSequence` is the highest durable event sequence known
-from the event stream, not a projection watermark; the atomic snapshot plus
-watermark primitive remains future work.
+from the returned pages, not a projection watermark; see Run snapshot below.
+
+## Run snapshot
+
+`IWorkflowSnapshotReader.GetRunSnapshotAsync(workflowRunId, options)` (store:
+`IWorkflowSnapshotRepository.ReadRunSnapshotAsync`) returns a
+`WorkflowRunSnapshot`: the run, current-revision steps, dependency edges,
+waits, artifacts, external operations (bounded), the active operation,
+generation + instance + dispositions, source run and lineage, recursive child
+snapshots, a derived diagnosis, and `ThroughDurableSequence`.
+
+The snapshot deliberately excludes historical step revisions (only
+current-revision rows are returned), journal events themselves (use event pages),
+export acknowledgement state, and anything outside durable storage. Direct store
+reads leave `Diagnosis` unset; the engine derives it from the same boundary's
+rows.
+
+**Watermark meaning.** `ThroughDurableSequence` (D) means: all authoritative
+state represented in this snapshot includes every durable execution transition
+through sequence D, and no state change caused solely by a durable transition
+after D is represented. Advisory events with sequences beyond D may exist and do
+not invalidate the snapshot.
+
+**Atomicity.** Snapshot rows and the watermark come from one consistent read
+boundary: a single deferred read transaction over one connection, rolled back
+without writing. Every entity query runs inside that boundary. A concurrent
+writer either fully precedes or fully follows the snapshot; no row can reflect
+a durable transition past D. The boundary works in both WAL and rollback-journal
+modes; connection busy-timeout applies at transaction start, matching ordinary
+reads.
+
+**Advisory events.** Ordering includes advisory entries where they occur, but
+advisories never advance the watermark: D is the highest *durable* sequence in
+the boundary view. A snapshot may legitimately report D = 102 while advisory
+events 103–104 already exist; event-page reads from 102 still expose them.
+
+**Intended consumer protocol.**
+
+```text
+1. Read authoritative snapshot => watermark D
+2. Initialize local projection from snapshot
+3. Read event pages after D
+4. Apply events in sequence order
+5. Continue from NextCursor
+```
+
+Three distinct concepts, not to be conflated: the snapshot watermark is
+durable-state consistency of one read boundary; `NextCursor` is event-stream
+traversal position; `ThroughDurableSequence` on an event page is the durable
+progress within returned pages.
+
+**Export cursors.** Snapshot reads never allocate an export consumer and neither
+read nor advance export acknowledgement state; durable export remains a separate
+integration mechanism.
+
+**Restart.** No in-memory watermark state is kept: reopening the store (new
+instance over the same file, or a new process) and reading again yields the same
+watermark for the same committed history.
+
+**Nonexistent run.** A snapshot read for a run that does not exist returns null,
+consistent with the existing run-reading APIs.
 
 ## Sources
 

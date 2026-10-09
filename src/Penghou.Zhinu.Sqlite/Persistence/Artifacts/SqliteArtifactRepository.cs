@@ -115,8 +115,18 @@ internal sealed class SqliteArtifactRepository(IZhinuSqliteDatabase factory) :
         await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
+        return await GetArtifactsAsync(connection, null, workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal async ValueTask<IReadOnlyList<WorkflowArtifactReference>> GetArtifactsAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
         await using var command = SqliteStoreSupport.CreateCommand(
-            connection, null,
+            connection, transaction,
             $"SELECT {Columns} FROM workflow_artifacts " +
             "WHERE workflow_run_id = $run ORDER BY created_at, name, revision;");
         command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));

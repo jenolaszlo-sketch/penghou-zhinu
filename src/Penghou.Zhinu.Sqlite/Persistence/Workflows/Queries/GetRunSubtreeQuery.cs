@@ -8,9 +8,10 @@ internal sealed class GetRunSubtreeQuery
         SqliteConnection connection,
         Guid workflowRunId,
         int maxDepth,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SqliteTransaction? transaction = null)
     {
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             WITH RECURSIVE subtree(id, depth) AS (
                 SELECT id, 0 FROM workflow_runs WHERE id = $rootId
                 UNION ALL

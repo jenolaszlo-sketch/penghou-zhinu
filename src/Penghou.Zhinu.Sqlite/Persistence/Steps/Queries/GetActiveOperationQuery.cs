@@ -7,9 +7,10 @@ internal sealed class GetActiveOperationQuery
     public async ValueTask<WorkflowRunOperation?> ExecuteAsync(
         SqliteConnection connection,
         Guid workflowRunId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SqliteTransaction? transaction = null)
     {
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             SELECT {SqliteStoreSupport.OperationColumns}
             FROM workflow_run_operations
             WHERE workflow_run_id = $runId

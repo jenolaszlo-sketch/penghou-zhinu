@@ -118,7 +118,20 @@ public sealed class SqliteExternalOperationRepository : IWorkflowExternalOperati
         await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await database.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+        return await ListAsync(connection, null, workflowRunId, limit, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal async ValueTask<IReadOnlyList<WorkflowExternalOperation>> ListAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid workflowRunId,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        if (limit is < 1 or > 1000)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             SELECT {Columns} FROM workflow_external_operations
             WHERE workflow_run_id = $run
             ORDER BY created_at, operation_id

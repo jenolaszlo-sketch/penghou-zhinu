@@ -58,7 +58,17 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await database.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null,
+        return await GetInstanceAsync(connection, null, instanceId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal async ValueTask<WorkflowInstance?> GetInstanceAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid instanceId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction,
             "SELECT instance_id, created_at, metadata_json FROM workflow_instances WHERE instance_id = $id;");
         command.Parameters.AddWithValue("$id", SqliteStoreSupport.Format(instanceId));
         await using var reader = await command.ExecuteReaderAsync(cancellationToken)
@@ -196,7 +206,17 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await database.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+        return await GetGenerationByRunAsync(connection, null, workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal async ValueTask<WorkflowGeneration?> GetGenerationByRunAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             SELECT {Columns} FROM workflow_generations
             WHERE workflow_run_id = $run
             ORDER BY ordinal DESC
@@ -489,7 +509,17 @@ public sealed class SqliteWorkflowInstanceRepository : IWorkflowInstanceReposito
         await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await database.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, """
+        return await ListDispositionsAsync(connection, null, generationId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal async ValueTask<IReadOnlyList<GenerationDisposition>> ListDispositionsAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid generationId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             SELECT disposition_id, generation_id, disposition, reason, actor, created_at
             FROM workflow_generation_dispositions
             WHERE generation_id = $generation

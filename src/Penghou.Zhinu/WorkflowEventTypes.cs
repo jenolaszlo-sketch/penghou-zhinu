@@ -57,4 +57,11 @@ public static class WorkflowEventTypes
 
     private static readonly FrozenSet<string> AdvisoryTypes =
         new[] { Progress }.ToFrozenSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The closed advisory event-type set used by <see cref="Durability(string)"/>,
+    /// shared with the durable watermark computation so read boundaries classify
+    /// events identically to projections.
+    /// </summary>
+    internal static IReadOnlySet<string> AdvisoryEventTypes => AdvisoryTypes;
 }

@@ -129,7 +129,17 @@ internal sealed class SqliteWaitRepository : IWorkflowWaitRepository
         await database.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await database.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        await using var command = SqliteStoreSupport.CreateCommand(connection, null, $"""
+        return await ListWaitsAsync(connection, null, workflowRunId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    internal async ValueTask<IReadOnlyList<WorkflowWait>> ListWaitsAsync(
+        SqliteConnection connection,
+        SqliteTransaction? transaction,
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
             SELECT {Columns} FROM workflow_waits
             WHERE workflow_run_id = $run
             ORDER BY step_key;

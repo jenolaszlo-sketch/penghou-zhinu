@@ -8,6 +8,7 @@ using Penghou.Zhinu.Sqlite.Persistence.Artifacts;
 using Penghou.Zhinu.Sqlite.Persistence.Waits;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Penghou.Zhinu.Sqlite;
 
@@ -26,6 +27,7 @@ public sealed class SqliteWorkflowStore :
     IWorkflowEventExportRepository
     , IWorkflowAuthorizationRepository
     , IWorkflowEventPageRepository
+    , IWorkflowSnapshotRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -138,6 +140,187 @@ public sealed class SqliteWorkflowStore :
         ObserveAsync(
             "events.get",
             () => workflows.GetEventsAsync(workflowRunId, afterSequence, limit, cancellationToken));
+
+    public ValueTask<WorkflowRunSnapshot?> ReadRunSnapshotAsync(
+        Guid workflowRunId,
+        RunSnapshotOptions options,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync(
+            "snapshots.read",
+            () => ReadRunSnapshotCoreAsync(workflowRunId, options, cancellationToken));
+
+    // Reads one consistent run projection snapshot from a single deferred read
+    // transaction on one connection. Every SELECT below (existing entity
+    // queries plus the watermark scalar) runs inside the same read boundary,
+    // and the transaction is rolled back without ever writing. A concurrent
+    // writer either fully precedes or fully follows the snapshot, so no state
+    // row can reflect a durable transition past ThroughDurableSequence.
+    private async ValueTask<WorkflowRunSnapshot?> ReadRunSnapshotCoreAsync(
+        Guid workflowRunId,
+        RunSnapshotOptions options,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        options.Validate();
+        await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await factory.OpenAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var transaction = connection.BeginTransaction(deferred: true);
+        try
+        {
+            var run = await new GetRunQuery().ExecuteAsync(
+                connection, transaction, workflowRunId, cancellationToken).ConfigureAwait(false);
+            if (run is null)
+            {
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                return null;
+            }
+            var subtree = options.MaxDepth == 0
+                ? new[] { run }
+                : await new GetRunSubtreeQuery().ExecuteAsync(
+                    connection, workflowRunId, options.MaxDepth, cancellationToken, transaction)
+                    .ConfigureAwait(false);
+            var byParent = subtree
+                .Where(candidate => candidate.ParentRunId is not null)
+                .GroupBy(candidate => candidate.ParentRunId!.Value)
+                .ToDictionary(group => group.Key, group => group.ToArray());
+            var snapshot = await BuildSnapshotNodeAsync(
+                connection, transaction, run, 0, options, byParent, cancellationToken)
+                .ConfigureAwait(false);
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return snapshot;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async ValueTask<WorkflowRunSnapshot> BuildSnapshotNodeAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        WorkflowRun nodeRun,
+        int depth,
+        RunSnapshotOptions options,
+        IReadOnlyDictionary<Guid, WorkflowRun[]> childrenByParent,
+        CancellationToken cancellationToken)
+    {
+        var steps = await new GetCurrentStepsQuery().ExecuteAsync(
+            connection, transaction, nodeRun.Id, cancellationToken).ConfigureAwait(false);
+        var dependencies = await new GetStepDependenciesQuery().ExecuteAsync(
+            connection, transaction, nodeRun.Id, cancellationToken).ConfigureAwait(false);
+        var operation = options.IncludeActiveOperation
+            ? await new GetActiveOperationQuery().ExecuteAsync(
+                connection, nodeRun.Id, cancellationToken, transaction).ConfigureAwait(false)
+            : null;
+        var artifactRows = options.IncludeArtifacts
+            ? await artifacts.GetArtifactsAsync(
+                connection, transaction, nodeRun.Id, cancellationToken).ConfigureAwait(false)
+            : Array.Empty<WorkflowArtifactReference>();
+        var waitRows = await waits.ListWaitsAsync(
+            connection, transaction, nodeRun.Id, cancellationToken).ConfigureAwait(false);
+        var operationRows = options.IncludeExternalOperations
+            ? await externalOperations.ListAsync(
+                connection, transaction, nodeRun.Id, options.ExternalOperationsLimit,
+                cancellationToken).ConfigureAwait(false)
+            : Array.Empty<WorkflowExternalOperation>();
+        WorkflowGeneration? generation = null;
+        WorkflowInstance? instance = null;
+        IReadOnlyList<GenerationDisposition> dispositions = Array.Empty<GenerationDisposition>();
+        if (options.IncludeGeneration)
+        {
+            generation = await instances.GetGenerationByRunAsync(
+                connection, transaction, nodeRun.Id, cancellationToken).ConfigureAwait(false);
+            if (generation is not null)
+            {
+                instance = await instances.GetInstanceAsync(
+                    connection, transaction, generation.InstanceId, cancellationToken)
+                    .ConfigureAwait(false);
+                dispositions = await instances.ListDispositionsAsync(
+                    connection, transaction, generation.GenerationId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+        var lineage = new List<WorkflowRun>();
+        WorkflowRun? source = null;
+        if (options.IncludeSourceLineage)
+        {
+            var sourceId = nodeRun.SourceRunId;
+            for (var remaining = options.SourceLineageMaxDepth;
+                remaining > 0 && sourceId is not null;
+                remaining--)
+            {
+                var ancestor = await new GetRunQuery().ExecuteAsync(
+                    connection, transaction, sourceId.Value, cancellationToken)
+                    .ConfigureAwait(false);
+                if (ancestor is null)
+                    break;
+                lineage.Add(ancestor);
+                sourceId = ancestor.SourceRunId;
+            }
+            source = lineage.Count > 0 ? lineage[0] : null;
+        }
+        var throughDurable = await GetMaxDurableSequenceAsync(
+            connection, transaction, nodeRun.Id, cancellationToken).ConfigureAwait(false);
+        IReadOnlyList<WorkflowRunSnapshot> children = Array.Empty<WorkflowRunSnapshot>();
+        if (depth < options.MaxDepth &&
+            childrenByParent.TryGetValue(nodeRun.Id, out var childRuns))
+        {
+            var built = new List<WorkflowRunSnapshot>(childRuns.Length);
+            foreach (var child in childRuns)
+                built.Add(await BuildSnapshotNodeAsync(
+                    connection, transaction, child, depth + 1, options,
+                    childrenByParent, cancellationToken).ConfigureAwait(false));
+            children = built;
+        }
+        return new WorkflowRunSnapshot
+        {
+            Run = nodeRun,
+            Steps = steps,
+            Dependencies = dependencies,
+            Waits = waitRows,
+            Artifacts = artifactRows,
+            ExternalOperations = operationRows,
+            ActiveOperation = operation,
+            Generation = generation,
+            Instance = instance,
+            Dispositions = dispositions,
+            SourceRun = source,
+            SourceLineage = lineage,
+            Children = children,
+            Diagnosis = null,
+            ThroughDurableSequence = throughDurable
+        };
+    }
+
+    private static async ValueTask<long> GetMaxDurableSequenceAsync(
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        Guid workflowRunId,
+        CancellationToken cancellationToken)
+    {
+        var exclusions = WorkflowEventTypes.AdvisoryEventTypes;
+        var where = exclusions.Count == 0
+            ? "workflow_run_id = $run"
+            : "workflow_run_id = $run AND " + string.Join(
+                " AND ", exclusions.Select((_, index) => $"event_type <> $adv{index}"));
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, $"""
+            SELECT COALESCE(MAX(sequence), 0) FROM workflow_events
+            WHERE {where};
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        var index = 0;
+        foreach (var advisory in exclusions)
+        {
+            command.Parameters.AddWithValue("$adv" + index, advisory);
+            index++;
+        }
+        return Convert.ToInt64(
+            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            CultureInfo.InvariantCulture);
+    }
+
 
     public ValueTask<WorkflowEventPage> ReadEventPageAsync(
         Guid workflowRunId,

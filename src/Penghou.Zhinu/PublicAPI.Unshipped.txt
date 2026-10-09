@@ -809,3 +809,59 @@ Penghou.Zhinu.WorkflowEventPage.RetentionFloor.get -> long
 Penghou.Zhinu.WorkflowEventPage.RetentionFloor.init -> void
 Penghou.Zhinu.WorkflowEventPage.ThroughDurableSequence.get -> long
 Penghou.Zhinu.WorkflowEventPage.ThroughDurableSequence.init -> void
+Penghou.Zhinu.IWorkflowSnapshotReader
+Penghou.Zhinu.IWorkflowSnapshotReader.GetRunSnapshotAsync(System.Guid workflowRunId, Penghou.Zhinu.RunSnapshotOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRunSnapshot?>!
+Penghou.Zhinu.IWorkflowSnapshotRepository
+Penghou.Zhinu.IWorkflowSnapshotRepository.ReadRunSnapshotAsync(System.Guid workflowRunId, Penghou.Zhinu.RunSnapshotOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowRunSnapshot?>
+Penghou.Zhinu.RunSnapshotOptions
+Penghou.Zhinu.RunSnapshotOptions.ExternalOperationsLimit.get -> int
+Penghou.Zhinu.RunSnapshotOptions.ExternalOperationsLimit.init -> void
+Penghou.Zhinu.RunSnapshotOptions.IncludeActiveOperation.get -> bool
+Penghou.Zhinu.RunSnapshotOptions.IncludeActiveOperation.init -> void
+Penghou.Zhinu.RunSnapshotOptions.IncludeArtifacts.get -> bool
+Penghou.Zhinu.RunSnapshotOptions.IncludeArtifacts.init -> void
+Penghou.Zhinu.RunSnapshotOptions.IncludeDiagnosis.get -> bool
+Penghou.Zhinu.RunSnapshotOptions.IncludeDiagnosis.init -> void
+Penghou.Zhinu.RunSnapshotOptions.IncludeExternalOperations.get -> bool
+Penghou.Zhinu.RunSnapshotOptions.IncludeExternalOperations.init -> void
+Penghou.Zhinu.RunSnapshotOptions.IncludeGeneration.get -> bool
+Penghou.Zhinu.RunSnapshotOptions.IncludeGeneration.init -> void
+Penghou.Zhinu.RunSnapshotOptions.IncludeSourceLineage.get -> bool
+Penghou.Zhinu.RunSnapshotOptions.IncludeSourceLineage.init -> void
+Penghou.Zhinu.RunSnapshotOptions.MaxDepth.get -> int
+Penghou.Zhinu.RunSnapshotOptions.MaxDepth.init -> void
+Penghou.Zhinu.RunSnapshotOptions.SourceLineageMaxDepth.get -> int
+Penghou.Zhinu.RunSnapshotOptions.SourceLineageMaxDepth.init -> void
+Penghou.Zhinu.RunSnapshotOptions.Validate() -> void
+Penghou.Zhinu.WorkflowEngine.GetRunSnapshotAsync(System.Guid workflowRunId, Penghou.Zhinu.RunSnapshotOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRunSnapshot?>!
+Penghou.Zhinu.WorkflowRunSnapshot
+Penghou.Zhinu.WorkflowRunSnapshot.ActiveOperation.get -> Penghou.Zhinu.WorkflowRunOperation?
+Penghou.Zhinu.WorkflowRunSnapshot.ActiveOperation.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Artifacts.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowArtifactReference!>!
+Penghou.Zhinu.WorkflowRunSnapshot.Artifacts.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Children.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowRunSnapshot!>!
+Penghou.Zhinu.WorkflowRunSnapshot.Children.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.StepDependency!>!
+Penghou.Zhinu.WorkflowRunSnapshot.Dependencies.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Diagnosis.get -> Penghou.Zhinu.RunDiagnosis?
+Penghou.Zhinu.WorkflowRunSnapshot.Diagnosis.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Dispositions.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.GenerationDisposition!>!
+Penghou.Zhinu.WorkflowRunSnapshot.Dispositions.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.ExternalOperations.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowExternalOperation!>!
+Penghou.Zhinu.WorkflowRunSnapshot.ExternalOperations.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Generation.get -> Penghou.Zhinu.WorkflowGeneration?
+Penghou.Zhinu.WorkflowRunSnapshot.Generation.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Instance.get -> Penghou.Zhinu.WorkflowInstance?
+Penghou.Zhinu.WorkflowRunSnapshot.Instance.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Run.get -> Penghou.Zhinu.WorkflowRun!
+Penghou.Zhinu.WorkflowRunSnapshot.Run.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.SourceLineage.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowRun!>!
+Penghou.Zhinu.WorkflowRunSnapshot.SourceLineage.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.SourceRun.get -> Penghou.Zhinu.WorkflowRun?
+Penghou.Zhinu.WorkflowRunSnapshot.SourceRun.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Steps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowStepRun!>!
+Penghou.Zhinu.WorkflowRunSnapshot.Steps.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.ThroughDurableSequence.get -> long
+Penghou.Zhinu.WorkflowRunSnapshot.ThroughDurableSequence.init -> void
+Penghou.Zhinu.WorkflowRunSnapshot.Waits.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowWait!>!
+Penghou.Zhinu.WorkflowRunSnapshot.Waits.init -> void
