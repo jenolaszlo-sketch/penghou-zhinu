@@ -1,4 +1,104 @@
 #nullable enable
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision.ApprovalRequired = 1 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision.Automatic = 0 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision.Denied = 2 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.AdaptiveBranch(string! LogicalId, string! RevisionStepId, string! Title, string! ContractDigest, string! InputDigest, string! AuthorityDigest, string! Provenance, string![]! Dependencies, Penghou.Zhinu.WorkflowRun! Execution, bool AcceptReuse) -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.AcceptReuse.get -> bool
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.AcceptReuse.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.AuthorityDigest.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.AuthorityDigest.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.ContractDigest.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.ContractDigest.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Dependencies.get -> string![]!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Dependencies.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Execution.get -> Penghou.Zhinu.WorkflowRun!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Execution.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.InputDigest.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.InputDigest.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.LogicalId.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.LogicalId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Provenance.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Provenance.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.RevisionStepId.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.RevisionStepId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Title.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch.Title.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.AdaptiveChange(string! LogicalId, Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind Kind, Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition Disposition) -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.Disposition.get -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.Disposition.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.Kind.get -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.Kind.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.LogicalId.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange.LogicalId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind.Added = 1 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind.DependencyChanged = 5 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind.Modified = 3 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind.Preserved = 0 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind.Removed = 2 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind.Superseded = 4 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChangeKind
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition.AllowToFinish = 1 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition.Cancel = 2 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition.Continue = 0 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition.Fence = 3 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition.RequiresManualDecision = 5 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition.SupersedeOnCompletion = 4 -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveDisposition
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.AdaptiveProposal(System.Guid ProposalId, Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision! Candidate, string! ParentStateDigest, Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange![]! Changes, Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision Authority, string! AuthorityEvidence, string! ImpactSummary) -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.Authority.get -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveAuthorityDecision
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.Authority.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.AuthorityEvidence.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.AuthorityEvidence.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.Candidate.get -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.Candidate.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.Changes.get -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange![]!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.Changes.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.ImpactSummary.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.ImpactSummary.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.ParentStateDigest.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.ParentStateDigest.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.ProposalId.get -> System.Guid
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal.ProposalId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.AdaptiveRevision(System.Guid WorkflowId, string! RevisionId, string? ParentRevisionId, string! PlanEnvelopeJson, string! Reason, string! CreatedBy, Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch![]! Branches) -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.Branches.get -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch![]!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.Branches.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.CreatedBy.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.CreatedBy.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.ParentRevisionId.get -> string?
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.ParentRevisionId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.PlanEnvelopeJson.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.PlanEnvelopeJson.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.Reason.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.Reason.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.RevisionId.get -> string!
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.RevisionId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.WorkflowId.get -> System.Guid
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision.WorkflowId.init -> void
+Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevisionContracts
+static Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevisionContracts.Compare(Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision! before, Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision! after) -> Penghou.Zhinu.Sqlite.Experimental.AdaptiveChange![]!
+static Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevisionContracts.Digest<T>(T value) -> string!
+static Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevisionContracts.Equivalent(Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch! before, Penghou.Zhinu.Sqlite.Experimental.AdaptiveBranch! after) -> bool
+static Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevisionContracts.Validate(Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision! revision) -> void
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.ApproveAsync(System.Guid proposalId, string! digest, string! actor, string! authorityEvidence, System.DateTimeOffset expiresAt, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.ActivateInitialAsync(Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision! revision, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.CommitAsync(System.Guid proposalId, string! digest, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.CancelAsync(System.Guid workflowId, string! authenticatedActor, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.DiscussAsync(System.Guid workflowId, string! authenticatedActor, string! question, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.GetActiveAsync(System.Guid workflowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision!>!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.GetEvidenceAsync(System.Guid workflowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.GetHistoryAsync(System.Guid workflowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.Sqlite.Experimental.AdaptiveRevision![]!>!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.GetPendingAsync(System.Guid workflowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal?>!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.GetStateDigestAsync(System.Guid workflowId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.InitializeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.ProposeAsync(Penghou.Zhinu.Sqlite.Experimental.AdaptiveProposal! proposal, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.RejectAsync(System.Guid proposalId, string! digest, string! actor, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Penghou.Zhinu.Sqlite.Experimental.SqliteAdaptiveRevisionRepository.SqliteAdaptiveRevisionRepository(Penghou.Zhinu.Sqlite.IZhinuSqliteDatabase! database) -> void
 *REMOVED*const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 5 -> int
 const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 6 -> int
 Penghou.Zhinu.Sqlite.SqliteExternalOperationRepository

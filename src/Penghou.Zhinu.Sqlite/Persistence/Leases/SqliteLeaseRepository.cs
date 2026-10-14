@@ -46,6 +46,22 @@ internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
+        // Optional M1 branch manifests gate execution inside the lease-claim transaction.
+        // Ordinary stores without this capability retain their original dispatch behavior.
+        await using (var capability = SqliteStoreSupport.CreateCommand(connection, transaction,
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='adaptive_execution_dependencies'"))
+        {
+            if (await capability.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null)
+            {
+                await using var dependencies = SqliteStoreSupport.CreateCommand(connection, transaction, """
+                    SELECT 1 FROM adaptive_execution_dependencies d LEFT JOIN workflow_runs r
+                    ON r.id=d.prerequisite_run_id WHERE d.run_id=$id AND (r.id IS NULL OR r.status<>$completed) LIMIT 1
+                    """);
+                dependencies.Parameters.AddWithValue("$id", workflowRunId.ToString("D"));
+                dependencies.Parameters.AddWithValue("$completed", (int)WorkflowStatus.Completed);
+                if (await dependencies.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null) return null;
+            }
+        }
         var status = await getRunStatus.ExecuteAsync(
             connection,
             transaction,
