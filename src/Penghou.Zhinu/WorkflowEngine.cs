@@ -159,6 +159,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         Guid? workflowRunId = null,
         DateTimeOffset? deadline = null,
         object? metadata = null,
+        string? authoritySubjectBinding = null,
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -172,6 +173,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
         var id = workflowRunId ?? Guid.NewGuid();
         var inputJson = registration.SerializeInput(input, serializerOptions);
+        ValidateAuthoritySubjectBinding(authoritySubjectBinding);
         if (workflowRunId is not null)
         {
             var existing = await store.GetRunAsync(id, cancellationToken)
@@ -186,6 +188,10 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                     string.Equals(
                         existing.DefinitionFingerprint,
                         registration.DefinitionFingerprint,
+                        StringComparison.Ordinal) &&
+                    string.Equals(
+                        existing.AuthoritySubjectBinding,
+                        authoritySubjectBinding,
                         StringComparison.Ordinal))
                 {
                     WorkflowAuthorizationGate.ValidateBinding(existing, this.options);
@@ -198,7 +204,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                     return id;
                 }
                 throw new WorkflowStateException(
-                    $"Workflow run ID '{id:D}' is already associated with a different workflow or input.");
+                    $"Workflow run ID '{id:D}' is already associated with a different workflow, input, or authority binding.");
             }
         }
         var now = timeProvider.GetUtcNow();
@@ -225,6 +231,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                     AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
                     AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
                         ? WorkflowAuthorizationCodec.Binding(authority) : null,
+                    AuthoritySubjectBinding = authoritySubjectBinding,
                     TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                         .ToHexString()
                 },
@@ -236,7 +243,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             // the admitted record instead of failing the retry.
             return await StartAsync(
                 workflowName, workflowVersion, input, workflowRunId,
-                deadline, metadata, cancellationToken).ConfigureAwait(false);
+                deadline, metadata, authoritySubjectBinding, cancellationToken).ConfigureAwait(false);
         }
         await BindFirstGenerationAsync(
             id,
@@ -293,7 +300,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     public async Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
         string workflowName, string workflowVersion, TInput input,
         Guid? workflowRunId = null, DateTimeOffset? deadline = null,
-        object? metadata = null, CancellationToken cancellationToken = default)
+        object? metadata = null, string? authoritySubjectBinding = null,
+        CancellationToken cancellationToken = default)
     {
         var registration = registry.Get(workflowName, workflowVersion);
         if (registration.OutputType != typeof(TOutput))
@@ -303,7 +311,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                 nameof(TOutput));
         }
         var id = await StartAsync(workflowName, workflowVersion, input,
-            workflowRunId, deadline, metadata, cancellationToken).ConfigureAwait(false);
+            workflowRunId, deadline, metadata, authoritySubjectBinding, cancellationToken).ConfigureAwait(false);
         return new WorkflowHandle<TOutput>(this, id);
     }
 
@@ -322,6 +330,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         Guid? workflowRunId = null,
         DateTimeOffset? deadline = null,
         object? metadata = null,
+        string? authoritySubjectBinding = null,
         CancellationToken cancellationToken = default)
     {
         var id = await StartAsync(
@@ -331,6 +340,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             workflowRunId,
             deadline,
             metadata,
+            authoritySubjectBinding,
             cancellationToken).ConfigureAwait(false);
         await ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
         return await WaitForCompletionAsync<TOutput>(
@@ -952,6 +962,10 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
             AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
                 ? WorkflowAuthorizationCodec.Binding(authority) : null,
+            // Forks continue the same authority principal: the binding is
+            // inherited, never cleared or reassigned here. There is no
+            // authority-transfer operation in this version.
+            AuthoritySubjectBinding = source.AuthoritySubjectBinding,
             TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                 .ToHexString()
         };
@@ -1911,6 +1925,24 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
 
     private void ThrowIfDisposed() =>
         ObjectDisposedException.ThrowIf(disposed != 0, this);
+
+    /// <summary>
+    /// Validates the opaque authority-subject binding without interpreting it:
+    /// null means the run carries no authority identity; otherwise it must be
+    /// a bounded token. Zhinu never assigns Hufu meaning to the value.
+    /// </summary>
+    private static void ValidateAuthoritySubjectBinding(string? binding)
+    {
+        if (binding is null) return;
+        if (string.IsNullOrWhiteSpace(binding))
+            throw new ArgumentException(
+                "An authority-subject binding must be null or a bounded non-empty token.",
+                nameof(binding));
+        if (binding.Length > 4096 || binding.Any(char.IsControl))
+            throw new ArgumentException(
+                "An authority-subject binding must be at most 4096 characters with no control characters.",
+                nameof(binding));
+    }
 
     internal int SubscriptionChannelCount => eventSubscriptions.Count;
 

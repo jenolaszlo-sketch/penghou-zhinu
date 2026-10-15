@@ -75,6 +75,17 @@ public sealed record WorkflowRun
     /// <summary>Trusted host binding profile paired with <see cref="AuthorizationProviderId"/>.</summary>
     public string? AuthorizationBindingId { get; init; }
 
+    /// <summary>
+    /// Opaque durable authority-subject binding: identifies whose current
+    /// authority governs this run's protected runtime effects. Owned
+    /// entirely by the host contract (Zhinu never interprets it); set once
+    /// when the run is admitted and never updated afterward. Null means the
+    /// run carries no authority identity: requesting an authorized runtime
+    /// effect for such a run must fail closed. This is identity only, never
+    /// a permission grant and never a stored authorization decision.
+    /// </summary>
+    public string? AuthoritySubjectBinding { get; init; }
+
     public string? LeaseOwner { get; init; }
 
     public DateTimeOffset? LeaseExpiresAt { get; init; }

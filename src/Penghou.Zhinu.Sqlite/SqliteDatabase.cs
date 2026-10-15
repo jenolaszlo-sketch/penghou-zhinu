@@ -68,11 +68,14 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             using var schemaTransaction = connection.BeginTransaction(deferred: false);
             try
             {
-                // Schema creation and the additive v5->v6 change are one durable step.
+                // Schema creation and additive migrations are one durable step.
                 await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction, Schema, cancellationToken)
                     .ConfigureAwait(false);
                 if (databaseVersion == 5)
                     await MigrateAuthorizationColumnsAsync(connection, schemaTransaction, cancellationToken)
+                        .ConfigureAwait(false);
+                if (databaseVersion is 5 or 6)
+                    await MigrateAuthorityBindingColumnAsync(connection, schemaTransaction, cancellationToken)
                         .ConfigureAwait(false);
                 await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
                     "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
@@ -187,7 +190,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
             .ConfigureAwait(false);
         var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
-        if (version is not (5 or ZhinuSqliteSchema.CurrentVersion))
+        if (version is not (5 or 6 or ZhinuSqliteSchema.CurrentVersion))
         {
             throw new ZhinuSchemaCompatibilityException(
                 ZhinuSqliteSchema.CurrentVersion,
@@ -216,6 +219,29 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 await SqliteStoreSupport.ExecuteAsync(connection, transaction,
                     $"ALTER TABLE {table} ADD COLUMN {column} {definition};", cancellationToken).ConfigureAwait(false);
         }
+        // Each migration step stamps its own version so a crash between steps
+        // resumes at the correct step and failure-injection tests keep working.
+        await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+            "UPDATE zhinu_schema SET version = 6 WHERE id = 1;", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Additive v6-&gt;v7 change: the opaque durable authority-subject binding
+    /// on runs. Idempotent: existing v7 databases keep their column.
+    /// </summary>
+    private static async ValueTask MigrateAuthorityBindingColumnAsync(
+        SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var inspect = SqliteStoreSupport.CreateCommand(connection, transaction,
+            "SELECT COUNT(*) FROM pragma_table_info($table) WHERE name=$column;");
+        inspect.Parameters.AddWithValue("$table", "workflow_runs");
+        inspect.Parameters.AddWithValue("$column", "authority_subject_binding");
+        var found = Convert.ToInt32(await inspect.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) > 0;
+        if (!found)
+            await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+                "ALTER TABLE workflow_runs ADD COLUMN authority_subject_binding TEXT NULL;", cancellationToken)
+                .ConfigureAwait(false);
         await SqliteStoreSupport.ExecuteAsync(connection, transaction,
             $"UPDATE zhinu_schema SET version = {ZhinuSqliteSchema.CurrentVersion} WHERE id = 1;", cancellationToken)
             .ConfigureAwait(false);
@@ -254,6 +280,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             definition_fingerprint TEXT NULL,
             authorization_provider_id TEXT NULL,
             authorization_binding_id TEXT NULL,
+            authority_subject_binding TEXT NULL,
             CHECK (status BETWEEN 0 AND 6),
             CHECK (lease_generation >= 1)
         );

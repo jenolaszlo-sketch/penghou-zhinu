@@ -5,7 +5,8 @@ public interface IWorkflowRuntime
 {
     Task<Guid> StartAsync<TInput>(string workflowName, string workflowVersion,
         TInput input, Guid? workflowRunId = null, DateTimeOffset? deadline = null,
-        object? metadata = null, CancellationToken cancellationToken = default);
+        object? metadata = null, string? authoritySubjectBinding = null,
+        CancellationToken cancellationToken = default);
     Task ExecuteAsync(Guid workflowRunId, CancellationToken cancellationToken = default);
     Task<int> RunAvailableAsync(CancellationToken cancellationToken = default);
 }
@@ -43,14 +44,17 @@ public interface IWorkflowStarter
 {
     Task<Guid> StartAsync<TInput>(string workflowName, string workflowVersion,
         TInput input, Guid? workflowRunId = null, DateTimeOffset? deadline = null,
-        object? metadata = null, CancellationToken cancellationToken = default);
+        object? metadata = null, string? authoritySubjectBinding = null,
+        CancellationToken cancellationToken = default);
     Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
         string workflowName, string workflowVersion, TInput input,
         Guid? workflowRunId = null, DateTimeOffset? deadline = null,
-        object? metadata = null, CancellationToken cancellationToken = default);
+        object? metadata = null, string? authoritySubjectBinding = null,
+        CancellationToken cancellationToken = default);
     Task<TOutput> RunAsync<TInput, TOutput>(string workflowName, string workflowVersion,
         TInput input, Guid? workflowRunId = null, DateTimeOffset? deadline = null,
-        object? metadata = null, CancellationToken cancellationToken = default);
+        object? metadata = null, string? authoritySubjectBinding = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Capabilities for querying run state, progress, and history.</summary>

@@ -255,7 +255,7 @@ Penghou.Zhinu.IWorkflowRetentionRepository.PurgeRetainedRunsAsync(Penghou.Zhinu.
 Penghou.Zhinu.IWorkflowRuntime
 Penghou.Zhinu.IWorkflowRuntime.ExecuteAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Penghou.Zhinu.IWorkflowRuntime.RunAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
-Penghou.Zhinu.IWorkflowRuntime.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
+Penghou.Zhinu.IWorkflowRuntime.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
 Penghou.Zhinu.IWorkflowOperator
 Penghou.Zhinu.IWorkflowOperator.CancelManyAsync(Penghou.Zhinu.RunQuery! query, string? actor = null, string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.BulkOperationResult!>!
 Penghou.Zhinu.IWorkflowOperator.ForkAsync(System.Guid sourceWorkflowRunId, string! targetStepKey, Penghou.Zhinu.ForkRunOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
@@ -279,9 +279,9 @@ Penghou.Zhinu.IWorkflowOperator.RollbackToStepAsync(System.Guid workflowRunId, s
 Penghou.Zhinu.IWorkflowOperator.UpdateRunMetadataAsync(System.Guid workflowRunId, object? metadata, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowRun?>!
 Penghou.Zhinu.IWorkflowSignalRepository.TryDeliverSignalAsync(System.Guid stepId, string! ownerId, long leaseGeneration, string! signalName, System.DateTimeOffset now, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.SignalDelivery?>
 Penghou.Zhinu.IWorkflowStarter
-Penghou.Zhinu.IWorkflowStarter.RunAsync<TInput, TOutput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
-Penghou.Zhinu.IWorkflowStarter.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
-Penghou.Zhinu.IWorkflowStarter.StartHandleAsync<TInput, TOutput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowHandle<TOutput>!>!
+Penghou.Zhinu.IWorkflowStarter.RunAsync<TInput, TOutput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.IWorkflowStarter.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
+Penghou.Zhinu.IWorkflowStarter.StartHandleAsync<TInput, TOutput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowHandle<TOutput>!>!
 Penghou.Zhinu.IWorkflowStep<TInput, TOutput>
 Penghou.Zhinu.IWorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.IWorkflowStepLease<TStep>
@@ -702,6 +702,8 @@ Penghou.Zhinu.WorkflowRegistrationException
 Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
 Penghou.Zhinu.WorkflowRun.AuthorizationBindingId.get -> string?
 Penghou.Zhinu.WorkflowRun.AuthorizationBindingId.init -> void
+Penghou.Zhinu.WorkflowRun.AuthoritySubjectBinding.get -> string?
+Penghou.Zhinu.WorkflowRun.AuthoritySubjectBinding.init -> void
 Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.get -> string?
 Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.init -> void
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
@@ -865,3 +867,6 @@ Penghou.Zhinu.WorkflowRunSnapshot.ThroughDurableSequence.get -> long
 Penghou.Zhinu.WorkflowRunSnapshot.ThroughDurableSequence.init -> void
 Penghou.Zhinu.WorkflowRunSnapshot.Waits.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowWait!>!
 Penghou.Zhinu.WorkflowRunSnapshot.Waits.init -> void
+Penghou.Zhinu.WorkflowEngine.RunAsync<TInput, TOutput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowEngine.StartAsync<TInput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Guid>!
+Penghou.Zhinu.WorkflowEngine.StartHandleAsync<TInput, TOutput>(string! workflowName, string! workflowVersion, TInput input, System.Guid? workflowRunId = null, System.DateTimeOffset? deadline = null, object? metadata = null, string? authoritySubjectBinding = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Penghou.Zhinu.WorkflowHandle<TOutput>!>!

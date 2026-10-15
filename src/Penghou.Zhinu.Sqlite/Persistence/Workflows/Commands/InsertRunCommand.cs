@@ -12,6 +12,7 @@ internal sealed class InsertRunCommand
     {
         if ((run.AuthorizationProviderId is null) != (run.AuthorizationBindingId is null))
             throw new WorkflowAuthorizationException("Protected runs must persist provider and binding IDs together.");
+        ValidateAuthoritySubjectBinding(run.AuthoritySubjectBinding);
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             INSERT INTO workflow_runs
             (id, workflow_name, workflow_version, status, input_json,
@@ -19,14 +20,14 @@ internal sealed class InsertRunCommand
              updated_at, completed_at, deadline, metadata_json, parent_run_id,
              source_run_id, trace_id, lease_owner, lease_expires_at,
              definition_fingerprint, authorization_provider_id,
-             authorization_binding_id)
+             authorization_binding_id, authority_subject_binding)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
              $updatedAt, $completedAt, $deadline, $metadataJson, $parentRunId,
              $sourceRunId, $traceId, $leaseOwner, $leaseExpiresAt,
              $definitionFingerprint, $authorizationProviderId,
-             $authorizationBindingId);
+             $authorizationBindingId, $authoritySubjectBinding);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -70,5 +71,17 @@ internal sealed class InsertRunCommand
             SqliteStoreSupport.DbValue(run.DefinitionFingerprint));
         command.Parameters.AddWithValue("$authorizationProviderId", SqliteStoreSupport.DbValue(run.AuthorizationProviderId));
         command.Parameters.AddWithValue("$authorizationBindingId", SqliteStoreSupport.DbValue(run.AuthorizationBindingId));
+        command.Parameters.AddWithValue("$authoritySubjectBinding", SqliteStoreSupport.DbValue(run.AuthoritySubjectBinding));
+    }
+
+    /// <summary>
+    /// The binding is opaque to the store: boundedness only, never interpreted.
+    /// Null means the run carries no authority identity.
+    /// </summary>
+    private static void ValidateAuthoritySubjectBinding(string? binding)
+    {
+        if (binding is null) return;
+        if (string.IsNullOrWhiteSpace(binding) || binding.Length > 4096 || binding.Any(char.IsControl))
+            throw new WorkflowAuthorizationException("An authority-subject binding must be a bounded non-empty token.");
     }
 }

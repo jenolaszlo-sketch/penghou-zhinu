@@ -1,6 +1,7 @@
 #nullable enable
 *REMOVED*const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 5 -> int
-const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 6 -> int
+*REMOVED*const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 6 -> int
+const Penghou.Zhinu.Sqlite.ZhinuSqliteSchema.CurrentVersion = 7 -> int
 Penghou.Zhinu.Sqlite.SqliteExternalOperationRepository
 Penghou.Zhinu.Sqlite.SqliteExternalOperationRepository.AcquireAsync(System.Guid operationId, string! ownerId, long leaseGeneration, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
 Penghou.Zhinu.Sqlite.SqliteExternalOperationRepository.CompleteAsync(System.Guid operationId, string! ownerId, string? payloadJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
