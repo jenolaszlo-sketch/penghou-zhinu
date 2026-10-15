@@ -129,11 +129,15 @@ packages and applications.
 - Evidence, provenance, and artifact-revision tracking
 - Retries, timeouts, leases, fencing, compensation, and recovery
 - Events, progress, tracing, metrics, and audit export
+- Planned generic durable activity-group containment, membership, provenance
+  and aggregate inspection; ordinary activities retain execution authority
 
 ### Adjacent packages own
 
 - Fuwen syntax, canonical workflow IR, type checking, semantic admission,
   immutable plan revisions, and plan comparison
+- User-defined macro expansion and its mapping through `Penghou.Fuwen.Zhinu`;
+  Zhinu core never interprets macro definitions or methodology names
 - Natural-language or AI-assisted plan proposal
 - Model-provider integrations
 - Tolerant repair of malformed model output
@@ -174,6 +178,150 @@ Product harness such as Solo
    evidence record should be explainable after execution.
 8. **No silent policy weakening.** Compilers and repair loops may correct syntax
    but may not remove or relax requirements merely to produce a valid artifact.
+9. **Methodology neutrality.** Coding, TDD, BDD, research and business procedures
+   are user/host choices expressed through ordinary activities and policies.
+   Examples and optional libraries receive no privileged runtime semantics.
+
+## Planned runtime milestone — hierarchical durable activity groups (ZG)
+
+Added **2026-10-15** from the macro activities/activity groups proposal. The
+repository-reconciled design/handoff checkpoint is prepared; runtime implementation
+remains **planned**. Read the [design](docs/activity-groups-design.md),
+[implementation stages](docs/activity-groups-implementation-plan.md),
+[qualification matrix](docs/activity-groups-qualification.md), and
+[next-agent handoff](docs/activity-groups-handoff.md).
+This is a follow-on to the
+existing durable runtime and read-only graph surface, not a new current release
+or Hufu qualification gate. Pair it with
+[Fuwen reusable macro activities (FM)](../Penghou.Fuwen/docs/roadmap.md#planned-composition-milestone--user-defined-reusable-macro-activities-fm).
+
+An `ActivityGroup` contains activities and child groups. Initial kinds are
+`Logical` (explicit organization) and `Macro` (an author-level macro invocation).
+Kinds describe provenance/presentation only. All macro names, including names
+unknown to Penghou, use the same generic contract. Groups do not become opaque
+executable activities, child workflows, separate engines, scheduler edges or
+authorization grants. Existing activities remain the durable execution primitive.
+
+**Resolved baseline:** optional group forest and optional direct innermost
+membership; no persisted synthetic root or activity parent hierarchy. Persist
+static definitions separately from run-local occurrences using existing loop/
+fan-out coordinates. Retry/lease changes do not create occurrences; step revisions
+retain separate membership history. Child runs retain their own group trees.
+Reuse `StepStatus` with read-only reasons/coverage/expansion fields; Blocked is a
+projection reason, not a new durable step state. Known work is not necessarily
+total work. The design specifies status precedence and required closure evidence.
+
+Current source already has atomic run snapshots, durable watermarks and event
+pages. Reuse those read patterns. The inspected committed baseline uses SQLite
+schema 6 and additive 5-to-6 migration; concurrent authority-subject edits now
+occupy schema 7 in the working tree. Reconcile that work and reserve the next
+free group schema (provisionally 8), preserving the migration chain rather than
+requiring destructive recreation. Fuwen still references Zhinu 0.1.0-preview.14, and its fan-out body
+currently shares one durable item step. Package adoption and a versioned adapter
+extension (or explicit interim rejection) are prerequisites to claiming
+independently durable macro children inside fan-out.
+
+Implementation stages now refine the original broad ZG-0/1/2 buckets:
+
+- [x] **ZG-0 design/handoff:** architecture map, identity/occurrence design,
+  child boundary, status/progress rules, compatibility and qualification plan.
+  This checks document preparation only, not runtime test evidence.
+- [ ] **ZG-1:** definitions, optional membership contract and validation.
+- [ ] **ZG-2:** runtime occurrence coordinates and claim mapping.
+- [ ] **ZG-3:** additive persistence, expansion evidence and restart.
+- [ ] **ZG-4:** coherent query model and progressive drill-down.
+- [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
+- [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
+- [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
+
+Implement ZG-2/3 as a durable vertical, and the ZG-5 reducer before freezing ZG-4
+read DTOs. The detailed scope checklist below remains useful, but its headings
+are broad requirement areas rather than the new stage identifiers.
+
+#### Shared identity, state and compatibility requirements
+
+- [ ] Define group identity, parent identity, kind, display name, ordered child
+  membership and activity ownership (conceptually `Activity.GroupId` and
+  `ActivityGroup.ParentGroupId`). Reject containment cycles, dangling parents,
+  duplicate membership and cross-run/generation attachment. Keep containment
+  separate from the dependency graph and code-first child-run relationships.
+- [ ] Retain macro name, exact version/definition identity, invocation identity,
+  source references and safe parameter summaries as opaque bounded provenance.
+  Group identity is distinct from macro provenance; logical groups have none.
+  No Fuwen or methodology-specific interpretation belongs in Zhinu core.
+- [ ] Separate static group definitions from runtime occurrences in loop
+  iterations and keyed fan-out. Bind memberships to the admitted plan, run,
+  generation and existing activity/step revision identities so retries, restart,
+  supersession and late results cannot attach to another occurrence. Share this
+  mapping with FM-0 rather than inventing a competing execution identity scheme.
+- [ ] Specify a deterministic aggregate-status table before implementation.
+  Candidate display states are Pending, Running, Waiting, Blocked, Failed,
+  Completed and Cancelled; map them explicitly from existing durable statuses,
+  without replacing `StepStatus` or authorizing transitions. Cover precedence
+  for mixed running/failed/waiting descendants, empty groups, inactive branches,
+  retries, cancellation, superseded work and unfinished dynamic expansion.
+  Completion cannot mean merely that all currently materialized children ended.
+- [ ] Define count/current-work semantics for nested and parallel work, including
+  multiple active descendants and unknown totals. Avoid double-counting group
+  containers or treating skipped/unchosen work as successful execution. Expose
+  the durable snapshot revision/watermark so status and children are coherent.
+- [ ] Decide versioned persistence/query contracts and upgrade behavior. Preserve
+  legacy ungrouped execution and historical recovery; an implicit read-only root
+  is permitted if appropriate, but do not require a destructive data recreation
+  to use the feature. Reject unsupported versions explicitly. Set resource
+  budgets for depth/node count/query pages without an arbitrary shallow nesting
+  restriction or unbounded recursive traversal.
+
+#### Durable model and runtime integration requirements
+
+- [ ] Expose a generic group definition/membership API for code-first callers
+  and adapters, with nested Logical/Macro groups and stable activity ownership.
+  Fuwen supplies expanded structure through its adapter; no model is needed to
+  interpret it and no macro-name registry is required in Zhinu.
+- [ ] Persist hierarchy and macro provenance so the full tree can be rebuilt
+  after process loss. Make registration/materialization idempotent and commit
+  membership consistently with the durable work it describes; reject changed
+  definitions under an existing identity rather than repairing them silently.
+- [ ] Preserve normal scheduling, retries, checkpoints, evidence, authorization,
+  fencing, external-operation reconciliation and compensation semantics.
+  Groups confer no inherited capability or completion/acceptance authority.
+- [ ] Reconstruct deterministic aggregate status from authoritative durable
+  facts, with a recoverable projection if cached. Group summaries and diagnostic
+  events never become a second execution truth or override descendant failures.
+
+#### Inspection, recovery and cross-repository qualification requirements
+
+- [ ] Extend runtime/tree queries and the existing read-only run graph projection
+  with parent/child membership, kind, display name, provenance, aggregate and
+  child state. Provide bounded traversal/pagination that can reconstruct the
+  complete tree and distinguish unknown/truncated structure from an empty group.
+- [ ] Preserve hierarchy in observability/evidence correlation and recovery
+  inspection. Apply existing authorization/redaction boundaries to parameter
+  summaries, labels, provenance and payload references; do not fetch raw payloads
+  merely to display the tree. Extend the existing export seam, not a new event log.
+- [ ] Supply sufficient generic data for a product UI to collapse/expand logical
+  work, macro invocations and review/loop iterations, and optionally display
+  `MacroName@Version`. The UI need not know any methodology. Full UI delivery
+  remains with product hosts under Phase 8.
+- [ ] Pass store conformance/process-loss tests for nested group registration,
+  activity membership, loop/fan-out occurrences, retry/restart, mixed aggregate
+  states and legacy ungrouped runs. Reopen must preserve hierarchy, provenance
+  and child state without repeating committed effects or changing authority.
+- [ ] Close the shared FM/ZG qualification with supervised coding/probe-and-verify,
+  TDD/BDD and a domain-specific approval workflow, repeated and nested macros,
+  and arbitrary user-defined names. The same generic runtime representation
+  executes each; invalid/missing hierarchy support must not silently flatten it.
+
+Delivery order is now specified in the implementation plan above. FM-0 consumes
+the resolved runtime contract; FM-2 closes with ZG-6/7. Compiler expansion alone
+does not satisfy durable hierarchy. The design resolves choices in this checklist;
+unchecked entries remain implementation/qualification obligations.
+
+Deferred follow-ons: group pause/resume, cancel, eligible-failure retry,
+aggregate evidence views, richer progress summaries and operator control scopes.
+Each control needs explicit descendant/child-run scope, authorization, idempotent
+commands, fencing and reconciliation with existing run/generation controls.
+They are not implied by group kinds or required for the initial milestone.
 
 ## Adaptive workflow evolution
 
@@ -201,10 +349,10 @@ atomically fence the old generation and establish the new active generation in
 Zhinu's authoritative store. Cross-store evidence uses outbox/forward
 reconciliation; it must not weaken this single-store ownership invariant.
 
-The initial evolution milestone is (**first slice landed 2026-09-27:**
-instance/generation persistence with atomic activation; pause, quiescence,
-transition preview, reuse/invalidation maps, dispositions, and compensation
-integration remain open):
+The initial evolution milestone began with instance/generation persistence and
+atomic activation on **2026-09-27**. The dated item-level notes below record
+subsequent store, calculator and engine work; their existence does not establish
+an end-to-end admitted Fuwen transition or artifact-reuse authorization.
 
  1. Persist workflow-instance identity separately from run identity, plus an
     immutable generation record bound to an admitted Fuwen revision and
@@ -357,8 +505,10 @@ seven reproduced defects) was implemented in packages ZH-00 through ZH-11:
   retention, durable parked waits (signal/retry/delay/child) with persisted
   deadlines, operator CLI, event export cursors, classified retry policies, and
   explicit agent restart semantics.
-- The transition preview and reuse/invalidation maps (item 4 and the second
-  half of item 7) remain Fuwen-blocked.
+- The transition-preview calculator and computed reuse/invalidation maps are
+  recorded as complete in items 4 and 7. The remaining Fuwen dependency is the
+  adapter/activation integration, including structural-path-to-step mapping
+  and authorized reuse; a calculated or recorded preview alone cannot grant it.
 
 ## Terminology
 
@@ -925,6 +1075,11 @@ runtime policy enforcement, admission-receipt verification, capability checks,
 freshness decisions based on durable state, and diagnostics for rejected
 runtime transitions. Do not rebuild a second static workflow compiler here.
 
+The graph/static-policy and compiler-repair deliverables retained below are
+historical cross-stack requirements owned by Fuwen. Zhinu consumes the admitted
+result and validates runtime facts. Build/test/review examples are host-selected
+policies, not universally required stages or special macro semantics.
+
 Implement deterministic policies over graphs, capabilities, types, evidence,
 and provenance.
 
@@ -1050,6 +1205,9 @@ Exit criteria:
 ## Phase 6 — Coding workflow vertical
 
 Use a coding harness as the first demanding product integration.
+Its catalogue, mandatory phases and reference methodology are optional product
+choices; neither this vertical nor a shipped macro library prescribes a workflow
+for every Zhinu user. ZG qualification also includes non-coding procedures.
 
 Reference workflow:
 
@@ -1175,6 +1333,14 @@ rank models, or learn workflow policy.
   The authoritative dependency assessment lives in Marang's
   [M5 execution-evidence contract](https://github.com/jenolaszlo-sketch/marang/blob/main/docs/m5-execution-evidence-contract.md).
 
+  **Local-source update 2026-10-15:** the 0.2.0-preview.3 candidate now includes
+  `IWorkflowSnapshotReader`/`IWorkflowSnapshotRepository`, atomic snapshots with
+  `ThroughDurableSequence`, durable/advisory classification and bounded event
+  pages. Generation/operation transitions remain snapshot-only by design. See
+  [candidate release notes](docs/releases/0.2.0-preview.3.md). This resolves the
+  older source-contract gap for this checkout; publication and consumer adoption
+  still require their own evidence. ZG extends these existing seams.
+
 Non-goals are retrospective interpretation, model reputation, context
 selection, procedural learning, or automatic plan mutation. Those belong to
 Hongxian projections, Cangjie/Marang context surfaces, Fuwen proposals, and
@@ -1188,6 +1354,8 @@ Potential work:
 
 - Artifact registry and compatibility tooling
 - Read-only workflow visualizer
+- Hierarchical collapse/expand and provenance views over ZG tree queries;
+  group controls follow only after their separate runtime contracts are proven
 - Policy and evidence inspector
 - Intervention queue for runs requiring attention
 - OpenTelemetry dashboards
@@ -1227,7 +1395,13 @@ and architecture roadmap.
 
 ## Near-term priorities
 
-Before beginning natural-language compilation:
+The numbered list below preserves the original cross-stack sequencing, not an
+assertion that all work is still missing. Fuwen now owns canonical IR, source
+and static graph/type/mandatory-gate validation (items 1, 2 and 5); Zhinu owns
+activation, runtime checks and durable execution. Instance/generation persistence
+from item 9 has landed as recorded above. Current release priorities remain the
+Hufu qualification gates at the top; the new follow-on FM/ZG milestone starts
+with the shared contract and does not require natural-language compilation.
 
 1. Write two hand-authored `WorkflowArtifact` examples.
 2. Define the minimal IR and its canonical JSON representation.

@@ -1,0 +1,270 @@
+# Activity groups: staged implementation plan
+
+Date: 2026-10-15. Status: prepared, implementation not started.
+Normative baseline: [design](activity-groups-design.md).
+Proof requirements: [qualification](activity-groups-qualification.md).
+Start here on a fresh coding session: [handoff](activity-groups-handoff.md).
+
+## Stage mapping and order
+
+The original roadmap's broad ZG-0/1/2 buckets meant design, durable integration,
+and inspection/qualification. This plan refines them into ZG-1 through ZG-7;
+the identifiers below supersede that broad numbering for implementation tracking.
+ZG-0 is the documentation/design checkpoint, not a runtime feature completion.
+
+Recommended order:
+
+```text
+ZG-0 design -> ZG-1 contracts -> ZG-2 identity + ZG-3 durable vertical
+                                      -> ZG-5 pure projection -> ZG-4 queries
+                                      -> ZG-6 Fuwen adapter -> ZG-7 qualification
+```
+
+Identity and persistence are one incremental vertical: do not publish a
+memory-only group feature and call it durable. Define/test the state reducer
+before finalizing read DTOs so the API can represent unknown totals and mixed
+states. Fuwen package compatibility investigation can occur early; adoption
+waits for a qualified group runtime. No group feature is enabled by default.
+
+All new file names below are proposed; existing integration anchors are exact.
+Every stage must update public API baselines where applicable, preserve existing
+tests, and report supported versus rejected shapes explicitly.
+
+## ZG-1 — Definitions, optional membership contract and validation
+
+**Scope:** immutable manifest/definition records, Logical/Macro kinds, safe
+provenance, optional registration capability, bounded forest validation, versioned
+manifest encoding and golden vectors. Specify Work/Control roles and nullable
+membership DTOs without changing existing step execution.
+
+**Likely components:** new `src/Penghou.Zhinu/ActivityGroups/` records/validator;
+optional companion to `IWorkflowRegistration`/`WorkflowRegistration.cs`;
+`StepOptions.cs` additive metadata contract; `PublicAPI.Unshipped.txt` in changed
+packages. Do not add required group members to existing interfaces or constructors.
+
+**Invariants:** no persisted synthetic root; standalone steps remain valid;
+direct innermost ownership only; parent links are group links; source strings
+are data; unknown macro names require no runtime extension. Manifest mutation
+after registration cannot change canonical bytes or validated structure.
+
+**Tests/probes:** Q01-Q09 and Q24-Q26; deserialize/serialize an old definition
+and compare its existing fingerprint; compile an unchanged external custom
+store/registration consumer. Probe depth and expansion-size limits iteratively,
+including malformed forests and sensitive-provenance rejection.
+
+**Exit:** positive/negative manifest vectors, exact public API diff, all legacy
+unit/public-surface tests green, and groups still disabled without a group-capable
+store. Record exact limits and canonical encoder version in the design.
+
+**Dependencies:** ZG-0. **Non-goals:** parser syntax, registry/library distribution,
+execution scheduling, schema installation, group controls or UI.
+
+## ZG-2 — Occurrence coordinates and claim mapping
+
+**Scope:** deterministic occurrence encoder, explicit parent occurrence mapping,
+run-local Work/Control membership, current/historical revision selection. Integrate
+metadata plumbing without changing step keys, operation IDs or retry policy.
+
+**Likely components:** new `ActivityGroups/` occurrence/coordinate helpers;
+`WorkflowContext.cs` claim creation; `StepClaimRequest.cs`; `WorkflowStepRun.cs`
+optional projection fields; `WorkflowLoopIteration.cs`, `WorkflowContext.Loops.cs`,
+`DurableLoopIdentity.cs`, `WorkflowLoopReference.cs`; native keyed fan-out and
+`StartChildCoreAsync`; `Context/ChildRunCoordinator.cs` boundary propagation.
+
+**Invariants:** same tuple after process loss; no attempt/lease in occurrence ID;
+new step revision retains history; sibling fan-out tasks cannot inherit one
+another's group metadata. Prefer explicit immutable execution scope passing;
+if an async-local convenience API is added, prove isolation across fan-out and
+exception paths. Nested-loop `StepOptions` copies must propagate group metadata
+without dropping existing authorization or retry settings.
+
+**Tests/probes:** Q10-Q16, Q21-Q23, Q27; golden coordinates include nested loops,
+typed fan-out keys, explicit positional keys, repeated definitions under different
+parents and sibling reorder. Trace both `:start` and `:wait` membership and verify
+child IDs and operation keys are byte-for-byte unchanged for equivalent old runs.
+
+**Exit:** deterministic identities and complete claim-path map; every path either
+supports optional membership or rejects it before work. Land with the smallest
+ZG-3 transaction proof; do not expose a process-local-only runtime capability.
+
+**Dependencies:** ZG-1. **Non-goals:** arbitrary C# introspection, step-key parsing
+in clients, new activity parent links, widening supported Fuwen control flow.
+
+## ZG-3 — Additive persistence, expansion evidence and restart
+
+**Scope:** optional store capability; run-bound manifest installation; occurrence,
+membership and expansion-evidence persistence; transactional migration; restart,
+fork/child creation and retention integration. Implement a minimal nested static
+group vertical first, then loops/fan-out using the same durable contracts.
+
+**Likely components:** new core `IWorkflowGroupRepository` capability and SQLite
+`Persistence/Groups/` commands/queries; `SqliteDatabase.cs`,
+`ZhinuSchemaCompatibilityException.cs`, `SqliteWorkflowStore.cs`;
+`SqliteStepRepository.Claims.cs`, `.Restart.cs`, `.Fork.cs`;
+`Persistence/Workflows/Commands/InsertRunCommand.cs`, `FinishRunCommand.cs`,
+`PurgeRunsCommand.cs`; `WorkflowEventTypes.cs`; runtime start/child/fork admission.
+Extend `src/Penghou.Zhinu.Testing/WorkflowStoreConformanceSuite.cs` with an explicitly
+reported optional group-capability suite; legacy stores remain usable ungrouped.
+
+**Invariants:** atomic step revision/membership; same-run foreign keys; conflict
+on changed re-registration; stale writer cannot materialize/seal; expansion
+closure refers to current boundary revisions. Crash between run creation and
+manifest install cannot dispatch group-bearing work without the manifest.
+Definitions and memberships are readable without replaying code. Do not infer
+fan-out closure from currently persisted item rows.
+
+**Tests/probes:** Q17-Q23, Q28-Q36, Q40-Q42; actual process termination around
+manifest install, occurrence+claim commit, fan-out enumeration seal, loop commit,
+group closure, selective restart and migration version bump. Extend
+`tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs` and the existing fault-injection
+decorator; an in-process reopen alone is insufficient. Verify persisted rows and
+effect receipts with a fresh process before allowing recovery to execute.
+
+**Exit:** schema-6 and upstream authority-schema-7 fixtures upgrade without loss;
+schema 5 still upgrades through the existing path; old binaries reject new schema;
+interrupted migrations roll
+back; grouped and ungrouped recovery meet the same fencing/replay guarantees.
+No automatic root/membership backfill. Include unique/foreign-key constraint and
+concurrent idempotent-registration evidence.
+
+**Dependencies:** ZG-1/2 and reconciliation of concurrent authority-subject work.
+Schema 7 is already used by that working-tree change; groups provisionally target
+8 after it lands, subject to a fresh version check. Preserve its nullable binding
+and migration. **Non-goals:**
+universal migration from unsupported historical schemas, event sourcing,
+group pause/cancel/retry, a second control-flow interpreter.
+
+## ZG-5 — Pure aggregate state and progress (before the public reader)
+
+**Scope:** deterministic reducer implementing design section 6, Work/Control
+counts, unknown totals, current versus historical occurrences, closure validity,
+safe approval and existing wait reasons. Reuse `StepStatus`, do not persist
+derived group status/counts in the first implementation.
+
+**Likely components:** new `ActivityGroups/GroupStateProjection.cs` and projection
+records; reuse `RunDiagnosis.cs`, `WorkflowWait.cs`, `WorkflowAuthorization.cs`,
+`WorkflowLoopProgress.cs` concepts; provider-neutral snapshot input DTOs.
+
+**Invariants:** failed current control work cannot disappear behind a progress
+filter; recovered old failures do not poison current status; containers/attempts
+are not counted as activities; no success while expansion is open; cancellation
+outside a completed group does not rewrite that group's completed history.
+
+**Tests/probes:** Q14-Q20, Q37-Q39; table-driven complete input snapshots for every
+ordered rule, sibling-order permutation invariance, nested versus flattened-leaf
+equivalence, parent/child count conservation, fixed clock/expired lease cases.
+Probe same three completed children with Open versus Sealed expansion and require
+different completion/total results.
+
+**Exit:** every design table row has positive and mixed-state cases; reducer does
+no I/O, payload decoding, model calls or scheduling. Missing facts produce an
+explicit incomplete projection. Freeze reason codes before exposing the reader.
+
+**Dependencies:** ZG-1/2 contracts, ZG-3 evidence model; pure tests can start early.
+**Non-goals:** replacing run/step state machines, interpreting Fuwen item payloads,
+acceptance/quality judgments, group-specific cancellation or retry behavior.
+
+## ZG-4 — Coherent query and drill-down surface
+
+**Scope:** optional engine/store group reader, root forest plus ungrouped members,
+direct member/child queries, bounded progressive traversal, safe provenance and
+read-only child-run links. Implement snapshot-token expiration/resync explicitly.
+
+**Likely components:** group reader interfaces; `WorkflowEngine.cs`;
+`SqliteWorkflowStore.ReadRunSnapshotCoreAsync` / `BuildSnapshotNodeAsync` patterns;
+same-transaction group/approval/step queries; `RunSnapshotOptions.cs` only through
+additive compatible options. Reuse `IWorkflowSnapshotRepository` conventions.
+CLI integration may extend `CliApp.cs`/`CliOutput.cs`, but a UI is not required.
+
+**Invariants:** state, counters and hierarchy share one boundary; do not read
+approval state outside it. Event-page watermark is not a pagination snapshot.
+No client SQL joins or guessed key parsing. Complete summaries cannot be
+calculated from a truncated page. Child trees never cross parent group ownership.
+
+**Tests/probes:** Q37-Q42; concurrent writer during snapshot; two-page traversal
+while a generation changes without a stream event; expired/lost snapshot token;
+limits, cancellation, absent run/occurrence, unsupported store, deleted run and
+unauthorized provenance. Check SQL plans/indexes for bounded child/member reads.
+
+**Exit:** a generic test client reconstructs the complete supported tree by
+drill-down, keeps ungrouped steps, preserves snapshot coherence and recognizes
+explicit resync/limits. Source-independent inspection works after process restart.
+
+**Dependencies:** ZG-3/5. **Non-goals:** visual styling, web UI, exposing raw inputs,
+long-lived SQLite read transactions or a persistent projection authority.
+
+## ZG-6 — Fuwen metadata handoff and package qualification
+
+**Scope:** consume a pinned group manifest with ordinary expanded workflow
+structure; map identities and safe provenance through the existing public step
+mapper; preflight exact runtime/store capabilities. This stage requires Fuwen FM
+implementation; a synthetic metadata fixture alone cannot close it.
+
+**Likely sibling components:** Fuwen `src/Penghou.Fuwen/` IR companion metadata;
+`Penghou.Fuwen.Compiler/` admission/canonicalization;
+`Penghou.Fuwen.Zhinu/FuwenZhinuWorkflowFactory.cs`, `FuwenZhinuStepKeys.cs`,
+`FuwenZhinuStepMapper.cs`, `FuwenZhinuSequentialInterpreter.cs`,
+`FuwenRepeatCoordinator.cs`, `FuwenFanOutCoordinator.cs` and adapter csproj.
+Zhinu consumes generic records only; no Fuwen package enters core.
+
+**Invariants:** preserve expanded hierarchy, exact admitted pin, per-step
+authorization and existing identity; same unknown macro names work identically.
+No old package is assumed to implement a new optional interface. Every declared
+macro child claimed independently durable must map to its own durable boundary.
+
+**Tests/probes:** Q43-Q47; inspect resolved NuGet closure, upgrade/legacy consumer
+probe, mapper exactness against real runs, altered macro definition after start,
+restart without compiler/library access, unsupported runtime rejection before
+provider calls. Run two styles plus AlienProcess42.
+
+**Required fan-out decision:** preserve old fan-out plans with their existing
+item boundary. For macro-bearing per-child durable fan-out, implement and qualify
+a versioned adapter lowering with new inner durable boundaries, or explicitly
+reject the shape. The latter is an interim limitation and leaves Q45/full FM-ZG
+completion open. Do not change semantics of historical item keys in place.
+
+**Exit:** compatible candidate package closure and exact mapping/recovery evidence;
+capability matrix truthfully lists any rejected combinations. Full stage requires
+the declared supported macro subset to pass the cross-repository contract.
+
+**Dependencies:** ZG-1/2/3/4/5 and Fuwen FM-0/1/2. **Non-goals:** redesigning
+Fuwen's parser here, Hufu/provider authority changes, hidden methodology behavior,
+unrelated inference hardening, publication without the normal release process.
+
+## ZG-7 — Cross-repository qualification and handoff closure
+
+**Scope:** execute the matrix on exact candidate commits/packages, native and
+Fuwen fixtures, both target frameworks and OS CI jobs, independent process-loss
+probes, API/package closure and legacy persisted-run checks.
+
+**Likely components:** existing Zhinu tests/ProcessProbe/Testing conformance,
+Fuwen adapter/compiler tests, `.github/workflows/ci.yml`, existing `eng/` package
+verification scripts, new `docs/qualification/activity-groups/` evidence ledger.
+
+**Invariants:** tests distinguish definition presence, observed step state and
+semantic outcomes; no unsupported shape is silently skipped as a pass. No claims
+of exactly-once remote effects beyond existing idempotency/reconciliation.
+
+**Tests/probes:** all Q01-Q47, including external fake effect receipts before and
+after process termination; independent reopened read before executing recovery;
+old-style public API/binary consumer and schema migration fixtures.
+
+**Exit:** every required case passes or is explicitly documented as blocking the
+full milestone; artifacts record commit, package hashes, schema, TFM, OS, command,
+exit code, assertions and logs. Update roadmap/capability docs from evidence.
+
+**Dependencies:** all preceding stages and relevant Fuwen FM functionality.
+**Non-goals:** UI delivery, new methodologies, group operational controls,
+claiming publication from local packing, automatically closing unrelated gates.
+
+## Immediate next implementation checkpoint
+
+Start ZG-1 only: add immutable bounded group manifest/forest validation and
+golden identity/compatibility fixtures in core tests. Confirm nullable/no-root
+semantics and freeze the additive capability API sketch. Keep runtime behavior,
+database version and package references unchanged at this first checkpoint.
+Review the contract diff and negative tests before proceeding into ZG-2/3.
+
+ZG-0 documentation is ready when all four documents and roadmap links are
+consistent. That readiness is not a green runtime test report or completion of
+any ZG-1+ checkbox.
