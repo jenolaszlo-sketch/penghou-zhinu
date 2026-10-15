@@ -1,7 +1,13 @@
 # Activity groups: next coding agent handoff
 
 Prepared 2026-10-15. This file is self-contained; no chat history is required.
-**Checkpoint: design and planning prepared; implementation has not started.**
+**Current checkpoint: ZG-1 annotation contracts implemented.** Read the
+[delivered contract](activity-groups-zg1.md) and
+[qualification](qualification/activity-groups/zg1.md) first. Runtime occurrences,
+persistence, attachment and queries remain ZG-2 onward. The historical repository
+snapshot below predates this implementation: its branch is
+`codex/zhinu-activity-groups`, based on `b7f1009` in the genuine worktree
+`C:/Users/Laszlos/source/repos/Solo/workstreams/zhinu-activity-groups`.
 
 ## Objective
 
@@ -23,7 +29,7 @@ SupervisedCoding, TDD or AlienProcess42 means. Do not implement UI in this work.
    [public API policy](public-api-policy.md), [releasing](releasing.md), and
    [preview.3 candidate notes](releases/0.2.0-preview.3.md).
 
-## Repository state and provenance
+## Historical documentation snapshot and provenance
 
 Repositories are siblings. Inspected local roots were
 `C:/Users/Laszlos/source/repos/Penghou.Zhinu` and
@@ -149,7 +155,7 @@ the unrelated ideas edit exists. Group documentation itself is committed.
 
 ## What to implement next
 
-Start **ZG-1**, not the whole feature at once:
+ZG-1's original checklist was:
 
 1. Establish a fresh baseline with the commands in the qualification document.
 2. Add immutable bounded manifest/definition/provenance records and forest
@@ -159,15 +165,17 @@ Start **ZG-1**, not the whole feature at once:
    baselines for actual additions. Keep group execution disabled until durable
    storage support is qualified.
 
-The next checkpoint is an inspectable ZG-1 diff with Q01-Q09/Q24-Q26 contract
-coverage, deterministic vectors and legacy public-surface tests green. At this
-checkpoint **do not change SQLite schema, runtime scheduling or package pins**.
-Then combine ZG-2/3 into a narrow durable vertical, implement the ZG-5 reducer
+That contract slice is now implemented; runtime attachment is deliberately only
+a documented capability sketch until durable support exists. Q01-Q09/Q24/Q26
+coverage is limited to the contract aspects identified in the evidence document;
+runtime versions of those cases remain open. Next combine ZG-2/3 into a narrow
+durable vertical, implement the ZG-5 reducer
 before freezing ZG-4 read DTOs, and finish ZG-6/7 with Fuwen.
 
-Remaining bounded decisions: exact canonical bytes/encoder golden vectors,
-public method/capability names, resource limits, read-cache TTL/capacity and the
-free next schema number. Fuwen owns syntax, argument/output semantics and its
+Manifest v1 canonical bytes/golden vectors and fixed resource ceilings are now
+specified by ZG-1. Remaining decisions: occurrence encoder vectors, public runtime
+method/capability names, read-cache TTL/capacity and the free next schema number.
+Fuwen owns syntax, argument/output semantics and its
 admission binding. Do not quietly settle those by adding methodology primitives.
 
 ## What must remain green and how to prove progress
@@ -182,9 +190,11 @@ Terminate before/after commits, reopen in a fresh process, inspect before execut
 recovery, then resume and compare IDs/state/closure/provenance/effect receipts.
 An in-process reopen or mocked store alone does not prove the acceptance gate.
 
-Documentation preparation verified links, referenced source/test paths, Markdown
-structure and diff whitespace. It did **not** run the runtime suites or implement
-any group behavior. No test count in older roadmap notes is a fresh baseline.
+Initial documentation preparation verified links, referenced source/test paths,
+Markdown structure and diff whitespace without running runtime suites. The later
+ZG-1 [qualification](qualification/activity-groups/zg1.md) records the current
+passing suite and package probes; no count in older roadmap notes substitutes
+for that evidence. Runtime group behavior is still not implemented.
 
 Do not redesign workflow control flow, inference protocols, Hufu authority,
 artifact reuse, compensation, child identity, existing step keys or historical

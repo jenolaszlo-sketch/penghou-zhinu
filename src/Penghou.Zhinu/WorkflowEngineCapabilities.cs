@@ -3,10 +3,18 @@ namespace Penghou.Zhinu;
 /// <summary>Capabilities used by execution hosts and schedulers.</summary>
 public interface IWorkflowRuntime
 {
+    /// <summary>The original binary contract, implemented by existing runtimes.</summary>
+    Task<Guid> StartAsync<TInput>(string workflowName, string workflowVersion,
+        TInput input, Guid? workflowRunId, DateTimeOffset? deadline,
+        object? metadata, CancellationToken cancellationToken);
+
     Task<Guid> StartAsync<TInput>(string workflowName, string workflowVersion,
         TInput input, Guid? workflowRunId = null, DateTimeOffset? deadline = null,
         object? metadata = null, string? authoritySubjectBinding = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default) =>
+        authoritySubjectBinding is null
+            ? StartAsync(workflowName, workflowVersion, input, workflowRunId, deadline, metadata, cancellationToken)
+            : throw new NotSupportedException("This runtime does not support authority-subject bindings.");
     Task ExecuteAsync(Guid workflowRunId, CancellationToken cancellationToken = default);
     Task<int> RunAvailableAsync(CancellationToken cancellationToken = default);
 }
@@ -42,19 +50,46 @@ public interface IWorkflowAdministration
 /// <summary>Capabilities for starting typed workflow runs.</summary>
 public interface IWorkflowStarter
 {
+    /// <summary>The original binary contract, implemented by existing starters.</summary>
+    Task<Guid> StartAsync<TInput>(string workflowName, string workflowVersion,
+        TInput input, Guid? workflowRunId, DateTimeOffset? deadline,
+        object? metadata, CancellationToken cancellationToken);
+
     Task<Guid> StartAsync<TInput>(string workflowName, string workflowVersion,
         TInput input, Guid? workflowRunId = null, DateTimeOffset? deadline = null,
         object? metadata = null, string? authoritySubjectBinding = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default) =>
+        authoritySubjectBinding is null
+            ? StartAsync(workflowName, workflowVersion, input, workflowRunId, deadline, metadata, cancellationToken)
+            : throw new NotSupportedException("This starter does not support authority-subject bindings.");
+
+    Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline,
+        object? metadata, CancellationToken cancellationToken);
+
     Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
         string workflowName, string workflowVersion, TInput input,
         Guid? workflowRunId = null, DateTimeOffset? deadline = null,
         object? metadata = null, string? authoritySubjectBinding = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default) =>
+        authoritySubjectBinding is null
+            ? StartHandleAsync<TInput, TOutput>(workflowName, workflowVersion, input,
+                workflowRunId, deadline, metadata, cancellationToken)
+            : throw new NotSupportedException("This starter does not support authority-subject bindings.");
+
+    Task<TOutput> RunAsync<TInput, TOutput>(string workflowName, string workflowVersion,
+        TInput input, Guid? workflowRunId, DateTimeOffset? deadline,
+        object? metadata, CancellationToken cancellationToken);
+
     Task<TOutput> RunAsync<TInput, TOutput>(string workflowName, string workflowVersion,
         TInput input, Guid? workflowRunId = null, DateTimeOffset? deadline = null,
         object? metadata = null, string? authoritySubjectBinding = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default) =>
+        authoritySubjectBinding is null
+            ? RunAsync<TInput, TOutput>(workflowName, workflowVersion, input,
+                workflowRunId, deadline, metadata, cancellationToken)
+            : throw new NotSupportedException("This starter does not support authority-subject bindings.");
 }
 
 /// <summary>Capabilities for querying run state, progress, and history.</summary>

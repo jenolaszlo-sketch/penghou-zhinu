@@ -1,6 +1,9 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-15. Status: **planned tests, not executed feature evidence**.
+Date: 2026-10-15. Status: **full runtime matrix planned; ZG-1 contracts qualified separately**.
+The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
+contract-level cases. The full runtime matrix below remains planned; contract
+fixtures do not prove persistence, occurrence identity, restart or group queries.
 Use the [design](activity-groups-design.md) and
 [stage plan](activity-groups-implementation-plan.md). Native Zhinu and Fuwen
 adapter profiles are separate: native support does not prove DSL support.

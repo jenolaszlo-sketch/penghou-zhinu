@@ -1,6 +1,8 @@
 # Activity groups: staged implementation plan
 
-Date: 2026-10-15. Status: prepared, implementation not started.
+Date: 2026-10-15. Status: ZG-1 annotation contracts implemented; ZG-2 onward
+remain planned. See the [delivered contract](activity-groups-zg1.md) and
+[checkpoint evidence](qualification/activity-groups/zg1.md).
 Normative baseline: [design](activity-groups-design.md).
 Proof requirements: [qualification](activity-groups-qualification.md).
 Start here on a fresh coding session: [handoff](activity-groups-handoff.md).
@@ -31,6 +33,12 @@ Every stage must update public API baselines where applicable, preserve existing
 tests, and report supported versus rejected shapes explicitly.
 
 ## ZG-1 — Definitions, optional membership contract and validation
+
+Delivered: immutable bounded definitions/provenance/membership values, forest
+validation, manifest v1 canonical bytes/digest and compatibility fixtures.
+The registration/store capability is a documented sketch only: no runtime API
+accepts metadata until the durable ZG-2/3 vertical can preserve it. No new
+required members, execution behavior, schema changes or package pins are included.
 
 **Scope:** immutable manifest/definition records, Logical/Macro kinds, safe
 provenance, optional registration capability, bounded forest validation, versioned
@@ -260,12 +268,12 @@ claiming publication from local packing, automatically closing unrelated gates.
 
 ## Immediate next implementation checkpoint
 
-Start ZG-1 only: add immutable bounded group manifest/forest validation and
-golden identity/compatibility fixtures in core tests. Confirm nullable/no-root
-semantics and freeze the additive capability API sketch. Keep runtime behavior,
-database version and package references unchanged at this first checkpoint.
-Review the contract diff and negative tests before proceeding into ZG-2/3.
+ZG-1's contract checkpoint is implemented and described in the linked contract
+and evidence documents. Next, implement deterministic occurrence identity with
+the smallest ZG-3 durable installation/membership vertical. Freeze the optional
+attachment API and fail-closed start/resume behavior together; do not attach
+manifests to an engine that cannot persist them.
 
 ZG-0 documentation is ready when all four documents and roadmap links are
-consistent. That readiness is not a green runtime test report or completion of
-any ZG-1+ checkbox.
+consistent. Its readiness alone does not qualify runtime behavior. ZG-1 contract
+verification does not complete any ZG-2+ runtime checkbox.

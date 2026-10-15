@@ -1,6 +1,8 @@
 # Durable activity groups: implementation design
 
-Date: 2026-10-15. Status: design checkpoint; no group implementation is claimed.
+Date: 2026-10-15. Status: ZG-1 annotation contracts implemented; runtime groups
+remain planned. The [ZG-1 contract](activity-groups-zg1.md) freezes manifest
+encoding/limits and records the boundary of the implemented slice.
 Read with the [implementation plan](activity-groups-implementation-plan.md),
 [qualification matrix](activity-groups-qualification.md) and
 [next-agent handoff](activity-groups-handoff.md). Decisions below are the proposed
@@ -449,9 +451,10 @@ Resolved here: optional forest, direct membership, definition/occurrence split,
 identity inputs, retry/restart behavior, child isolation, status precedence,
 unknown totals, sidecar evidence requirement, schema direction and reader model.
 
-Still to freeze with tests before public APIs: exact manifest encoding/digest
-golden vectors, overload/capability names, resource defaults, migration version
-availability and snapshot-cache limits. These are bounded engineering decisions,
+Manifest v1 encoding/digest vectors and resource defaults are now frozen in
+ZG-1. Still to freeze before the later public runtime APIs: occurrence encoding,
+overload/capability names, migration version availability and snapshot-cache
+limits. These are bounded engineering decisions,
 not permission to redesign execution semantics.
 
 Fuwen separately owns grammar, parameter/result contracts and its versioned

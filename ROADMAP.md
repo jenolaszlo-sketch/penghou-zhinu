@@ -227,7 +227,13 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-0 design/handoff:** architecture map, identity/occurrence design,
   child boundary, status/progress rules, compatibility and qualification plan.
   This checks document preparation only, not runtime test evidence.
-- [ ] **ZG-1:** definitions, optional membership contract and validation.
+- [x] **ZG-1:** immutable bounded definitions, optional membership values,
+  forest validation and manifest v1 canonical/digest vectors. See the
+  [contract](docs/activity-groups-zg1.md) and
+  [qualification](docs/qualification/activity-groups/zg1.md). Runtime attachment
+  remains gated on the durable ZG-2/3 vertical. No group execution or schema
+  change is included; qualification also restores pre-authority-binding binary
+  overloads discovered missing by the legacy consumer probe.
 - [ ] **ZG-2:** runtime occurrence coordinates and claim mapping.
 - [ ] **ZG-3:** additive persistence, expansion evidence and restart.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.

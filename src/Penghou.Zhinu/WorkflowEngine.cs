@@ -151,6 +151,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             this.logger);
     }
 
+    /// <summary>Preserves the pre-authority-binding binary start contract.</summary>
+    public Task<Guid> StartAsync<TInput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline, object? metadata,
+        CancellationToken cancellationToken) =>
+        StartAsync(workflowName, workflowVersion, input, workflowRunId,
+            deadline, metadata, authoritySubjectBinding: null, cancellationToken);
+
     /// <summary>Creates a pending durable run without waiting for its execution.</summary>
     public async Task<Guid> StartAsync<TInput>(
         string workflowName,
@@ -296,6 +304,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             store, workflowRunId, planRevision, workflowName, workflowVersion,
             cancellationToken).AsTask();
 
+    /// <summary>Preserves the pre-authority-binding binary handle-start contract.</summary>
+    public Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline, object? metadata,
+        CancellationToken cancellationToken) =>
+        StartHandleAsync<TInput, TOutput>(workflowName, workflowVersion, input,
+            workflowRunId, deadline, metadata, authoritySubjectBinding: null, cancellationToken);
+
     /// <summary>Starts a run and returns a typed durable handle.</summary>
     public async Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
         string workflowName, string workflowVersion, TInput input,
@@ -321,6 +337,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         ThrowIfDisposed();
         return new WorkflowHandle<TOutput>(this, workflowRunId);
     }
+
+    /// <summary>Preserves the pre-authority-binding binary run contract.</summary>
+    public Task<TOutput> RunAsync<TInput, TOutput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline, object? metadata,
+        CancellationToken cancellationToken) =>
+        RunAsync<TInput, TOutput>(workflowName, workflowVersion, input,
+            workflowRunId, deadline, metadata, authoritySubjectBinding: null, cancellationToken);
 
     /// <summary>Starts, executes, and waits for one workflow result.</summary>
     public async Task<TOutput> RunAsync<TInput, TOutput>(
