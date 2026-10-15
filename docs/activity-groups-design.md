@@ -57,7 +57,7 @@ changes and their reconciliation are recorded immediately below it.
 | Compatibility | `ZhinuSqliteSchema.CurrentVersion` is 6. `SqliteDatabase.InitializeAsync` accepts 5 and 6; migrates 5 to 6 atomically. `WorkflowAuthorizationMigrationTests` proves rollback/retained rows. | Design the next additive migration; do not assume the stale exception comment saying previews never migrate is authoritative. |
 | Fuwen mapping | Sibling Fuwen `FuwenZhinuStepKeys.cs` and public `FuwenZhinuStepMapper.cs` already map declared/synthetic steps and loop/item scopes. | Extend this map; operator clients must not invent step-key parsers. |
 
-The current Zhinu commit is `99d9d78e863badb45571f1f3799d79a6fb88c39f`, a
+The initially inspected Zhinu commit was `99d9d78e863badb45571f1f3799d79a6fb88c39f`, a
 0.2.0-preview.3 **candidate**, not evidence of publication. Its M5 snapshot,
 watermark and event-page APIs already exist. The older roadmap's M5 missing-seam
 assessment is historical for this checkout.
@@ -70,7 +70,11 @@ signatures, and raises the working-tree SQLite schema from 6 to **7**, with a
 later edits are not group implementation and were neither changed nor qualified
 by this task. Preserve the opaque authority binding in all future group
 start/fork integration. It is not a group ID, manifest fingerprint or grant.
-Rebaseline that work before coding; see the handoff's observed file inventory.
+Before finalization, that work landed as
+`0a523826c2d7281164ee0b1826fcb1bbee2d6689` (AE-6.2). This is the final source
+baseline beneath the documentation commits. Schema 7 is now committed; the
+observed file inventory in the handoff is historical, not remaining dirty work.
+Rebaseline against it and any newer commits before coding.
 
 ### Material adapter limits discovered
 
@@ -380,9 +384,9 @@ are invalidation/correlation hints; a client refreshes the group snapshot. No
 per-group derived-status events or second event log are needed. Preserve existing
 per-run cursor/export semantics and the snapshot-only generation/operation policy.
 
-The committed baseline is schema 6, but concurrent authority work now occupies
-schema 7 in the working tree. Reserve the **next free version (provisionally 8
-after that work lands)** for groups; do not reuse 7 or overwrite its authority
+The initial baseline was schema 6; AE-6.2 has now committed authority schema 7.
+Reserve the **next free version (provisionally 8)** for groups;
+do not reuse 7 or overwrite its authority
 migration. Implement additive transactional 7-to-8 migration on that baseline,
 preserving 5-to-6 and 6-to-7 so supported older databases can upgrade through the
 chain. Reconfirm the version before implementation if the concurrent work changes.

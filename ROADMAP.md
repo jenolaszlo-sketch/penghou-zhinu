@@ -213,8 +213,9 @@ total work. The design specifies status precedence and required closure evidence
 
 Current source already has atomic run snapshots, durable watermarks and event
 pages. Reuse those read patterns. The inspected committed baseline uses SQLite
-schema 6 and additive 5-to-6 migration; concurrent authority-subject edits now
-occupy schema 7 in the working tree. Reconcile that work and reserve the next
+schema 6 and additive 5-to-6 migration. Authority-subject work subsequently landed
+as `0a523826c2d7281164ee0b1826fcb1bbee2d6689` (AE-6.2), using schema 7.
+Preserve that baseline and reserve the next
 free group schema (provisionally 8), preserving the migration chain rather than
 requiring destructive recreation. Fuwen still references Zhinu 0.1.0-preview.14, and its fan-out body
 currently shares one durable item step. Package adoption and a versioned adapter

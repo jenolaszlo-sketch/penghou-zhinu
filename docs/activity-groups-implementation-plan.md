@@ -127,9 +127,10 @@ back; grouped and ungrouped recovery meet the same fencing/replay guarantees.
 No automatic root/membership backfill. Include unique/foreign-key constraint and
 concurrent idempotent-registration evidence.
 
-**Dependencies:** ZG-1/2 and reconciliation of concurrent authority-subject work.
-Schema 7 is already used by that working-tree change; groups provisionally target
-8 after it lands, subject to a fresh version check. Preserve its nullable binding
+**Dependencies:** ZG-1/2 and the authority-subject baseline
+`0a523826c2d7281164ee0b1826fcb1bbee2d6689`, which landed during preparation.
+Schema 7 is already used by that change; groups provisionally target
+8, subject to a fresh version check. Preserve its nullable binding
 and migration. **Non-goals:**
 universal migration from unsupported historical schemas, event sourcing,
 group pause/cancel/retry, a second control-flow interpreter.

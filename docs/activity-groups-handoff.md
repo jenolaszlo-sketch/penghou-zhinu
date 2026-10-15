@@ -35,7 +35,14 @@ as if they were the product repositories.
 | Penghou.Zhinu | `main`, `99d9d78e863badb45571f1f3799d79a6fb88c39f` | Modified `ROADMAP.md` from earlier macro planning; separately modified `docs/ideas.md`. |
 | Penghou.Fuwen | `main`, `603b2e78d3f3ff33e2152641ab0ca016a120552e` | Modified `docs/roadmap.md` from earlier macro planning. |
 
-The intended handoff change consists only of Zhinu `ROADMAP.md`, the four
+**Final source baseline:** the concurrent AE-6.2 work described below committed
+as `0a523826c2d7281164ee0b1826fcb1bbee2d6689` before this task finalized. The
+group documentation commits descend from it. The authority files are no longer
+uncommitted in the verified snapshot; only the pre-existing `docs/ideas.md` edit
+remains dirty in Zhinu. Fuwen is clean after its documentation commit
+`c38dd67b971f0361e5c143d07ba0f7514ff29d45`. Recheck these facts before starting.
+
+The handoff change consists only of Zhinu `ROADMAP.md`, the four
 `docs/activity-groups-*.md` documents, and Fuwen `docs/roadmap.md`. These are
 documentation-only commits on the same branches; no runtime, schema, package
 reference or tests are changed **by this task**. `docs/ideas.md` is unrelated existing user work
@@ -58,13 +65,14 @@ Observed modified source files (all excluded from the group documentation commit
 - `src/Penghou.Zhinu/PublicAPI.Unshipped.txt`
 
 New untracked test observed: `tests/Penghou.Zhinu.Sqlite.Tests/AuthoritySubjectBindingTests.cs`.
-This is an observation, not an exhaustive final inventory of another active task.
+This is a historical observation of work since committed as AE-6.2, not the final
+dirty-file inventory.
 The changes add an opaque durable authority-subject binding, alter public start
 signatures/fork propagation, and use schema 7 with an additive 6-to-7 migration.
 They were inspected for overlap, not reviewed/tested for correctness here. Do not
-revert, stage or commit them as group work. Re-read current Git state and coordinate
-the baseline before implementing ZG-1; groups provisionally use schema 8 after
-authority work lands. Preserve that binding independently of group identity.
+revert or attribute them to group work. Re-read current Git state and reconcile
+the baseline before implementing ZG-1; groups provisionally use schema 8 now that
+authority schema 7 has landed. Preserve that binding independently of group identity.
 
 Resolve the documentation commits and current state before implementation:
 
@@ -80,7 +88,7 @@ The handoff's own immutable identity is the commit returned by the second
 command, avoiding a self-referential embedded commit hash. If source moved since
 the base commits above, reconcile the changed components before relying on this
 design. Repository state is intentionally not described as wholly clean while
-the unrelated ideas edit and concurrent authority work exist.
+the unrelated ideas edit exists. Group documentation itself is committed.
 
 ## Decisions already settled
 
@@ -124,8 +132,8 @@ the unrelated ideas edit and concurrent authority work exist.
 5. Fuwen currently references Zhinu **0.1.0-preview.14**, while this Zhinu checkout
    is **0.2.0-preview.3 candidate**. Source availability is not package compatibility
    or publication evidence. Qualify exact candidate packages and old consumers.
-6. The committed schema 6 already upgrades schema 5 transactionally; concurrent
-   authority work now uses schema 7. The older exception comment
+6. The original schema 6 already upgrades schema 5 transactionally; committed
+   AE-6.2 authority work now uses schema 7. The older exception comment
    saying preview schemas never migrate is stale. Reserve the next schema number
    only after checking the current branch; preserve the 5→6→7 migration chain.
 7. Atomic M5 snapshots/watermarks/event pages already exist. Current run snapshots

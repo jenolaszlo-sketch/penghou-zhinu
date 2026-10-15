@@ -88,6 +88,8 @@ assertions with group-specific behavior:
   `RunGraphCliTests`, `SchemaCompatibilityTests`,
   `WorkflowAuthorizationMigrationTests`, `WorkflowAuthorizationFencingTests`,
   `WorkflowAuthorizationRecoveryTests`, `RetentionTests`, `CompensationTests`.
+- The concurrently landed AE-6.2 baseline also adds `AuthoritySubjectBindingTests`;
+  keep its nullable-binding, idempotency and migration guarantees green.
 - Fuwen: `FuwenZhinuStepMapperTests`, `FuwenZhinuRepeatTests`,
   `FuwenZhinuFanOutTests`, `WorkflowAdmissionTests`, `WorkflowPlanIdentityTests`,
   `RuntimeNodeIdentityTests` and source repeat/fan-out compiler suites.
