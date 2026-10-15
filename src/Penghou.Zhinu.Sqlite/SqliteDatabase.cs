@@ -77,6 +77,9 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 if (databaseVersion is 5 or 6)
                     await MigrateAuthorityBindingColumnAsync(connection, schemaTransaction, cancellationToken)
                         .ConfigureAwait(false);
+                if (databaseVersion is 5 or 6 or 7)
+                    await MigrateActivityGroupsAsync(connection, schemaTransaction, cancellationToken)
+                        .ConfigureAwait(false);
                 await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
                     "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
                     cancellationToken).ConfigureAwait(false);
@@ -190,7 +193,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
             .ConfigureAwait(false);
         var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
-        if (version is not (5 or 6 or ZhinuSqliteSchema.CurrentVersion))
+        if (version is not (5 or 6 or 7 or ZhinuSqliteSchema.CurrentVersion))
         {
             throw new ZhinuSchemaCompatibilityException(
                 ZhinuSqliteSchema.CurrentVersion,
@@ -243,8 +246,25 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 "ALTER TABLE workflow_runs ADD COLUMN authority_subject_binding TEXT NULL;", cancellationToken)
                 .ConfigureAwait(false);
         await SqliteStoreSupport.ExecuteAsync(connection, transaction,
-            $"UPDATE zhinu_schema SET version = {ZhinuSqliteSchema.CurrentVersion} WHERE id = 1;", cancellationToken)
+            "UPDATE zhinu_schema SET version = 7 WHERE id = 1;", cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>Additive v7-&gt;v8 group manifest, occurrence, and revision membership storage.</summary>
+    private static async ValueTask MigrateActivityGroupsAsync(
+        SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var inspect = SqliteStoreSupport.CreateCommand(connection, transaction,
+            "SELECT COUNT(*) FROM pragma_table_info($table) WHERE name=$column;");
+        inspect.Parameters.AddWithValue("$table", "workflow_runs");
+        inspect.Parameters.AddWithValue("$column", "group_manifest_digest");
+        var found = Convert.ToInt32(await inspect.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) > 0;
+        if (!found)
+            await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+                "ALTER TABLE workflow_runs ADD COLUMN group_manifest_digest TEXT NULL;", cancellationToken)
+                .ConfigureAwait(false);
+        await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+            "UPDATE zhinu_schema SET version = 8 WHERE id = 1;", cancellationToken).ConfigureAwait(false);
     }
 
     private static readonly string Schema = $"""
@@ -281,6 +301,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             authorization_provider_id TEXT NULL,
             authorization_binding_id TEXT NULL,
             authority_subject_binding TEXT NULL,
+            group_manifest_digest TEXT NULL,
             CHECK (status BETWEEN 0 AND 6),
             CHECK (lease_generation >= 1)
         );
@@ -290,6 +311,10 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             ON workflow_runs(created_at, id);
         CREATE INDEX IF NOT EXISTS ix_workflow_runs_source
             ON workflow_runs(source_run_id);
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_run_group_pin_immutable
+        BEFORE UPDATE OF group_manifest_digest ON workflow_runs
+        WHEN OLD.group_manifest_digest IS NOT NEW.group_manifest_digest
+        BEGIN SELECT RAISE(ABORT, 'workflow group manifest pin is immutable'); END;
 
         CREATE TABLE IF NOT EXISTS workflow_steps
         (
@@ -328,6 +353,59 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             ON workflow_steps(status, available_at, lease_expires_at);
         CREATE INDEX IF NOT EXISTS ix_workflow_steps_current
             ON workflow_steps(workflow_run_id, step_key, revision);
+        CREATE UNIQUE INDEX IF NOT EXISTS ux_workflow_steps_group_membership_fk
+            ON workflow_steps(workflow_run_id, id, step_key, revision);
+
+        CREATE TABLE IF NOT EXISTS workflow_group_manifests
+        (
+            workflow_run_id TEXT PRIMARY KEY,
+            contract_version INTEGER NOT NULL,
+            manifest_digest TEXT NOT NULL,
+            canonical_json TEXT NOT NULL,
+            CHECK (contract_version >= 1),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE
+        );
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_group_manifest_immutable
+        BEFORE UPDATE ON workflow_group_manifests
+        BEGIN SELECT RAISE(ABORT, 'workflow group manifests are immutable'); END;
+
+        CREATE TABLE IF NOT EXISTS workflow_group_occurrences
+        (
+            workflow_run_id TEXT NOT NULL,
+            group_occurrence_id TEXT NOT NULL,
+            group_key TEXT NOT NULL,
+            parent_group_occurrence_id TEXT NULL,
+            execution_coordinate TEXT NOT NULL,
+            manifest_digest TEXT NOT NULL,
+            PRIMARY KEY(workflow_run_id, group_occurrence_id),
+            CHECK (length(group_occurrence_id) = 64),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE,
+            FOREIGN KEY(workflow_run_id, parent_group_occurrence_id)
+                REFERENCES workflow_group_occurrences(workflow_run_id, group_occurrence_id) ON DELETE CASCADE
+        );
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_group_occurrence_immutable
+        BEFORE UPDATE ON workflow_group_occurrences
+        BEGIN SELECT RAISE(ABORT, 'workflow group occurrences are immutable'); END;
+        CREATE INDEX IF NOT EXISTS ix_workflow_group_occurrences_key
+            ON workflow_group_occurrences(workflow_run_id, group_key);
+
+        CREATE TABLE IF NOT EXISTS workflow_step_group_memberships
+        (
+            workflow_run_id TEXT NOT NULL,
+            step_id TEXT NOT NULL PRIMARY KEY,
+            step_key TEXT NOT NULL,
+            step_revision INTEGER NOT NULL,
+            group_occurrence_id TEXT NOT NULL,
+            role INTEGER NOT NULL,
+            CHECK (step_revision >= 1),
+            CHECK (role BETWEEN 0 AND 1),
+            FOREIGN KEY(workflow_run_id, step_id, step_key, step_revision)
+                REFERENCES workflow_steps(workflow_run_id, id, step_key, revision) ON DELETE CASCADE,
+            FOREIGN KEY(workflow_run_id, group_occurrence_id)
+                REFERENCES workflow_group_occurrences(workflow_run_id, group_occurrence_id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS ix_workflow_step_group_memberships_run
+            ON workflow_step_group_memberships(workflow_run_id, step_key, step_revision);
 
         CREATE TABLE IF NOT EXISTS workflow_step_dependencies
         (

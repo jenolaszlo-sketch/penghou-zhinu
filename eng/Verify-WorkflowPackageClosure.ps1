@@ -216,9 +216,14 @@ if (File.Exists(databasePath)) File.Delete(databasePath);
 var store = new SqliteWorkflowStore(new ZhinuSqliteOptions { DatabasePath = databasePath, Pooling = false });
 var ordinary = new OrdinaryWorkflow();
 var protectedWorkflow = new ProtectedWorkflow();
+var groupManifest = ActivityGroupManifest.Create([
+    new ActivityGroupDefinition("root", ActivityGroupKind.Logical, "Root"),
+    new ActivityGroupDefinition("work", ActivityGroupKind.Logical, "Work", "root")]);
 var registry = new WorkflowRegistry()
     .Register("ordinary", "1", ordinary)
-    .Register("protected", "1", protectedWorkflow);
+    .Register("protected", "1", protectedWorkflow)
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped", Version = "1" }, () => new GroupedWorkflow(), groupManifest));
 
 await using (var directEngine = new WorkflowEngine(store, registry, new ZhinuOptions()))
 {
@@ -242,9 +247,50 @@ await using (var builderEngine = new WorkflowEngineBuilder()
     if (authorizer.Contexts.Count != 1 || authorizer.Contexts[0].Requirements.Count != 1 ||
         authorizer.Contexts[0].Requirements.Single().Capability != "execute")
         throw new InvalidOperationException("Protected execution did not pass its declared requirement to the authorizer.");
+    var groupedId = await builderEngine.StartAsync("grouped", "1", "package-closure");
+    await builderEngine.ExecuteAsync(groupedId);
+    if (await builderEngine.WaitForCompletionAsync<string>(groupedId) != "2" || authorizer.Contexts.Count != 3)
+        throw new InvalidOperationException("Grouped loop execution lost its result or authorization declarations.");
+    var reopened = new SqliteWorkflowStore(new ZhinuSqliteOptions { DatabasePath = databasePath, Pooling = false });
+    if ((await reopened.GetGroupManifestAsync(groupedId))?.CanonicalJson != groupManifest.CanonicalJson)
+        throw new InvalidOperationException("Grouped manifest was not durably installed.");
+    var groupedSteps = (await reopened.GetStepsAsync(groupedId)).Where(s => s.StepKey.EndsWith("/body/work", StringComparison.Ordinal)).ToArray();
+    if (groupedSteps.Length != 2) throw new InvalidOperationException("Grouped loop did not repeat twice.");
+    var occurrenceIds = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var step in groupedSteps)
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Grouped revision membership was lost.");
+        var occurrence = await reopened.GetGroupOccurrenceAsync(groupedId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Grouped occurrence was lost.");
+        if (membership.StepRevision != step.Revision || occurrence.GroupKey != "work" || occurrence.ParentGroupOccurrenceId is null)
+            throw new InvalidOperationException("Grouped revision or parent association changed.");
+        occurrenceIds.Add(occurrence.GroupOccurrenceId);
+    }
+    if (occurrenceIds.Count != 2) throw new InvalidOperationException("Repeated group occurrences collided.");
 }
 
-Console.WriteLine("Package closure consumer completed both direct SQLite and protected builder execution.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder and durable grouped loop execution.");
+
+sealed class GroupedWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var root = context.GetActivityGroup("root");
+        var result = await context.LoopAsync("repeat", 0, state => state < 2, async (iteration, ct) =>
+        {
+            var group = iteration.GetActivityGroup("work", root);
+            await iteration.StepAsync("work", input, (value, _, _) => Task.FromResult(value), new StepOptions
+            {
+                Group = new ActivityGroupStepBinding(new ActivityGroupMembership("work"), group),
+                Authorization = new WorkflowAuthorizationDeclaration([
+                    new ExecutionRequirement("workflow.capability", 1, "execute", "package-closure", null)])
+            }, ct);
+            return iteration.Continue(iteration.State + 1);
+        }, new LoopOptions(2), cancellationToken);
+        return result.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+}
 
 sealed class OrdinaryWorkflow : IWorkflow<string, string>
 {

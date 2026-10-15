@@ -69,6 +69,9 @@ public sealed record WorkflowRun
     /// </summary>
     public string? DefinitionFingerprint { get; init; }
 
+    /// <summary>Optional immutable annotation pin, independent of executable identity and mutable metadata.</summary>
+    public string? GroupManifestDigest { get; init; }
+
     /// <summary>Configured authorization provider bound when this run was admitted.</summary>
     public string? AuthorizationProviderId { get; init; }
 

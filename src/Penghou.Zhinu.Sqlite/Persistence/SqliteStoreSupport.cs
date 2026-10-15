@@ -95,7 +95,8 @@ internal static class SqliteStoreSupport
         DefinitionFingerprint = GetNullableString(reader, 20),
         AuthorizationProviderId = GetNullableString(reader, 21),
         AuthorizationBindingId = GetNullableString(reader, 22),
-        AuthoritySubjectBinding = GetNullableString(reader, 23)
+        AuthoritySubjectBinding = GetNullableString(reader, 23),
+        GroupManifestDigest = GetNullableString(reader, 24)
     };
 
     internal static WorkflowStepRun ReadStep(SqliteDataReader reader) => new()
@@ -185,7 +186,7 @@ internal static class SqliteStoreSupport
         completed_at, deadline, metadata_json, parent_run_id, source_run_id,
         trace_id, lease_owner, lease_expires_at, lease_generation,
         definition_fingerprint, authorization_provider_id, authorization_binding_id,
-        authority_subject_binding
+        authority_subject_binding, group_manifest_digest
         """;
 
     internal const string StepColumns = """

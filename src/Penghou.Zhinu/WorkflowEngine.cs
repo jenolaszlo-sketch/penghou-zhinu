@@ -173,6 +173,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         ThrowIfDisposed();
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var registration = registry.Get(workflowName, workflowVersion);
+        var groupManifest = ActivityGroupRuntime.Capture(registration, store);
         if (registration.InputType != typeof(TInput))
         {
             throw new ArgumentException(
@@ -203,6 +204,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         StringComparison.Ordinal))
                 {
                     WorkflowAuthorizationGate.ValidateBinding(existing, this.options);
+                    await ActivityGroupRuntime.ValidateRunAsync(store, existing, groupManifest, cancellationToken)
+                        .ConfigureAwait(false);
                     await EnsureGenerationBindingAsync(
                         id,
                         registration.DefinitionFingerprint,
@@ -219,7 +222,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         var fingerprint = registration.DefinitionFingerprint;
         try
         {
-            await store.CreateRunAsync(
+            await ActivityGroupRuntime.CreateRunAsync(store,
                 new WorkflowRun
                 {
                     Id = id,
@@ -236,6 +239,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         ? null
                         : JsonSerializer.Serialize(metadata, serializerOptions),
                     DefinitionFingerprint = fingerprint,
+                    GroupManifestDigest = groupManifest?.ManifestDigest,
                     AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
                     AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
                         ? WorkflowAuthorizationCodec.Binding(authority) : null,
@@ -243,7 +247,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                     TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                         .ToHexString()
                 },
-                cancellationToken).ConfigureAwait(false);
+                groupManifest, cancellationToken).ConfigureAwait(false);
         }
         catch (WorkflowConcurrencyException) when (workflowRunId is not null)
         {
@@ -303,6 +307,18 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         InitialGenerationBinding.EnsureAsync(
             store, workflowRunId, planRevision, workflowName, workflowVersion,
             cancellationToken).AsTask();
+
+    private async ValueTask ValidateGroupOperationAsync(Guid workflowRunId, CancellationToken cancellationToken)
+    {
+        var run = await store.GetRunAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
+        if (run?.GroupManifestDigest is null)
+            return; // Preserve the operation's existing not-found result.
+        registry.TryGet(run.WorkflowName, run.WorkflowVersion, out var registration);
+        if (registration is null)
+            throw new WorkflowDefinitionUnavailableException(run.WorkflowName, run.WorkflowVersion);
+        var manifest = registration is null ? null : ActivityGroupRuntime.Capture(registration, store);
+        await ActivityGroupRuntime.ValidateRunAsync(store, run, manifest, cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>Preserves the pre-authority-binding binary handle-start contract.</summary>
     public Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
@@ -757,6 +773,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
 
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         if (runningCancellations.TryGetValue(
                 workflowRunId,
                 out var runningCancellation))
@@ -811,6 +828,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
 
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         var receipt = await repository.RestartStepIdempotentlyAsync(
             workflowRunId,
             stepKey,
@@ -959,6 +977,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             ReferenceEquals(targetVersion, source.WorkflowVersion)
             ? registration
             : registry.Get(targetName, targetVersion);
+        if (source.GroupManifestDigest is not null || ActivityGroupRuntime.Capture(targetRegistration, store) is not null)
+            throw new WorkflowConfigurationException("Grouped workflow forks are not supported by this foundation.");
         if (source.InputType != SerializationIdentity.TypeId(targetRegistration.InputType) ||
             source.OutputType != SerializationIdentity.TypeId(targetRegistration.OutputType))
         {
@@ -1122,6 +1142,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         CancellationToken cancellationToken = default)
     {
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         await rollbackCoordinator.RollbackAsync(
             workflowRunId,
             null,
@@ -1147,6 +1168,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         await rollbackCoordinator.RollbackAsync(
             workflowRunId,
             stepKey,
@@ -1170,6 +1192,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         CancellationToken cancellationToken = default)
     {
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         await rollbackAndRestart.RollbackAndRestartAsync(
             workflowRunId,
             actor,

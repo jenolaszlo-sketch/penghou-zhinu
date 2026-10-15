@@ -87,6 +87,9 @@ internal sealed class CompensationExecutor
                 run.WorkflowName,
                 run.WorkflowVersion);
         }
+        var groupManifest = ActivityGroupRuntime.Capture(registration!, store);
+        await ActivityGroupRuntime.ValidateRunAsync(store, run, groupManifest, cancellationToken)
+            .ConfigureAwait(false);
         var context = new WorkflowContext(
             run.Id,
             store,
@@ -102,7 +105,8 @@ internal sealed class CompensationExecutor
             rollbackCompensations: byKey,
             onEventAppended: notifyEventAppended,
             workflowStepResolver: workflowStepResolver,
-            registry: registry);
+            registry: registry,
+            groupManifest: groupManifest);
         await registration!.ExecuteAsync(
             context,
             run.InputJson ?? "null",

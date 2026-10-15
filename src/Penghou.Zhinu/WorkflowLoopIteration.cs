@@ -36,6 +36,10 @@ public sealed class WorkflowLoopIteration<TState>
     /// <summary>The immutable state committed by the previous iteration.</summary>
     public TState State { get; }
 
+    /// <summary>Creates an occurrence using this durable loop iteration's execution coordinate.</summary>
+    public ActivityGroupOccurrence GetActivityGroup(string groupKey, ActivityGroupOccurrence? parent = null) =>
+        workflow.GetActivityGroup(groupKey, parent, identity);
+
     /// <summary>
     /// Commits <paramref name="nextState"/> and requests evaluation of the
     /// next iteration's continuation condition.
@@ -193,6 +197,10 @@ public sealed class WorkflowLoopIteration<TState>
         {
             Retry = options?.Retry ?? new RetryPolicy(),
             ExecutionTimeout = options?.ExecutionTimeout,
+            Authorization = options?.Authorization,
+            CompensationAuthorization = options?.CompensationAuthorization,
+            Group = options?.Group,
+            GroupExecutionScope = identity,
             DependsOn = dependencies
         };
     }

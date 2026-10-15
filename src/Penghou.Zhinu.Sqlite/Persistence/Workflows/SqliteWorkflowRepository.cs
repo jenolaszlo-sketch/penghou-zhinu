@@ -32,6 +32,28 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(run);
+        if (run.GroupManifestDigest is not null)
+            throw new WorkflowStateException("A run pinned to a group manifest must be created through the group repository capability.");
+        await CreateRunCoreAsync(run, null, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async ValueTask CreateGroupedRunAsync(
+        WorkflowRun run,
+        ActivityGroupManifest manifest,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+        ArgumentNullException.ThrowIfNull(manifest);
+        if (!string.Equals(run.GroupManifestDigest, manifest.ManifestDigest, StringComparison.Ordinal))
+            throw new WorkflowStateException("The run's group-manifest pin does not match the supplied manifest.");
+        await CreateRunCoreAsync(run, manifest, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async ValueTask CreateRunCoreAsync(
+        WorkflowRun run,
+        ActivityGroupManifest? manifest,
+        CancellationToken cancellationToken)
+    {
         await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -40,6 +62,19 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         {
             await insertRun.ExecuteAsync(connection, transaction, run, cancellationToken)
                 .ConfigureAwait(false);
+            if (manifest is not null)
+            {
+                await using var manifestCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+                    INSERT INTO workflow_group_manifests
+                        (workflow_run_id, contract_version, manifest_digest, canonical_json)
+                    VALUES ($run, $version, $digest, $canonical);
+                    """);
+                manifestCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(run.Id));
+                manifestCommand.Parameters.AddWithValue("$version", manifest.ContractVersion);
+                manifestCommand.Parameters.AddWithValue("$digest", manifest.ManifestDigest);
+                manifestCommand.Parameters.AddWithValue("$canonical", manifest.CanonicalJson);
+                await manifestCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
         catch (SqliteException exception) when (exception.SqliteExtendedErrorCode == 1555)
         {

@@ -58,6 +58,8 @@ internal sealed partial class SqliteStepRepository
             cancellationToken).ConfigureAwait(false) ??
             throw new WorkflowNotFoundException(
                 $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
+        if (source.GroupManifestDigest is not null || newRun.GroupManifestDigest is not null)
+            throw new WorkflowStateException("Forking a run with activity-group metadata is not supported.");
         if (await getRun.ExecuteAsync(
                 connection,
                 transaction,

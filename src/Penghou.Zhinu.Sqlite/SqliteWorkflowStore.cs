@@ -6,6 +6,7 @@ using Penghou.Zhinu.Sqlite.Persistence.Timers;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 using Penghou.Zhinu.Sqlite.Persistence.Artifacts;
 using Penghou.Zhinu.Sqlite.Persistence.Waits;
+using Penghou.Zhinu.Sqlite.Persistence.Groups;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 using System.Globalization;
@@ -28,6 +29,7 @@ public sealed class SqliteWorkflowStore :
     , IWorkflowAuthorizationRepository
     , IWorkflowEventPageRepository
     , IWorkflowSnapshotRepository
+    , IWorkflowGroupRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -40,6 +42,7 @@ public sealed class SqliteWorkflowStore :
     private readonly SqliteWorkflowInstanceRepository instances;
     private readonly SqliteWaitRepository waits;
     private readonly SqliteWorkflowAuthorizationRepository authorizations;
+    private readonly SqliteWorkflowGroupRepository groups;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -67,6 +70,7 @@ public sealed class SqliteWorkflowStore :
         instances = new SqliteWorkflowInstanceRepository(factory);
         waits = new SqliteWaitRepository(factory);
         authorizations = new SqliteWorkflowAuthorizationRepository(factory);
+        groups = new SqliteWorkflowGroupRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
@@ -103,6 +107,28 @@ public sealed class SqliteWorkflowStore :
         WorkflowRun run,
         CancellationToken cancellationToken = default) =>
         ObserveAsync("run.create", () => workflows.CreateRunAsync(run, cancellationToken));
+
+    public ValueTask CreateGroupedRunAsync(
+        WorkflowRun run,
+        ActivityGroupManifest manifest,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("run.create.grouped", () => workflows.CreateGroupedRunAsync(run, manifest, cancellationToken));
+
+    public ValueTask<ActivityGroupManifest?> GetGroupManifestAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.manifest.get", () => groups.GetGroupManifestAsync(workflowRunId, cancellationToken));
+
+    public ValueTask<ActivityGroupOccurrence?> GetGroupOccurrenceAsync(
+        Guid workflowRunId,
+        string groupOccurrenceId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.occurrence.get", () => groups.GetGroupOccurrenceAsync(workflowRunId, groupOccurrenceId, cancellationToken));
+
+    public ValueTask<ActivityGroupStepMembership?> GetStepGroupMembershipAsync(
+        Guid stepId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.step.membership.get", () => groups.GetStepGroupMembershipAsync(stepId, cancellationToken));
 
     public ValueTask<WorkflowRun?> GetRunAsync(
         Guid id,

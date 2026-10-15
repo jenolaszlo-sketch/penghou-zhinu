@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using Penghou.Zhinu.Sqlite.Persistence.Leases;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
+using Penghou.Zhinu.Sqlite.Persistence.Groups;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Steps;
 
@@ -97,6 +98,8 @@ internal sealed partial class SqliteStepRepository
             };
             await insertStep.ExecuteAsync(connection, transaction, created, cancellationToken)
                 .ConfigureAwait(false);
+            await SqliteWorkflowGroupRepository.ValidateAndPersistClaimAsync(
+                connection, transaction, request, created, allowInsertMembership: true, cancellationToken).ConfigureAwait(false);
             await InsertDependenciesAsync(
                 connection,
                 transaction,
@@ -142,6 +145,8 @@ internal sealed partial class SqliteStepRepository
                 runGeneration,
                 cancellationToken).ConfigureAwait(false);
         }
+        await SqliteWorkflowGroupRepository.ValidateAndPersistClaimAsync(
+            connection, transaction, request, existing, allowInsertMembership: false, cancellationToken).ConfigureAwait(false);
         ValidateStepContract(existing, request);
         if (existing.Status == StepStatus.Completed)
         {

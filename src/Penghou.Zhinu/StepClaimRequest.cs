@@ -3,6 +3,11 @@ namespace Penghou.Zhinu;
 /// <summary>Contains the stable execution shape required to claim a step.</summary>
 public sealed record StepClaimRequest
 {
+    /// <summary>The immutable run annotation pin; required on all claims of a grouped run.</summary>
+    public string? GroupManifestDigest { get; init; }
+
+    /// <summary>Optional direct group membership persisted with the claimed step revision.</summary>
+    public ActivityGroupStepBinding? Group { get; init; }
     public required Guid WorkflowRunId { get; init; }
 
     public required string StepKey { get; init; }

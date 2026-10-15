@@ -5,6 +5,7 @@ const Penghou.Zhinu.ActivityGroupManifest.CurrentContractVersion = 1 -> int
 const Penghou.Zhinu.ActivityGroupManifestLimits.MaximumAllowedCanonicalBytes = 1048576 -> int
 const Penghou.Zhinu.ActivityGroupManifestLimits.MaximumAllowedDepth = 128 -> int
 const Penghou.Zhinu.ActivityGroupManifestLimits.MaximumAllowedGroups = 4096 -> int
+const Penghou.Zhinu.ActivityGroupOccurrence.MaximumAllowedOccurrencesPerRun = 65536 -> int
 const Penghou.Zhinu.WorkflowEventTypes.LoopCompleted = "loop-completed" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.LoopIterationCommitted = "loop-iteration-committed" -> string!
 const Penghou.Zhinu.WorkflowEventTypes.LoopLimitExceeded = "loop-limit-exceeded" -> string!
@@ -48,6 +49,29 @@ Penghou.Zhinu.ActivityGroupMembership
 Penghou.Zhinu.ActivityGroupMembership.ActivityGroupMembership(string! groupKey, Penghou.Zhinu.ActivityGroupMemberRole role = Penghou.Zhinu.ActivityGroupMemberRole.Work) -> void
 Penghou.Zhinu.ActivityGroupMembership.GroupKey.get -> string!
 Penghou.Zhinu.ActivityGroupMembership.Role.get -> Penghou.Zhinu.ActivityGroupMemberRole
+Penghou.Zhinu.ActivityGroupOccurrence
+Penghou.Zhinu.ActivityGroupOccurrence.ExecutionCoordinate.get -> string!
+Penghou.Zhinu.ActivityGroupOccurrence.GroupKey.get -> string!
+Penghou.Zhinu.ActivityGroupOccurrence.GroupOccurrenceId.get -> string!
+Penghou.Zhinu.ActivityGroupOccurrence.ParentGroupOccurrenceId.get -> string?
+Penghou.Zhinu.ActivityGroupOccurrence.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.ActivityGroupStepBinding
+Penghou.Zhinu.ActivityGroupStepBinding.ActivityGroupStepBinding(Penghou.Zhinu.ActivityGroupMembership! membership, Penghou.Zhinu.ActivityGroupOccurrence! occurrence) -> void
+Penghou.Zhinu.ActivityGroupStepBinding.Membership.get -> Penghou.Zhinu.ActivityGroupMembership!
+Penghou.Zhinu.ActivityGroupStepBinding.Occurrence.get -> Penghou.Zhinu.ActivityGroupOccurrence!
+Penghou.Zhinu.ActivityGroupStepMembership
+Penghou.Zhinu.ActivityGroupStepMembership.GroupOccurrenceId.get -> string!
+Penghou.Zhinu.ActivityGroupStepMembership.GroupOccurrenceId.init -> void
+Penghou.Zhinu.ActivityGroupStepMembership.Role.get -> Penghou.Zhinu.ActivityGroupMemberRole
+Penghou.Zhinu.ActivityGroupStepMembership.Role.init -> void
+Penghou.Zhinu.ActivityGroupStepMembership.StepId.get -> System.Guid
+Penghou.Zhinu.ActivityGroupStepMembership.StepId.init -> void
+Penghou.Zhinu.ActivityGroupStepMembership.StepKey.get -> string!
+Penghou.Zhinu.ActivityGroupStepMembership.StepKey.init -> void
+Penghou.Zhinu.ActivityGroupStepMembership.StepRevision.get -> int
+Penghou.Zhinu.ActivityGroupStepMembership.StepRevision.init -> void
+Penghou.Zhinu.ActivityGroupStepMembership.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.ActivityGroupStepMembership.WorkflowRunId.init -> void
 Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.get -> string?
 Penghou.Zhinu.ArtifactPublicationRequest.ProducerLeaseOwner.init -> void
 Penghou.Zhinu.CandidateStep
@@ -254,6 +278,13 @@ Penghou.Zhinu.IWorkflowExternalOperationRepository.ListAsync(System.Guid workflo
 Penghou.Zhinu.IWorkflowExternalOperationRepository.RegisterAsync(Penghou.Zhinu.ExternalOperationRegistration! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
+Penghou.Zhinu.IWorkflowGroupManifestProvider
+Penghou.Zhinu.IWorkflowGroupManifestProvider.GroupManifest.get -> Penghou.Zhinu.ActivityGroupManifest?
+Penghou.Zhinu.IWorkflowGroupRepository
+Penghou.Zhinu.IWorkflowGroupRepository.CreateGroupedRunAsync(Penghou.Zhinu.WorkflowRun! run, Penghou.Zhinu.ActivityGroupManifest! manifest, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Penghou.Zhinu.IWorkflowGroupRepository.GetGroupManifestAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupManifest?>
+Penghou.Zhinu.IWorkflowGroupRepository.GetGroupOccurrenceAsync(System.Guid workflowRunId, string! groupOccurrenceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupOccurrence?>
+Penghou.Zhinu.IWorkflowGroupRepository.GetStepGroupMembershipAsync(System.Guid stepId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupStepMembership?>
 Penghou.Zhinu.IWorkflowInstanceRepository
 Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, string? previewJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
@@ -463,6 +494,10 @@ Penghou.Zhinu.StepClaimRequest.AllowSupersede.get -> bool
 Penghou.Zhinu.StepClaimRequest.AllowSupersede.init -> void
 Penghou.Zhinu.StepClaimRequest.AuthorizationDeclarationHash.get -> string?
 Penghou.Zhinu.StepClaimRequest.AuthorizationDeclarationHash.init -> void
+Penghou.Zhinu.StepClaimRequest.Group.get -> Penghou.Zhinu.ActivityGroupStepBinding?
+Penghou.Zhinu.StepClaimRequest.Group.init -> void
+Penghou.Zhinu.StepClaimRequest.GroupManifestDigest.get -> string?
+Penghou.Zhinu.StepClaimRequest.GroupManifestDigest.init -> void
 Penghou.Zhinu.StepClaimRequest.ImplementationKey.get -> string?
 Penghou.Zhinu.StepClaimRequest.ImplementationKey.init -> void
 Penghou.Zhinu.StepCompensationMode
@@ -476,6 +511,8 @@ Penghou.Zhinu.StepOptions.Authorization.get -> Penghou.Zhinu.WorkflowAuthorizati
 Penghou.Zhinu.StepOptions.Authorization.init -> void
 Penghou.Zhinu.StepOptions.CompensationAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
 Penghou.Zhinu.StepOptions.CompensationAuthorization.init -> void
+Penghou.Zhinu.StepOptions.Group.get -> Penghou.Zhinu.ActivityGroupStepBinding?
+Penghou.Zhinu.StepOptions.Group.init -> void
 Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Child = 2 -> Penghou.Zhinu.WaitKind
 Penghou.Zhinu.WaitKind.Delay = 3 -> Penghou.Zhinu.WaitKind
@@ -564,6 +601,7 @@ Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(stri
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
+Penghou.Zhinu.WorkflowContext.GetActivityGroup(string! groupKey, Penghou.Zhinu.ActivityGroupOccurrence? parent = null) -> Penghou.Zhinu.ActivityGroupOccurrence!
 Penghou.Zhinu.WorkflowContext.LoopAsync<TState>(string! loopKey, TState initialState, System.Func<TState, bool>! continueWhile, System.Func<Penghou.Zhinu.WorkflowLoopIteration<TState>!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Penghou.Zhinu.LoopBodyOutcome<TState>!>!>! body, Penghou.Zhinu.LoopOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TState>!
 Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.StepImplementationKey implementationKey, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
@@ -674,6 +712,7 @@ Penghou.Zhinu.WorkflowLoopIteration<TState>
 Penghou.Zhinu.WorkflowLoopIteration<TState>.Break(TState finalState) -> Penghou.Zhinu.LoopBodyOutcome<TState>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.Continue(TState nextState) -> Penghou.Zhinu.LoopBodyOutcome<TState>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.DependsOn(params string![]! stepNames) -> System.IDisposable!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.GetActivityGroup(string! groupKey, Penghou.Zhinu.ActivityGroupOccurrence? parent = null) -> Penghou.Zhinu.ActivityGroupOccurrence!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.Iteration.get -> int
 Penghou.Zhinu.WorkflowLoopIteration<TState>.LoopAsync<TNestedState>(string! loopKey, TNestedState initialState, System.Func<TNestedState, bool>! continueWhile, System.Func<Penghou.Zhinu.WorkflowLoopIteration<TNestedState>!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Penghou.Zhinu.LoopBodyOutcome<TNestedState>!>!>! body, Penghou.Zhinu.LoopOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TNestedState>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.LoopKey.get -> string!
@@ -745,6 +784,8 @@ Penghou.Zhinu.WorkflowOperationConflictException
 Penghou.Zhinu.WorkflowOperationConflictException.OperationId.get -> System.Guid
 Penghou.Zhinu.WorkflowOperationConflictException.WorkflowOperationConflictException(System.Guid operationId, string! message) -> void
 Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.DefinitionFingerprint.get -> string?
+Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.GroupManifest.get -> Penghou.Zhinu.ActivityGroupManifest?
+Penghou.Zhinu.WorkflowRegistration<TInput, TOutput>.WorkflowRegistration(Penghou.Zhinu.WorkflowDefinition! definition, System.Func<Penghou.Zhinu.IWorkflow<TInput, TOutput>!>! workflowFactory, Penghou.Zhinu.ActivityGroupManifest! groupManifest) -> void
 Penghou.Zhinu.WorkflowRegistrationException
 Penghou.Zhinu.WorkflowRegistrationException.WorkflowRegistrationException(string! message) -> void
 Penghou.Zhinu.WorkflowRun.AuthorizationBindingId.get -> string?
@@ -755,6 +796,8 @@ Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.get -> string?
 Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.init -> void
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
+Penghou.Zhinu.WorkflowRun.GroupManifestDigest.get -> string?
+Penghou.Zhinu.WorkflowRun.GroupManifestDigest.init -> void
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>.WorkflowStep() -> void
 Penghou.Zhinu.WorkflowStepCompensation.AuthorizationDeclarationJson.get -> string?

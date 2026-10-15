@@ -3,6 +3,10 @@ namespace Penghou.Zhinu;
 /// <summary>Configures retry and execution behavior for one durable step.</summary>
 public sealed record StepOptions
 {
+    internal DurableLoopIterationIdentity? GroupExecutionScope { get; init; }
+
+    /// <summary>Optional direct occurrence membership; never a control-flow or authorization declaration.</summary>
+    public ActivityGroupStepBinding? Group { get; init; }
     /// <summary>Immutable declared authority and approved plan identity for the forward callback.</summary>
     public WorkflowAuthorizationDeclaration? Authorization { get; init; }
 

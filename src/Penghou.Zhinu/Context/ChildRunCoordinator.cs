@@ -66,10 +66,13 @@ internal sealed class ChildRunCoordinator
             childId,
             cancellationToken).ConfigureAwait(false);
         var registration = ResolveRegistration(request);
+        var groupManifest = ActivityGroupRuntime.Capture(registration, store);
         ValidateContract(request, registration, stepKey);
         if (existing is not null)
         {
             WorkflowAuthorizationGate.ValidateBinding(existing, options);
+            await ActivityGroupRuntime.ValidateRunAsync(store, existing, groupManifest, cancellationToken)
+                .ConfigureAwait(false);
             if (!string.Equals(existing.WorkflowName, request.WorkflowName, StringComparison.Ordinal) ||
                 !string.Equals(existing.WorkflowVersion, request.WorkflowVersion, StringComparison.Ordinal) ||
                 !string.Equals(existing.InputJson, request.InputJson, StringComparison.Ordinal) ||
@@ -105,7 +108,7 @@ internal sealed class ChildRunCoordinator
         var now = timeProvider.GetUtcNow();
         var deadline = EffectiveDeadline(parent.Deadline, request.Deadline);
         var metadataJson = ResolveMetadata(parent, request);
-        await store.CreateRunAsync(
+        await ActivityGroupRuntime.CreateRunAsync(store,
             new WorkflowRun
             {
                 Id = childId,
@@ -124,9 +127,10 @@ internal sealed class ChildRunCoordinator
                 Deadline = deadline,
                 MetadataJson = metadataJson,
                 DefinitionFingerprint = registration.DefinitionFingerprint,
+                GroupManifestDigest = groupManifest?.ManifestDigest,
                 TraceId = parent.TraceId
             },
-            cancellationToken).ConfigureAwait(false);
+            groupManifest, cancellationToken).ConfigureAwait(false);
         await InitialGenerationBinding.BindAsync(
             store,
             childId,
