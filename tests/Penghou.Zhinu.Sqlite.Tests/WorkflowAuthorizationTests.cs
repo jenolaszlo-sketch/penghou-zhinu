@@ -181,6 +181,58 @@ public sealed class WorkflowAuthorizationTests : WorkflowEngineTestBase
         authorizer.Requests.Last().Identity.OperationId.Should().StartWith("compensation:");
     }
 
+    /// <summary>
+    /// AE-6.2 blocked-rollback semantic: authorization failure may prevent
+    /// rollback and leave the earlier effect in place. This is intentional
+    /// under "fresh authority before every side effect" — compensation is
+    /// not privileged merely because it undoes. The forward result stays
+    /// durable and the run's authority binding is untouched.
+    /// </summary>
+    [Fact]
+    public async Task BlockedRollback_LeavesEarlierEffectInPlace_WithBindingIntact()
+    {
+        const string binding = "tenant-1:subject-1:delegation-1:workspace-1";
+        var authorizer = new TestAuthorizer((context, provider) =>
+        {
+            var decision = context.Identity.OperationId.StartsWith("compensation:", StringComparison.Ordinal)
+                ? ExecutionAuthorizationDecision.Denied
+                : ExecutionAuthorizationDecision.Allowed;
+            return Result(decision, context, provider,
+                expiresAt: decision == ExecutionAuthorizationDecision.Allowed
+                    ? DateTimeOffset.UtcNow.AddMinutes(1) : null);
+        });
+        var store = CreateStore();
+        var workflow = new CompensationAuthorizationWorkflow();
+        var registry = new WorkflowRegistry().Register("compensation", "1", workflow);
+        var options = new ZhinuOptions
+        {
+            LeaseDuration = TimeSpan.FromSeconds(2),
+            LeaseRenewalInterval = TimeSpan.FromMilliseconds(500),
+            ExecutionAuthorization = new WorkflowExecutionAuthorizationOptions("policy", "host-v1", authorizer)
+        };
+        await using var engine = new WorkflowEngine(store, registry, options);
+        var runId = await engine.StartAsync("compensation", "1", "input",
+            authoritySubjectBinding: binding, cancellationToken: TestContext.Current.CancellationToken);
+        await engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
+
+        Func<Task> rollback = () => engine.RollbackAsync(runId, cancellationToken: TestContext.Current.CancellationToken);
+        await rollback.Should().ThrowAsync<WorkflowAuthorizationException>();
+
+        // No compensation side effect occurred ...
+        workflow.CompensationCalls.Should().Be(0);
+        // ... the earlier effect stays durably recorded ...
+        var steps = await engine.GetStepsAsync(runId, TestContext.Current.CancellationToken);
+        var forward = steps.Should().ContainSingle(s => s.StepKey == "first").Subject;
+        forward.Status.Should().Be(StepStatus.Completed);
+        forward.OutputJson.Should().Contain("input");
+        // ... the run is not silently marked rolled back ...
+        (await engine.GetRunAsync(runId, TestContext.Current.CancellationToken))!.Status
+            .Should().NotBe(WorkflowStatus.Compensated);
+        // ... and the authority binding is untouched.
+        (await engine.GetRunAsync(runId, TestContext.Current.CancellationToken))!
+            .AuthoritySubjectBinding.Should().Be(binding);
+    }
+
     [Fact]
     public async Task ProtectedRunCannotResumeWithoutItsProviderBinding()
     {
