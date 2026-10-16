@@ -1,6 +1,7 @@
 # Activity groups: staged implementation plan
 
-Date: 2026-10-16. Status: ZG-1 and the ZG-2/3a durable foundation implemented.
+Date: 2026-10-16. Status: ZG-1, the ZG-2/3a durable foundation and
+[ZG-3b.1 root native fan-out](activity-groups-zg3b1.md) implemented.
 See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
 [foundation scope](activity-groups-zg2-3a.md),
 [ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
@@ -75,7 +76,8 @@ execution scheduling, schema installation, group controls or UI.
 
 Foundation scope: explicit root/typed-loop occurrences, optional revision
 membership, immutable run pin and fail-closed admission land with ZG-3a.
-Native grouped fan-out and grouped forks reject; broader dynamic expansion,
+Direct Group on fan-out and grouped forks reject. The additive FanOutGroup
+profile in ZG-3b.1 admits bounded root native fan-out; broader dynamic expansion,
 child boundary grouping and cross-repository profiles remain later work.
 
 **Scope:** deterministic occurrence encoder, explicit parent occurrence mapping,
@@ -109,9 +111,14 @@ in clients, new activity parent links, widening supported Fuwen control flow.
 
 ## ZG-3 — Additive persistence, expansion evidence and restart
 
-Next: [ZG-3b dynamic durability](activity-groups-zg3b.md), with separate proof for
+In progress: [ZG-3b dynamic durability](activity-groups-zg3b.md), with separate proof for
 grouped fan-out, forks, nested repetition, interrupted partial execution,
 resume/recovery and child boundaries. ZG-2/3a evidence is not dynamic qualification.
+
+ZG-3b.1 adds schema 9 selected-set admission and exact-current-revision closure
+for native fan-out at an existing explicit selection step. Forks, nested repeated
+parents, evolving selection and child boundaries remain open. Its evidence is
+[separate](qualification/activity-groups/zg3b1.md) from the foundation.
 
 ZG-3a adds schema 8 atomic run/manifest and claim/occurrence/membership writes,
 historical revision inheritance and real process-loss probes. It does not
@@ -155,9 +162,9 @@ concurrent idempotent-registration evidence.
 
 **Dependencies:** ZG-1/2 and the authority-subject baseline
 `0a523826c2d7281164ee0b1826fcb1bbee2d6689`, which landed during preparation.
-The foundation uses schema 8 and preserves the nullable authority binding and
-5→6→7→8 migration chain. Reserve the next free schema number only if ZG-3b needs
-an additive migration. **Non-goals:**
+The foundation uses schema 8; ZG-3b.1 uses schema 9 and preserves the nullable
+authority binding and 5→6→7→8→9 migration chain. Reserve another free schema number
+only if later ZG-3b work needs an additive migration. **Non-goals:**
 universal migration from unsupported historical schemas, event sourcing,
 group pause/cancel/retry, a second control-flow interpreter.
 

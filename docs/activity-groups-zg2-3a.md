@@ -1,5 +1,9 @@
 # ZG-2 + ZG-3a: implementation contract and checkpoint
 
+This records the historical foundation profile. [ZG-3b.1](activity-groups-zg3b1.md)
+subsequently adds schema 9 and opt-in root native fan-out; its narrower support
+supersedes this checkpoint's blanket fan-out rejection, without changing v1 IDs.
+
 Base: `d2821b20a3ae767aa24627cd345f1880416829bc`.
 Branch: `codex/zhinu-activity-groups`.
 Implementation: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.

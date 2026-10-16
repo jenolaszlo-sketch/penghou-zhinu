@@ -1,6 +1,8 @@
 # ZG-3b: dynamic occurrence durability
 
-Status: next implementation checkpoint; **not implemented or qualified**.
+Status: **ZG-3b.1 root native fan-out implemented**; the remaining independent
+verticals below are open. See the [3b.1 contract](activity-groups-zg3b1.md) and
+[construct-specific evidence](qualification/activity-groups/zg3b1.md).
 Decision recorded 2026-10-16. Start from qualified checkpoint
 `33c051ed4907178e13d273e930d1f63342321f3f` on `codex/zhinu-activity-groups`.
 Runtime foundation: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
@@ -20,6 +22,12 @@ become coupled to temporary native-runtime limitations.
 are not evidence that any construct below is already supported.
 
 ## Required verticals and proof
+
+Internal sequence: **3b.1 fan-out → 3b.2 forks → 3b.3 nested repetition/parents →
+3b.4 partial/evolving expansion and recovery → 3b.5 child boundaries → 3b.6
+consolidated qualification**. The first profile requires a completed explicit
+selection step and an immutable selected set at root execution scope. Its
+admission/partial-item/closure process proofs do not close broader 3b.4.
 
 | Dynamic surface | Required behavior and qualification |
 | --- | --- |

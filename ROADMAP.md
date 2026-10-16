@@ -185,8 +185,9 @@ Product harness such as Solo
 ## Planned runtime milestone — hierarchical durable activity groups (ZG)
 
 Added **2026-10-15** from the macro activities/activity groups proposal. The
-repository-reconciled design/handoff checkpoint is prepared; runtime implementation
-remains **planned**. Read the [design](docs/activity-groups-design.md),
+repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
+ZG-3b.1 root native fan-out are implemented. Broader dynamic durability, queries,
+progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
 [next-agent handoff](docs/activity-groups-handoff.md).
@@ -215,9 +216,9 @@ Current source already has atomic run snapshots, durable watermarks and event
 pages. Reuse those read patterns. The inspected committed baseline uses SQLite
 schema 6 and additive 5-to-6 migration. Authority-subject work subsequently landed
 as `0a523826c2d7281164ee0b1826fcb1bbee2d6689` (AE-6.2), using schema 7.
-Preserve that baseline and reserve the next
-free group schema (provisionally 8), preserving the migration chain rather than
-requiring destructive recreation. Fuwen still references Zhinu 0.1.0-preview.14, and its fan-out body
+The foundation added schema 8; ZG-3b.1 adds schema 9, preserving
+5→6→7→8→9 rather than requiring destructive recreation.
+The inspected Fuwen baseline references Zhinu 0.1.0-preview.14, and its fan-out body
 currently shares one durable item step. Package adoption and a versioned adapter
 extension (or explicit interim rejection) are prerequisites to claiming
 independently durable macro children inside fan-out.
@@ -236,16 +237,23 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-2 foundation:** deterministic root/typed-loop occurrences, explicit
   parent identity, scoped claim mapping and optional Work/Control membership.
   See the [foundation](docs/activity-groups-zg2-3a.md) and
-  [evidence](docs/qualification/activity-groups/zg2-3a.md). Item scopes remain deferred.
+    [evidence](docs/qualification/activity-groups/zg2-3a.md). ZG-3b.1 extends this
+    with native root item scopes; nested combinations remain deferred.
 - [x] **ZG-3a foundation:** schema 8 atomic manifest/admission and revision
   membership, restart inheritance, fail-closed capabilities and real process-loss
   reconstruction. No hierarchy query or expansion-completeness claim is included.
-- [ ] **ZG-3b — next checkpoint:** dynamic occurrence durability: grouped
+- [ ] **ZG-3b — in progress:** dynamic occurrence durability: grouped
   fan-out/forks, nested repeated groups, restart during partial execution,
   resume/recovery identity preservation and child-workflow boundaries. See the
   [scope and independent proof gates](docs/activity-groups-zg3b.md). Static/restart
   correctness does not imply fan-out/fork correctness. Keep explicit rejection
   until each dynamic vertical is durable and qualified.
+- [x] **ZG-3b.1:** bounded root native fan-out at an explicit completed selection
+  step, immutable keyed/positional enumeration, current-revision closure and
+  process-loss recovery. See [contract](docs/activity-groups-zg3b1.md) and
+  [evidence](docs/qualification/activity-groups/zg3b1.md). Next is 3b.2 grouped forks;
+  3b.3 nested repetition, 3b.4 broader partial/evolving expansion, 3b.5 child
+  boundaries and 3b.6 consolidated qualification remain separate proofs.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.

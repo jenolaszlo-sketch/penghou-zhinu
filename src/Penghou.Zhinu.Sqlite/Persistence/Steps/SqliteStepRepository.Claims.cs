@@ -75,6 +75,8 @@ internal sealed partial class SqliteStepRepository
             request.WorkflowRunId,
             request.StepKey,
             cancellationToken).ConfigureAwait(false);
+        await SqliteWorkflowGroupFanOutRepository.ValidateItemClaimAsync(
+            connection, transaction, request, cancellationToken).ConfigureAwait(false);
         if (existing is null)
         {
             var created = new WorkflowStepRun

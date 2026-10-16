@@ -176,7 +176,8 @@ still rejected for an already admitted run. This supersedes the initial tuple
 that included ManifestDigest.
 
 Coordinates are ordered **outermost first**. The foundation implements existing
-typed loop frames only; the following fan-out frames remain design targets:
+typed loop frames. [ZG-3b.1](activity-groups-zg3b1.md) adds one explicitly versioned
+root native fan-out frame; nested combinations and Fuwen tokens remain targets:
 
 - Loop: stable loop control identity plus one-based iteration number, using
   `WorkflowLoopReference`/`WorkflowLoopIterationReference` where applicable.
@@ -235,8 +236,9 @@ step retry must not invalidate an unrelated branch or every group in the run.
 ## 5. Expansion and unknown totals
 
 Group nesting alone cannot prove total work. Native loops have committed
-iteration/final boundaries; native fan-out has no durable enumeration-complete
-record; ordinary code-first control flow is arbitrary C#. Therefore the runtime
+iteration/final boundaries; ungrouped native fan-out has no durable enumeration-complete
+record. ZG-3b.1 opts into bounded immutable selection and current-revision closure
+at an explicit existing selection step. Ordinary code-first control flow is arbitrary C#. Therefore the runtime
 cannot infer completeness merely by scanning keys or observing a disposed scope.
 
 For grouped execution, the existing orchestrator/adapter supplies bounded
@@ -398,7 +400,9 @@ per-group derived-status events or second event log are needed. Preserve existin
 per-run cursor/export semantics and the snapshot-only generation/operation policy.
 
 The initial baseline was schema 6; AE-6.2 added authority schema 7.
-The foundation now uses **schema 8** with additive transactional 7-to-8 migration,
+The foundation uses **schema 8** with additive transactional 7-to-8 migration;
+ZG-3b.1 adds **schema 9** with immutable native fan-out evidence and a monotonic
+run capability marker,
 preserving 5-to-6 and 6-to-7 so supported older databases upgrade through the
 chain. Do not reuse or overwrite the authority migration.
 Empty group tables represent old runs; do not
@@ -462,8 +466,9 @@ unknown totals, sidecar evidence requirement, schema direction and reader model.
 
 Manifest v1 encoding/digest vectors and resource defaults are frozen in ZG-1.
 The ZG-2/3a foundation freezes explicit runtime factories, occurrence v1 bytes,
-optional provider/store capabilities and schema 8. Snapshot-cache limits,
-fan-out coordinates and dynamic selection/closure remain later decisions.
+optional provider/store capabilities and schema 8. ZG-3b.1 freezes root native
+fan-out coordinates, fixed-selection admission/closure and schema 9. Snapshot-cache
+limits, nested dynamic scopes and evolving selection remain later decisions.
 These are bounded engineering decisions,
 not permission to redesign execution semantics.
 

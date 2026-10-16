@@ -32,6 +32,8 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(run);
+        if (run.GroupFanOutUsed)
+            throw new WorkflowStateException("The grouped fan-out marker is store-managed and cannot be set during run creation.");
         if (run.GroupManifestDigest is not null)
             throw new WorkflowStateException("A run pinned to a group manifest must be created through the group repository capability.");
         await CreateRunCoreAsync(run, null, cancellationToken).ConfigureAwait(false);
@@ -44,6 +46,8 @@ internal sealed class SqliteWorkflowRepository : IWorkflowRepository
     {
         ArgumentNullException.ThrowIfNull(run);
         ArgumentNullException.ThrowIfNull(manifest);
+        if (run.GroupFanOutUsed)
+            throw new WorkflowStateException("The grouped fan-out marker is store-managed and cannot be set during run creation.");
         if (!string.Equals(run.GroupManifestDigest, manifest.ManifestDigest, StringComparison.Ordinal))
             throw new WorkflowStateException("The run's group-manifest pin does not match the supplied manifest.");
         await CreateRunCoreAsync(run, manifest, cancellationToken).ConfigureAwait(false);

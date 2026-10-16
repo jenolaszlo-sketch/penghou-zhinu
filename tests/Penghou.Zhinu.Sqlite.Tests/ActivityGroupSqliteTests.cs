@@ -313,6 +313,11 @@ public sealed class ActivityGroupSqliteTests : WorkflowEngineTestBase
             await connection.OpenAsync(TestContext.Current.CancellationToken);
             await using var downgrade = connection.CreateCommand();
             downgrade.CommandText = """
+                DROP TRIGGER trg_workflow_run_group_fanout_marker_immutable;
+                DROP TABLE workflow_group_fanout_closures;
+                DROP TABLE workflow_group_fanout_items;
+                DROP TABLE workflow_group_fanout_expansions;
+                ALTER TABLE workflow_runs DROP COLUMN group_fanout_used;
                 DROP TRIGGER trg_workflow_run_group_pin_immutable;
                 DROP INDEX ux_workflow_steps_group_membership_fk;
                 DROP TABLE workflow_step_group_memberships;
@@ -350,7 +355,7 @@ public sealed class ActivityGroupSqliteTests : WorkflowEngineTestBase
                 """;
             await using var reader = await check.ExecuteReaderAsync(TestContext.Current.CancellationToken);
             (await reader.ReadAsync(TestContext.Current.CancellationToken)).Should().BeTrue();
-            reader.GetInt32(0).Should().Be(8);
+            reader.GetInt32(0).Should().Be(ZhinuSqliteSchema.CurrentVersion);
             reader.GetInt32(1).Should().Be(1);
             reader.GetInt32(2).Should().Be(1);
             reader.GetInt32(3).Should().Be(1);

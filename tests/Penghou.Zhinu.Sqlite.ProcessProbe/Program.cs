@@ -8,7 +8,7 @@ using Penghou.Zhinu.Sqlite.Tests;
 
 namespace Penghou.Zhinu.Sqlite.ProcessProbe;
 
-public static class Program
+public static partial class Program
 {
     public static async Task<int> Main(string[] args)
     {
@@ -20,6 +20,8 @@ public static class Program
             return await GroupProbeAsync(args).ConfigureAwait(false);
         if (args.Length == 5 && args[0] == "--zhinu-group-atomic-probe")
             return await GroupAtomicProbeAsync(args).ConfigureAwait(false);
+        if (args.Length == 4 && args[0] == "--zhinu-group-fanout-probe")
+            return await GroupFanOutProbe.RunAsync(args[1], args[2], args[3]).ConfigureAwait(false);
         return 2;
     }
 

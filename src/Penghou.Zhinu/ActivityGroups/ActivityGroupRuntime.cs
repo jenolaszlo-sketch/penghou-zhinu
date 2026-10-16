@@ -18,6 +18,8 @@ internal static class ActivityGroupRuntime
     internal static async ValueTask ValidateRunAsync(IWorkflowStore store, WorkflowRun run,
         ActivityGroupManifest? manifest, CancellationToken cancellationToken)
     {
+        if (run.GroupFanOutUsed && store is not IWorkflowGroupFanOutRepository)
+            throw new WorkflowConfigurationException("The run requires the durable grouped fan-out repository capability.");
         if (!string.Equals(run.GroupManifestDigest, manifest?.ManifestDigest, StringComparison.Ordinal))
             throw new WorkflowConfigurationException("The registered group manifest does not match the admitted run.");
         if (run.GroupManifestDigest is null)
@@ -31,7 +33,7 @@ internal static class ActivityGroupRuntime
     }
 
     internal static void ValidateBinding(Guid runId, ActivityGroupManifest? manifest, ActivityGroupStepBinding? binding,
-        DurableLoopIterationIdentity? iteration = null)
+        DurableLoopIterationIdentity? iteration = null, string? fanOutCoordinate = null)
     {
         if (binding is null)
             return;
@@ -40,7 +42,9 @@ internal static class ActivityGroupRuntime
             throw new WorkflowConfigurationException("Step grouping must use an occurrence from this run's admitted manifest.");
         manifest.ValidateMembership(binding.Membership);
         var groupFrames = ActivityGroupOccurrence.ReadCoordinate(binding.Occurrence.ExecutionCoordinate);
-        var executionFrames = ActivityGroupOccurrence.ReadCoordinate(ActivityGroupOccurrence.Coordinate(iteration));
+        if (iteration is not null && fanOutCoordinate is not null)
+            throw new WorkflowConfigurationException("Nested grouped fan-out scopes are not qualified by this profile.");
+        var executionFrames = ActivityGroupOccurrence.ReadCoordinate(fanOutCoordinate ?? ActivityGroupOccurrence.Coordinate(iteration));
         if (groupFrames.Count > executionFrames.Count || !groupFrames.SequenceEqual(executionFrames.Take(groupFrames.Count)))
             throw new WorkflowConfigurationException("The group occurrence must belong to this step's typed execution scope or an enclosing scope.");
     }

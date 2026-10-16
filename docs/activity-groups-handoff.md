@@ -10,7 +10,10 @@ Prepared 2026-10-16. No chat history is required.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
 - Implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
 - Qualified checkpoint/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
-- SQLite schema: **8**, additive migrations **5→6→7→8**.
+- Current dynamic slice: [ZG-3b.1 contract](activity-groups-zg3b1.md) and
+  [evidence/source commits](qualification/activity-groups/zg3b1.md). The commits
+  above remain the exact foundation baseline, not the current runtime head.
+- SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
 
@@ -22,7 +25,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b next-checkpoint scope and gates](activity-groups-zg3b.md), then
+1. [ZG-3b.1 supported native profile](activity-groups-zg3b1.md),
+   [ZG-3b remaining scope and gates](activity-groups-zg3b.md), then
    [foundation contract and bytes](activity-groups-zg2-3a.md).
 2. [Qualification and reproduction](qualification/activity-groups/zg2-3a.md).
 3. [Design](activity-groups-design.md), [stage plan](activity-groups-implementation-plan.md),
@@ -79,10 +83,14 @@ a root logical parent. Static nested groups, mixed membership, retry/revision
 storage and process loss are foundation support, not proof of complete dynamic
 expansion or aggregate progress.
 
-- Grouped forks and every native FanOutAsync overload supplied Group reject
-  before affected work. Ungrouped fan-out inside a grouped run remains ordinary.
-- No durable keyed/typed/positional item-scope or enumeration/selection closure
-  exists. Never derive item identities from arbitrary dotted step keys.
+- Grouped forks and every native FanOutAsync overload supplied direct Group
+  reject before affected work. Additive FanOutGroup supports all four native
+  overloads at root scope with an explicit current completed selection step and
+  declared dependency. Ungrouped fan-out remains ordinary.
+- Schema 9 durably admits the full selected set before item claims; keyed tokens
+  and tagged positional indices have v2 coordinates, preserving root/loop v1.
+  Append-only exact-revision closure proofs become non-current on restart.
+  Never derive item identities from arbitrary dotted step keys.
 - Full nested-loop repeated groups, condition/input restart affecting expansion,
   partial expansion and skipped branches need dedicated ZG-3 qualification.
 - Parent child-invocation start/wait membership is not exposed by ChildRunOptions.
@@ -95,9 +103,11 @@ expansion or aggregate progress.
 
 ## Next checkpoint
 
-Implement [ZG-3b dynamic durability](activity-groups-zg3b.md): grouped fan-out,
-grouped forks, nested repeated occurrences, restart during partial fan-out/fork
-execution, resume/recovery identity preservation and child-workflow boundaries.
+Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.2 grouped
+forks**, then 3b.3 nested repeated occurrences/parents, 3b.4 broader partial/evolving
+dynamic expansion and recovery, 3b.5 child-workflow boundaries and 3b.6 consolidated
+qualification. ZG-3b.1's fixed-selection fan-out and four hard-exit proofs are
+qualified separately; they do not close the entire dynamic model.
 Preserve explicit rejection until each complete durable vertical passes its own
 real-process and compatibility gates. Static/restart correctness does not imply
 fan-out/fork correctness; retain separate evidence for every dynamic construct.
@@ -120,9 +130,12 @@ and inside manifest/claim SQLite transactions; an in-process reopen is insuffici
 The schema's exact-revision foreign key needs the explicit composite unique
 index on old workflow_steps tables as well as fresh databases. Migration tests
 must claim grouped work after upgrade, not only check the version stamp. Preserve
-authority migration's intermediate literal schema 7 and the full 5→6→7→8 chain.
+authority migration's intermediate literal schema 7/schema 8 and the full 5→6→7→8→9 chain.
 Older worker rejection and retained rows are qualified by the binary package probe.
-The probe's ExpectedCandidateSchemaVersion is now 8.
+The probe's ExpectedCandidateSchemaVersion is now 9. Preserve the monotonic
+GroupFanOutUsed trigger on fresh databases as well as migrations. Closure reads
+must evaluate current revisions coherently, and a new item revision needs a new
+proof instead of trying to replace immutable historical closure.
 
 Do not redesign control flow, step keys, child IDs, operation IDs, generation
 ownership, authorization grants, compensation semantics, Hufu boundaries or

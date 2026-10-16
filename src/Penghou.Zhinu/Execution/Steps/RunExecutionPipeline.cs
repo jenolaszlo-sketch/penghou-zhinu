@@ -178,6 +178,10 @@ internal sealed class RunExecutionPipeline
                 serializerOptions,
                 runCancellation.Token).ConfigureAwait(false);
             context.ThrowIfAuthorizationBlocked();
+            if ((run.GroupFanOutUsed || context.HasUsedGroupFanOut) &&
+                store is IWorkflowGroupFanOutRepository fanOuts &&
+                await fanOuts.HasIncompleteGroupFanOutAsync(workflowRunId, CancellationToken.None).ConfigureAwait(false))
+                throw new WorkflowConfigurationException("Workflow completed with an incomplete grouped fan-out enumeration.");
             if (store is IWorkflowWaitRepository waits &&
                 await waits.HasParkedWaitsAsync(
                     workflowRunId, leaseGeneration.Value, CancellationToken.None)

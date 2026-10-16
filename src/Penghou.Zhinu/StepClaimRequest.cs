@@ -3,6 +3,9 @@ namespace Penghou.Zhinu;
 /// <summary>Contains the stable execution shape required to claim a step.</summary>
 public sealed record StepClaimRequest
 {
+    /// <summary>Optional admitted fan-out item identity, validated atomically with membership and the claim.</summary>
+    public ActivityGroupFanOutItemClaim? FanOut { get; init; }
+
     /// <summary>The immutable run annotation pin; required on all claims of a grouped run.</summary>
     public string? GroupManifestDigest { get; init; }
 

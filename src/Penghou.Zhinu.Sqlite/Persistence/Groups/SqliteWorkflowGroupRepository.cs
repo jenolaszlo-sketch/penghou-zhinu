@@ -218,7 +218,7 @@ internal sealed class SqliteWorkflowGroupRepository
         return chain;
     }
 
-    private static async ValueTask InsertOrCompareOccurrenceAsync(
+    internal static async ValueTask InsertOrCompareOccurrenceAsync(
         SqliteConnection connection,
         SqliteTransaction transaction,
         ActivityGroupOccurrence occurrence,

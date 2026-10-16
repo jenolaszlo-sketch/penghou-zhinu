@@ -80,6 +80,11 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 if (databaseVersion is 5 or 6 or 7)
                     await MigrateActivityGroupsAsync(connection, schemaTransaction, cancellationToken)
                         .ConfigureAwait(false);
+                if (databaseVersion is 5 or 6 or 7 or 8)
+                    await MigrateGroupFanOutAsync(connection, schemaTransaction, cancellationToken)
+                        .ConfigureAwait(false);
+                await EnsureGroupFanOutMarkerTriggerAsync(connection, schemaTransaction, cancellationToken)
+                    .ConfigureAwait(false);
                 await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
                     "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
                     cancellationToken).ConfigureAwait(false);
@@ -193,7 +198,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
             .ConfigureAwait(false);
         var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
-        if (version is not (5 or 6 or 7 or ZhinuSqliteSchema.CurrentVersion))
+        if (version is not (5 or 6 or 7 or 8 or ZhinuSqliteSchema.CurrentVersion))
         {
             throw new ZhinuSchemaCompatibilityException(
                 ZhinuSqliteSchema.CurrentVersion,
@@ -267,6 +272,38 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             "UPDATE zhinu_schema SET version = 8 WHERE id = 1;", cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Additive v8-&gt;v9 durable grouped fan-out enumeration and closure evidence.</summary>
+    private static async ValueTask MigrateGroupFanOutAsync(
+        SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var inspect = SqliteStoreSupport.CreateCommand(connection, transaction,
+            "SELECT COUNT(*) FROM pragma_table_info($table) WHERE name=$column;");
+        inspect.Parameters.AddWithValue("$table", "workflow_runs");
+        inspect.Parameters.AddWithValue("$column", "group_fanout_used");
+        var found = Convert.ToInt32(await inspect.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) > 0;
+        if (!found)
+            await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+                "ALTER TABLE workflow_runs ADD COLUMN group_fanout_used INTEGER NOT NULL DEFAULT 0 CHECK (group_fanout_used IN (0,1));",
+                cancellationToken).ConfigureAwait(false);
+        await SqliteStoreSupport.ExecuteAsync(connection, transaction, """
+            CREATE TRIGGER IF NOT EXISTS trg_workflow_run_group_fanout_marker_immutable
+            BEFORE UPDATE OF group_fanout_used ON workflow_runs
+            WHEN OLD.group_fanout_used = 1 AND NEW.group_fanout_used <> 1
+            BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out marker is immutable'); END;
+            """, cancellationToken).ConfigureAwait(false);
+        await SqliteStoreSupport.ExecuteAsync(connection, transaction,
+            "UPDATE zhinu_schema SET version = 9 WHERE id = 1;", cancellationToken).ConfigureAwait(false);
+    }
+
+    private static ValueTask EnsureGroupFanOutMarkerTriggerAsync(
+        SqliteConnection connection, SqliteTransaction transaction, CancellationToken cancellationToken) =>
+        SqliteStoreSupport.ExecuteAsync(connection, transaction, """
+            CREATE TRIGGER IF NOT EXISTS trg_workflow_run_group_fanout_marker_immutable
+            BEFORE UPDATE OF group_fanout_used ON workflow_runs
+            WHEN OLD.group_fanout_used = 1 AND NEW.group_fanout_used <> 1
+            BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out marker is immutable'); END;
+            """, cancellationToken);
+
     private static readonly string Schema = $"""
         CREATE TABLE IF NOT EXISTS zhinu_schema
         (
@@ -302,6 +339,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             authorization_binding_id TEXT NULL,
             authority_subject_binding TEXT NULL,
             group_manifest_digest TEXT NULL,
+            group_fanout_used INTEGER NOT NULL DEFAULT 0 CHECK (group_fanout_used IN (0,1)),
             CHECK (status BETWEEN 0 AND 6),
             CHECK (lease_generation >= 1)
         );
@@ -406,6 +444,73 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         );
         CREATE INDEX IF NOT EXISTS ix_workflow_step_group_memberships_run
             ON workflow_step_group_memberships(workflow_run_id, step_key, step_revision);
+
+        CREATE TABLE IF NOT EXISTS workflow_group_fanout_expansions
+        (
+            workflow_run_id TEXT NOT NULL,
+            expansion_id TEXT NOT NULL,
+            fan_out_key TEXT NOT NULL,
+            boundary_step_id TEXT NOT NULL,
+            boundary_step_key TEXT NOT NULL,
+            boundary_revision INTEGER NOT NULL,
+            plan_digest TEXT NOT NULL,
+            canonical_json TEXT NOT NULL,
+            item_count INTEGER NOT NULL,
+            admitted_generation INTEGER NOT NULL,
+            PRIMARY KEY(workflow_run_id, expansion_id),
+            UNIQUE(workflow_run_id, fan_out_key, boundary_step_id, boundary_revision),
+            CHECK (length(expansion_id) = 64),
+            CHECK (length(plan_digest) = 64),
+            CHECK (boundary_revision >= 1),
+            CHECK (item_count BETWEEN 0 AND 4096),
+            CHECK (admitted_generation >= 1),
+            FOREIGN KEY(workflow_run_id) REFERENCES workflow_runs(id) ON DELETE CASCADE,
+            FOREIGN KEY(workflow_run_id, boundary_step_id, boundary_step_key, boundary_revision)
+                REFERENCES workflow_steps(workflow_run_id, id, step_key, revision) ON DELETE CASCADE
+        );
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_group_fanout_expansion_immutable
+        BEFORE UPDATE ON workflow_group_fanout_expansions
+        BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out expansions are immutable'); END;
+        CREATE INDEX IF NOT EXISTS ix_workflow_group_fanout_latest
+            ON workflow_group_fanout_expansions(workflow_run_id, fan_out_key, boundary_revision DESC);
+
+        CREATE TABLE IF NOT EXISTS workflow_group_fanout_items
+        (
+            workflow_run_id TEXT NOT NULL,
+            expansion_id TEXT NOT NULL,
+            item_key TEXT NOT NULL,
+            step_key TEXT NOT NULL,
+            input_hash TEXT NOT NULL,
+            group_occurrence_id TEXT NOT NULL,
+            role INTEGER NOT NULL,
+            PRIMARY KEY(workflow_run_id, expansion_id, item_key),
+            UNIQUE(workflow_run_id, expansion_id, step_key),
+            FOREIGN KEY(workflow_run_id, expansion_id)
+                REFERENCES workflow_group_fanout_expansions(workflow_run_id, expansion_id) ON DELETE CASCADE,
+            FOREIGN KEY(workflow_run_id, group_occurrence_id)
+                REFERENCES workflow_group_occurrences(workflow_run_id, group_occurrence_id) ON DELETE CASCADE
+        );
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_group_fanout_item_immutable
+        BEFORE UPDATE ON workflow_group_fanout_items
+        BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out items are immutable'); END;
+
+        CREATE TABLE IF NOT EXISTS workflow_group_fanout_closures
+        (
+            workflow_run_id TEXT NOT NULL,
+            expansion_id TEXT NOT NULL,
+            current_steps_json TEXT NOT NULL,
+            closure_digest TEXT NOT NULL,
+            closure_generation INTEGER NOT NULL,
+            completed_at TEXT NOT NULL,
+            PRIMARY KEY(workflow_run_id, expansion_id, closure_digest),
+            CHECK (length(closure_digest) = 64),
+            CHECK (closure_generation >= 1),
+            FOREIGN KEY(workflow_run_id, expansion_id)
+                REFERENCES workflow_group_fanout_expansions(workflow_run_id, expansion_id) ON DELETE CASCADE
+        );
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_group_fanout_closure_immutable
+        BEFORE UPDATE ON workflow_group_fanout_closures
+        BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out closure proofs are immutable'); END;
 
         CREATE TABLE IF NOT EXISTS workflow_step_dependencies
         (

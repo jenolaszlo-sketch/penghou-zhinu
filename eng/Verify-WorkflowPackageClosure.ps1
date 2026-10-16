@@ -223,7 +223,9 @@ var registry = new WorkflowRegistry()
     .Register("ordinary", "1", ordinary)
     .Register("protected", "1", protectedWorkflow)
     .Register(new WorkflowRegistration<string, string>(
-        new WorkflowDefinition { Name = "grouped", Version = "1" }, () => new GroupedWorkflow(), groupManifest));
+        new WorkflowDefinition { Name = "grouped", Version = "1" }, () => new GroupedWorkflow(), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-fanout", Version = "1" }, () => new GroupedFanOutWorkflow(), groupManifest));
 
 await using (var directEngine = new WorkflowEngine(store, registry, new ZhinuOptions()))
 {
@@ -273,9 +275,52 @@ await using (var builderEngine = new WorkflowEngineBuilder()
         occurrenceIds.Add(occurrence.GroupOccurrenceId);
     }
     if (occurrenceIds.Count != 2) throw new InvalidOperationException("Repeated group occurrences collided.");
+    var contextsBeforeFanOut = authorizer.Contexts.Count;
+    var fanOutId = await builderEngine.StartAsync("grouped-fanout", "1", "package-closure");
+    await builderEngine.ExecuteAsync(fanOutId);
+    if (await builderEngine.WaitForCompletionAsync<string>(fanOutId) != "A:B")
+        throw new InvalidOperationException("Grouped fan-out changed native results.");
+    var fanOutState = await reopened.GetGroupFanOutAsync(fanOutId, "items");
+    if (fanOutState is not { IsComplete: true, ItemCount: 2 } ||
+        (await reopened.GetRunAsync(fanOutId))?.GroupFanOutUsed != true)
+        throw new InvalidOperationException("Grouped fan-out enumeration/closure/marker was not durable.");
+    var fanOutContexts = authorizer.Contexts.Skip(contextsBeforeFanOut).Where(context => context.Requirements.Count > 0).ToArray();
+    if (fanOutContexts.Length != 2 || fanOutContexts.Any(context => context.Requirements.Single().Capability != "execute"))
+        throw new InvalidOperationException("Grouped fan-out lost its authorization declarations.");
+    var fanOutIds = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var step in (await reopened.GetStepsAsync(fanOutId)).Where(step => step.StepKey.StartsWith("items.", StringComparison.Ordinal)))
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Fan-out item lost its revision membership.");
+        var occurrence = await reopened.GetGroupOccurrenceAsync(fanOutId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Fan-out item lost its occurrence.");
+        if (membership.StepRevision != step.Revision || occurrence.ParentGroupOccurrenceId is null ||
+            !occurrence.ExecutionCoordinate.Contains("\"version\":2", StringComparison.Ordinal))
+            throw new InvalidOperationException("Fan-out item lost its parent or v2 coordinate.");
+        fanOutIds.Add(occurrence.GroupOccurrenceId);
+    }
+    if (fanOutIds.Count != 2) throw new InvalidOperationException("Fan-out occurrences collided.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder and durable grouped loop execution.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, durable grouped loop and grouped fan-out execution.");
+
+sealed class GroupedFanOutWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var selected = await context.StepAsync("select", input, (_, _) => Task.FromResult(new[] { "a", "b" }), cancellationToken: cancellationToken);
+        var values = await context.FanOutAsync("items", selected, value => value,
+            (value, _, _) => Task.FromResult(value.ToUpperInvariant()), new FanOutOptions { MaxDegreeOfParallelism = 1 },
+            new StepOptions
+            {
+                DependsOn = ["select"],
+                FanOutGroup = new ActivityGroupFanOutBinding(new ActivityGroupMembership("work"), "select", context.GetActivityGroup("root")),
+                Authorization = new WorkflowAuthorizationDeclaration([
+                    new ExecutionRequirement("workflow.capability", 1, "execute", "package-closure", null)])
+            }, cancellationToken);
+        return string.Join(':', values);
+    }
+}
 
 sealed class GroupedWorkflow : IWorkflow<string, string>
 {

@@ -33,11 +33,25 @@ manifest restoration and occurrence ancestry, immutable pins/tuples, and the
 reads are persistence diagnostics; they do not establish a coherent hierarchy,
 expansion completeness, aggregate status or progress.
 
-The current implementation rejects grouped forks and grouped native fan-out.
+The current implementation rejects grouped forks and direct Group on native
+fan-out. The additive `FanOutGroup` profile additionally requires
+`IWorkflowGroupFanOutRepository`; see [ZG-3b.1](activity-groups-zg3b1.md).
 Child runs admit their own manifests with separate run-local trees. Parent
 start/wait group binding and broader dynamic recovery are not yet qualified.
 See [the foundation contract](activity-groups-zg2-3a.md) and its evidence before
 claiming optional group support for another provider.
+
+Schema 9 adds immutable bounded fan-out enumeration/item rows before dispatch,
+anchored to an existing current completed selection revision. Claims validate the
+exact admitted item contract. Append-only closure proofs bind all current item
+step IDs/revisions; a historical proof cannot close a restarted item or boundary.
+`GroupFanOutUsed` is set atomically at admission and never cleared; caller-supplied
+true markers are rejected at run creation. Marked resumes require the additional
+capability. Fence both admission and closure with live owner/lease/generation;
+cascade all evidence on retention and evaluate closure from a coherent read
+transaction. Preserve native input-reference, retry, compensation and authority
+semantics. This profile rejects changed selection across boundary revisions and
+does not promise nested dynamic scopes or aggregate/query projections.
 
 Run `WorkflowStoreConformance.VerifyRunRoundTripAsync` and
 `VerifyArtifactRoundTripAsync` from `Penghou.Zhinu.Testing` as the minimum

@@ -161,6 +161,11 @@ public sealed class ActivityGroupManifest
             writer.WriteNullValue();
             return;
         }
+        WriteStringValue(writer, value);
+    }
+
+    internal static void WriteStringValue(Utf8JsonWriter writer, string value)
+    {
         // Freeze escaping independently of the runtime's changing encoder blocklist.
         // Validated strings emit printable ASCII literally (except quote/backslash),
         // and every other UTF-16 code unit as uppercase \uXXXX, including surrogate pairs.

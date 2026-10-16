@@ -1,6 +1,8 @@
 #nullable enable
 abstract Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Penghou.Zhinu.WorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
+const Penghou.Zhinu.ActivityGroupFanOutPlan.MaximumAllowedCanonicalBytes = 1048576 -> int
+const Penghou.Zhinu.ActivityGroupFanOutPlan.MaximumAllowedItems = 4096 -> int
 const Penghou.Zhinu.ActivityGroupManifest.CurrentContractVersion = 1 -> int
 const Penghou.Zhinu.ActivityGroupManifestLimits.MaximumAllowedCanonicalBytes = 1048576 -> int
 const Penghou.Zhinu.ActivityGroupManifestLimits.MaximumAllowedDepth = 128 -> int
@@ -21,6 +23,70 @@ Penghou.Zhinu.ActivityGroupDefinition.GroupKey.get -> string!
 Penghou.Zhinu.ActivityGroupDefinition.Kind.get -> Penghou.Zhinu.ActivityGroupKind
 Penghou.Zhinu.ActivityGroupDefinition.ParentGroupKey.get -> string?
 Penghou.Zhinu.ActivityGroupDefinition.Provenance.get -> Penghou.Zhinu.ActivityGroupMacroProvenance?
+Penghou.Zhinu.ActivityGroupFanOutBinding
+Penghou.Zhinu.ActivityGroupFanOutBinding.ActivityGroupFanOutBinding(Penghou.Zhinu.ActivityGroupMembership! membership, string! selectionStepKey, Penghou.Zhinu.ActivityGroupOccurrence? parent = null) -> void
+Penghou.Zhinu.ActivityGroupFanOutBinding.Membership.get -> Penghou.Zhinu.ActivityGroupMembership!
+Penghou.Zhinu.ActivityGroupFanOutBinding.Parent.get -> Penghou.Zhinu.ActivityGroupOccurrence?
+Penghou.Zhinu.ActivityGroupFanOutBinding.SelectionStepKey.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutIdentityKind
+Penghou.Zhinu.ActivityGroupFanOutIdentityKind.Keyed = 0 -> Penghou.Zhinu.ActivityGroupFanOutIdentityKind
+Penghou.Zhinu.ActivityGroupFanOutIdentityKind.Positional = 1 -> Penghou.Zhinu.ActivityGroupFanOutIdentityKind
+Penghou.Zhinu.ActivityGroupFanOutItem
+Penghou.Zhinu.ActivityGroupFanOutItem.Group.get -> Penghou.Zhinu.ActivityGroupStepBinding!
+Penghou.Zhinu.ActivityGroupFanOutItem.Group.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItem.InputHash.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutItem.InputHash.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItem.ItemKey.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutItem.ItemKey.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItem.StepKey.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutItem.StepKey.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItemClaim
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.ExpansionId.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.ExpansionId.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.ItemKey.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.ItemKey.init -> void
+Penghou.Zhinu.ActivityGroupFanOutPlan
+Penghou.Zhinu.ActivityGroupFanOutPlan.AuthorizationDeclarationHash.get -> string?
+Penghou.Zhinu.ActivityGroupFanOutPlan.Binding.get -> Penghou.Zhinu.ActivityGroupFanOutBinding!
+Penghou.Zhinu.ActivityGroupFanOutPlan.CanonicalJson.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.CompensationContract.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.Dependencies.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.ActivityGroupFanOutPlan.FanOutKey.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.GetExpansionId(System.Guid boundaryStepId) -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.GroupManifestDigest.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.IdentityKind.get -> Penghou.Zhinu.ActivityGroupFanOutIdentityKind
+Penghou.Zhinu.ActivityGroupFanOutPlan.ImplementationKey.get -> string?
+Penghou.Zhinu.ActivityGroupFanOutPlan.InputType.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.Items.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.ActivityGroupFanOutItem!>!
+Penghou.Zhinu.ActivityGroupFanOutPlan.OutputType.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.PlanDigest.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutPlan.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.ActivityGroupFanOutRequest
+Penghou.Zhinu.ActivityGroupFanOutRequest.LeaseGeneration.get -> long
+Penghou.Zhinu.ActivityGroupFanOutRequest.LeaseGeneration.init -> void
+Penghou.Zhinu.ActivityGroupFanOutRequest.Now.get -> System.DateTimeOffset
+Penghou.Zhinu.ActivityGroupFanOutRequest.Now.init -> void
+Penghou.Zhinu.ActivityGroupFanOutRequest.OwnerId.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutRequest.OwnerId.init -> void
+Penghou.Zhinu.ActivityGroupFanOutRequest.Plan.get -> Penghou.Zhinu.ActivityGroupFanOutPlan!
+Penghou.Zhinu.ActivityGroupFanOutRequest.Plan.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState
+Penghou.Zhinu.ActivityGroupFanOutState.BoundaryRevision.get -> int
+Penghou.Zhinu.ActivityGroupFanOutState.BoundaryRevision.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.BoundaryStepId.get -> System.Guid
+Penghou.Zhinu.ActivityGroupFanOutState.BoundaryStepId.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.ExpansionId.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutState.ExpansionId.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.FanOutKey.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutState.FanOutKey.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.IsComplete.get -> bool
+Penghou.Zhinu.ActivityGroupFanOutState.IsComplete.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.ItemCount.get -> int
+Penghou.Zhinu.ActivityGroupFanOutState.ItemCount.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.PlanDigest.get -> string!
+Penghou.Zhinu.ActivityGroupFanOutState.PlanDigest.init -> void
+Penghou.Zhinu.ActivityGroupFanOutState.WorkflowRunId.get -> System.Guid
+Penghou.Zhinu.ActivityGroupFanOutState.WorkflowRunId.init -> void
 Penghou.Zhinu.ActivityGroupKind
 Penghou.Zhinu.ActivityGroupKind.Logical = 0 -> Penghou.Zhinu.ActivityGroupKind
 Penghou.Zhinu.ActivityGroupKind.Macro = 1 -> Penghou.Zhinu.ActivityGroupKind
@@ -278,6 +344,11 @@ Penghou.Zhinu.IWorkflowExternalOperationRepository.ListAsync(System.Guid workflo
 Penghou.Zhinu.IWorkflowExternalOperationRepository.RegisterAsync(Penghou.Zhinu.ExternalOperationRegistration! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
+Penghou.Zhinu.IWorkflowGroupFanOutRepository
+Penghou.Zhinu.IWorkflowGroupFanOutRepository.AdmitGroupFanOutAsync(Penghou.Zhinu.ActivityGroupFanOutRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState!>
+Penghou.Zhinu.IWorkflowGroupFanOutRepository.CompleteGroupFanOutAsync(Penghou.Zhinu.ActivityGroupFanOutRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState!>
+Penghou.Zhinu.IWorkflowGroupFanOutRepository.GetGroupFanOutAsync(System.Guid workflowRunId, string! fanOutKey, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState?>
+Penghou.Zhinu.IWorkflowGroupFanOutRepository.HasIncompleteGroupFanOutAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
 Penghou.Zhinu.IWorkflowGroupManifestProvider
 Penghou.Zhinu.IWorkflowGroupManifestProvider.GroupManifest.get -> Penghou.Zhinu.ActivityGroupManifest?
 Penghou.Zhinu.IWorkflowGroupRepository
@@ -494,6 +565,8 @@ Penghou.Zhinu.StepClaimRequest.AllowSupersede.get -> bool
 Penghou.Zhinu.StepClaimRequest.AllowSupersede.init -> void
 Penghou.Zhinu.StepClaimRequest.AuthorizationDeclarationHash.get -> string?
 Penghou.Zhinu.StepClaimRequest.AuthorizationDeclarationHash.init -> void
+Penghou.Zhinu.StepClaimRequest.FanOut.get -> Penghou.Zhinu.ActivityGroupFanOutItemClaim?
+Penghou.Zhinu.StepClaimRequest.FanOut.init -> void
 Penghou.Zhinu.StepClaimRequest.Group.get -> Penghou.Zhinu.ActivityGroupStepBinding?
 Penghou.Zhinu.StepClaimRequest.Group.init -> void
 Penghou.Zhinu.StepClaimRequest.GroupManifestDigest.get -> string?
@@ -511,6 +584,8 @@ Penghou.Zhinu.StepOptions.Authorization.get -> Penghou.Zhinu.WorkflowAuthorizati
 Penghou.Zhinu.StepOptions.Authorization.init -> void
 Penghou.Zhinu.StepOptions.CompensationAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
 Penghou.Zhinu.StepOptions.CompensationAuthorization.init -> void
+Penghou.Zhinu.StepOptions.FanOutGroup.get -> Penghou.Zhinu.ActivityGroupFanOutBinding?
+Penghou.Zhinu.StepOptions.FanOutGroup.init -> void
 Penghou.Zhinu.StepOptions.Group.get -> Penghou.Zhinu.ActivityGroupStepBinding?
 Penghou.Zhinu.StepOptions.Group.init -> void
 Penghou.Zhinu.WaitKind
@@ -796,6 +871,8 @@ Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.get -> string?
 Penghou.Zhinu.WorkflowRun.AuthorizationProviderId.init -> void
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.get -> string?
 Penghou.Zhinu.WorkflowRun.DefinitionFingerprint.init -> void
+Penghou.Zhinu.WorkflowRun.GroupFanOutUsed.get -> bool
+Penghou.Zhinu.WorkflowRun.GroupFanOutUsed.init -> void
 Penghou.Zhinu.WorkflowRun.GroupManifestDigest.get -> string?
 Penghou.Zhinu.WorkflowRun.GroupManifestDigest.init -> void
 Penghou.Zhinu.WorkflowStep<TInput, TOutput>

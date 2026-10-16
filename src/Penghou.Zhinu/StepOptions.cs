@@ -4,6 +4,11 @@ namespace Penghou.Zhinu;
 public sealed record StepOptions
 {
     internal DurableLoopIterationIdentity? GroupExecutionScope { get; init; }
+    internal string? GroupFanOutExecutionScope { get; init; }
+    internal ActivityGroupFanOutItemClaim? FanOutClaim { get; init; }
+
+    /// <summary>Optional per-item group declaration, consumed only by native fan-out at an explicit selection boundary.</summary>
+    public ActivityGroupFanOutBinding? FanOutGroup { get; init; }
 
     /// <summary>Optional direct occurrence membership; never a control-flow or authorization declaration.</summary>
     public ActivityGroupStepBinding? Group { get; init; }

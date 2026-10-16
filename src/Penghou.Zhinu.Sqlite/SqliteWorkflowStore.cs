@@ -30,6 +30,7 @@ public sealed class SqliteWorkflowStore :
     , IWorkflowEventPageRepository
     , IWorkflowSnapshotRepository
     , IWorkflowGroupRepository
+    , IWorkflowGroupFanOutRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -43,6 +44,7 @@ public sealed class SqliteWorkflowStore :
     private readonly SqliteWaitRepository waits;
     private readonly SqliteWorkflowAuthorizationRepository authorizations;
     private readonly SqliteWorkflowGroupRepository groups;
+    private readonly SqliteWorkflowGroupFanOutRepository groupFanOut;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -71,6 +73,7 @@ public sealed class SqliteWorkflowStore :
         waits = new SqliteWaitRepository(factory);
         authorizations = new SqliteWorkflowAuthorizationRepository(factory);
         groups = new SqliteWorkflowGroupRepository(factory);
+        groupFanOut = new SqliteWorkflowGroupFanOutRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
@@ -129,6 +132,27 @@ public sealed class SqliteWorkflowStore :
         Guid stepId,
         CancellationToken cancellationToken = default) =>
         ObserveAsync("group.step.membership.get", () => groups.GetStepGroupMembershipAsync(stepId, cancellationToken));
+
+    public ValueTask<ActivityGroupFanOutState> AdmitGroupFanOutAsync(
+        ActivityGroupFanOutRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.admit", () => groupFanOut.AdmitAsync(request, cancellationToken));
+
+    public ValueTask<ActivityGroupFanOutState> CompleteGroupFanOutAsync(
+        ActivityGroupFanOutRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.complete", () => groupFanOut.CompleteAsync(request, cancellationToken));
+
+    public ValueTask<ActivityGroupFanOutState?> GetGroupFanOutAsync(
+        Guid workflowRunId,
+        string fanOutKey,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.get", () => groupFanOut.GetAsync(workflowRunId, fanOutKey, cancellationToken));
+
+    public ValueTask<bool> HasIncompleteGroupFanOutAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.incomplete", () => groupFanOut.HasIncompleteAsync(workflowRunId, cancellationToken));
 
     public ValueTask<WorkflowRun?> GetRunAsync(
         Guid id,

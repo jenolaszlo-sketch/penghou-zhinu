@@ -27,7 +27,7 @@ public sealed class ActivityGroupOccurrence
     public string GroupOccurrenceId { get; }
     public string GroupKey { get; }
     public string? ParentGroupOccurrenceId => Parent?.GroupOccurrenceId;
-    /// <summary>Canonical serialization of existing enclosing loop iteration coordinates; [] for the root scope.</summary>
+    /// <summary>Canonical execution coordinates: v1 root/loop arrays, or a versioned fan-out item envelope.</summary>
     public string ExecutionCoordinate { get; }
     internal string ManifestDigest { get; }
     internal ActivityGroupOccurrence? Parent { get; }
@@ -66,13 +66,61 @@ public sealed class ActivityGroupOccurrence
         return EncodeCoordinate(frames);
     }
 
-    internal static IReadOnlyList<(string Name, int Number)> ReadCoordinate(string coordinate)
+    internal static string FanOutCoordinate(string fanOutKey, ActivityGroupFanOutIdentityKind kind, string itemKey)
+    {
+        ActivityGroupText.Required(fanOutKey, 512, nameof(fanOutKey));
+        ActivityGroupText.Required(itemKey, 512, nameof(itemKey));
+        if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (kind == ActivityGroupFanOutIdentityKind.Positional &&
+            (!int.TryParse(itemKey, NumberStyles.None, CultureInfo.InvariantCulture, out var index) || index < 0 ||
+             index.ToString(CultureInfo.InvariantCulture) != itemKey))
+            throw new WorkflowConfigurationException("Positional fan-out coordinates require a canonical nonnegative index.");
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("version", 2);
+            writer.WriteStartArray("frames");
+            writer.WriteStartObject();
+            writer.WritePropertyName("fanOut");
+            ActivityGroupManifest.WriteStringValue(writer, fanOutKey);
+            writer.WriteString("kind", kind == ActivityGroupFanOutIdentityKind.Keyed ? "key" : "index");
+            writer.WritePropertyName("item");
+            ActivityGroupManifest.WriteStringValue(writer, itemKey);
+            writer.WriteEndObject();
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    internal static IReadOnlyList<ActivityGroupCoordinateFrame> ReadCoordinate(string coordinate)
     {
         if (coordinate.Length > MaximumCoordinateBytes || Encoding.UTF8.GetByteCount(coordinate) > MaximumCoordinateBytes)
             throw new WorkflowConfigurationException("Execution coordinate exceeds its byte limit.");
         try
         {
             using var json = JsonDocument.Parse(coordinate, new JsonDocumentOptions { MaxDepth = 4 });
+            if (json.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                var root = json.RootElement;
+                var version = root.GetProperty("version").GetInt32();
+                var array = root.GetProperty("frames");
+                if (version != 2 || array.GetArrayLength() != 1)
+                    throw new WorkflowConfigurationException("Unsupported fan-out coordinate version or shape.");
+                var frame = array[0];
+                var scope = frame.GetProperty("fanOut").GetString()!;
+                var token = frame.GetProperty("item").GetString()!;
+                var kind = frame.GetProperty("kind").GetString() switch
+                {
+                    "key" => ActivityGroupFanOutIdentityKind.Keyed,
+                    "index" => ActivityGroupFanOutIdentityKind.Positional,
+                    _ => throw new WorkflowConfigurationException("Unknown fan-out coordinate kind.")
+                };
+                if (FanOutCoordinate(scope, kind, token) != coordinate)
+                    throw new WorkflowConfigurationException("Fan-out coordinate is not canonical.");
+                return [new ActivityGroupCoordinateFrame(kind == ActivityGroupFanOutIdentityKind.Keyed ? "key" : "index", scope, token)];
+            }
             var frames = new List<(string Name, int Number)>();
             foreach (var element in json.RootElement.EnumerateArray())
             {
@@ -87,7 +135,8 @@ public sealed class ActivityGroupOccurrence
             }
             if (!string.Equals(EncodeCoordinate(frames), coordinate, StringComparison.Ordinal))
                 throw new WorkflowConfigurationException("Execution coordinate is not canonical.");
-            return frames;
+            return frames.Select(frame => new ActivityGroupCoordinateFrame("loop", frame.Name,
+                frame.Number.ToString(CultureInfo.InvariantCulture))).ToArray();
         }
         catch (Exception error) when (error is JsonException or InvalidOperationException or KeyNotFoundException or ArgumentException or FormatException or OverflowException)
         {
@@ -102,7 +151,9 @@ public sealed class ActivityGroupOccurrence
     private static string ComputeId(Guid runId, string groupKey, string? parentId, string coordinate)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        hash.AppendData("penghou.zhinu.activity-group-occurrence.v1\n"u8);
+        hash.AppendData(coordinate.StartsWith('{')
+            ? "penghou.zhinu.activity-group-occurrence.v2\n"u8
+            : "penghou.zhinu.activity-group-occurrence.v1\n"u8);
         AppendField(hash, runId.ToString("D", CultureInfo.InvariantCulture));
         AppendField(hash, groupKey);
         AppendField(hash, parentId);
@@ -120,6 +171,8 @@ public sealed class ActivityGroupOccurrence
             hash.AppendData(bytes);
     }
 }
+
+internal readonly record struct ActivityGroupCoordinateFrame(string Kind, string Scope, string Token);
 
 /// <summary>Binds optional static membership to one explicit runtime occurrence.</summary>
 public sealed class ActivityGroupStepBinding

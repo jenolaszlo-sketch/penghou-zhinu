@@ -200,6 +200,7 @@ public sealed class WorkflowLoopIteration<TState>
             Authorization = options?.Authorization,
             CompensationAuthorization = options?.CompensationAuthorization,
             Group = options?.Group,
+            FanOutGroup = options?.FanOutGroup,
             GroupExecutionScope = identity,
             DependsOn = dependencies
         };

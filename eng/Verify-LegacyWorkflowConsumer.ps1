@@ -14,7 +14,7 @@ param(
 
     [Parameter(Mandatory = $false)]
     [ValidateRange(6, 2147483647)]
-    [int] $ExpectedCandidateSchemaVersion = 8
+    [int] $ExpectedCandidateSchemaVersion = 9
 )
 
 Set-StrictMode -Version Latest
