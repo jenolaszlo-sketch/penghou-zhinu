@@ -1,8 +1,9 @@
 # Activity groups: staged implementation plan
 
-Date: 2026-10-15. Status: ZG-1 annotation contracts implemented; ZG-2 onward
-remain planned. See the [delivered contract](activity-groups-zg1.md) and
-[checkpoint evidence](qualification/activity-groups/zg1.md).
+Date: 2026-10-16. Status: ZG-1 and the ZG-2/3a durable foundation implemented.
+See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
+[foundation scope](activity-groups-zg2-3a.md),
+[ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
 Normative baseline: [design](activity-groups-design.md).
 Proof requirements: [qualification](activity-groups-qualification.md).
 Start here on a fresh coding session: [handoff](activity-groups-handoff.md).
@@ -69,6 +70,11 @@ execution scheduling, schema installation, group controls or UI.
 
 ## ZG-2 — Occurrence coordinates and claim mapping
 
+Foundation scope: explicit root/typed-loop occurrences, optional revision
+membership, immutable run pin and fail-closed admission land with ZG-3a.
+Native grouped fan-out and grouped forks reject; broader dynamic expansion,
+child boundary grouping and cross-repository profiles remain later work.
+
 **Scope:** deterministic occurrence encoder, explicit parent occurrence mapping,
 run-local Work/Control membership, current/historical revision selection. Integrate
 metadata plumbing without changing step keys, operation IDs or retry policy.
@@ -99,6 +105,11 @@ ZG-3 transaction proof; do not expose a process-local-only runtime capability.
 in clients, new activity parent links, widening supported Fuwen control flow.
 
 ## ZG-3 — Additive persistence, expansion evidence and restart
+
+ZG-3a adds schema 8 atomic run/manifest and claim/occurrence/membership writes,
+historical revision inheritance and real process-loss probes. It does not
+establish expansion closure or aggregate completeness. Keep ZG-3 open until the
+remaining dynamic/fork/child/partial-expansion matrix is qualified.
 
 **Scope:** optional store capability; run-bound manifest installation; occurrence,
 membership and expansion-evidence persistence; transactional migration; restart,

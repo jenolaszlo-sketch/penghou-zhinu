@@ -5,6 +5,40 @@ implementation must preserve fencing generations, use UTC timestamps, and make
 every method described as atomic a single durable transaction. A false or null
 claim result must leave no partial rows or events.
 
+## Optional activity groups (schema 8 SQLite foundation)
+
+An existing provider remains valid for ungrouped workflows. A registration with
+`IWorkflowGroupManifestProvider.GroupManifest` requires `IWorkflowGroupRepository`;
+the engine rejects it before admission/callbacks if that capability is missing.
+Implementing the interface is a durability promise, including the ordinary claim
+and restart paths, not just the four companion methods.
+
+`CreateGroupedRunAsync` atomically installs the run's immutable
+`GroupManifestDigest`, canonical manifest, and ordinary run-start event. Ordinary
+`CreateRunAsync` must reject a non-null group pin. Never install or replace a
+manifest later, clear its pin, or repurpose executable definition fingerprints.
+
+Every claim in a grouped run carries the exact manifest digest. Membership is
+optional even in a grouped run. A new step revision atomically materializes its
+occurrence ancestors and direct membership with the existing claim, dependency,
+compensation and event writes. Existing revisions compare exact membership,
+including absence, before returning reuse/busy/wait/retry. They cannot acquire,
+remove, or change membership afterward. Existing lease/generation checks still
+precede materialization. Retry keeps the same membership; selective restart
+copies it to the new revision and preserves history.
+
+Enforce same-run parent and exact step-revision ownership, bounded canonical
+manifest restoration and occurrence ancestry, immutable pins/tuples, and the
+65,536-occurrence per-run ceiling. Cascade annotations on run retention. Point
+reads are persistence diagnostics; they do not establish a coherent hierarchy,
+expansion completeness, aggregate status or progress.
+
+The current implementation rejects grouped forks and grouped native fan-out.
+Child runs admit their own manifests with separate run-local trees. Parent
+start/wait group binding and broader dynamic recovery are not yet qualified.
+See [the foundation contract](activity-groups-zg2-3a.md) and its evidence before
+claiming optional group support for another provider.
+
 Run `WorkflowStoreConformance.VerifyRunRoundTripAsync` and
 `VerifyArtifactRoundTripAsync` from `Penghou.Zhinu.Testing` as the minimum
 provider checks. Artifact insertion and its `artifact-published` event must be

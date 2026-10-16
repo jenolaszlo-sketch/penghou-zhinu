@@ -1,5 +1,12 @@
 # Releasing and upgrading Zhinu
 
+The unshipped activity-group foundation on `codex/zhinu-activity-groups` uses
+source candidate `0.2.0-preview.4` and SQLite schema **8**, accepting additive
+upgrades from 5, 6 and 7. Its exact local package/binary and process-loss evidence
+is recorded [separately](qualification/activity-groups/zg2-3a.md). This is not
+publication evidence. The authority-release narrative below describes its earlier
+candidate and schema; it does not override the branch's current schema gate.
+
 The current source candidate is `0.2.0-preview.1`. It adds optional execution
 authorization against exact `Penghou.Workflow.Abstractions` `0.1.0-preview.2`
 and upgrades SQLite from schema 5 to 6. Read the [release notes](releases/0.2.0-preview.1.md)

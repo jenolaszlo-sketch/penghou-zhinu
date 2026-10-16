@@ -1,8 +1,9 @@
 # Durable activity groups: implementation design
 
-Date: 2026-10-15. Status: ZG-1 annotation contracts implemented; runtime groups
-remain planned. The [ZG-1 contract](activity-groups-zg1.md) freezes manifest
-encoding/limits and records the boundary of the implemented slice.
+Date: 2026-10-16. Status: ZG-1 contracts qualified; the
+[ZG-2/3a foundation](activity-groups-zg2-3a.md) is implemented with explicit
+[qualification boundaries](qualification/activity-groups/zg2-3a.md). ZG-1 freezes
+manifest encoding/limits; ZG-2/3a freezes occurrence encoding and durable admission.
 Read with the [implementation plan](activity-groups-implementation-plan.md),
 [qualification matrix](activity-groups-qualification.md) and
 [next-agent handoff](activity-groups-handoff.md). Decisions below are the proposed
@@ -165,10 +166,17 @@ name/fingerprint never substitutes for invocation identity.
 The semantic occurrence identity is the tuple:
 
 ```text
-(group-contract-v1, RunId, ManifestDigest, GroupKey, enclosing Coordinates[])
+(occurrence-v1, RunId, GroupKey, ParentOccurrenceId?, enclosing Coordinates[])
 ```
 
-Coordinates are ordered **outermost first** and have discriminated kinds:
+The manifest digest pins immutable annotation bytes separately and is excluded
+from occurrence identity: changing display/provenance must not change the
+identity of the same run/key/parent/coordinate tuple. Such a manifest change is
+still rejected for an already admitted run. This supersedes the initial tuple
+that included ManifestDigest.
+
+Coordinates are ordered **outermost first**. The foundation implements existing
+typed loop frames only; the following fan-out frames remain design targets:
 
 - Loop: stable loop control identity plus one-based iteration number, using
   `WorkflowLoopReference`/`WorkflowLoopIterationReference` where applicable.
@@ -212,9 +220,11 @@ delivery.qualification   [fanout(repositories,string:repo-B)]
 Retry changes Attempt only: same occurrence and membership row. Selective
 restart changes StepId/Revision: append a membership for the new revision, keep
 old history, and calculate current state from current revisions. Lease rollover
-never creates an occurrence. A new run, fork or execution generation has its
-own run-bound occurrences; copied steps get new destination memberships, never
-foreign references to source groups. Preserve normal source/producer provenance.
+never creates an occurrence. A new run has its own run-bound occurrences;
+execution-generation changes within the same run do not change occurrence IDs.
+Grouped forks currently reject before writes. Future fork support must create
+destination memberships and never foreign references to source groups. Preserve
+normal source/producer provenance.
 
 When restart changes a controlling condition/input revision, old expansion
 evidence is historical. Effective occurrences/members are those reachable from
@@ -379,19 +389,18 @@ Same-run conflicting re-registration fails. Inserting a step revision and its
 membership is atomic, including restarted/copied revisions. Existing completed
 step reuse validates membership rather than attaching new claims after the fact.
 
-Group mutation transactions append bounded durable events for manifest binding,
-occurrence/member materialization and expansion changes (batch where practical).
-Duplicate writes return existing records without duplicate events. These events
+Foundation manifest/claim writes share the existing WorkflowStarted/StepStarted
+transactions and event log; no separate group event stream was introduced.
+Later expansion changes will need bounded invalidation events (batch where practical).
+Idempotent annotation insertion does not invent duplicate group events. These events
 are invalidation/correlation hints; a client refreshes the group snapshot. No
 per-group derived-status events or second event log are needed. Preserve existing
 per-run cursor/export semantics and the snapshot-only generation/operation policy.
 
-The initial baseline was schema 6; AE-6.2 has now committed authority schema 7.
-Reserve the **next free version (provisionally 8)** for groups;
-do not reuse 7 or overwrite its authority
-migration. Implement additive transactional 7-to-8 migration on that baseline,
-preserving 5-to-6 and 6-to-7 so supported older databases can upgrade through the
-chain. Reconfirm the version before implementation if the concurrent work changes.
+The initial baseline was schema 6; AE-6.2 added authority schema 7.
+The foundation now uses **schema 8** with additive transactional 7-to-8 migration,
+preserving 5-to-6 and 6-to-7 so supported older databases upgrade through the
+chain. Do not reuse or overwrite the authority migration.
 Empty group tables represent old runs; do not
 backfill artificial roots or memberships. Preserve IDs, step revisions/results,
 events/cursors, authorizations, waits, artifacts and definition fingerprints.
@@ -451,10 +460,11 @@ Resolved here: optional forest, direct membership, definition/occurrence split,
 identity inputs, retry/restart behavior, child isolation, status precedence,
 unknown totals, sidecar evidence requirement, schema direction and reader model.
 
-Manifest v1 encoding/digest vectors and resource defaults are now frozen in
-ZG-1. Still to freeze before the later public runtime APIs: occurrence encoding,
-overload/capability names, migration version availability and snapshot-cache
-limits. These are bounded engineering decisions,
+Manifest v1 encoding/digest vectors and resource defaults are frozen in ZG-1.
+The ZG-2/3a foundation freezes explicit runtime factories, occurrence v1 bytes,
+optional provider/store capabilities and schema 8. Snapshot-cache limits,
+fan-out coordinates and dynamic selection/closure remain later decisions.
+These are bounded engineering decisions,
 not permission to redesign execution semantics.
 
 Fuwen separately owns grammar, parameter/result contracts and its versioned

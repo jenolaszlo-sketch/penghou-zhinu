@@ -249,7 +249,12 @@ await using (var builderEngine = new WorkflowEngineBuilder()
         throw new InvalidOperationException("Protected execution did not pass its declared requirement to the authorizer.");
     var groupedId = await builderEngine.StartAsync("grouped", "1", "package-closure");
     await builderEngine.ExecuteAsync(groupedId);
-    if (await builderEngine.WaitForCompletionAsync<string>(groupedId) != "2" || authorizer.Contexts.Count != 3)
+    var groupedResult = await builderEngine.WaitForCompletionAsync<string>(groupedId);
+    // The configured authority profile also evaluates loop controls with empty
+    // requirements. Only the two body callbacks declare the execute capability.
+    var declaredGroupContexts = authorizer.Contexts.Skip(1).Where(context => context.Requirements.Count > 0).ToArray();
+    if (groupedResult != "2" || declaredGroupContexts.Length != 2 ||
+        declaredGroupContexts.Any(context => context.Requirements.Count != 1 || context.Requirements.Single().Capability != "execute"))
         throw new InvalidOperationException("Grouped loop execution lost its result or authorization declarations.");
     var reopened = new SqliteWorkflowStore(new ZhinuSqliteOptions { DatabasePath = databasePath, Pooling = false });
     if ((await reopened.GetGroupManifestAsync(groupedId))?.CanonicalJson != groupManifest.CanonicalJson)

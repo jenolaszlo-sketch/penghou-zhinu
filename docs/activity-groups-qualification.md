@@ -1,9 +1,12 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-15. Status: **full runtime matrix planned; ZG-1 contracts qualified separately**.
+Date: 2026-10-16. Status: **ZG-1 and the ZG-2/3a foundation qualified separately;
+the full runtime matrix remains open**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
-contract-level cases. The full runtime matrix below remains planned; contract
-fixtures do not prove persistence, occurrence identity, restart or group queries.
+contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
+records the narrow root/loop durability, admission and process-loss slice.
+The full matrix below remains open; those tests do not prove dynamic expansion
+closure, complete grouped fan-out/fork/child operation recovery or group queries.
 Use the [design](activity-groups-design.md) and
 [stage plan](activity-groups-implementation-plan.md). Native Zhinu and Fuwen
 adapter profiles are separate: native support does not prove DSL support.
@@ -65,9 +68,11 @@ methods/test names proposed for groups below are new work, not existing tests.
 | Q46 | Different macro/library content or group manifest under old run/admission | Reject altered binding; preserve old run/bytes; no live re-expansion or retrospective metadata restamping. | 6,7 |
 | Q47 | Fresh external consumer resolves exact candidate packages on .NET 8/10 and both OS jobs | Correct closure, API/binary compatibility and schema profile; no reliance on a source-tree project reference. | 6,7 |
 
-For Q07, occurrence IDs include ManifestDigest by design. Test sibling-order
-independence of GroupKey/coordinates separately from an intentionally changed
-manifest digest; do not claim IDs across two different manifests must be equal.
+For Q07, occurrence v1 excludes ManifestDigest. Given the same run, GroupKey,
+explicit parent occurrence and coordinates, display/provenance or unrelated
+sibling changes do not change its ID. The immutable manifest pin is separate:
+re-registration with changed canonical bytes still conflicts for an admitted run.
+The initial design included the digest in identity; ZG-2/3a supersedes that rule.
 
 For Fuwen Q43-Q45, arbitrary nested control-flow combinations not supported by
 the selected adapter must be negative preflight cases until implemented. Native

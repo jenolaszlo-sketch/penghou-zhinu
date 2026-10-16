@@ -230,12 +230,20 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-1:** immutable bounded definitions, optional membership values,
   forest validation and manifest v1 canonical/digest vectors. See the
   [contract](docs/activity-groups-zg1.md) and
-  [qualification](docs/qualification/activity-groups/zg1.md). Runtime attachment
-  remains gated on the durable ZG-2/3 vertical. No group execution or schema
-  change is included; qualification also restores pre-authority-binding binary
+  [qualification](docs/qualification/activity-groups/zg1.md). That contract slice
+  contains no group execution or schema change; qualification also restores pre-authority-binding binary
   overloads discovered missing by the legacy consumer probe.
-- [ ] **ZG-2:** runtime occurrence coordinates and claim mapping.
+- [x] **ZG-2 foundation:** deterministic root/typed-loop occurrences, explicit
+  parent identity, scoped claim mapping and optional Work/Control membership.
+  See the [foundation](docs/activity-groups-zg2-3a.md) and
+  [evidence](docs/qualification/activity-groups/zg2-3a.md). Item scopes remain deferred.
+- [x] **ZG-3a foundation:** schema 8 atomic manifest/admission and revision
+  membership, restart inheritance, fail-closed capabilities and real process-loss
+  reconstruction. No hierarchy query or expansion-completeness claim is included.
 - [ ] **ZG-3:** additive persistence, expansion evidence and restart.
+  Remaining: dynamic selection/closure, partial and nested repeated expansion,
+  grouped fan-out/fork support, and child-boundary/operation recovery. Grouped
+  native fan-out and grouped forks explicitly reject in the foundation.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
