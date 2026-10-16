@@ -1,14 +1,32 @@
 # ZG-3b.1 qualification: root native fan-out
 
-Date: 2026-10-16. Status: **1,441 tests passed; package gates pending**. The following
-qualification commit will record the exact source commit, test totals, package
-hashes and binary/package probe results in [zg3b1.json](zg3b1.json).
+Date: 2026-10-16. Status: **passed for the root fixed-selection native profile**.
+Runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`.
+The commit containing this record adds qualification evidence only. Exact test
+receipts, package/source hashes, recovery records and binary/package results are
+retained in [zg3b1.json](zg3b1.json).
 
 Branch: `codex/zhinu-activity-groups`. Documentation base: `91cc723`.
 The last foundation checkpoint remains `33c051e`, with runtime source `130e927`.
 Do not mistake foundation evidence for dynamic-surface qualification.
 Read the [profile contract](../../activity-groups-zg3b1.md) before applying these
 results to another construct or provider.
+
+| Gate | Result |
+| --- | --- |
+| Release tests | **1,441 passed**, zero failures/skips, 11 assembly/framework combinations on .NET 8/10 |
+| Formatting | Full solution verify-no-changes passed on the committed source |
+| Process loss | Four hard-exit modes on both frameworks; eight before/after receipts retained |
+| Packages | All seven `0.2.0-preview.4` candidate packages built from the exact source commit |
+| Package-only consumer | Passed both frameworks, including ordinary/protected execution, authorized groups, loops and native fan-out |
+| Existing compiled consumer | Published `0.1.0-preview.15` consumer unchanged while candidate assemblies were substituted; both frameworks passed |
+| Old worker | Rejected schema 9 on both frameworks; version and four retained step rows unchanged |
+| Review | Independent Luna source review found no remaining concrete issue after the fresh-database marker-trigger fix |
+
+The final SQLite suites were rerun after correcting a test-output fixture; the
+nine other assembly/framework receipts remain valid because runtime sources were
+unchanged. Schema-8 retained grouped-row migration is a separate test from the
+published binary probe's schema-5→9 migration. Neither is Linux/remote evidence.
 
 ## Supported profile and evidence
 

@@ -13,6 +13,9 @@ Prepared 2026-10-16. No chat history is required.
 - Current dynamic slice: [ZG-3b.1 contract](activity-groups-zg3b1.md) and
   [evidence/source commits](qualification/activity-groups/zg3b1.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
+- ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
+  1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
+  The following qualification commit changes evidence/docs only.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
