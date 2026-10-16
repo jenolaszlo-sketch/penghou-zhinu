@@ -9,6 +9,7 @@ Prepared 2026-10-16. No chat history is required.
 - Worktree: `C:/Users/Laszlos/source/repos/Solo/workstreams/zhinu-activity-groups`.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
 - Implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
+- Qualified checkpoint/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
 - SQLite schema: **8**, additive migrations **5→6→7→8**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
@@ -21,7 +22,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [Foundation contract and bytes](activity-groups-zg2-3a.md).
+1. [ZG-3b next-checkpoint scope and gates](activity-groups-zg3b.md), then
+   [foundation contract and bytes](activity-groups-zg2-3a.md).
 2. [Qualification and reproduction](qualification/activity-groups/zg2-3a.md).
 3. [Design](activity-groups-design.md), [stage plan](activity-groups-implementation-plan.md),
    [full qualification matrix](activity-groups-qualification.md), [roadmap](../ROADMAP.md).
@@ -93,13 +95,19 @@ expansion or aggregate progress.
 
 ## Next checkpoint
 
-Continue the remaining ZG-3 dynamic durability slice: freeze a typed native item
-coordinate only alongside durable enumeration/selection and current-revision
-closure evidence; prove partial expansion across process loss and stale writers.
-Extend nested-loop, child-boundary and fork destination rebind coverage. Preserve
-explicit rejection until each path is durable. Keep ZG-3 open, then implement the
-ZG-5 pure reducer before freezing ZG-4 read DTOs; ZG-6/7 Fuwen adoption follows
-exact package qualification. Do not infer Fuwen support from native tests.
+Implement [ZG-3b dynamic durability](activity-groups-zg3b.md): grouped fan-out,
+grouped forks, nested repeated occurrences, restart during partial fan-out/fork
+execution, resume/recovery identity preservation and child-workflow boundaries.
+Preserve explicit rejection until each complete durable vertical passes its own
+real-process and compatibility gates. Static/restart correctness does not imply
+fan-out/fork correctness; retain separate evidence for every dynamic construct.
+
+The user-directed sequence is ZG-3b → ZG-4 hierarchy/query projection → ZG-5
+aggregate state/progress → ZG-6 Fuwen handoff/integration → ZG-7 cross-repository
+qualification. This supersedes the earlier reducer-before-query stage ordering.
+Queries/progress must build on the qualified dynamic occurrence model, and Fuwen
+adoption must wait for the structures its selected profile can emit. Extend the
+established architecture rather than revisiting its fundamental contracts.
 
 ## Checks and known traps
 

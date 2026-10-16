@@ -15,19 +15,22 @@ and inspection/qualification. This plan refines them into ZG-1 through ZG-7;
 the identifiers below supersede that broad numbering for implementation tracking.
 ZG-0 is the documentation/design checkpoint, not a runtime feature completion.
 
-Recommended order:
+User-directed order, updated 2026-10-16:
 
 ```text
-ZG-0 design -> ZG-1 contracts -> ZG-2 identity + ZG-3 durable vertical
-                                      -> ZG-5 pure projection -> ZG-4 queries
-                                      -> ZG-6 Fuwen adapter -> ZG-7 qualification
+ZG-1 contracts -> ZG-2 / ZG-3a foundation (qualified)
+              -> ZG-3b dynamic durability
+              -> ZG-4 hierarchy/queries -> ZG-5 aggregate state/progress
+              -> ZG-6 Fuwen handoff/integration -> ZG-7 cross-repository qualification
 ```
 
 Identity and persistence are one incremental vertical: do not publish a
-memory-only group feature and call it durable. Define/test the state reducer
-before finalizing read DTOs so the API can represent unknown totals and mixed
-states. Fuwen package compatibility investigation can occur early; adoption
-waits for a qualified group runtime. No group feature is enabled by default.
+memory-only group feature and call it durable. Finish the dynamic occurrence
+model before exposing queries or aggregate progress. ZG-4 first projects durable
+structure and facts; ZG-5 adds derived state/progress through compatible query
+extensions. This replaces the earlier ZG-5-before-ZG-4 ordering. Fuwen adoption
+waits for qualification of the structures its selected profile can emit.
+No group feature is enabled by default.
 
 All new file names below are proposed; existing integration anchors are exact.
 Every stage must update public API baselines where applicable, preserve existing
@@ -106,6 +109,10 @@ in clients, new activity parent links, widening supported Fuwen control flow.
 
 ## ZG-3 — Additive persistence, expansion evidence and restart
 
+Next: [ZG-3b dynamic durability](activity-groups-zg3b.md), with separate proof for
+grouped fan-out, forks, nested repetition, interrupted partial execution,
+resume/recovery and child boundaries. ZG-2/3a evidence is not dynamic qualification.
+
 ZG-3a adds schema 8 atomic run/manifest and claim/occurrence/membership writes,
 historical revision inheritance and real process-loss probes. It does not
 establish expansion closure or aggregate completeness. Keep ZG-3 open until the
@@ -148,13 +155,44 @@ concurrent idempotent-registration evidence.
 
 **Dependencies:** ZG-1/2 and the authority-subject baseline
 `0a523826c2d7281164ee0b1826fcb1bbee2d6689`, which landed during preparation.
-Schema 7 is already used by that change; groups provisionally target
-8, subject to a fresh version check. Preserve its nullable binding
-and migration. **Non-goals:**
+The foundation uses schema 8 and preserves the nullable authority binding and
+5→6→7→8 migration chain. Reserve the next free schema number only if ZG-3b needs
+an additive migration. **Non-goals:**
 universal migration from unsupported historical schemas, event sourcing,
 group pause/cancel/retry, a second control-flow interpreter.
 
-## ZG-5 — Pure aggregate state and progress (before the public reader)
+## ZG-4 — Coherent query and drill-down surface
+
+**Scope:** optional engine/store group reader, root forest plus ungrouped members,
+direct member/child queries, bounded progressive traversal, safe provenance and
+read-only child-run links. Implement snapshot-token expiration/resync explicitly.
+
+**Likely components:** group reader interfaces; `WorkflowEngine.cs`;
+`SqliteWorkflowStore.ReadRunSnapshotCoreAsync` / `BuildSnapshotNodeAsync` patterns;
+same-transaction group/approval/step queries; `RunSnapshotOptions.cs` only through
+additive compatible options. Reuse `IWorkflowSnapshotRepository` conventions.
+CLI integration may extend `CliApp.cs`/`CliOutput.cs`, but a UI is not required.
+
+**Invariants:** structure and current revision facts share one boundary. When
+ZG-5 adds derived state/counters, they and safe approval facts must use that same
+boundary. Event-page watermark is not a pagination snapshot.
+No client SQL joins or guessed key parsing. Complete summaries cannot be
+calculated from a truncated page. Child trees never cross parent group ownership.
+
+**Tests/probes:** Q37-Q42; concurrent writer during snapshot; two-page traversal
+while a generation changes without a stream event; expired/lost snapshot token;
+limits, cancellation, absent run/occurrence, unsupported store, deleted run and
+unauthorized provenance. Check SQL plans/indexes for bounded child/member reads.
+
+**Exit:** a generic test client reconstructs the complete supported tree by
+drill-down, keeps ungrouped steps, preserves snapshot coherence and recognizes
+explicit resync/limits. Source-independent inspection works after process restart.
+
+**Dependencies:** qualified ZG-3b. **Non-goals:** ZG-5 aggregate calculations,
+visual styling, web UI, exposing raw inputs,
+long-lived SQLite read transactions or a persistent projection authority.
+
+## ZG-5 — Pure aggregate state and progress
 
 **Scope:** deterministic reducer implementing design section 6, Work/Control
 counts, unknown totals, current versus historical occurrences, closure validity,
@@ -178,40 +216,13 @@ different completion/total results.
 
 **Exit:** every design table row has positive and mixed-state cases; reducer does
 no I/O, payload decoding, model calls or scheduling. Missing facts produce an
-explicit incomplete projection. Freeze reason codes before exposing the reader.
+explicit incomplete projection. Freeze reason codes before exposing the aggregate
+reader extension.
 
-**Dependencies:** ZG-1/2 contracts, ZG-3 evidence model; pure tests can start early.
+**Dependencies:** qualified ZG-3b occurrence/evidence model and ZG-4 structural
+queries. Preserve the reducer's separation from I/O.
 **Non-goals:** replacing run/step state machines, interpreting Fuwen item payloads,
 acceptance/quality judgments, group-specific cancellation or retry behavior.
-
-## ZG-4 — Coherent query and drill-down surface
-
-**Scope:** optional engine/store group reader, root forest plus ungrouped members,
-direct member/child queries, bounded progressive traversal, safe provenance and
-read-only child-run links. Implement snapshot-token expiration/resync explicitly.
-
-**Likely components:** group reader interfaces; `WorkflowEngine.cs`;
-`SqliteWorkflowStore.ReadRunSnapshotCoreAsync` / `BuildSnapshotNodeAsync` patterns;
-same-transaction group/approval/step queries; `RunSnapshotOptions.cs` only through
-additive compatible options. Reuse `IWorkflowSnapshotRepository` conventions.
-CLI integration may extend `CliApp.cs`/`CliOutput.cs`, but a UI is not required.
-
-**Invariants:** state, counters and hierarchy share one boundary; do not read
-approval state outside it. Event-page watermark is not a pagination snapshot.
-No client SQL joins or guessed key parsing. Complete summaries cannot be
-calculated from a truncated page. Child trees never cross parent group ownership.
-
-**Tests/probes:** Q37-Q42; concurrent writer during snapshot; two-page traversal
-while a generation changes without a stream event; expired/lost snapshot token;
-limits, cancellation, absent run/occurrence, unsupported store, deleted run and
-unauthorized provenance. Check SQL plans/indexes for bounded child/member reads.
-
-**Exit:** a generic test client reconstructs the complete supported tree by
-drill-down, keeps ungrouped steps, preserves snapshot coherence and recognizes
-explicit resync/limits. Source-independent inspection works after process restart.
-
-**Dependencies:** ZG-3/5. **Non-goals:** visual styling, web UI, exposing raw inputs,
-long-lived SQLite read transactions or a persistent projection authority.
 
 ## ZG-6 — Fuwen metadata handoff and package qualification
 

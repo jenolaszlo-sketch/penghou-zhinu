@@ -240,17 +240,22 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-3a foundation:** schema 8 atomic manifest/admission and revision
   membership, restart inheritance, fail-closed capabilities and real process-loss
   reconstruction. No hierarchy query or expansion-completeness claim is included.
-- [ ] **ZG-3:** additive persistence, expansion evidence and restart.
-  Remaining: dynamic selection/closure, partial and nested repeated expansion,
-  grouped fan-out/fork support, and child-boundary/operation recovery. Grouped
-  native fan-out and grouped forks explicitly reject in the foundation.
+- [ ] **ZG-3b — next checkpoint:** dynamic occurrence durability: grouped
+  fan-out/forks, nested repeated groups, restart during partial execution,
+  resume/recovery identity preservation and child-workflow boundaries. See the
+  [scope and independent proof gates](docs/activity-groups-zg3b.md). Static/restart
+  correctness does not imply fan-out/fork correctness. Keep explicit rejection
+  until each dynamic vertical is durable and qualified.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
-Implement ZG-2/3 as a durable vertical, and the ZG-5 reducer before freezing ZG-4
-read DTOs. The detailed scope checklist below remains useful, but its headings
+Finish ZG-3b before ZG-4 queries, then ZG-5 aggregate state/progress, ZG-6 Fuwen
+integration and ZG-7 cross-repository qualification. This supersedes the earlier
+reducer-before-query stage ordering. Preserve the foundation architecture and
+avoid coupling Fuwen to temporary native-runtime limits. The checklist below
+remains useful, but its headings
 are broad requirement areas rather than the new stage identifiers.
 
 #### Shared identity, state and compatibility requirements
