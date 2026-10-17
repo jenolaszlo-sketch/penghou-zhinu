@@ -4,14 +4,25 @@ Updated 2026-10-17. No chat history is required.
 
 ## Checkout and checkpoint
 
+**Safe handoff requested by the user because usage is low.** ZG-3b.4 is qualified;
+no ZG-3b.5 runtime work has started. Resume with **ZG-3b.5 child boundaries** only
+when asked: inspect child start/wait identity, admission/grouping, reuse/restart,
+cancellation and recovery before writing a bounded implementation note. Read the
+3b.4 contract/evidence first. There is no pending product defect or failed gate.
+Previously admitted unfinished work remains an obligation; this checkpoint does
+not implement in-place replanning, implicit retirement or a first-class epoch API.
+After child qualification, continue to 3b.6 consolidation, then ZG-4/5, Fuwen and
+cross-repository gates. Preserve the exact-source evidence; rerun checks when
+subsequent changes warrant them rather than restarting completed qualification.
+
 - Repository: `https://github.com/jenolaszlo-sketch/penghou-zhinu.git`.
 - Branch: `codex/zhinu-activity-groups`.
 - Worktree: `C:/Users/Laszlos/source/repos/Solo/workstreams/zhinu-activity-groups`.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
 - Foundation implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
 - Qualified foundation/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
-- Current dynamic slice: [ZG-3b.3 nested repetition](activity-groups-zg3b3.md) and
-  [evidence/source commits](qualification/activity-groups/zg3b3.md). The commits
+- Current dynamic slice: [ZG-3b.4 explicit evolving-selection epochs](activity-groups-zg3b4.md) and
+  [evidence/source commits](qualification/activity-groups/zg3b4.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
@@ -26,6 +37,17 @@ Updated 2026-10-17. No chat history is required.
   All 1,531 tests, formatting and both package/binary probes passed on .NET 8/10;
   qualification retains the exact source/package hashes and recovery receipts.
   No runtime algorithm, identity encoding or schema change was needed.
+- ZG-3b.4 source: `bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6`, starting from
+  `9be3308555e2fe2c4cc169391a4baf6cc32a8d91`. Explicit pinned epoch schedule,
+  distinct stable root fan-out/selection keys and immutable historical membership.
+  Expand/contract/reorder/disappear/reappear, retry/restart and changed current
+  selectors are qualified under that profile. Eight positive crash/recovery
+  boundaries per framework plus a separate omission rejection case retain raw
+  receipts. All **1,571 tests**, formatting, seven package builds and both isolated
+  package/binary/schema probes passed on .NET 8/10. Evidence retains 16 positive
+  recovery receipts and 20 semantic receipts (including two omission rejection
+  process cases), with **36 fresh worker starts** overall.
+  No first-class epoch API, runtime algorithm, schema or occurrence codec change.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
@@ -37,7 +59,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b.3 supported nested profile and pre-code note](activity-groups-zg3b3.md),
+1. [ZG-3b.4 supported explicit-epoch profile and pre-code note](activity-groups-zg3b4.md),
+   [ZG-3b.3 supported nested profile and pre-code note](activity-groups-zg3b3.md),
    [ZG-3b.2 supported fork profile](activity-groups-zg3b2.md),
    [ZG-3b.1 supported fan-out profile](activity-groups-zg3b1.md),
    [ZG-3b remaining scope and gates](activity-groups-zg3b.md), then
@@ -95,7 +118,8 @@ Use each profile's explicit supported/remaining lists. The foundation qualified
 one native loop under a root logical parent; ZG-3b.3 separately qualifies fixed
 nested native loops with three outer and two inner iterations, exactly six leaf
 occurrences and reconstructable immediate-parent ancestry. This is not proof of
-arbitrary dynamic expansion, evolving selection or aggregate progress.
+arbitrary dynamic expansion or aggregate progress. ZG-3b.4 separately qualifies
+evolving sets across explicit immutable root epochs, without rewriting old scopes.
 
 - Grouped forks use `IWorkflowGroupForkRepository` to atomically install the
   target manifest and rebind copied parent/member lineage under the existing
@@ -114,6 +138,13 @@ arbitrary dynamic expansion, evolving selection or aggregate progress.
   through inner/outer activity retry, selective restart and early/later process
   loss. Native commits/finals govern completion. Condition/input changes affecting
   selection, broader partial expansion and skipped branches remain open.
+- ZG-3b.4 pins epoch identities and ordered selector output in ordinary durable
+  steps, with distinct native fan-out keys per epoch. Completed historical
+  selectors replay despite today's changed decisions; only unselected future
+  epochs consult current selectors. Older unfinished scopes remain obligations,
+  including when a newer epoch excludes their items. Omitting an incomplete scope
+  fails the exact existing completion guard. Same-scope changed plans still reject;
+  no implicit retirement/cancellation or active-only progress model is added.
 - Parent child-invocation start/wait membership is not exposed by ChildRunOptions.
   Child-owned manifest admission is tested; broader child restart/reuse/fork,
   cancellation and boundary-group operation recovery remain open.
@@ -124,14 +155,16 @@ arbitrary dynamic expansion, evolving selection or aggregate progress.
 
 ## Next checkpoint
 
-Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.4 broader
-partial/evolving dynamic expansion and recovery**, then 3b.5 child-workflow
-boundaries and 3b.6 consolidated qualification. ZG-3b.1's fixed-selection fan-out,
-ZG-3b.2's native fork lineage and ZG-3b.3's fixed nested repetition have separate
+Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.5 child-workflow
+boundaries**, then **3b.6 consolidated qualification**. ZG-3b.1's fixed-selection fan-out,
+ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
+explicit immutable selection epochs have separate
 evidence; they do not close the entire dynamic model. Nested repetition/fork
 composition is not newly qualified. The accepted grouped fan-out/fork rejection
 and root-only grouped fan-out profile remain intact.
-Evolving selection remains deferred after ZG-3b.3.
+In-place old-plan replacement and automatic retirement remain outside the accepted
+explicit-epoch profile. The consolidated record must prominently preserve:
+**Nested repetition required no runtime algorithm, schema, or identity redesign.**
 Preserve explicit rejection until each complete durable vertical passes its own
 real-process and compatibility gates. Static/restart correctness does not imply
 fan-out/fork correctness; retain separate evidence for every dynamic construct.

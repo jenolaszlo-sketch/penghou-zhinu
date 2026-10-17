@@ -74,3 +74,48 @@ It does not memoize arbitrary external key-selector code. The original ordered
 selection JSON remains in each exact selector revision. Fan-out evidence itself
 sorts keyed items and has no source-order column; no new public ordered history
 or active-membership projection is claimed.
+
+## Qualified authoring pattern
+
+See the [qualification record](qualification/activity-groups/zg3b4.md) for exact
+source and gate results. The profile uses existing public APIs, with no first-class
+epoch API or implicit reconciliation. Pin the epoch identities in an ordinary
+durable step, and give each epoch a stable selection step and native scope:
+
+```csharp
+var epochs = await context.StepAsync("epochs", input,
+    (_, _, _) => Task.FromResult(new[] { "first", "second" }));
+foreach (var epoch in epochs)
+{
+    var selectionKey = "select." + epoch;
+    var selected = await context.StepAsync(selectionKey, epoch,
+        (value, _, ct) => SelectItemsAsync(value, ct));
+    await context.FanOutAsync("items." + epoch, selected, item => item.Key,
+        ExecuteItemAsync, new FanOutOptions { MaxDegreeOfParallelism = 1 },
+        new StepOptions
+        {
+            DependsOn = [selectionKey],
+            FanOutGroup = new ActivityGroupFanOutBinding(
+                new ActivityGroupMembership("work"), selectionKey,
+                context.GetActivityGroup("root"))
+        });
+}
+```
+
+This example is sequential. Qualification also overlaps independent root epochs
+to prove that new selection does not erase old unfinished obligations. Scope
+names come from pinned execution identities, never a transient counter, wall
+clock, selected-set hash or the item's current position. Keyed order-only changes
+retain the accepted canonical membership plan; positional item mapping changes
+within one admitted epoch still reject. A new epoch can use either accepted kind.
+
+All admitted scopes must close before run completion. Dropping an old incomplete
+scope from orchestration cannot silently declare success: the existing completion
+guard rejects with `Workflow completed with an incomplete grouped fan-out enumeration.`
+No new cancellation, retirement or state-reducer semantics are introduced.
+
+The bounded result proves append-only evolving selection with preserved history.
+It does not implement in-place mutation of one fan-out, automatic epoch discovery,
+changed membership under a restarted old prefix or active-only progress semantics.
+The sequence remains 3b.4 explicit epochs → 3b.5 child boundaries → 3b.6 consolidated
+qualification → ZG-4 queries → ZG-5 progress → ZG-6 Fuwen → ZG-7 cross-repository.

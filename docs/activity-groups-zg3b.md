@@ -1,11 +1,13 @@
 # ZG-3b: dynamic occurrence durability
 
-Status: **ZG-3b.1 root native fan-out, ZG-3b.2 grouped native forks and ZG-3b.3 fixed nested repetition implemented**;
+Status: **ZG-3b.1 root native fan-out, ZG-3b.2 grouped native forks, ZG-3b.3 fixed nested repetition and ZG-3b.4 explicit immutable selection epochs implemented**;
 the remaining independent verticals below are open. See the
 [3b.1 contract](activity-groups-zg3b1.md), [3b.2 contract](activity-groups-zg3b2.md)
-and [3b.3 contract](activity-groups-zg3b3.md), with construct-specific evidence.
-The next proof is **3b.4 broader partial/evolving expansion and recovery**.
-Evolving selection remains deferred after ZG-3b.3.
+and [3b.3 contract](activity-groups-zg3b3.md), plus
+[3b.4 contract](activity-groups-zg3b4.md), with construct-specific evidence.
+The next proof is **3b.5 child boundaries**, then **3b.6 consolidation**.
+The explicit-epoch profile preserves historical obligations; in-place changed-plan
+replacement and implicit retirement are not enabled.
 Decision recorded 2026-10-16. Start from qualified checkpoint
 `33c051ed4907178e13d273e930d1f63342321f3f` on `codex/zhinu-activity-groups`.
 Runtime foundation: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
@@ -27,10 +29,11 @@ are not evidence that any construct below is already supported.
 ## Required verticals and proof
 
 Internal sequence: **3b.1 fan-out → 3b.2 forks → 3b.3 nested repetition/parents →
-3b.4 partial/evolving expansion and recovery → 3b.5 child boundaries → 3b.6
+3b.4 explicit evolving-selection epochs/recovery → 3b.5 child boundaries → 3b.6
 consolidated qualification**. The first profile requires a completed explicit
 selection step and an immutable selected set at root execution scope. Its
-admission/partial-item/closure process proofs do not close broader 3b.4.
+admission/partial-item/closure proofs are fixed-set evidence; the separate
+3b.4 explicit-epoch result must not be inferred from them.
 The fork profile uses existing separate destination runs and unchanged root/loop
 coordinates, with destination-owned copied ancestry. It has no new in-run
 fork/join coordinate. Source grouped fan-out evidence remains a rejected combined
@@ -40,7 +43,8 @@ profile until enumeration/closure rebinding is qualified.
 | --- | --- |
 | Grouped fan-out | One definition yields distinct item occurrences with correct explicit parents. Use existing native keys and deliberately tagged positional identity; never parse display or dotted step keys. Persist enumeration/selection and current-revision closure alongside occurrence claims. Prove reorder stability for keyed items and concurrent sibling isolation. |
 | Grouped forks | The destination owns a manifest, occurrences and exact-revision memberships under its new RunId. Copied members resolve to destination parent occurrences, preserve existing producer/source provenance, and never retain source-run group pointers. Prove atomic creation and unchanged source state. |
-| Nested repeated groups | ZG-3b.3 qualifies fixed native 3×2 loops, six distinct leaves, explicit immediate-parent ancestry, activity retry, selective restart and seven fresh-process crash/recovery barriers per framework. Existing outer-first typed coordinates and schema 9 suffice. Evolving sets and mixed constructs remain open. |
+| Nested repeated groups | ZG-3b.3 qualifies fixed native 3×2 loops, six distinct leaves, explicit immediate-parent ancestry, activity retry, selective restart and seven fresh-process crash/recovery barriers per framework. Existing outer-first typed coordinates and schema 9 suffice. Evolving sets have their separate 3b.4 profile; mixed constructs remain open. |
+| Evolving selection | ZG-3b.4 qualifies distinct stable root fan-out scopes/selection steps per durable epoch. Sets expand/contract/reorder and items disappear/reappear without relabeling historical occurrences. Old selectors replay; only unselected future epochs consult today's selection. Earlier unfinished scopes remain obligations. Same-scope changed plans still reject. |
 | Restart during partial fan-out/fork execution | Terminate inside the affected transaction and after committed partial work, then restart/recover. Retain committed work and history, rebuild only the correct current occurrences, and prevent stale generations from extending or sealing invalidated expansion. A failed fork transaction must leave no partial destination. |
 | Resume/recovery identity | Reconstruct in a fresh process before running callbacks; compare occurrence IDs, coordinates, parent IDs and exact revision memberships. Retry/reclaim must not invent occurrences, and recovery must reuse committed activity results. Unfinished attempts retain existing retry/effect semantics. Apply this proof to each supported dynamic construct, not just a static fixture. |
 | Child-workflow boundaries | Qualify parent start/wait membership, the child's separate tree, existing deterministic child IDs, reuse/restart/cancellation and interrupted boundary recovery. Parent occurrence pointers stay in the parent run; child occurrences stay in the child run. Existing authority and child execution semantics remain intact. |
@@ -86,3 +90,13 @@ ZG-3b. End with construct-specific evidence and a fresh-agent handoff that recor
 exact commits, compatibility constraints, unsupported combinations and the next
 checkpoint. A different model should continue from repository artifacts without
 depending on chat history.
+
+## ZG-3b.6 consolidation requirement
+
+Preserve this exact finding prominently in the eventual consolidated record:
+
+> **Nested repetition required no runtime algorithm, schema, or identity redesign.**
+
+Keep its ZG-3b.3 evidence separate from explicit-epoch evolving selection. Neither
+qualification permits arbitrary mixed fan-out/loop/fork compositions, implicit
+retirement or a claim that public hierarchy/progress semantics are complete.

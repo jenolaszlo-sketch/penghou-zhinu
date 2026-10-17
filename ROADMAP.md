@@ -186,7 +186,8 @@ Product harness such as Solo
 
 Added **2026-10-15** from the macro activities/activity groups proposal. The
 repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
-ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks and ZG-3b.3 fixed nested repetition are implemented. Broader dynamic durability, queries,
+ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks, ZG-3b.3 fixed nested repetition
+and ZG-3b.4 explicit immutable evolving-selection epochs are implemented. Child boundaries, consolidated dynamic durability, queries,
 progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
@@ -263,9 +264,17 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   activity retry, selective restart and fourteen fresh-process crash/recovery
   cases. Identity and schema 9 remain unchanged. See
   [contract](docs/activity-groups-zg3b3.md) and
-  [evidence](docs/qualification/activity-groups/zg3b3.md). Next is **3b.4 evolving
-  selection/partial dynamic recovery**, then 3b.5 children and 3b.6 consolidation.
-  Evolving selection remains deferred after ZG-3b.3.
+  [evidence](docs/qualification/activity-groups/zg3b3.md). Evolving selection was
+  excluded from that checkpoint and has its own bounded profile below.
+- [x] **ZG-3b.4:** evolving selection across explicit immutable root epochs with
+  stable native scope/selection keys: expand/contract/reorder/disappear/reappear,
+  identical values across epochs, historical selector replay, retries/restart,
+  atomic/partial-work recovery and preserved unfinished obligations. No identity,
+  runtime algorithm or schema change. See [contract](docs/activity-groups-zg3b4.md)
+  and [evidence](docs/qualification/activity-groups/zg3b4.md). This does not permit
+  changed plans under an old prefix or automatic retirement of unfinished work.
+  Next is **3b.5 child boundaries**, then **3b.6 consolidated qualification**.
+  Grouped fan-out/fork copying and mixed loop/fan-out scopes remain rejected.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
@@ -277,6 +286,9 @@ reducer-before-query stage ordering. Preserve the foundation architecture and
 avoid coupling Fuwen to temporary native-runtime limits. The checklist below
 remains useful, but its headings
 are broad requirement areas rather than the new stage identifiers.
+
+The eventual consolidated qualification must preserve this established result:
+**Nested repetition required no runtime algorithm, schema, or identity redesign.**
 
 #### Shared identity, state and compatibility requirements
 

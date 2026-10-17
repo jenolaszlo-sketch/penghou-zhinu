@@ -235,6 +235,14 @@ the current expansion evidence; previously visited but now unselected branches
 remain inspectable as historical, not counted as current pending work. A normal
 step retry must not invalidate an unrelated branch or every group in the run.
 
+ZG-3b.4's bounded evolving-selection profile uses separate stable native root
+fan-out scopes and completed selection steps per explicit durable epoch. It
+preserves old occurrences and unfinished obligations; it does not enable changed
+plans under an existing prefix, automatic retirement or the broader active-only
+reducer semantics above. Ordered history remains in exact selector output JSON;
+canonical keyed expansion evidence is sorted. Public epoch/history projections
+remain later work. No new coordinate encoding or schema was required.
+
 ## 5. Expansion and unknown totals
 
 Group nesting alone cannot prove total work. Native loops have committed
@@ -470,8 +478,9 @@ Manifest v1 encoding/digest vectors and resource defaults are frozen in ZG-1.
 The ZG-2/3a foundation freezes explicit runtime factories, occurrence v1 bytes,
 optional provider/store capabilities and schema 8. ZG-3b.1 freezes root native
 fan-out coordinates, fixed-selection admission/closure and schema 9. ZG-3b.3
-qualifies fixed nested loops without changing those contracts. Snapshot-cache
-limits, mixed dynamic scopes and evolving selection remain later decisions.
+qualifies fixed nested loops without changing those contracts. ZG-3b.4 qualifies
+explicit immutable root selection epochs using existing scope identity. Snapshot-cache
+limits, mixed dynamic scopes, in-place selection mutation and retirement remain later decisions.
 These are bounded engineering decisions,
 not permission to redesign execution semantics.
 
