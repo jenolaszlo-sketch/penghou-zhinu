@@ -186,7 +186,7 @@ Product harness such as Solo
 
 Added **2026-10-15** from the macro activities/activity groups proposal. The
 repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
-ZG-3b.1 root native fan-out and ZG-3b.2 grouped forks are implemented. Broader dynamic durability, queries,
+ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks and ZG-3b.3 fixed nested repetition are implemented. Broader dynamic durability, queries,
 progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
@@ -238,7 +238,7 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   parent identity, scoped claim mapping and optional Work/Control membership.
   See the [foundation](docs/activity-groups-zg2-3a.md) and
     [evidence](docs/qualification/activity-groups/zg2-3a.md). ZG-3b.1 extends this
-    with native root item scopes; nested combinations remain deferred.
+    with native root item scopes; mixed fan-out nesting remains deferred.
 - [x] **ZG-3a foundation:** schema 8 atomic manifest/admission and revision
   membership, restart inheritance, fail-closed capabilities and real process-loss
   reconstruction. No hierarchy query or expansion-completeness claim is included.
@@ -256,10 +256,16 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   lineage, exact copied membership, retry/restart/supersede, mixed membership,
   authority continuity and independent process-loss evidence. See
   [contract](docs/activity-groups-zg3b2.md) and
-  [evidence](docs/qualification/activity-groups/zg3b2.md). Next is **3b.3 nested
-  repetition**; 3b.4 evolving selection/partial dynamic recovery, 3b.5 child
-  boundaries and 3b.6 consolidated qualification remain open. Combined grouped
+  [evidence](docs/qualification/activity-groups/zg3b2.md). Combined grouped
   fan-out/fork copying remains rejected until expansion evidence is qualified.
+- [x] **ZG-3b.3:** fixed native nested repetition (3×2), full durable typed lineage,
+  six distinct leaf occurrences, immediate-parent reconstruction, inner/outer
+  activity retry, selective restart and fourteen fresh-process crash/recovery
+  cases. Identity and schema 9 remain unchanged. See
+  [contract](docs/activity-groups-zg3b3.md) and
+  [evidence](docs/qualification/activity-groups/zg3b3.md). Next is **3b.4 evolving
+  selection/partial dynamic recovery**, then 3b.5 children and 3b.6 consolidation.
+  Evolving selection remains deferred after ZG-3b.3.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.

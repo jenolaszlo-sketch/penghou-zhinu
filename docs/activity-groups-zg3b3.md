@@ -51,3 +51,89 @@ fan-out/fork combinations remain rejected. Nested-loop fork composition is not a
 newly qualified profile here; retain the existing fork regression coverage.
 
 Evolving selection remains deferred after ZG-3b.3.
+
+## Supported profile and identity
+
+The [qualification record](qualification/activity-groups/zg3b3.md) binds this
+profile to exact source, frameworks and gates. This slice makes the existing
+typed-loop composition an explicitly qualified contract; runtime identity,
+native loop execution and persistence algorithms are unchanged.
+
+Use `outer.LoopAsync` for the inner loop and `inner.StepAsync` for its activities.
+Create an outer group through the outer iteration, then the inner group through
+the inner iteration with that outer occurrence as explicit parent. A leaf group
+created through the inner iteration points to that inner occurrence. A single
+definition of each kind produces three outer, six inner and six leaf occurrences
+in the fixed 3×2 case. Inner/leaf coordinates share their two loop frames; their
+different group keys and explicit parents distinguish the groups. Local inner
+position 1 under outer 1 cannot alias local inner position 1 under outer 2.
+
+Factories are references, not independent completion or durable entry records.
+The first actual member claim persists ancestry/membership atomically. The
+qualification fixture uses ordinary grouped entry activities to expose durable
+outer/inner entry barriers. The package consumer also proves lazy materialization
+of the complete parent chain from leaf claims without separate entry activities.
+
+There is no item-selection/addressing mechanism added for loops. Native typed
+one-based iteration frames stay distinct from fan-out's tagged zero-based indices
+or keyed v2 frame. Manifest pins, v1 hash fields, canonical coordinate bytes,
+existing root/single-loop vectors, step identities and retry policies stay intact.
+
+## Retry, restart and completion
+
+Native activity retry changes attempt while preserving the exact step revision,
+occurrence, coordinate and parent. Tests force an inner leaf and an outer entry
+activity to fail once; completed siblings receive no new callback. Native loop
+orchestration delegates have no separate retryable activity identity, so an
+independent outer-body retry policy would invent new semantics and is not added.
+
+Selective restart at a later inner leaf invalidates its normal dependent native
+control work; restarting a later outer commit reuses completed nested work where
+the native dependency graph allows it. Historical memberships remain readable,
+new step revisions retain the same occurrence, and completed work outside the
+invalidation set remains unchanged. Changing selection/inputs is outside this
+fixed profile.
+
+Completion is entirely native: each inner iteration commit depends on its body,
+each inner final follows its terminating condition/commit, each outer commit
+depends on its inner final, and the outer final follows its terminal condition.
+Recovery replays committed state and never infers success from missing runnable
+work. Boundary/event assertions cover all six inner and three outer commits,
+three inner finals and one outer final, once per completed revision including
+retained selective-restart history. Groups acquire no separate aggregate status.
+
+## Process and query boundaries
+
+Seven hard-exit modes cover outer entry, inner entry, early/later unfinished leaf,
+completed leaf, inner final and outer commit. Each has a fresh crash worker and a
+second fresh recovery worker on .NET 8/10. Before recovery, inspect occurrence
+IDs/coordinates/parents, exact step revisions/attempts/status/results and membership.
+After recovery, assert all prior occurrence/membership records remain identical,
+completed steps are reused, unfinished steps keep ID/revision and increment
+attempt, future iterations continue with distinct lineage and exactly six leaves
+exist. Raw occurrence counts exclude hidden duplicates/orphans. No sleep controls
+the barriers; the recovery worker uses one consistent advanced clock to expire
+the dead worker's lease and make recovered steps immediately eligible.
+
+Existing point reads reconstruct leaf → inner → outer through immediate parent
+IDs and validate the full canonical coordinate. They do not collapse equal local
+positions under different outer iterations. Coherent public hierarchy queries,
+snapshots, aggregate state and progress remain ZG-4/5 work.
+
+## Composition limits and next work
+
+Grouped fan-out remains its root-only fixed-selection profile. Keyed and positional
+fan-out under a loop parent reject during plan validation; combining typed-loop
+and fan-out coordinates rejects before a claim. Direct `Group` on fan-out remains
+invalid. Grouped fan-out/fork copying remains explicitly rejected in engine/store.
+Existing grouped-fork destination lineage and single-loop reuse regressions remain
+required; nested repetition/fork composition is not newly qualified by this slice.
+No existing native fork contract is widened or narrowed here.
+
+Schema remains **9**. No public signature, migration, package dependency or binary
+contract changes. Evolving selection, added/removed/reordered/recomputed dynamic
+sets, broader partial dynamic expansion, child-boundary semantics, arbitrary
+mixed constructs and Fuwen lowering are outside this profile. Continue with
+ZG-3b.4, then 3b.5 children and 3b.6 consolidated qualification before ZG-4.
+
+Evolving selection remains deferred after ZG-3b.3.

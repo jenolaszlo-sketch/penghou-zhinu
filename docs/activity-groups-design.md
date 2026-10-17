@@ -177,7 +177,8 @@ that included ManifestDigest.
 
 Coordinates are ordered **outermost first**. The foundation implements existing
 typed loop frames. [ZG-3b.1](activity-groups-zg3b1.md) adds one explicitly versioned
-root native fan-out frame; nested combinations and Fuwen tokens remain targets:
+root native fan-out frame. ZG-3b.3 qualifies fixed nested native loops using the
+unchanged outer-first typed frames; mixed fan-out nesting and Fuwen tokens remain targets:
 
 - Loop: stable loop control identity plus one-based iteration number, using
   `WorkflowLoopReference`/`WorkflowLoopIterationReference` where applicable.
@@ -468,8 +469,9 @@ unknown totals, sidecar evidence requirement, schema direction and reader model.
 Manifest v1 encoding/digest vectors and resource defaults are frozen in ZG-1.
 The ZG-2/3a foundation freezes explicit runtime factories, occurrence v1 bytes,
 optional provider/store capabilities and schema 8. ZG-3b.1 freezes root native
-fan-out coordinates, fixed-selection admission/closure and schema 9. Snapshot-cache
-limits, nested dynamic scopes and evolving selection remain later decisions.
+fan-out coordinates, fixed-selection admission/closure and schema 9. ZG-3b.3
+qualifies fixed nested loops without changing those contracts. Snapshot-cache
+limits, mixed dynamic scopes and evolving selection remain later decisions.
 These are bounded engineering decisions,
 not permission to redesign execution semantics.
 

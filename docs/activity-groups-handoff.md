@@ -10,8 +10,8 @@ Updated 2026-10-17. No chat history is required.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
 - Foundation implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
 - Qualified foundation/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
-- Current dynamic slice: [ZG-3b.2 grouped forks](activity-groups-zg3b2.md) and
-  [evidence/source commits](qualification/activity-groups/zg3b2.md). The commits
+- Current dynamic slice: [ZG-3b.3 nested repetition](activity-groups-zg3b3.md) and
+  [evidence/source commits](qualification/activity-groups/zg3b3.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
@@ -19,6 +19,13 @@ Updated 2026-10-17. No chat history is required.
 - ZG-3b.2 runtime/package source: `28818cfc12831978a06b2fcd46d258699f0b9204`;
   1,499 tests, fourteen fork recovery receipts, formatting and both package/binary
   probes passed on .NET 8/10. The following evidence commit changes docs only.
+- ZG-3b.3 source: `4d24d6c4e25efc4efdf99b4e3f44f461e227019d`, starting from
+  `ef6d2fe3bf8d7490d5e6e89fbd5406f457f85c7f`. Fixed native 3×2 repetition,
+  full typed lineage and immediate parents, activity retries, selective restart
+  and fourteen new process-loss cases (28 fresh crash/recovery worker starts).
+  All 1,531 tests, formatting and both package/binary probes passed on .NET 8/10;
+  qualification retains the exact source/package hashes and recovery receipts.
+  No runtime algorithm, identity encoding or schema change was needed.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
@@ -30,7 +37,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b.2 supported fork profile](activity-groups-zg3b2.md),
+1. [ZG-3b.3 supported nested profile and pre-code note](activity-groups-zg3b3.md),
+   [ZG-3b.2 supported fork profile](activity-groups-zg3b2.md),
    [ZG-3b.1 supported fan-out profile](activity-groups-zg3b1.md),
    [ZG-3b remaining scope and gates](activity-groups-zg3b.md), then
    [foundation contract and bytes](activity-groups-zg2-3a.md).
@@ -83,11 +91,11 @@ lease checks precede writes. All annotation records cascade on run deletion.
 
 ## Supported versus still open
 
-Use the evidence's explicit SUPPORTED/NOT YET QUALIFIED lists. The qualified
-repeated example is one native loop with two occurrences of a child group under
-a root logical parent. Static nested groups, mixed membership, retry/revision
-storage and process loss are foundation support, not proof of complete dynamic
-expansion or aggregate progress.
+Use each profile's explicit supported/remaining lists. The foundation qualified
+one native loop under a root logical parent; ZG-3b.3 separately qualifies fixed
+nested native loops with three outer and two inner iterations, exactly six leaf
+occurrences and reconstructable immediate-parent ancestry. This is not proof of
+arbitrary dynamic expansion, evolving selection or aggregate progress.
 
 - Grouped forks use `IWorkflowGroupForkRepository` to atomically install the
   target manifest and rebind copied parent/member lineage under the existing
@@ -102,8 +110,10 @@ expansion or aggregate progress.
   and tagged positional indices have v2 coordinates, preserving root/loop v1.
   Append-only exact-revision closure proofs become non-current on restart.
   Never derive item identities from arbitrary dotted step keys.
-- Full nested-loop repeated groups, condition/input restart affecting expansion,
-  partial expansion and skipped branches need dedicated ZG-3 qualification.
+- ZG-3b.3 preserves full outer-first typed-loop coordinates and explicit parents
+  through inner/outer activity retry, selective restart and early/later process
+  loss. Native commits/finals govern completion. Condition/input changes affecting
+  selection, broader partial expansion and skipped branches remain open.
 - Parent child-invocation start/wait membership is not exposed by ChildRunOptions.
   Child-owned manifest admission is tested; broader child restart/reuse/fork,
   cancellation and boundary-group operation recovery remain open.
@@ -114,15 +124,14 @@ expansion or aggregate progress.
 
 ## Next checkpoint
 
-Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.3 nested
-repeated occurrences/parents**, then 3b.4 broader partial/evolving
-dynamic expansion and recovery, 3b.5 child-workflow boundaries and 3b.6 consolidated
-qualification. ZG-3b.1's fixed-selection fan-out and four hard-exit proofs, and
-ZG-3b.2's native fork lineage and seven fork/continuation barriers, are qualified
-separately; they do not close the entire dynamic model. For 3b.3, repeat an outer
-macro occurrence across two outer iterations and its inner macro across two inner
-iterations, proving each inner parent is the corresponding outer occurrence.
-Keep evolving selection out of that composability proof.
+Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.4 broader
+partial/evolving dynamic expansion and recovery**, then 3b.5 child-workflow
+boundaries and 3b.6 consolidated qualification. ZG-3b.1's fixed-selection fan-out,
+ZG-3b.2's native fork lineage and ZG-3b.3's fixed nested repetition have separate
+evidence; they do not close the entire dynamic model. Nested repetition/fork
+composition is not newly qualified. The accepted grouped fan-out/fork rejection
+and root-only grouped fan-out profile remain intact.
+Evolving selection remains deferred after ZG-3b.3.
 Preserve explicit rejection until each complete durable vertical passes its own
 real-process and compatibility gates. Static/restart correctness does not imply
 fan-out/fork correctness; retain separate evidence for every dynamic construct.

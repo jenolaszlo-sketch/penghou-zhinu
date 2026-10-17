@@ -1,8 +1,9 @@
 # Activity groups: staged implementation plan
 
-Date: 2026-10-16. Status: ZG-1, the ZG-2/3a durable foundation and
+Date: 2026-10-17. Status: ZG-1, the ZG-2/3a durable foundation and
 [ZG-3b.1 root native fan-out](activity-groups-zg3b1.md) and
-[ZG-3b.2 grouped forks](activity-groups-zg3b2.md) implemented.
+[ZG-3b.2 grouped forks](activity-groups-zg3b2.md) and
+[ZG-3b.3 fixed nested repetition](activity-groups-zg3b3.md) implemented.
 See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
 [foundation scope](activity-groups-zg2-3a.md),
 [ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
@@ -121,10 +122,13 @@ resume/recovery and child boundaries. ZG-2/3a evidence is not dynamic qualificat
 ZG-3b.1 adds schema 9 selected-set admission and exact-current-revision closure
 for native fan-out at an existing explicit selection step. ZG-3b.2 adds atomic
 grouped fork rebinding, unchanged native reuse/authority, exact revision history
-and process-loss reconstruction without a schema change. Nested repeated parents,
-evolving selection, child boundaries and grouped fan-out/fork combinations remain
+and process-loss reconstruction without a schema change. ZG-3b.3 qualifies fixed
+3×2 nested loops, full typed lineage/parents, activity retry, selective restart and
+fresh-process recovery using the existing schema 9 and occurrence v1 model.
+Evolving selection, child boundaries and grouped fan-out/fork combinations remain
 open. Evidence for the first fan-out profile is
 [separate](qualification/activity-groups/zg3b1.md) from the foundation.
+Evolving selection remains deferred after ZG-3b.3.
 
 ZG-3a adds schema 8 atomic run/manifest and claim/occurrence/membership writes,
 historical revision inheritance and real process-loss probes. It does not

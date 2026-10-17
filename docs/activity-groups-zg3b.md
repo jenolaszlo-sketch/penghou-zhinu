@@ -1,10 +1,11 @@
 # ZG-3b: dynamic occurrence durability
 
-Status: **ZG-3b.1 root native fan-out and ZG-3b.2 grouped native forks implemented**;
+Status: **ZG-3b.1 root native fan-out, ZG-3b.2 grouped native forks and ZG-3b.3 fixed nested repetition implemented**;
 the remaining independent verticals below are open. See the
 [3b.1 contract](activity-groups-zg3b1.md), [3b.2 contract](activity-groups-zg3b2.md)
-and their construct-specific evidence. The next proof is **3b.3 nested repetition**,
-combining qualified primitives without evolving selection.
+and [3b.3 contract](activity-groups-zg3b3.md), with construct-specific evidence.
+The next proof is **3b.4 broader partial/evolving expansion and recovery**.
+Evolving selection remains deferred after ZG-3b.3.
 Decision recorded 2026-10-16. Start from qualified checkpoint
 `33c051ed4907178e13d273e930d1f63342321f3f` on `codex/zhinu-activity-groups`.
 Runtime foundation: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
@@ -39,7 +40,7 @@ profile until enumeration/closure rebinding is qualified.
 | --- | --- |
 | Grouped fan-out | One definition yields distinct item occurrences with correct explicit parents. Use existing native keys and deliberately tagged positional identity; never parse display or dotted step keys. Persist enumeration/selection and current-revision closure alongside occurrence claims. Prove reorder stability for keyed items and concurrent sibling isolation. |
 | Grouped forks | The destination owns a manifest, occurrences and exact-revision memberships under its new RunId. Copied members resolve to destination parent occurrences, preserve existing producer/source provenance, and never retain source-run group pointers. Prove atomic creation and unchanged source state. |
-| Nested repeated groups | Repeat one inner definition across at least two outer and two inner coordinates. Prove distinct occurrences, correct parent for each repetition, and no aliasing after replay or unrelated sibling reordering. |
+| Nested repeated groups | ZG-3b.3 qualifies fixed native 3×2 loops, six distinct leaves, explicit immediate-parent ancestry, activity retry, selective restart and seven fresh-process crash/recovery barriers per framework. Existing outer-first typed coordinates and schema 9 suffice. Evolving sets and mixed constructs remain open. |
 | Restart during partial fan-out/fork execution | Terminate inside the affected transaction and after committed partial work, then restart/recover. Retain committed work and history, rebuild only the correct current occurrences, and prevent stale generations from extending or sealing invalidated expansion. A failed fork transaction must leave no partial destination. |
 | Resume/recovery identity | Reconstruct in a fresh process before running callbacks; compare occurrence IDs, coordinates, parent IDs and exact revision memberships. Retry/reclaim must not invent occurrences, and recovery must reuse committed activity results. Unfinished attempts retain existing retry/effect semantics. Apply this proof to each supported dynamic construct, not just a static fixture. |
 | Child-workflow boundaries | Qualify parent start/wait membership, the child's separate tree, existing deterministic child IDs, reuse/restart/cancellation and interrupted boundary recovery. Parent occurrence pointers stay in the parent run; child occurrences stay in the child run. Existing authority and child execution semantics remain intact. |
