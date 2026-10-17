@@ -1,11 +1,31 @@
 # ZG-3b.2 qualification: grouped native forks
 
-Date: 2026-10-17. Status: **1,499 tests and formatting passed; package gates pending**.
+Date: 2026-10-17. Status: **passed for the standalone native fork profile**.
 Base: `1d3c232d6c19b6a618a5a5feeb55cd3cd0b7e2fe` on
-`codex/zhinu-activity-groups`. The final qualification record will identify the
-exact runtime/package source, tests, source/package hashes and compatibility
-receipts in [zg3b2.json](zg3b2.json). Read the
+`codex/zhinu-activity-groups`.
+Runtime/package source: `28818cfc12831978a06b2fcd46d258699f0b9204`.
+The commit containing this record adds evidence/docs only. Exact test receipts,
+source/package hashes, fourteen process recovery records and compatibility results
+are retained in [zg3b2.json](zg3b2.json). Read the
 [supported contract](../../activity-groups-zg3b2.md) before applying this evidence.
+
+| Gate | Result |
+| --- | --- |
+| Release tests | **1,499 passed**, zero failures/skips across 11 assembly/framework combinations on .NET 8/10 |
+| Formatting | Full solution verify-no-changes passed |
+| Process loss | Seven barriers on each framework; fourteen before/after receipts retained |
+| Packages | All seven unpublished `0.2.0-preview.4` candidates built from the exact runtime source commit |
+| Package-only consumer | Passed both frameworks, including protected grouped-loop forks with destination-owned copied parents/members |
+| Legacy binary | Published `0.1.0-preview.15` consumer unchanged while candidate runtime assemblies were substituted; passed both frameworks |
+| Schema/old worker | Existing schema remains 9; old worker rejected it without changing version or four retained step rows |
+| Review | Independent Luna source review found no remaining runtime issue; final documentation audit reconciled evidence/status/date |
+
+The full test run completed on 2026-10-16; final formatting, package and binary
+gates completed on 2026-10-17. The schema source, occurrence encoder, manifest
+encoder and mandatory fork interface are byte-for-byte unchanged from the base;
+their hashes are included alongside the changed source files. The genuine retained
+schema-8→9 grouped-row migration test is separate from the published binary probe's
+schema-5→9 migration. This is Windows evidence, without Linux/remote CI claims.
 
 ## Independent fork claim
 

@@ -1,6 +1,6 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-16. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out and ZG-3b.2 forks qualified separately;
+Date: 2026-10-17. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out and ZG-3b.2 forks qualified separately;
 the full runtime matrix remains open**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
 contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
@@ -20,7 +20,8 @@ adapter profiles are separate: native support does not prove DSL support.
 Each case records before/after IDs, current and historical revisions, hierarchy,
 provenance, statuses/reasons/counts, expansion coverage, event cursor and fake
 effect receipts. Verify both returned API models and durable records. All
-methods/test names proposed for groups below are new work, not existing tests.
+rows describe required behaviors. The profile evidence above identifies the
+implemented suites and their exact coverage; unchecked broader cases remain work.
 
 ## Concrete cases
 

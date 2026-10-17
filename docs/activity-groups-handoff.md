@@ -16,6 +16,9 @@ Updated 2026-10-17. No chat history is required.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
   Qualification/evidence commit: `1d3c232d6c19b6a618a5a5feeb55cd3cd0b7e2fe`.
+- ZG-3b.2 runtime/package source: `28818cfc12831978a06b2fcd46d258699f0b9204`;
+  1,499 tests, fourteen fork recovery receipts, formatting and both package/binary
+  probes passed on .NET 8/10. The following evidence commit changes docs only.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
