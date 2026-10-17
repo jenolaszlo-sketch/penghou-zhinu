@@ -231,7 +231,9 @@ var registry = new WorkflowRegistry()
     .Register(new WorkflowRegistration<string, string>(
         new WorkflowDefinition { Name = "grouped-fanout", Version = "1" }, () => new GroupedFanOutWorkflow(), groupManifest))
     .Register(new WorkflowRegistration<string, string>(
-        new WorkflowDefinition { Name = "grouped-nested", Version = "1" }, () => new GroupedNestedWorkflow(), nestedManifest));
+        new WorkflowDefinition { Name = "grouped-nested", Version = "1" }, () => new GroupedNestedWorkflow(), nestedManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-epochs", Version = "1" }, () => new GroupedEpochWorkflow(), groupManifest));
 
 await using (var directEngine = new WorkflowEngine(store, registry, new ZhinuOptions()))
 {
@@ -353,9 +355,63 @@ await using (var builderEngine = new WorkflowEngineBuilder()
     }
     if (nestedLeaves.Length != 6 || nestedIds.Count != 6 || outerIds.Count != 3)
         throw new InvalidOperationException("Nested repetition aliased local inner positions across outer iterations.");
+    var epochsId = await builderEngine.StartAsync("grouped-epochs", "1", "same-value");
+    await builderEngine.ExecuteAsync(epochsId);
+    if (await builderEngine.WaitForCompletionAsync<string>(epochsId) != "five-epochs" ||
+        await reopened.HasIncompleteGroupFanOutAsync(epochsId))
+        throw new InvalidOperationException("Evolving selection lost an epoch obligation.");
+    var epochOccurrences = new HashSet<string>(StringComparer.Ordinal);
+    for (var epoch = 1; epoch <= 5; epoch++)
+    {
+        var scope = "epochs." + epoch.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var state = await reopened.GetGroupFanOutAsync(epochsId, scope);
+        if (state is not { IsComplete: true }) throw new InvalidOperationException("An explicit epoch did not close.");
+        var members = (await reopened.GetStepsAsync(epochsId)).Where(step => step.StepKey.StartsWith(scope + ".", StringComparison.Ordinal));
+        foreach (var step in members)
+        {
+            var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+                ?? throw new InvalidOperationException("Epoch member lost its history.");
+            var occurrence = await reopened.GetGroupOccurrenceAsync(epochsId, membership.GroupOccurrenceId)
+                ?? throw new InvalidOperationException("Epoch occurrence missing.");
+            if (!epochOccurrences.Add(occurrence.GroupOccurrenceId) || occurrence.ParentGroupOccurrenceId is null)
+                throw new InvalidOperationException("Identical/reappearing item aliased a prior epoch.");
+        }
+    }
+    if (epochOccurrences.Count != 14) throw new InvalidOperationException("Evolving epoch cardinality changed.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, durable grouped loop, grouped fork, grouped fan-out and 3x2 nested repetition execution.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition and five immutable evolving-selection epochs.");
+
+sealed class GroupedEpochWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var schedule = await context.StepAsync("epoch-schedule", input, (_, _, _) => Task.FromResult(new[] { 1, 2, 3, 4, 5 }), cancellationToken: cancellationToken);
+        foreach (var epoch in schedule)
+        {
+            var suffix = epoch.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var selection = "selection." + suffix;
+            var selected = await context.StepAsync(selection, epoch, (value, _, _) => Task.FromResult(value switch
+            {
+                1 => new[] { "A", "B", "C" },
+                2 => new[] { "A", "C", "D", "E" },
+                3 => new[] { "C", "A" },
+                4 => new[] { "A", "C" },
+                _ => new[] { "B", "A", "C" }
+            }), cancellationToken: cancellationToken);
+            var result = await context.FanOutAsync("epochs." + suffix, selected, key => key,
+                (key, _, _) => Task.FromResult(key + ":" + input), new FanOutOptions { MaxDegreeOfParallelism = 1 },
+                new StepOptions
+                {
+                    DependsOn = [selection],
+                    FanOutGroup = new ActivityGroupFanOutBinding(new ActivityGroupMembership("work"), selection, context.GetActivityGroup("root"))
+                }, cancellationToken);
+            if (!result.SequenceEqual(selected.Select(key => key + ":" + input), StringComparer.Ordinal))
+                throw new InvalidOperationException("Epoch ordering changed historical item ownership.");
+        }
+        return "five-epochs";
+    }
+}
 
 sealed class GroupedNestedWorkflow : IWorkflow<string, string>
 {

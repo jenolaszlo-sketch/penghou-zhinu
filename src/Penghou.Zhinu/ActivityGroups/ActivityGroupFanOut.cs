@@ -5,7 +5,12 @@ using System.Text.Json;
 
 namespace Penghou.Zhinu;
 
-/// <summary>Declares per-item grouping at an existing durable selection boundary.</summary>
+/// <summary>
+/// Declares per-item grouping at an existing durable selection boundary.
+/// Changing selected membership or inputs requires a distinct stable native fan-out scope and
+/// selection step. Replaying an admitted scope retains its immutable plan;
+/// a new epoch never reinterprets historical item membership.
+/// </summary>
 public sealed class ActivityGroupFanOutBinding
 {
     public ActivityGroupFanOutBinding(ActivityGroupMembership membership, string selectionStepKey,
