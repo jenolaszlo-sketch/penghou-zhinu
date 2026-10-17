@@ -219,13 +219,19 @@ var protectedWorkflow = new ProtectedWorkflow();
 var groupManifest = ActivityGroupManifest.Create([
     new ActivityGroupDefinition("root", ActivityGroupKind.Logical, "Root"),
     new ActivityGroupDefinition("work", ActivityGroupKind.Logical, "Work", "root")]);
+var nestedManifest = ActivityGroupManifest.Create([
+    new ActivityGroupDefinition("outer", ActivityGroupKind.Logical, "Outer"),
+    new ActivityGroupDefinition("inner", ActivityGroupKind.Logical, "Inner", "outer"),
+    new ActivityGroupDefinition("leaf", ActivityGroupKind.Logical, "Leaf", "inner")]);
 var registry = new WorkflowRegistry()
     .Register("ordinary", "1", ordinary)
     .Register("protected", "1", protectedWorkflow)
     .Register(new WorkflowRegistration<string, string>(
         new WorkflowDefinition { Name = "grouped", Version = "1" }, () => new GroupedWorkflow(), groupManifest))
     .Register(new WorkflowRegistration<string, string>(
-        new WorkflowDefinition { Name = "grouped-fanout", Version = "1" }, () => new GroupedFanOutWorkflow(), groupManifest));
+        new WorkflowDefinition { Name = "grouped-fanout", Version = "1" }, () => new GroupedFanOutWorkflow(), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-nested", Version = "1" }, () => new GroupedNestedWorkflow(), nestedManifest));
 
 await using (var directEngine = new WorkflowEngine(store, registry, new ZhinuOptions()))
 {
@@ -321,9 +327,58 @@ await using (var builderEngine = new WorkflowEngineBuilder()
         fanOutIds.Add(occurrence.GroupOccurrenceId);
     }
     if (fanOutIds.Count != 2) throw new InvalidOperationException("Fan-out occurrences collided.");
+    var nestedId = await builderEngine.StartAsync("grouped-nested", "1", "identical-input");
+    await builderEngine.ExecuteAsync(nestedId);
+    if (await builderEngine.WaitForCompletionAsync<string>(nestedId) != "3" ||
+        (await reopened.GetGroupManifestAsync(nestedId))?.CanonicalJson != nestedManifest.CanonicalJson)
+        throw new InvalidOperationException("Nested repetition lost its result or manifest.");
+    var nestedLeaves = (await reopened.GetStepsAsync(nestedId)).Where(step => step.StepKey.EndsWith("/body/work", StringComparison.Ordinal)).ToArray();
+    var nestedIds = new HashSet<string>(StringComparer.Ordinal);
+    var outerIds = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var step in nestedLeaves)
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Nested leaf membership missing.");
+        var leaf = await reopened.GetGroupOccurrenceAsync(nestedId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Nested leaf occurrence missing.");
+        var inner = await reopened.GetGroupOccurrenceAsync(nestedId, leaf.ParentGroupOccurrenceId!);
+        var outer = await reopened.GetGroupOccurrenceAsync(nestedId, inner!.ParentGroupOccurrenceId!);
+        using var coordinate = System.Text.Json.JsonDocument.Parse(leaf.ExecutionCoordinate);
+        if (leaf.GroupKey != "leaf" || inner.GroupKey != "inner" || outer?.GroupKey != "outer" ||
+            coordinate.RootElement.GetArrayLength() != 2 || inner.ExecutionCoordinate != leaf.ExecutionCoordinate ||
+            membership.StepRevision != step.Revision || outer.ParentGroupOccurrenceId is not null)
+            throw new InvalidOperationException("Nested immediate-parent lineage changed.");
+        nestedIds.Add(leaf.GroupOccurrenceId);
+        outerIds.Add(outer.GroupOccurrenceId);
+    }
+    if (nestedLeaves.Length != 6 || nestedIds.Count != 6 || outerIds.Count != 3)
+        throw new InvalidOperationException("Nested repetition aliased local inner positions across outer iterations.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, durable grouped loop, grouped fork and grouped fan-out execution.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, durable grouped loop, grouped fork, grouped fan-out and 3x2 nested repetition execution.");
+
+sealed class GroupedNestedWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var result = await context.LoopAsync("outer", 0, state => state < 3, async (outer, ct) =>
+        {
+            var outerGroup = outer.GetActivityGroup("outer");
+            await outer.LoopAsync("inner", 0, state => state < 2, async (inner, innerCt) =>
+            {
+                var innerGroup = inner.GetActivityGroup("inner", outerGroup);
+                var leaf = inner.GetActivityGroup("leaf", innerGroup);
+                await inner.StepAsync("work", input, (value, _, _) => Task.FromResult(value), new StepOptions
+                {
+                    Group = new ActivityGroupStepBinding(new ActivityGroupMembership("leaf"), leaf)
+                }, innerCt);
+                return inner.Continue(inner.State + 1);
+            }, new LoopOptions(2), ct);
+            return outer.Continue(outer.State + 1);
+        }, new LoopOptions(3), cancellationToken);
+        return result.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+}
 
 sealed class GroupedFanOutWorkflow : IWorkflow<string, string>
 {

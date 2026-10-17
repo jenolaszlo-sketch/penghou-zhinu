@@ -36,7 +36,12 @@ public sealed class WorkflowLoopIteration<TState>
     /// <summary>The immutable state committed by the previous iteration.</summary>
     public TState State { get; }
 
-    /// <summary>Creates an occurrence using this durable loop iteration's execution coordinate.</summary>
+    /// <summary>
+    /// Creates an occurrence using the full durable loop lineage, outermost
+    /// first. Equal inner iteration numbers beneath different outer iterations
+    /// have distinct coordinates. Supply the corresponding explicit group parent;
+    /// retry and replay preserve this logical occurrence identity.
+    /// </summary>
     public ActivityGroupOccurrence GetActivityGroup(string groupKey, ActivityGroupOccurrence? parent = null) =>
         workflow.GetActivityGroup(groupKey, parent, identity);
 
