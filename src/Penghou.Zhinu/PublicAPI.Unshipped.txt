@@ -349,6 +349,8 @@ Penghou.Zhinu.IWorkflowGroupFanOutRepository.AdmitGroupFanOutAsync(Penghou.Zhinu
 Penghou.Zhinu.IWorkflowGroupFanOutRepository.CompleteGroupFanOutAsync(Penghou.Zhinu.ActivityGroupFanOutRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState!>
 Penghou.Zhinu.IWorkflowGroupFanOutRepository.GetGroupFanOutAsync(System.Guid workflowRunId, string! fanOutKey, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState?>
 Penghou.Zhinu.IWorkflowGroupFanOutRepository.HasIncompleteGroupFanOutAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Penghou.Zhinu.IWorkflowGroupForkRepository
+Penghou.Zhinu.IWorkflowGroupForkRepository.ForkGroupedRunAsync(System.Guid sourceWorkflowRunId, Penghou.Zhinu.WorkflowRun! newRun, Penghou.Zhinu.ActivityGroupManifest? targetManifest, string! targetStepKey, Penghou.Zhinu.StepRestartMode mode, string? actor, string? reason, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ForkPlan!>
 Penghou.Zhinu.IWorkflowGroupManifestProvider
 Penghou.Zhinu.IWorkflowGroupManifestProvider.GroupManifest.get -> Penghou.Zhinu.ActivityGroupManifest?
 Penghou.Zhinu.IWorkflowGroupRepository

@@ -31,6 +31,7 @@ public sealed class SqliteWorkflowStore :
     , IWorkflowSnapshotRepository
     , IWorkflowGroupRepository
     , IWorkflowGroupFanOutRepository
+    , IWorkflowGroupForkRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -914,6 +915,18 @@ public sealed class SqliteWorkflowStore :
             actor,
             reason,
             cancellationToken);
+
+    public ValueTask<ForkPlan> ForkGroupedRunAsync(
+        Guid sourceWorkflowRunId,
+        WorkflowRun newRun,
+        ActivityGroupManifest? targetManifest,
+        string targetStepKey,
+        StepRestartMode mode,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken = default) =>
+        steps.ForkGroupedRunAsync(sourceWorkflowRunId, newRun, targetManifest,
+            targetStepKey, mode, actor, reason, cancellationToken);
 
     public ValueTask<RollbackPlan> PlanRollbackAsync(
         Guid workflowRunId,

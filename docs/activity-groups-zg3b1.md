@@ -1,5 +1,9 @@
 # ZG-3b.1: native grouped fan-out
 
+This records the fan-out checkpoint. [ZG-3b.2](activity-groups-zg3b2.md) subsequently
+qualifies native grouped forks separately; combined grouped fan-out/fork copying
+still rejects until enumeration and closure rebinding are qualified.
+
 Implemented 2026-10-16. This is the first bounded ZG-3b profile; forks, nested
 dynamic coordinates, evolving selection and child boundaries remain open.
 See [qualification](qualification/activity-groups/zg3b1.md) for the exact tested

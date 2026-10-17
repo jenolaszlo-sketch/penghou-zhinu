@@ -61,12 +61,14 @@ public sealed class ActivityGroupBoundaryTests : WorkflowEngineTestBase
     }
 
     [Fact]
-    public async Task GroupedFork_IsRejectedBeforeDestinationIsCreated()
+    public async Task GroupedFork_MissingOptionalCapabilityRejectsBeforeDestinationIsCreated()
     {
         var store = CreateStore();
         var manifest = Manifest("Fork");
         var runId = await CompleteGroupedRunAsync(store, manifest, "fork-run");
-        await using var engine = new WorkflowEngine(store, Registry(manifest, "fork-run"));
+        var hidden = DispatchProxy.Create<IGroupFoundationStore, GroupCapabilityHidingProxy>();
+        ((GroupCapabilityHidingProxy)(object)hidden).Target = store;
+        await using var engine = new WorkflowEngine(hidden, Registry(manifest, "fork-run"));
         var beforeRuns = await engine.GetRunsAsync(new RunQuery(), Ct);
         var destinationId = Guid.NewGuid();
 
@@ -237,6 +239,8 @@ public sealed class ActivityGroupBoundaryTests : WorkflowEngineTestBase
         ((GroupCapabilityHidingProxy)(object)proxy).Target = store;
         return proxy;
     }
+
+    public interface IGroupFoundationStore : IWorkflowStore, IWorkflowGroupRepository { }
 
     private sealed record DurableSnapshot(
         WorkflowRun? Run,

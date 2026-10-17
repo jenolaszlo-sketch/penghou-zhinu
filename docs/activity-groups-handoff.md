@@ -1,6 +1,6 @@
 # Activity groups: continuation handoff
 
-Prepared 2026-10-16. No chat history is required.
+Updated 2026-10-17. No chat history is required.
 
 ## Checkout and checkpoint
 
@@ -8,27 +8,27 @@ Prepared 2026-10-16. No chat history is required.
 - Branch: `codex/zhinu-activity-groups`.
 - Worktree: `C:/Users/Laszlos/source/repos/Solo/workstreams/zhinu-activity-groups`.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
-- Implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
-- Qualified checkpoint/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
-- Current dynamic slice: [ZG-3b.1 contract](activity-groups-zg3b1.md) and
-  [evidence/source commits](qualification/activity-groups/zg3b1.md). The commits
+- Foundation implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
+- Qualified foundation/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
+- Current dynamic slice: [ZG-3b.2 grouped forks](activity-groups-zg3b2.md) and
+  [evidence/source commits](qualification/activity-groups/zg3b2.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
-  The following qualification commit changes evidence/docs only.
+  Qualification/evidence commit: `1d3c232d6c19b6a618a5a5feeb55cd3cd0b7e2fe`.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
 
-The implementation commit identifies the qualified runtime source exactly. A
-following qualification commit records evidence, the package probe assertion
-correction and this handoff; use
+Each profile's qualification record identifies its exact runtime/package source;
+the following qualification commit adds evidence/docs only. Use
 `git rev-parse HEAD` for the checkout's current documentation HEAD. Do not work in
 the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b.1 supported native profile](activity-groups-zg3b1.md),
+1. [ZG-3b.2 supported fork profile](activity-groups-zg3b2.md),
+   [ZG-3b.1 supported fan-out profile](activity-groups-zg3b1.md),
    [ZG-3b remaining scope and gates](activity-groups-zg3b.md), then
    [foundation contract and bytes](activity-groups-zg2-3a.md).
 2. [Qualification and reproduction](qualification/activity-groups/zg2-3a.md).
@@ -86,8 +86,13 @@ a root logical parent. Static nested groups, mixed membership, retry/revision
 storage and process loss are foundation support, not proof of complete dynamic
 expansion or aggregate progress.
 
-- Grouped forks and every native FanOutAsync overload supplied direct Group
-  reject before affected work. Additive FanOutGroup supports all four native
+- Grouped forks use `IWorkflowGroupForkRepository` to atomically install the
+  target manifest and rebind copied parent/member lineage under the existing
+  destination RunId, preserving native root/loop coordinates and reuse selection.
+  Null membership stays null; incompatible copied groups abort. A grouped fan-out
+  source remains a rejected combined profile until expansion evidence can be
+  rebound coherently. Every FanOutAsync overload supplied direct Group still
+  rejects. Additive FanOutGroup supports all four native
   overloads at root scope with an explicit current completed selection step and
   declared dependency. Ungrouped fan-out remains ordinary.
 - Schema 9 durably admits the full selected set before item claims; keyed tokens
@@ -106,11 +111,15 @@ expansion or aggregate progress.
 
 ## Next checkpoint
 
-Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.2 grouped
-forks**, then 3b.3 nested repeated occurrences/parents, 3b.4 broader partial/evolving
+Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.3 nested
+repeated occurrences/parents**, then 3b.4 broader partial/evolving
 dynamic expansion and recovery, 3b.5 child-workflow boundaries and 3b.6 consolidated
-qualification. ZG-3b.1's fixed-selection fan-out and four hard-exit proofs are
-qualified separately; they do not close the entire dynamic model.
+qualification. ZG-3b.1's fixed-selection fan-out and four hard-exit proofs, and
+ZG-3b.2's native fork lineage and seven fork/continuation barriers, are qualified
+separately; they do not close the entire dynamic model. For 3b.3, repeat an outer
+macro occurrence across two outer iterations and its inner macro across two inner
+iterations, proving each inner parent is the corresponding outer occurrence.
+Keep evolving selection out of that composability proof.
 Preserve explicit rejection until each complete durable vertical passes its own
 real-process and compatibility gates. Static/restart correctness does not imply
 fan-out/fork correctness; retain separate evidence for every dynamic construct.
@@ -139,6 +148,10 @@ The probe's ExpectedCandidateSchemaVersion is now 9. Preserve the monotonic
 GroupFanOutUsed trigger on fresh databases as well as migrations. Closure reads
 must evaluate current revisions coherently, and a new item revision needs a new
 proof instead of trying to replace immutable historical closure.
+Grouped forks do not need a new schema: all pointers are destination-local and
+normal grouped claims can resume them. Preserve the superseding-revision
+membership clone for native changed-input fork reuse. Source grants are never
+copied; a reexecuted protected operation is evaluated under current authority.
 
 Do not redesign control flow, step keys, child IDs, operation IDs, generation
 ownership, authorization grants, compensation semantics, Hufu boundaries or

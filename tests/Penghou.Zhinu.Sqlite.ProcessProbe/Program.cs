@@ -22,6 +22,8 @@ public static partial class Program
             return await GroupAtomicProbeAsync(args).ConfigureAwait(false);
         if (args.Length == 4 && args[0] == "--zhinu-group-fanout-probe")
             return await GroupFanOutProbe.RunAsync(args[1], args[2], args[3]).ConfigureAwait(false);
+        if (args.Length == 5 && args[0] == "--zhinu-group-fork-probe")
+            return await GroupForkProbeAsync(args[1], Guid.Parse(args[2]), Guid.Parse(args[3]), args[4]).ConfigureAwait(false);
         return 2;
     }
 

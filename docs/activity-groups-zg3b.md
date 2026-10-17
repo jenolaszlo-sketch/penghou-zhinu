@@ -1,8 +1,10 @@
 # ZG-3b: dynamic occurrence durability
 
-Status: **ZG-3b.1 root native fan-out implemented**; the remaining independent
-verticals below are open. See the [3b.1 contract](activity-groups-zg3b1.md) and
-[construct-specific evidence](qualification/activity-groups/zg3b1.md).
+Status: **ZG-3b.1 root native fan-out and ZG-3b.2 grouped native forks implemented**;
+the remaining independent verticals below are open. See the
+[3b.1 contract](activity-groups-zg3b1.md), [3b.2 contract](activity-groups-zg3b2.md)
+and their construct-specific evidence. The next proof is **3b.3 nested repetition**,
+combining qualified primitives without evolving selection.
 Decision recorded 2026-10-16. Start from qualified checkpoint
 `33c051ed4907178e13d273e930d1f63342321f3f` on `codex/zhinu-activity-groups`.
 Runtime foundation: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
@@ -28,6 +30,10 @@ Internal sequence: **3b.1 fan-out → 3b.2 forks → 3b.3 nested repetition/pare
 consolidated qualification**. The first profile requires a completed explicit
 selection step and an immutable selected set at root execution scope. Its
 admission/partial-item/closure process proofs do not close broader 3b.4.
+The fork profile uses existing separate destination runs and unchanged root/loop
+coordinates, with destination-owned copied ancestry. It has no new in-run
+fork/join coordinate. Source grouped fan-out evidence remains a rejected combined
+profile until enumeration/closure rebinding is qualified.
 
 | Dynamic surface | Required behavior and qualification |
 | --- | --- |

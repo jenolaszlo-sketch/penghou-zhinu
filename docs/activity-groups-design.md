@@ -223,7 +223,8 @@ restart changes StepId/Revision: append a membership for the new revision, keep
 old history, and calculate current state from current revisions. Lease rollover
 never creates an occurrence. A new run has its own run-bound occurrences;
 execution-generation changes within the same run do not change occurrence IDs.
-Grouped forks currently reject before writes. Future fork support must create
+ZG-3b.2 now implements this for native separate-run forks; grouped fan-out/fork
+combinations remain rejected. Fork support must create
 destination memberships and never foreign references to source groups. Preserve
 normal source/producer provenance.
 

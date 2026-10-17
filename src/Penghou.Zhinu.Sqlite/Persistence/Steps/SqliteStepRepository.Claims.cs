@@ -267,6 +267,8 @@ internal sealed partial class SqliteStepRepository
         };
         await insertStep.ExecuteAsync(connection, transaction, superseding, cancellationToken)
             .ConfigureAwait(false);
+        await SqliteWorkflowGroupRepository.CloneMembershipAsync(
+            connection, transaction, existing, superseding, cancellationToken).ConfigureAwait(false);
         return superseding;
     }
 

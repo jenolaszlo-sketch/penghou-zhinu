@@ -275,6 +275,27 @@ await using (var builderEngine = new WorkflowEngineBuilder()
         occurrenceIds.Add(occurrence.GroupOccurrenceId);
     }
     if (occurrenceIds.Count != 2) throw new InvalidOperationException("Repeated group occurrences collided.");
+    var groupForkId = await builderEngine.ForkAsync(groupedId, "new-step");
+    await builderEngine.ExecuteAsync(groupForkId);
+    if (await builderEngine.WaitForCompletionAsync<string>(groupForkId) != "2" ||
+        (await reopened.GetRunAsync(groupForkId))?.SourceRunId != groupedId ||
+        (await reopened.GetGroupManifestAsync(groupForkId))?.CanonicalJson != groupManifest.CanonicalJson)
+        throw new InvalidOperationException("Grouped fork lost native reuse, source lineage or destination manifest.");
+    var copiedGroupSteps = (await reopened.GetStepsAsync(groupForkId)).Where(step => step.StepKey.EndsWith("/body/work", StringComparison.Ordinal)).ToArray();
+    if (copiedGroupSteps.Length != 2) throw new InvalidOperationException("Grouped fork lost copied loop members.");
+    foreach (var copied in copiedGroupSteps)
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(copied.Id)
+            ?? throw new InvalidOperationException("Grouped fork lost copied membership.");
+        var occurrence = await reopened.GetGroupOccurrenceAsync(groupForkId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Grouped fork lost destination occurrence.");
+        if (occurrenceIds.Contains(occurrence.GroupOccurrenceId) || occurrence.WorkflowRunId != groupForkId ||
+            occurrence.ParentGroupOccurrenceId is null || membership.StepRevision != copied.Revision)
+            throw new InvalidOperationException("Grouped fork retained source occurrence references.");
+        var parent = await reopened.GetGroupOccurrenceAsync(groupForkId, occurrence.ParentGroupOccurrenceId);
+        if (parent?.WorkflowRunId != groupForkId || parent.GroupKey != "root")
+            throw new InvalidOperationException("Grouped fork lost destination parent lineage.");
+    }
     var contextsBeforeFanOut = authorizer.Contexts.Count;
     var fanOutId = await builderEngine.StartAsync("grouped-fanout", "1", "package-closure");
     await builderEngine.ExecuteAsync(fanOutId);
@@ -302,7 +323,7 @@ await using (var builderEngine = new WorkflowEngineBuilder()
     if (fanOutIds.Count != 2) throw new InvalidOperationException("Fan-out occurrences collided.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, durable grouped loop and grouped fan-out execution.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, durable grouped loop, grouped fork and grouped fan-out execution.");
 
 sealed class GroupedFanOutWorkflow : IWorkflow<string, string>
 {

@@ -33,8 +33,9 @@ manifest restoration and occurrence ancestry, immutable pins/tuples, and the
 reads are persistence diagnostics; they do not establish a coherent hierarchy,
 expansion completeness, aggregate status or progress.
 
-The current implementation rejects grouped forks and direct Group on native
-fan-out. The additive `FanOutGroup` profile additionally requires
+The current implementation rejects direct Group on native fan-out. Grouped forks
+require the separate `IWorkflowGroupForkRepository` described below.
+The additive `FanOutGroup` profile additionally requires
 `IWorkflowGroupFanOutRepository`; see [ZG-3b.1](activity-groups-zg3b1.md).
 Child runs admit their own manifests with separate run-local trees. Parent
 start/wait group binding and broader dynamic recovery are not yet qualified.
@@ -52,6 +53,22 @@ cascade all evidence on retention and evaluate closure from a coherent read
 transaction. Preserve native input-reference, retry, compensation and authority
 semantics. This profile rejects changed selection across boundary revisions and
 does not promise nested dynamic scopes or aggregate/query projections.
+
+`IWorkflowGroupForkRepository.ForkGroupedRunAsync` atomically creates the pending
+destination with its supplied optional manifest, native reusable steps/dependencies,
+rebound destination-owned occurrence ancestors and exact copied memberships, and
+the existing fork event. The base `ForkRunAsync` signature remains ungrouped.
+Do not change native reuse selection, source state, copied step evidence or
+authority identity. Preserve each existing coordinate and role, deriving new
+occurrence IDs through the destination RunId and existing hash domain. Reused
+groups must retain key/kind/parent/macro provenance; copied null membership stays
+null. A missing/incompatible target for any copied member aborts the whole fork.
+Changed-input superseding revisions retain the inherited occurrence and membership
+history. Source authorization decisions are not destination grants. No new schema
+or durable fork marker is needed: ordinary grouped claims/restart continue after
+atomic admission. Source grouped fan-out evidence is explicitly rejected by this
+profile until complete enumeration/closure rebinding is qualified. See
+[ZG-3b.2](activity-groups-zg3b2.md) and its independent evidence.
 
 Run `WorkflowStoreConformance.VerifyRunRoundTripAsync` and
 `VerifyArtifactRoundTripAsync` from `Penghou.Zhinu.Testing` as the minimum

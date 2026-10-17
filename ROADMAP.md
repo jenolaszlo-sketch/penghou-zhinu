@@ -186,7 +186,7 @@ Product harness such as Solo
 
 Added **2026-10-15** from the macro activities/activity groups proposal. The
 repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
-ZG-3b.1 root native fan-out are implemented. Broader dynamic durability, queries,
+ZG-3b.1 root native fan-out and ZG-3b.2 grouped forks are implemented. Broader dynamic durability, queries,
 progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
@@ -251,9 +251,15 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-3b.1:** bounded root native fan-out at an explicit completed selection
   step, immutable keyed/positional enumeration, current-revision closure and
   process-loss recovery. See [contract](docs/activity-groups-zg3b1.md) and
-  [evidence](docs/qualification/activity-groups/zg3b1.md). Next is 3b.2 grouped forks;
-  3b.3 nested repetition, 3b.4 broader partial/evolving expansion, 3b.5 child
-  boundaries and 3b.6 consolidated qualification remain separate proofs.
+  [evidence](docs/qualification/activity-groups/zg3b1.md).
+- [x] **ZG-3b.2:** grouped native workflow forks with destination-owned parent
+  lineage, exact copied membership, retry/restart/supersede, mixed membership,
+  authority continuity and independent process-loss evidence. See
+  [contract](docs/activity-groups-zg3b2.md) and
+  [evidence](docs/qualification/activity-groups/zg3b2.md). Next is **3b.3 nested
+  repetition**; 3b.4 evolving selection/partial dynamic recovery, 3b.5 child
+  boundaries and 3b.6 consolidated qualification remain open. Combined grouped
+  fan-out/fork copying remains rejected until expansion evidence is qualified.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.

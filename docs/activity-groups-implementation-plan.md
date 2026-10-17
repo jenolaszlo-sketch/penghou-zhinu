@@ -1,7 +1,8 @@
 # Activity groups: staged implementation plan
 
 Date: 2026-10-16. Status: ZG-1, the ZG-2/3a durable foundation and
-[ZG-3b.1 root native fan-out](activity-groups-zg3b1.md) implemented.
+[ZG-3b.1 root native fan-out](activity-groups-zg3b1.md) and
+[ZG-3b.2 grouped forks](activity-groups-zg3b2.md) implemented.
 See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
 [foundation scope](activity-groups-zg2-3a.md),
 [ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
@@ -76,7 +77,9 @@ execution scheduling, schema installation, group controls or UI.
 
 Foundation scope: explicit root/typed-loop occurrences, optional revision
 membership, immutable run pin and fail-closed admission land with ZG-3a.
-Direct Group on fan-out and grouped forks reject. The additive FanOutGroup
+Direct Group on fan-out rejects. Grouped forks use an optional durable capability
+to rebind copied ancestry under the existing destination RunId, preserving the
+root/loop coordinate and hash domain. The additive FanOutGroup
 profile in ZG-3b.1 admits bounded root native fan-out; broader dynamic expansion,
 child boundary grouping and cross-repository profiles remain later work.
 
@@ -116,8 +119,11 @@ grouped fan-out, forks, nested repetition, interrupted partial execution,
 resume/recovery and child boundaries. ZG-2/3a evidence is not dynamic qualification.
 
 ZG-3b.1 adds schema 9 selected-set admission and exact-current-revision closure
-for native fan-out at an existing explicit selection step. Forks, nested repeated
-parents, evolving selection and child boundaries remain open. Its evidence is
+for native fan-out at an existing explicit selection step. ZG-3b.2 adds atomic
+grouped fork rebinding, unchanged native reuse/authority, exact revision history
+and process-loss reconstruction without a schema change. Nested repeated parents,
+evolving selection, child boundaries and grouped fan-out/fork combinations remain
+open. Evidence for the first fan-out profile is
 [separate](qualification/activity-groups/zg3b1.md) from the foundation.
 
 ZG-3a adds schema 8 atomic run/manifest and claim/occurrence/membership writes,

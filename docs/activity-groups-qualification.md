@@ -1,6 +1,6 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-16. Status: **ZG-1, ZG-2/3a and the root ZG-3b.1 fan-out profile qualified separately;
+Date: 2026-10-16. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out and ZG-3b.2 forks qualified separately;
 the full runtime matrix remains open**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
 contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
@@ -8,8 +8,11 @@ records the narrow root/loop durability, admission and process-loss slice.
 The [ZG-3b.1 evidence](qualification/activity-groups/zg3b1.md) adds root native
 keyed/positional fan-out admission, exact-revision closure and process recovery.
 Native portions of Q12/Q13/Q23/Q27/Q31/Q32/Q34/Q35 are covered only within that
-fixed-selection profile; broader dynamic combinations, forks, evolving selection,
-child recovery, aggregate summaries and group queries remain open.
+fixed-selection profile. The [ZG-3b.2 evidence](qualification/activity-groups/zg3b2.md)
+covers Q36's native separate-run fork ownership and relevant Q18/Q27/Q31/Q32/Q34/Q35
+restart, fencing, recovery and migration cases. This does not close nested repeated
+composition, grouped fan-out/fork evidence, evolving selection, child recovery,
+aggregate summaries or group queries.
 Use the [design](activity-groups-design.md) and
 [stage plan](activity-groups-implementation-plan.md). Native Zhinu and Fuwen
 adapter profiles are separate: native support does not prove DSL support.

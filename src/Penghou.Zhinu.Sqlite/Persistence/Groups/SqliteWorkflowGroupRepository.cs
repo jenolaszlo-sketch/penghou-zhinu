@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Groups;
 
-internal sealed class SqliteWorkflowGroupRepository
+internal sealed partial class SqliteWorkflowGroupRepository
 {
     private readonly IZhinuSqliteDatabase factory;
 

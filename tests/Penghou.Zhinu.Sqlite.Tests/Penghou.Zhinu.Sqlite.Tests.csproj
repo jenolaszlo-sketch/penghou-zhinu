@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Compile Include="..\Penghou.Zhinu.Sqlite.ProcessProbe\GroupForkWorkflow.cs" Link="GroupForkWorkflow.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Fixtures\zhinu-schema-v5.sql" CopyToOutputDirectory="PreserveNewest" />

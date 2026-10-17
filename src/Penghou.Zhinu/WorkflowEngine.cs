@@ -977,8 +977,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             ReferenceEquals(targetVersion, source.WorkflowVersion)
             ? registration
             : registry.Get(targetName, targetVersion);
-        if (source.GroupManifestDigest is not null || ActivityGroupRuntime.Capture(targetRegistration, store) is not null)
-            throw new WorkflowConfigurationException("Grouped workflow forks are not supported by this foundation.");
+        var sourceManifest = ActivityGroupRuntime.Capture(registration, store);
+        await ActivityGroupRuntime.ValidateRunAsync(store, source, sourceManifest, cancellationToken).ConfigureAwait(false);
+        var targetManifest = ActivityGroupRuntime.Capture(targetRegistration, store);
+        var groupedFork = source.GroupManifestDigest is not null || targetManifest is not null;
+        if (groupedFork && store is not IWorkflowGroupForkRepository)
+            throw new WorkflowConfigurationException("Grouped workflow forks require a durable IWorkflowGroupForkRepository.");
+        if (source.GroupFanOutUsed)
+            throw new WorkflowConfigurationException("Forking a run with grouped fan-out evidence is not qualified by this fork profile.");
         if (source.InputType != SerializationIdentity.TypeId(targetRegistration.InputType) ||
             source.OutputType != SerializationIdentity.TypeId(targetRegistration.OutputType))
         {
@@ -1002,6 +1008,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             Deadline = options.Deadline,
             MetadataJson = source.MetadataJson,
             DefinitionFingerprint = targetRegistration.DefinitionFingerprint,
+            GroupManifestDigest = targetManifest?.ManifestDigest,
             SourceRunId = sourceWorkflowRunId,
             AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
             AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
@@ -1013,14 +1020,13 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                 .ToHexString()
         };
-        var plan = await store.ForkRunAsync(
-            sourceWorkflowRunId,
-            newRun,
-            targetStepKey,
-            options.Mode,
-            options.Actor,
-            options.Reason,
-            cancellationToken).ConfigureAwait(false);
+        var plan = groupedFork
+            ? await ((IWorkflowGroupForkRepository)store).ForkGroupedRunAsync(
+                sourceWorkflowRunId, newRun, targetManifest, targetStepKey, options.Mode,
+                options.Actor, options.Reason, cancellationToken).ConfigureAwait(false)
+            : await store.ForkRunAsync(
+                sourceWorkflowRunId, newRun, targetStepKey, options.Mode,
+                options.Actor, options.Reason, cancellationToken).ConfigureAwait(false);
         await BindFirstGenerationAsync(
             id,
             targetRegistration.DefinitionFingerprint,
