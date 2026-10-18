@@ -13,20 +13,23 @@ public sealed class ActivityGroupManifest
 {
     public const int CurrentContractVersion = 1;
     private const string DigestDomain = "penghou.zhinu.activity-groups.manifest.v1\n";
-    private readonly HashSet<string> groupKeys;
+    private readonly Dictionary<string, ActivityGroupDefinition> definitionsByKey;
 
     private ActivityGroupManifest(ActivityGroupDefinition[] definitions, string canonicalJson, string manifestDigest)
     {
         Definitions = Array.AsReadOnly(definitions);
         CanonicalJson = canonicalJson;
         ManifestDigest = manifestDigest;
-        groupKeys = definitions.Select(definition => definition.GroupKey).ToHashSet(StringComparer.Ordinal);
+        definitionsByKey = definitions.ToDictionary(definition => definition.GroupKey, StringComparer.Ordinal);
     }
 
     public int ContractVersion => CurrentContractVersion;
     public IReadOnlyList<ActivityGroupDefinition> Definitions { get; }
     public string CanonicalJson { get; }
     public string ManifestDigest { get; }
+
+    internal ActivityGroupDefinition? FindDefinition(string groupKey) =>
+        groupKey is null ? null : definitionsByKey.GetValueOrDefault(groupKey);
 
     /// <summary>
     /// Captures and validates a forest without recursion. Host limits may only
@@ -81,7 +84,7 @@ public sealed class ActivityGroupManifest
     /// <summary>Validates optional direct membership without scheduling or persisting work.</summary>
     public void ValidateMembership(ActivityGroupMembership? membership)
     {
-        if (membership is not null && !groupKeys.Contains(membership.GroupKey))
+        if (membership is not null && !definitionsByKey.ContainsKey(membership.GroupKey))
             throw new ArgumentException("Membership references an unknown group.", nameof(membership));
     }
 

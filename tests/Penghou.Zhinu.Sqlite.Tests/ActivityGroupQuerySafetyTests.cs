@@ -8,6 +8,80 @@ public sealed class ActivityGroupQuerySafetyTests : WorkflowEngineTestBase
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Theory]
+    [InlineData("step-key")]
+    [InlineData("revision")]
+    [InlineData("run")]
+    [InlineData("orphan")]
+    public async Task CorruptMembershipCannotDisappearIntoUngroupedWork(string corruption)
+    {
+        var store = CreateStore();
+        var runId = await CreateGroupedRunAsync(store, "query-membership-integrity", RootAndWorkManifest(), "input");
+        await using (var connection = await OpenAsync())
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA foreign_keys=OFF;";
+            await command.ExecuteNonQueryAsync(Ct);
+            command.CommandText = corruption switch
+            {
+                "step-key" => "UPDATE workflow_step_group_memberships SET step_key='wrong' WHERE workflow_run_id=$run;",
+                "revision" => "UPDATE workflow_step_group_memberships SET step_revision=2 WHERE workflow_run_id=$run;",
+                "run" => "UPDATE workflow_step_group_memberships SET workflow_run_id=$other WHERE workflow_run_id=$run;",
+                _ => "UPDATE workflow_step_group_memberships SET step_id=$other WHERE workflow_run_id=$run;"
+            };
+            command.Parameters.AddWithValue("$run", runId.ToString("D"));
+            command.Parameters.AddWithValue("$other", Guid.NewGuid().ToString("D"));
+            await command.ExecuteNonQueryAsync(Ct);
+        }
+
+        var result = await store.ReadGroupSnapshotAsync(runId, new WorkflowGroupReadLimits(), Ct);
+        result.Status.Should().Be(WorkflowGroupReadStatus.InconsistentData);
+        result.Value.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(1, 1, false, true)]
+    [InlineData(2, 1, false, false)]
+    [InlineData(1, 2, false, false)]
+    [InlineData(2, 2, true, true)]
+    public async Task ApprovalProjectionUsesNativeLeaseFencesButRetainsReadyWakeups(
+        int runGeneration, int stepGeneration, bool ready, bool expected)
+    {
+        var store = CreateStore();
+        var runId = await CreateGroupedRunAsync(store, "query-approval-fence", RootAndWorkManifest(), "input");
+        await using (var connection = await OpenAsync())
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                UPDATE workflow_runs SET status=1,lease_generation=$runGeneration WHERE id=$run;
+                UPDATE workflow_steps SET status=4,lease_generation=$stepGeneration WHERE workflow_run_id=$run;
+                INSERT INTO workflow_authorization_checkpoints
+                    (workflow_run_id,claim_id,is_compensation,step_key,revision,lease_generation,
+                     provider_id,binding_id,declaration_hash,context_hash,authorization_request_id,
+                     approval_request_id,decision,ready,context_json,result_json,created_at)
+                SELECT workflow_run_id,id,0,step_key,revision,1,'provider','binding','declaration','context',
+                    'request','approval',$approval,$ready,'{}','{}',created_at FROM workflow_steps WHERE workflow_run_id=$run;
+                """;
+            command.Parameters.AddWithValue("$run", runId.ToString("D"));
+            command.Parameters.AddWithValue("$runGeneration", runGeneration);
+            command.Parameters.AddWithValue("$stepGeneration", stepGeneration);
+            command.Parameters.AddWithValue("$ready", ready);
+            command.Parameters.AddWithValue("$approval", (int)Penghou.Workflow.Abstractions.ExecutionAuthorizationDecision.ApprovalRequired);
+            await command.ExecuteNonQueryAsync(Ct);
+        }
+
+        (await store.HasPendingAuthorizationsAsync(runId, Ct)).Should().Be(expected);
+        using var reader = new WorkflowGroupReader(store);
+        var snapshot = (await reader.GetRunGroupSnapshotAsync(runId, Ct)).Value!;
+        var step = (await store.GetStepsAsync(runId, Ct)).Single();
+        var membership = (await store.GetStepGroupMembershipAsync(step.Id, Ct))!;
+        var members = await reader.QueryGroupMembersAsync(runId, snapshot.SnapshotToken, membership.GroupOccurrenceId, cancellationToken: Ct);
+        members.Value!.Items.Single().Approvals.Should().HaveCount(expected ? 1 : 0);
+        var state = (await reader.GetGroupStateAsync(runId, snapshot.SnapshotToken, membership.GroupOccurrenceId, Ct)).Value!.State;
+        state.Reasons.Contains(WorkflowGroupStateReason.Approval).Should().Be(expected);
+        if (expected && ready) state.Reason.Should().Be(WorkflowGroupStateReason.AwaitingDispatch);
+    }
+
     [Fact]
     public async Task SnapshotExcludesPayloadErrorMetadataTraceAndAuthority_AndDoesNotBudgetIrrelevantPayload()
     {

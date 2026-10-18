@@ -83,6 +83,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                 cancellationToken).ConfigureAwait(false);
             var occurrenceIds = occurrences.Select(item => item.OccurrenceId).ToHashSet(StringComparer.Ordinal);
             var occurrenceById = occurrences.ToDictionary(item => item.OccurrenceId, StringComparer.Ordinal);
+            await ValidateMembershipsAsync(connection, transaction, run.RunId, cancellationToken).ConfigureAwait(false);
             var steps = await ReadStepsAsync(connection, transaction, run.RunId, cancellationToken)
                 .ConfigureAwait(false);
             foreach (var step in steps)
@@ -430,6 +431,25 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
             counts.GetValueOrDefault(definition.GroupKey))).ToArray());
     }
 
+    private static async ValueTask ValidateMembershipsAsync(SqliteConnection connection,
+        SqliteTransaction transaction, Guid runId, CancellationToken cancellationToken)
+    {
+        // An exact LEFT JOIN alone would turn damaged membership into ungrouped work.
+        // Check both directions: orphan rows owned by this run and foreign rows on its steps.
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT EXISTS(SELECT 1 FROM workflow_step_group_memberships m
+                LEFT JOIN workflow_steps s ON s.id=m.step_id
+                WHERE m.workflow_run_id=$run AND (s.id IS NULL OR s.workflow_run_id<>m.workflow_run_id
+                    OR s.step_key<>m.step_key OR s.revision<>m.step_revision))
+             OR EXISTS(SELECT 1 FROM workflow_steps s JOIN workflow_step_group_memberships m ON m.step_id=s.id
+                WHERE s.workflow_run_id=$run AND m.workflow_run_id<>s.workflow_run_id);
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        if (Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture) != 0)
+            throw new WorkflowStateException("A group membership does not match its owning step revision.");
+    }
+
     private static async ValueTask<IReadOnlyList<StepFactRow>> ReadStepsAsync(SqliteConnection connection,
         SqliteTransaction transaction, Guid runId, CancellationToken cancellationToken)
     {
@@ -509,10 +529,24 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             SELECT DISTINCT p.step_key,p.revision,p.is_compensation,p.decision,p.ready
             FROM workflow_authorization_checkpoints p
-            WHERE p.workflow_run_id=$run
+            JOIN workflow_runs r ON r.id=p.workflow_run_id
+            WHERE p.workflow_run_id=$run AND p.decision=$approval
+              AND ((p.is_compensation=0 AND EXISTS (SELECT 1 FROM workflow_steps s WHERE s.id=p.claim_id
+                    AND s.revision=p.revision AND s.status IN ($running,$waiting) AND (p.ready=1 OR
+                        (s.lease_generation=p.lease_generation AND r.lease_generation=p.lease_generation))))
+                OR (p.is_compensation=1 AND EXISTS (SELECT 1 FROM workflow_step_compensations c WHERE c.id=p.claim_id
+                    AND c.revision=p.revision AND c.status IN ($compRunning,$compPending) AND (p.ready=1 OR
+                        (c.lease_generation=p.lease_generation AND r.lease_generation=p.lease_generation)))))
             ORDER BY p.step_key,p.revision,p.is_compensation;
             """);
         command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        // Match HasPendingAuthorizationsAsync: stale unready checkpoints do not park
+        // current work, while durable ready wakeups survive lease rollover.
+        command.Parameters.AddWithValue("$approval", (int)Penghou.Workflow.Abstractions.ExecutionAuthorizationDecision.ApprovalRequired);
+        command.Parameters.AddWithValue("$running", (int)StepStatus.Running);
+        command.Parameters.AddWithValue("$waiting", (int)StepStatus.Waiting);
+        command.Parameters.AddWithValue("$compRunning", (int)CompensationStatus.Running);
+        command.Parameters.AddWithValue("$compPending", (int)CompensationStatus.Pending);
         var result = new List<WorkflowGroupApprovalFact>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -577,7 +611,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
             }
             if (manifest is null)
                 throw new WorkflowStateException("A fan-out plan has no pinned group manifest.");
-            var groupDefinition = manifest.Definitions.SingleOrDefault(item => item.GroupKey == planGroup)
+            var groupDefinition = manifest.FindDefinition(planGroup)
                 ?? throw new WorkflowStateException("A fan-out plan references a missing group definition.");
             if (planParent is null)
             {

@@ -95,7 +95,7 @@ public sealed class ActivityGroupFanOutPlan
         if (binding.Parent is not null && binding.Parent.ExecutionCoordinate != "[]")
             throw new WorkflowConfigurationException("This grouped fan-out profile supports root execution scope only.");
         manifest.ValidateMembership(binding.Membership);
-        var definition = manifest.Definitions.Single(item => item.GroupKey == binding.Membership.GroupKey);
+        var definition = manifest.FindDefinition(binding.Membership.GroupKey)!;
         if (definition.ParentGroupKey != binding.Parent?.GroupKey ||
             (binding.Parent is not null && (binding.Parent.WorkflowRunId != runId || binding.Parent.ManifestDigest != manifest.ManifestDigest)))
             throw new WorkflowConfigurationException("Grouped fan-out requires the corresponding explicit parent from this run and manifest.");

@@ -37,7 +37,7 @@ public sealed class ActivityGroupOccurrence
     {
         if (runId == Guid.Empty)
             throw new ArgumentException("A group occurrence requires a run identity.", nameof(runId));
-        var definition = manifest.Definitions.FirstOrDefault(item => string.Equals(item.GroupKey, groupKey, StringComparison.Ordinal))
+        var definition = manifest.FindDefinition(groupKey)
             ?? throw new WorkflowConfigurationException("The group definition is not present in the admitted manifest.");
         if (!string.Equals(definition.ParentGroupKey, parent?.GroupKey, StringComparison.Ordinal))
             throw new WorkflowConfigurationException("A nested group requires its corresponding explicit parent occurrence.");

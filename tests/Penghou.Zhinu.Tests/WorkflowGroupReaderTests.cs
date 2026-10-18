@@ -8,6 +8,39 @@ public sealed class WorkflowGroupReaderTests
     private static readonly DateTimeOffset Epoch = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Theory]
+    [InlineData("null-definition")]
+    [InlineData("null-expansion")]
+    [InlineData("null-items")]
+    [InlineData("null-closure")]
+    [InlineData("duplicate-step-id")]
+    [InlineData("missing-boundary")]
+    [InlineData("false-completion")]
+    [InlineData("missing-item")]
+    public async Task MalformedProviderFactsCannotBecomeSuccessfulSnapshots(string corruption)
+    {
+        var runId = Guid.NewGuid();
+        var step = new WorkflowGroupStepFact(runId, Guid.NewGuid(), "select", 1, 1, StepStatus.Completed, true,
+            null, null, 1, null, null, Epoch, Epoch, null);
+        var expansion = new WorkflowGroupExpansionFact("expansion", "items", step.StepId, 1, "digest", 0, true, false, [], []);
+        var data = Snapshot(runId, steps: [step], expansions: [expansion]);
+        data = corruption switch
+        {
+            "null-definition" => data with { Definitions = [null!] },
+            "null-expansion" => data with { Expansions = [null!] },
+            "null-items" => data with { Expansions = [expansion with { Items = null! }] },
+            "null-closure" => data with { Expansions = [expansion with { Closures = [null!] }] },
+            "duplicate-step-id" => data with { Steps = [step, step with { StepKey = "other", Revision = 2 }] },
+            "missing-boundary" => data with { Expansions = [expansion with { BoundaryStepId = Guid.NewGuid() }] },
+            "false-completion" => data with { Expansions = [expansion with { IsComplete = true }] },
+            _ => data with { Expansions = [expansion with { ItemCount = 1 }] }
+        };
+        using var reader = Reader(NewStore(data).Store, time: new FakeTimeProvider(Epoch));
+        var result = await reader.GetRunGroupSnapshotAsync(runId, Ct);
+        result.Status.Should().Be(WorkflowGroupReadStatus.InconsistentData);
+        result.Value.Should().BeNull();
+    }
+
     [Fact]
     public async Task SnapshotFreezesProviderCollectionsAndReturnsReadOnlyPages()
     {

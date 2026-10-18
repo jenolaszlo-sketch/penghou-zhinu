@@ -57,6 +57,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         if (data.Run is null || data.Definitions is null || data.Occurrences is null || data.Steps is null
             || data.Dependencies is null || data.Waits is null || data.Approvals is null || data.Expansions is null
             || data.ChildRuns is null || data.Dispositions is null) return new(WorkflowGroupReadStatus.InconsistentData);
+        if (!CollectionsPresent(data)) return new(WorkflowGroupReadStatus.InconsistentData);
         var rows = RowCount(data);
         if (rows > limits.MaximumRows || rows * 256L > limits.MaximumBytes || data.EstimatedBytes > limits.MaximumBytes)
             return new(WorkflowGroupReadStatus.LimitExceeded);
@@ -257,7 +258,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
 
     private static bool Valid(WorkflowGroupSnapshotData d, Guid runId)
     {
-        if (d.Run.RunId != runId || d.EstimatedBytes < 0 || d.ThroughDurableSequence < 0 || d.RunCreatedSequence < 0) return false;
+        if (d.Run.RunId != runId || !Enum.IsDefined(d.Run.Status) || d.EstimatedBytes < 0 || d.ThroughDurableSequence < 0 || d.RunCreatedSequence < 0) return false;
         var definitions = new Dictionary<string, WorkflowGroupDefinitionFact>(StringComparer.Ordinal);
         foreach (var def in d.Definitions)
             if (string.IsNullOrWhiteSpace(def.GroupKey) || def.ChildOrdinal < 0 || def.OccurrenceCount < 0 || !Enum.IsDefined(def.Kind)
@@ -281,7 +282,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         foreach (var o in d.Occurrences)
         {
             if (o.WorkflowRunId != runId || string.IsNullOrWhiteSpace(o.OccurrenceId) || o.ExecutionCoordinate is null || o.ExecutionCoordinate.Length > 32768
-                || !definitions.ContainsKey(o.GroupKey) || !occurrences.TryAdd(o.OccurrenceId, o)
+                || string.IsNullOrWhiteSpace(o.GroupKey) || !definitions.ContainsKey(o.GroupKey) || !occurrences.TryAdd(o.OccurrenceId, o)
                 || ActivityGroupOccurrence.ComputeId(runId, o.GroupKey, o.ParentOccurrenceId, o.ExecutionCoordinate) != o.OccurrenceId) return false;
             coordinates.Add(o.OccurrenceId, ActivityGroupOccurrence.ReadCoordinate(o.ExecutionCoordinate));
         }
@@ -308,14 +309,59 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
                 current = parent;
             }
         }
-        var revisions = new HashSet<(Guid, int)>();
+        var identities = new HashSet<Guid>();
         var keys = new HashSet<(string, int)>();
         foreach (var s in d.Steps)
             if (s.WorkflowRunId != runId || s.StepId == Guid.Empty || string.IsNullOrWhiteSpace(s.StepKey)
-                || !Enum.IsDefined(s.Status) || !revisions.Add((s.StepId, s.Revision)) || !keys.Add((s.StepKey, s.Revision))
+                || s.Revision < 1 || s.Attempt < 0 || !Enum.IsDefined(s.Status) || !identities.Add(s.StepId) || !keys.Add((s.StepKey, s.Revision))
                 || (s.GroupOccurrenceId is null ? s.Role is not null : s.Role is null || !Enum.IsDefined(s.Role.Value) || !occurrences.ContainsKey(s.GroupOccurrenceId))) return false;
         foreach (var steps in d.Steps.GroupBy(s => s.StepKey, StringComparer.Ordinal))
             if (steps.Count(s => s.IsCurrent) != 1 || steps.Single(s => s.IsCurrent).Revision != steps.Max(s => s.Revision)) return false;
+        return ValidExpansions(d, occurrences);
+    }
+
+    private static bool CollectionsPresent(WorkflowGroupSnapshotData d) =>
+        d.Definitions.All(item => item is not null) && d.Occurrences.All(item => item is not null)
+        && d.Steps.All(item => item is not null) && d.Dependencies.All(item => item is not null)
+        && d.Waits.All(item => item is not null) && d.Approvals.All(item => item is not null)
+        && d.ChildRuns.All(item => item is not null) && d.Dispositions.All(item => item is not null)
+        && d.Expansions.All(expansion => expansion is not null && expansion.Items is not null && expansion.Closures is not null
+            && expansion.Items.All(item => item is not null)
+            && expansion.Closures.All(closure => closure is not null && closure.Steps is not null
+                && closure.Steps.All(step => step is not null)));
+
+    private static bool ValidExpansions(WorkflowGroupSnapshotData d,
+        IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrences)
+    {
+        var steps = d.Steps.ToDictionary(step => step.StepId);
+        var current = d.Steps.Where(step => step.IsCurrent).ToDictionary(step => step.StepKey, StringComparer.Ordinal);
+        var expansions = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var expansion in d.Expansions)
+        {
+            if (string.IsNullOrWhiteSpace(expansion.ExpansionId) || !expansions.Add(expansion.ExpansionId)
+                || string.IsNullOrWhiteSpace(expansion.FanOutKey) || string.IsNullOrWhiteSpace(expansion.PlanDigest)
+                || expansion.ItemCount != expansion.Items.Count
+                || !steps.TryGetValue(expansion.BoundaryStepId, out var boundary)
+                || boundary.Revision != expansion.BoundaryRevision || boundary.IsCurrent != expansion.IsCurrent) return false;
+            var itemKeys = new HashSet<string>(StringComparer.Ordinal);
+            var stepKeys = new HashSet<string>(StringComparer.Ordinal);
+            var occurrenceIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var item in expansion.Items)
+                if (string.IsNullOrWhiteSpace(item.ItemKey) || !itemKeys.Add(item.ItemKey)
+                    || string.IsNullOrWhiteSpace(item.StepKey) || !stepKeys.Add(item.StepKey)
+                    || string.IsNullOrWhiteSpace(item.OccurrenceId) || !occurrenceIds.Add(item.OccurrenceId)
+                    || !occurrences.ContainsKey(item.OccurrenceId) || !Enum.IsDefined(item.Role)) return false;
+            foreach (var closure in expansion.Closures)
+                if (string.IsNullOrWhiteSpace(closure.Digest) || closure.Steps.Count != expansion.ItemCount
+                    || closure.Steps.Select(step => step.StepId).Distinct().Count() != closure.Steps.Count
+                    || closure.Steps.Any(step => !steps.TryGetValue(step.StepId, out var stored) || stored.Revision != step.Revision)) return false;
+            if (!expansion.IsComplete) continue;
+            if (!expansion.IsCurrent || expansion.Items.Any(item => !current.TryGetValue(item.StepKey, out var step)
+                || step.Status != StepStatus.Completed || step.GroupOccurrenceId != item.OccurrenceId || step.Role != item.Role)) return false;
+            // Provider closure must reference the exact current selected revisions.
+            if (!expansion.Closures.Any(closure => closure.Steps.Select(step => (step.StepId, step.Revision)).ToHashSet()
+                .SetEquals(expansion.Items.Select(item => (current[item.StepKey].StepId, current[item.StepKey].Revision))))) return false;
+        }
         return true;
     }
 

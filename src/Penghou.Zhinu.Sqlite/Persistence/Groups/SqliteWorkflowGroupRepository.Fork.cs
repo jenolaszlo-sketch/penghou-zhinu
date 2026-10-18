@@ -94,8 +94,8 @@ internal sealed partial class SqliteWorkflowGroupRepository
             // coordinate and hash domain; do not invent a fork frame or parse keys.
             if (source.ExecutionCoordinate.StartsWith('{'))
                 throw new WorkflowStateException("Fan-out occurrence copying requires a qualified expansion-aware fork profile.");
-            var definition = sourceManifest!.Definitions.Single(item => item.GroupKey == source.GroupKey);
-            var target = targetManifest!.Definitions.FirstOrDefault(item => item.GroupKey == source.GroupKey);
+            var definition = sourceManifest!.FindDefinition(source.GroupKey)!;
+            var target = targetManifest!.FindDefinition(source.GroupKey);
             if (target is null || target.Kind != definition.Kind || target.ParentGroupKey != definition.ParentGroupKey ||
                 !SameProvenance(definition.Provenance, target.Provenance))
                 throw new WorkflowStateException("A reused group must retain its definition key, kind, parent lineage and macro provenance.");
