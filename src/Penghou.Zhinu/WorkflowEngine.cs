@@ -39,6 +39,10 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     private readonly EventSubscriptionHub eventSubscriptions = new();
     private int disposed;
 
+    /// <summary>Creates an independently bounded reader; the caller owns its lifetime.</summary>
+    public WorkflowGroupReader CreateGroupReader(WorkflowGroupQueryOptions? options = null,
+        IWorkflowGroupReadAuthorizer? authorizer = null) => new(store, options, timeProvider, authorizer);
+
     public WorkflowEngine(
         IWorkflowStore store,
         IWorkflowRegistry registry,

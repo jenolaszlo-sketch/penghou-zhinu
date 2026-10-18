@@ -148,7 +148,7 @@ public sealed class ActivityGroupOccurrence
         "[" + string.Join(',', frames.Select(frame =>
             "{\"loop\":\"" + frame.Name + "\",\"iteration\":" + frame.Number.ToString(CultureInfo.InvariantCulture) + "}")) + "]";
 
-    private static string ComputeId(Guid runId, string groupKey, string? parentId, string coordinate)
+    internal static string ComputeId(Guid runId, string groupKey, string? parentId, string coordinate)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         hash.AppendData(coordinate.StartsWith('{')

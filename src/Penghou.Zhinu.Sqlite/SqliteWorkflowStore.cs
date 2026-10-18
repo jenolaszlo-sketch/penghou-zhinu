@@ -18,7 +18,7 @@ namespace Penghou.Zhinu.Sqlite;
 /// delegates every operation to a domain repository that coordinates the
 /// persistence commands and queries.
 /// </summary>
-public sealed class SqliteWorkflowStore :
+public sealed partial class SqliteWorkflowStore :
     IWorkflowStore,
     IIdempotentWorkflowRestartRepository,
     IIdempotentWorkflowSignalRepository,
@@ -32,6 +32,7 @@ public sealed class SqliteWorkflowStore :
     , IWorkflowGroupRepository
     , IWorkflowGroupFanOutRepository
     , IWorkflowGroupForkRepository
+    , IWorkflowGroupSnapshotRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;

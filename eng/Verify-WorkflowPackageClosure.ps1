@@ -411,9 +411,33 @@ await using (var builderEngine = new WorkflowEngineBuilder()
         (await reopened.GetGroupOccurrenceAsync(childId, childGroup.ParentGroupOccurrenceId))?.WorkflowRunId != childId ||
         await reopened.GetGroupOccurrenceAsync(parentId, childGroup.GroupOccurrenceId) is not null)
         throw new InvalidOperationException("Child group tree crossed its run boundary.");
+
+    using var hierarchyReader = new WorkflowGroupReader(reopened);
+    var hierarchy = await hierarchyReader.GetRunGroupSnapshotAsync(nestedId);
+    if (hierarchy.Status != WorkflowGroupReadStatus.Success || hierarchy.Value is not { OccurrenceCount: 15, ProvenanceIncluded: false })
+        throw new InvalidOperationException("Packaged hierarchy snapshot did not retain the nested tree.");
+    var token = hierarchy.Value.SnapshotToken;
+    var page = await hierarchyReader.QueryGroupChildrenAsync(nestedId, token, pageSize: 1);
+    var rootOccurrences = new List<string>();
+    while (true)
+    {
+        if (page.Status != WorkflowGroupReadStatus.Success) throw new InvalidOperationException("Packaged hierarchy paging failed.");
+        rootOccurrences.AddRange(page.Value!.Items.Where(node => node.Occurrence is not null).Select(node => node.Occurrence!.OccurrenceId));
+        if (!page.Value.HasMore) break;
+        page = await hierarchyReader.QueryGroupChildrenAsync(nestedId, token, pageSize: 1, cursor: page.Value.NextCursor);
+    }
+    if (rootOccurrences.Count != 3 || rootOccurrences.Distinct().Count() != 3)
+        throw new InvalidOperationException("Packaged hierarchy paging aliased occurrences.");
+    var parentSnapshot = await hierarchyReader.GetRunGroupSnapshotAsync(parentId);
+    var parentRoots = await hierarchyReader.QueryGroupChildrenAsync(parentId, parentSnapshot.Value!.SnapshotToken);
+    if (!parentRoots.Value!.Items.Any(node => node.ChildRun is { IsAvailable: true } link && link.RunId == childId && link.ParentRunId == parentId))
+        throw new InvalidOperationException("Packaged hierarchy omitted the independent native child link.");
+    using var otherReader = builderEngine.CreateGroupReader();
+    if ((await otherReader.QueryGroupChildrenAsync(nestedId, token)).Status != WorkflowGroupReadStatus.ResyncRequired)
+        throw new InvalidOperationException("A reader accepted another cache's token.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition, five immutable evolving-selection epochs and independent grouped child boundaries.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition, five immutable evolving-selection epochs, independent grouped child boundaries and bounded hierarchy query paging.");
 
 sealed class GroupedChildWorkflow(bool parent) : IWorkflow<string, string>
 {
