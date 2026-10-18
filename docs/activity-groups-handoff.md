@@ -5,10 +5,10 @@ Updated 2026-10-18. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-bounded profile is **ZG-3b.5 native child boundaries**; read its
-[contract/pre-code note](activity-groups-zg3b5.md) and
-[qualification record](qualification/activity-groups/zg3b5.md). Next is
-**ZG-3b.6 consolidated dynamic qualification**, then ZG-4/5, Fuwen and
+boundary is **ZG-3b.6 consolidated native durability**; read its
+[capability matrix](activity-groups-zg3b6.md) and
+[qualification record](qualification/activity-groups/zg3b6.md). Next is
+**ZG-4 coherent hierarchy queries**, then ZG-5, Fuwen and
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
@@ -21,8 +21,8 @@ them rather than restarting completed qualification.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
 - Foundation implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
 - Qualified foundation/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
-- Current dynamic slice: [ZG-3b.5 native child boundaries](activity-groups-zg3b5.md) and
-  [evidence/source commits](qualification/activity-groups/zg3b5.md). The commits
+- Current dynamic boundary: [ZG-3b.6 consolidation](activity-groups-zg3b6.md) and
+  [evidence/source commits](qualification/activity-groups/zg3b6.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
@@ -57,6 +57,14 @@ them rather than restarting completed qualification.
   receipts and **38 fresh worker starts**, covering ten distinct crash boundaries
   per framework. Schema 9, child IDs, serialized start requests and occurrence
   encoders are unchanged. Typed loop/fan-out child lowering remains open.
+- ZG-3b.6 changes tests/tooling/docs only; runtime/package source remains the
+  exact ZG-3b.5 source above. Its audit checks all five source ledgers, 55 TRX
+  files and 35 historical candidate packages, plus eight new focused guard tests.
+  The retained complete suite has 1,639 tests; the eight additional executions
+  are separate targeted coverage, not a new full-suite count. Historical ledgers
+  contain 68 positive recovery receipts, two omission rejection cases and 146
+  tranche-specific worker starts; consolidation starts no process-loss workers.
+  Explicit rejection is distinguished from unqualified lexical composition.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
@@ -68,7 +76,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b.5 native child profile and pre-code note](activity-groups-zg3b5.md),
+1. [ZG-3b.6 capability boundary and ZG-4 entry contract](activity-groups-zg3b6.md),
+   [ZG-3b.5 native child profile and pre-code note](activity-groups-zg3b5.md),
    [ZG-3b.4 supported explicit-epoch profile and pre-code note](activity-groups-zg3b4.md),
    [ZG-3b.3 supported nested profile and pre-code note](activity-groups-zg3b3.md),
    [ZG-3b.2 supported fork profile](activity-groups-zg3b2.md),
@@ -169,14 +178,15 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
 ## Next checkpoint
 
 Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with
-**3b.6 consolidated qualification**. ZG-3b.1's fixed-selection fan-out,
+**ZG-4 coherent hierarchy queries**, using the consolidated capability boundary.
+ZG-3b.1's fixed-selection fan-out,
 ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
 explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate
 evidence; they do not close the entire dynamic model. Nested repetition/fork
 composition is not newly qualified. The accepted grouped fan-out/fork rejection
 and root-only grouped fan-out profile remain intact.
 In-place old-plan replacement and automatic retirement remain outside the accepted
-explicit-epoch profile. The consolidated record must prominently preserve:
+explicit-epoch profile. The consolidated record prominently preserves:
 **Nested repetition required no runtime algorithm, schema, or identity redesign.**
 Preserve explicit rejection until each complete durable vertical passes its own
 real-process and compatibility gates. Static/restart correctness does not imply

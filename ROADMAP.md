@@ -188,7 +188,8 @@ Added **2026-10-15** from the macro activities/activity groups proposal. The
 repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
 ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks, ZG-3b.3 fixed nested repetition
 ZG-3b.4 explicit immutable evolving-selection epochs and ZG-3b.5 native child
-boundaries are implemented. Consolidated dynamic durability, queries,
+boundaries are implemented. ZG-3b.6 consolidates the selected native durability
+profiles and their explicit composition limits. Queries,
 progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
@@ -244,12 +245,14 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-3a foundation:** schema 8 atomic manifest/admission and revision
   membership, restart inheritance, fail-closed capabilities and real process-loss
   reconstruction. No hierarchy query or expansion-completeness claim is included.
-- [ ] **ZG-3b — in progress:** dynamic occurrence durability: grouped
+- [x] **ZG-3b — bounded native profiles qualified:** dynamic occurrence durability: grouped
   fan-out/forks, nested repeated groups, restart during partial execution,
   resume/recovery identity preservation and child-workflow boundaries. See the
   [scope and independent proof gates](docs/activity-groups-zg3b.md). Static/restart
-  correctness does not imply fan-out/fork correctness. Keep explicit rejection
-  until each dynamic vertical is durable and qualified.
+  correctness does not imply fan-out/fork correctness. The
+  [consolidated capability boundary](docs/activity-groups-zg3b6.md) preserves
+  explicit rejection and unqualified combinations; this is not arbitrary mixed
+  composition or full Fuwen durability support.
 - [x] **ZG-3b.1:** bounded root native fan-out at an explicit completed selection
   step, immutable keyed/positional enumeration, current-revision closure and
   process-loss recovery. See [contract](docs/activity-groups-zg3b1.md) and
@@ -274,7 +277,8 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   runtime algorithm or schema change. See [contract](docs/activity-groups-zg3b4.md)
   and [evidence](docs/qualification/activity-groups/zg3b4.md). This does not permit
   changed plans under an old prefix or automatic retirement of unfinished work.
-  Grouped fan-out/fork copying and mixed loop/fan-out scopes remain rejected.
+  Grouped fan-out/fork copying and explicit loop-parent fan-out bindings remain
+  rejected; arbitrary mixed composition remains unqualified.
 - [x] **ZG-3b.5:** optional explicit parent `StartGroup`/`WaitGroup` bindings,
   independently owned child manifests/trees, native retry/restart/fork provenance,
   separate boundary authorization, cancellation and fresh-process recovery through
@@ -282,21 +286,26 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   9 and existing identity encoders remain unchanged. See
   [contract](docs/activity-groups-zg3b5.md) and
   [evidence](docs/qualification/activity-groups/zg3b5.md).
-- [ ] **ZG-3b.6:** consolidated dynamic qualification is next; retain each
-  construct's supported profile and explicit composition limits.
+- [x] **ZG-3b.6:** consolidated capability/rejection matrix and machine-checked
+  exact-source evidence audit. Retains the 1,639-test full-suite qualification;
+  eight new focused rejection executions close ordinary-step FanOutGroup and
+  engine fan-out/fork guard coverage gaps. Runtime/package source remains
+  `3ca1105`; schema and identity encoders are unchanged. See
+  [contract](docs/activity-groups-zg3b6.md) and
+  [evidence](docs/qualification/activity-groups/zg3b6.md).
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
-Finish ZG-3b before ZG-4 queries, then ZG-5 aggregate state/progress, ZG-6 Fuwen
+Next is ZG-4 queries over the bounded qualified profiles, then ZG-5 aggregate state/progress, ZG-6 Fuwen
 integration and ZG-7 cross-repository qualification. This supersedes the earlier
 reducer-before-query stage ordering. Preserve the foundation architecture and
 avoid coupling Fuwen to temporary native-runtime limits. The checklist below
 remains useful, but its headings
 are broad requirement areas rather than the new stage identifiers.
 
-The eventual consolidated qualification must preserve this established result:
+The consolidated qualification preserves this established result:
 **Nested repetition required no runtime algorithm, schema, or identity redesign.**
 
 #### Shared identity, state and compatibility requirements

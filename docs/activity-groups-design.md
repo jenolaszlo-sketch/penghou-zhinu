@@ -1,6 +1,8 @@
 # Durable activity groups: implementation design
 
-Date: 2026-10-16. Status: ZG-1 contracts qualified; the
+Updated 2026-10-18. Status: selected native durability profiles are consolidated
+in [ZG-3b.6](activity-groups-zg3b6.md); ZG-4 coherent hierarchy queries are next.
+ZG-1 contracts are qualified; the
 [ZG-2/3a foundation](activity-groups-zg2-3a.md) is implemented with explicit
 [qualification boundaries](qualification/activity-groups/zg2-3a.md). ZG-1 freezes
 manifest encoding/limits; ZG-2/3a freezes occurrence encoding and durable admission.
@@ -36,7 +38,7 @@ Fuwen determines expansion; Zhinu preserves structural intent and durable facts.
 9. Group controls, UI implementation, new orchestration semantics and arbitrary
    dynamic code/graph generation are outside this implementation.
 
-## 2. Current architecture, with source anchors
+## 2. Inspected architecture at the design baseline
 
 Paths below are relative to the Zhinu repository unless explicitly marked Fuwen.
 The table describes the inspected committed baseline; concurrent working-tree

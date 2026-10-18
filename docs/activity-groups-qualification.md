@@ -1,7 +1,7 @@
 # Activity groups: qualification matrix
 
 Date: 2026-10-18. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries qualified separately;
-the full runtime matrix remains open**.
+ZG-3b.6 consolidates the selected native profiles; the full milestone matrix remains open**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
 contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
 records the narrow root/loop durability, admission and process-loss slice.
@@ -29,7 +29,13 @@ retry/restart, admission, execution and parked/ready child-wait recovery. Separa
 start/wait/child authorization, successful parent cancellation and native fork
 provenance remain ordinary runtime semantics. Typed child lowering, coherent
 cross-run queries and aggregate progress are not closed by those proofs.
-Consolidation must prominently retain: **Nested repetition required no runtime
+The [ZG-3b.6 consolidated audit](qualification/activity-groups/zg3b6.md) verifies
+exact sources, retained TRX/package hashes and composition guard evidence, adding
+eight focused negative test executions. The [capability matrix](activity-groups-zg3b6.md)
+distinguishes actual rejection from unqualified combinations. This closes the
+bounded native durability checkpoint, not coherent reads, aggregate state,
+progress or Fuwen/cross-repository requirements in the wider Q01–Q47 matrix.
+Consolidation prominently retains: **Nested repetition required no runtime
 algorithm, schema, or identity redesign.**
 Use the [design](activity-groups-design.md) and
 [stage plan](activity-groups-implementation-plan.md). Native Zhinu and Fuwen

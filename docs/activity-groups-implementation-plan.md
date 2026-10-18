@@ -6,6 +6,8 @@ Date: 2026-10-18. Status: ZG-1, the ZG-2/3a durable foundation and
 [ZG-3b.3 fixed nested repetition](activity-groups-zg3b3.md) and
 [ZG-3b.4 explicit immutable selection epochs](activity-groups-zg3b4.md) and
 [ZG-3b.5 native child boundaries](activity-groups-zg3b5.md) implemented.
+The [ZG-3b.6 consolidated boundary](activity-groups-zg3b6.md) qualifies the
+selected native profiles together and records remaining composition limits.
 See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
 [foundation scope](activity-groups-zg2-3a.md),
 [ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
@@ -117,7 +119,7 @@ in clients, new activity parent links, widening supported Fuwen control flow.
 
 ## ZG-3 — Additive persistence, expansion evidence and restart
 
-In progress: [ZG-3b dynamic durability](activity-groups-zg3b.md), with separate proof for
+Bounded native profiles qualified: [ZG-3b dynamic durability](activity-groups-zg3b.md), with separate proof for
 grouped fan-out, forks, nested repetition, interrupted partial execution,
 resume/recovery and child boundaries. ZG-2/3a evidence is not dynamic qualification.
 
@@ -136,14 +138,17 @@ fork provenance, authorization, cancellation and interrupted recovery. It does
 not add typed loop/fan-out child lowering. Grouped fan-out/fork combinations
 remain rejected. Evidence for the first fan-out profile is
 [separate](qualification/activity-groups/zg3b1.md) from the foundation.
-Consolidated dynamic qualification is next.
+The [consolidated qualification](qualification/activity-groups/zg3b6.md) audits
+each profile and closes two focused rejection-coverage gaps. No runtime changes
+or generalized mixed-composition support are introduced. ZG-4 queries are next.
 That record must preserve: **Nested repetition required no runtime algorithm,
 schema, or identity redesign.**
 
 ZG-3a adds schema 8 atomic run/manifest and claim/occurrence/membership writes,
 historical revision inheritance and real process-loss probes. It does not
-establish expansion closure or aggregate completeness. Keep ZG-3 open until the
-remaining dynamic/fork/child/partial-expansion matrix is qualified.
+establish expansion closure or aggregate completeness. ZG-3b.6 closes only the
+selected native dynamic profiles; broader mixed/Fuwen and query/progress matrix
+requirements remain open under their explicit later gates.
 
 **Scope:** optional store capability; run-bound manifest installation; occurrence,
 membership and expansion-evidence persistence; transactional migration; restart,
@@ -317,10 +322,10 @@ claiming publication from local packing, automatically closing unrelated gates.
 
 ## Immediate next implementation checkpoint
 
-ZG-1, ZG-2/3a and ZG-3b.1–4 each have separate implementation and qualification
-records. The current bounded implementation is
-[ZG-3b.5 native child boundaries](activity-groups-zg3b5.md), followed by ZG-3b.6
-consolidated dynamic qualification. Preserve the construct-specific evidence;
+ZG-1, ZG-2/3a and ZG-3b.1–5 each have separate implementation and qualification
+records, audited by [ZG-3b.6 consolidation](activity-groups-zg3b6.md).
+Next implement **ZG-4 hierarchy queries** over that bounded durability contract.
+Preserve the construct-specific evidence;
 passing one shape does not close the remaining matrix or authorize query/progress
 and Fuwen adoption claims.
 

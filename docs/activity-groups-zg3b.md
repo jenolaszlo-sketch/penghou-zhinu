@@ -1,12 +1,14 @@
 # ZG-3b: dynamic occurrence durability
 
 Status: **ZG-3b.1 root native fan-out, ZG-3b.2 grouped native forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries implemented**;
-the remaining independent verticals below are open. See the
+ZG-3b.6 consolidates these bounded native profiles. Broader mixed compositions
+and the full activity-group milestone remain open. See the
 [3b.1 contract](activity-groups-zg3b1.md), [3b.2 contract](activity-groups-zg3b2.md)
 and [3b.3 contract](activity-groups-zg3b3.md), plus
 [3b.4 contract](activity-groups-zg3b4.md) and
 [3b.5 contract](activity-groups-zg3b5.md), with construct-specific evidence.
-The next proof is **3b.6 consolidation**.
+Read the [consolidated capability boundary](activity-groups-zg3b6.md) and
+[audit evidence](qualification/activity-groups/zg3b6.md). Next is **ZG-4 hierarchy queries**.
 The explicit-epoch profile preserves historical obligations; in-place changed-plan
 replacement and implicit retirement are not enabled.
 Decision recorded 2026-10-16. Start from qualified checkpoint
@@ -92,12 +94,18 @@ exact commits, compatibility constraints, unsupported combinations and the next
 checkpoint. A different model should continue from repository artifacts without
 depending on chat history.
 
-## ZG-3b.6 consolidation requirement
+## ZG-3b.6 consolidation result
 
-Preserve this exact finding prominently in the eventual consolidated record:
+The consolidated contract and evidence preserve this exact finding prominently:
 
 > **Nested repetition required no runtime algorithm, schema, or identity redesign.**
 
 Keep its ZG-3b.3 evidence separate from explicit-epoch evolving selection. Neither
 qualification permits arbitrary mixed fan-out/loop/fork compositions, implicit
 retirement or a claim that public hierarchy/progress semantics are complete.
+
+The evidence audit verifies the five exact-source ledgers, 55 retained full-suite
+TRX files and 35 packages. Eight new focused test executions close two guard
+coverage gaps without changing runtime code. Existing explicit rejection is
+distinguished from unqualified lexical composition; a raw WorkflowContext call
+inside arbitrary C# code does not automatically establish a typed loop scope.
