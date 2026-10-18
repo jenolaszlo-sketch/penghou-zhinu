@@ -88,11 +88,13 @@ public sealed class WorkflowGroupReaderTests
         opened.Status.Should().Be(WorkflowGroupReadStatus.InconsistentData);
     }
 
-    [Fact]
-    public async Task NegativeDefinitionOccurrenceCountIsInconsistent()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(7)]
+    public async Task IncorrectDefinitionOccurrenceCountIsInconsistent(int occurrenceCount)
     {
         var runId = Guid.NewGuid();
-        var proxy = NewStore(Snapshot(runId, definitions: [Definition("root", null, 0) with { OccurrenceCount = -1 }]));
+        var proxy = NewStore(Snapshot(runId, definitions: [Definition("root", null, 0) with { OccurrenceCount = occurrenceCount }]));
         using var reader = Reader(proxy.Store, time: new FakeTimeProvider(Epoch));
 
         var opened = await reader.GetRunGroupSnapshotAsync(runId, Ct);
@@ -352,7 +354,7 @@ public sealed class WorkflowGroupReaderTests
     {
         var runId = Guid.NewGuid();
         var data = Snapshot(runId,
-            definitions: [Definition("root", null, 0)],
+            definitions: [Definition("root", null, 0) with { OccurrenceCount = 1 }],
             occurrences: [new WorkflowGroupOccurrenceFact(runId, ActivityGroupOccurrence.ComputeId(runId, "root", null, "[]"), "root", null, "[]")]);
         var proxy = NewStore(data);
         using var reader = Reader(proxy.Store, time: new FakeTimeProvider(Epoch));

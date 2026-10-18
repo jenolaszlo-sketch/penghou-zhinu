@@ -286,6 +286,9 @@ public sealed class WorkflowGroupReader : IWorkflowGroupReader, IDisposable
             coordinates.Add(o.OccurrenceId, ActivityGroupOccurrence.ReadCoordinate(o.ExecutionCoordinate));
         }
         if (occurrences.Count > ActivityGroupOccurrence.MaximumAllowedOccurrencesPerRun) return false;
+        var counts = occurrences.Values.GroupBy(o => o.GroupKey, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+        if (definitions.Values.Any(definition => definition.OccurrenceCount != counts.GetValueOrDefault(definition.GroupKey))) return false;
         foreach (var o in occurrences.Values)
         {
             var current = o;
