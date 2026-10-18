@@ -300,12 +300,21 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   isolated package/binary/schema probes pass on .NET 8/10. Schema and identity
   encoders remain unchanged. See [contract](docs/activity-groups-zg4.md) and
   [evidence](docs/qualification/activity-groups/zg4.md).
-- [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
+- [x] **ZG-5:** deterministic aggregate state and unknown-total progress over
+  qualified native profiles. Pure reducer and optional state reader share the
+  frozen query snapshot and timestamp; Work/Control counters, wait/block reasons,
+  historical coverage and conservative closure remain explicit. Full suite
+  **1,845 tests** (96 new), formatting, seven unpublished packages and both
+  package/binary/schema probes pass on .NET 8/10. Schema 9, identity and native
+  execution semantics are unchanged; no aggregate state is persisted. See
+  [contract](docs/activity-groups-zg5.md) and
+  [evidence](docs/qualification/activity-groups/zg5.md).
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
-Next is ZG-5 aggregate state/progress over the qualified query facts, then ZG-6 Fuwen
-integration and ZG-7 cross-repository qualification. This supersedes the earlier
+Next is ZG-6 Fuwen metadata handoff and exact package integration, then ZG-7
+cross-repository qualification. Active code-first/loop groups retain unknown
+totals until authoritative closure. This supersedes the earlier
 reducer-before-query stage ordering. Preserve the foundation architecture and
 avoid coupling Fuwen to temporary native-runtime limits. The checklist below
 remains useful, but its headings

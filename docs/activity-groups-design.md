@@ -1,7 +1,10 @@
 # Durable activity groups: implementation design
 
 Updated 2026-10-18. Status: selected native durability profiles are consolidated
-in [ZG-3b.6](activity-groups-zg3b6.md); ZG-4 coherent hierarchy queries are next.
+in [ZG-3b.6](activity-groups-zg3b6.md). [ZG-4 coherent queries](activity-groups-zg4.md)
+and [ZG-5 aggregate state/progress](activity-groups-zg5.md) are qualified over
+those bounded profiles. ZG-6 Fuwen handoff and integration is next; active
+code-first/loop closure and wider composition retain explicit limits.
 ZG-1 contracts are qualified; the
 [ZG-2/3a foundation](activity-groups-zg2-3a.md) is implemented with explicit
 [qualification boundaries](qualification/activity-groups/zg2-3a.md). ZG-1 freezes

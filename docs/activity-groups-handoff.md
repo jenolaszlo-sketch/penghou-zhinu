@@ -5,10 +5,10 @@ Updated 2026-10-18. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-4 coherent hierarchy queries**; read its
-[contract](activity-groups-zg4.md) and
-[qualification record](qualification/activity-groups/zg4.md). Next is
-**ZG-5 aggregate state/progress**, then Fuwen and
+boundary is **ZG-5 aggregate state/progress**; read its
+[contract](activity-groups-zg5.md) and
+[qualification record](qualification/activity-groups/zg5.md). Next is
+**ZG-6 Fuwen metadata handoff and exact package integration**, then ZG-7
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
@@ -24,7 +24,19 @@ them rather than restarting completed qualification.
 - Current dynamic boundary: [ZG-3b.6 consolidation](activity-groups-zg3b6.md) and
   [evidence/source commits](qualification/activity-groups/zg3b6.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
-- Current reader/runtime/package source: `f911630e52743373ced9f5be0e8d33e1142e63b2`.
+- Current qualified source/packages: `01f2ac64173a625f3bf745704391871aac014a72`.
+  Feature implementation: `e8bb89c975f32695364b7836e6ba41856e681094`.
+  ZG-5 adds a pure aggregate reducer and optional state reader over the same
+  frozen ZG-4 facts and timestamp. All **1,845 tests** pass (96 new executions),
+  plus formatting, seven unpublished packages and both isolated package and
+  legacy binary/schema probes. The ledger retains 50 query/projection receipts
+  and 14 matching packaged/build binaries. Active code-first/loop groups keep
+  unknown totals until authoritative closure; historical selection exposes
+  explicit unknown/partial coverage. No aggregate state is persisted.
+  Schema 9, occurrence encoding and execution/authority algorithms are unchanged.
+  The final source also hardens only the shared hard-loss test helper, keeping
+  its exact fault boundaries; earlier worker-exit timeouts remain in evidence.
+- ZG-4 qualified reader/runtime/package source: `f911630e52743373ced9f5be0e8d33e1142e63b2`.
   ZG-4 adds safe coherent hierarchy snapshots, bounded immutable pagination,
   explicit resync outcomes and host read policy. All **1,749 tests** pass in the
   clean final full run, including **102 new query executions**; formatting,
@@ -83,7 +95,9 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-4 query contract](activity-groups-zg4.md) and
+1. [ZG-5 aggregate contract and limits](activity-groups-zg5.md) and
+   [qualification](qualification/activity-groups/zg5.md), then
+   [ZG-4 query contract](activity-groups-zg4.md) and
    [qualification](qualification/activity-groups/zg4.md), then
    [ZG-3b.6 native capability boundary](activity-groups-zg3b6.md),
    [ZG-3b.5 native child profile and pre-code note](activity-groups-zg3b5.md),
@@ -181,15 +195,21 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
   fan-out child lowering remain outside the root invocation profile.
 - ZG-4 qualifies hierarchy/tree queries and a bounded reader-local snapshot cache.
   Older point reads remain diagnostic capabilities without a multi-call snapshot
-  guarantee. Aggregate state/progress, group controls, UI, Fuwen macro adapter
-  and DSL runtime support remain outside this checkpoint.
+  guarantee. ZG-5 adds aggregate state/progress over that immutable snapshot with
+  explicit extent/coverage and separate Work/Control counts. It does not invent
+  closure for active arbitrary code-first/loop groups or reinterpret retained
+  historical fan-out selections as current work. Group controls, UI, Fuwen macro
+  adapter and DSL runtime support remain outside this checkpoint.
 - Local Windows .NET qualification is not Linux/remote CI or package publication.
 
 ## Next checkpoint
 
-Continue with **ZG-5 aggregate state/progress** over the
-[qualified ZG-4 query facts](activity-groups-zg4.md), preserving the consolidated
-native durability boundary.
+Continue with **ZG-6 Fuwen metadata handoff and exact package integration** over
+the [qualified ZG-4 facts](activity-groups-zg4.md) and
+[ZG-5 aggregate projection](activity-groups-zg5.md), preserving the consolidated
+native durability boundary and conservative closure policy. Inspect the Fuwen
+adapter's actual lowering and pin its selected profile before making support
+claims; no package is published by this checkpoint.
 ZG-3b.1's fixed-selection fan-out,
 ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
 explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate

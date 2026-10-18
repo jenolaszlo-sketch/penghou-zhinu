@@ -1,6 +1,10 @@
 # ZG-5 aggregate state and progress
 
-Status: implementation and qualification in progress.
+Status: **qualified** on Windows, .NET 8/10 at source
+`01f2ac64173a625f3bf745704391871aac014a72`: **1,845 tests**, formatting,
+seven unpublished packages and both package/binary/schema probes passed.
+See the [qualification and exact-source ledger](qualification/activity-groups/zg5.md).
+Next is ZG-6 Fuwen metadata handoff and package integration.
 
 The reducer is pure: selected Work/Control declarations, current/historical step
 facts, dependencies, safe waits/approvals, run/generation/operation context, an

@@ -8,6 +8,10 @@ Date: 2026-10-18. Status: ZG-1, the ZG-2/3a durable foundation and
 [ZG-3b.5 native child boundaries](activity-groups-zg3b5.md) implemented.
 The [ZG-3b.6 consolidated boundary](activity-groups-zg3b6.md) qualifies the
 selected native profiles together and records remaining composition limits.
+The [ZG-4 query surface](activity-groups-zg4.md) and
+[ZG-5 aggregate projection](activity-groups-zg5.md) are qualified over that
+bounded model; see [ZG-4 evidence](qualification/activity-groups/zg4.md) and
+[ZG-5 evidence](qualification/activity-groups/zg5.md). Next is ZG-6.
 See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
 [foundation scope](activity-groups-zg2-3a.md),
 [ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
@@ -140,7 +144,8 @@ remain rejected. Evidence for the first fan-out profile is
 [separate](qualification/activity-groups/zg3b1.md) from the foundation.
 The [consolidated qualification](qualification/activity-groups/zg3b6.md) audits
 each profile and closes two focused rejection-coverage gaps. No runtime changes
-or generalized mixed-composition support are introduced. ZG-4 queries are next.
+or generalized mixed-composition support are introduced. ZG-4 and ZG-5 now
+project this bounded model; they do not extend its execution profiles.
 That record must preserve: **Nested repetition required no runtime algorithm,
 schema, or identity redesign.**
 
@@ -226,14 +231,22 @@ long-lived SQLite read transactions or a persistent projection authority.
 
 ## ZG-5 — Pure aggregate state and progress
 
+**Qualified:** [contract and closure limits](activity-groups-zg5.md),
+[exact-source evidence](qualification/activity-groups/zg5.md). The implementation
+uses `WorkflowGroupState.cs`, `WorkflowGroupReader.State.cs` and the optional
+`IWorkflowGroupStateReader`; existing structural reader implementations remain
+compatible. Active code-first/loop scopes keep unknown totals until authoritative
+closure. Schema 9 and native execution algorithms are unchanged.
+
 **Scope:** deterministic reducer implementing design section 6, Work/Control
 counts, unknown totals, current versus historical occurrences, closure validity,
 safe approval and existing wait reasons. Reuse `StepStatus`, do not persist
 derived group status/counts in the first implementation.
 
-**Likely components:** new `ActivityGroups/GroupStateProjection.cs` and projection
-records; reuse `RunDiagnosis.cs`, `WorkflowWait.cs`, `WorkflowAuthorization.cs`,
-`WorkflowLoopProgress.cs` concepts; provider-neutral snapshot input DTOs.
+**Components:** `ActivityGroups/WorkflowGroupState.cs` contains the pure reducer
+and provider-neutral input/result records; `WorkflowGroupReader.State.cs` bridges
+the frozen structural snapshot. Safe wait, approval and run facts reuse the
+existing query DTOs.
 
 **Invariants:** failed current control work cannot disappear behind a progress
 filter; recovered old failures do not poison current status; containers/attempts
@@ -324,10 +337,12 @@ claiming publication from local packing, automatically closing unrelated gates.
 
 ZG-1, ZG-2/3a and ZG-3b.1–5 each have separate implementation and qualification
 records, audited by [ZG-3b.6 consolidation](activity-groups-zg3b6.md).
-Next implement **ZG-4 hierarchy queries** over that bounded durability contract.
-Preserve the construct-specific evidence;
-passing one shape does not close the remaining matrix or authorize query/progress
-and Fuwen adoption claims.
+[ZG-4 hierarchy queries](activity-groups-zg4.md) and
+[ZG-5 aggregate state/progress](activity-groups-zg5.md) are now separately
+qualified over that bounded durability contract. Next implement **ZG-6 Fuwen
+metadata handoff and exact package integration**. Preserve the construct-specific
+evidence and closure limits; native query/progress qualification does not prove
+Fuwen adoption or close the remaining cross-repository matrix.
 
 ZG-0 documentation is ready when all four documents and roadmap links are
 consistent. Its readiness alone does not qualify runtime behavior. ZG-1 contract
