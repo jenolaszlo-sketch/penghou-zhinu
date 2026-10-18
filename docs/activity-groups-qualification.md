@@ -1,6 +1,6 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-17. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 forks, ZG-3b.3 fixed nested repetition and ZG-3b.4 explicit immutable selection epochs qualified separately;
+Date: 2026-10-18. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries qualified separately;
 the full runtime matrix remains open**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
 contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
@@ -15,7 +15,7 @@ restart, fencing, recovery and migration cases. The
 relevant Q10/Q18/Q27/Q31/Q32 durability within fixed 3×2 nested loops: six leaf
 occurrences, complete typed lineage, explicit parents, retries, selective restart
 and seven process-loss boundaries on each framework. This does not close arbitrary
-mixed composition, grouped fan-out/fork evidence, implicit selection retirement, child recovery,
+mixed composition, grouped fan-out/fork evidence, implicit selection retirement,
 aggregate summaries or group queries.
 The [ZG-3b.4 evidence](qualification/activity-groups/zg3b4.md) separately qualifies
 changing sets across distinct stable root scopes, replayed historical selection,
@@ -23,6 +23,12 @@ unmodified old occurrences/memberships and unfinished obligations. This covers
 the explicit-epoch native portions of Q12/Q13/Q23/Q31 only; prior retry, fencing
 and restart cases remain regression gates. In-place
 old-plan replacement, active/history reducers and public projections remain open.
+The [ZG-3b.5 evidence](qualification/activity-groups/zg3b5.md) covers native Q42
+boundary membership and run-local child ownership, plus relevant Q18/Q27/Q29/Q30/Q31/Q32
+retry/restart, admission, execution and parked/ready child-wait recovery. Separate
+start/wait/child authorization, successful parent cancellation and native fork
+provenance remain ordinary runtime semantics. Typed child lowering, coherent
+cross-run queries and aggregate progress are not closed by those proofs.
 Consolidation must prominently retain: **Nested repetition required no runtime
 algorithm, schema, or identity redesign.**
 Use the [design](activity-groups-design.md) and

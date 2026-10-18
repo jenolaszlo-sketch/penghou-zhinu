@@ -1,5 +1,10 @@
 # ZG-3b.5: native child-workflow group boundaries
 
+Implemented and qualified for native root invocation boundaries on 2026-10-18.
+See [exact-source qualification](qualification/activity-groups/zg3b5.md) and its
+JSON for tests, fresh-process snapshots, packages and compatibility receipts.
+Schema remains **9**; child ID and occurrence encoders are unchanged.
+
 ## Implementation note — before coding, 2026-10-18
 
 Verified clean `codex/zhinu-activity-groups` at

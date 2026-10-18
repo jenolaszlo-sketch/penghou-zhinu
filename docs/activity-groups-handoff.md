@@ -48,6 +48,15 @@ them rather than restarting completed qualification.
   recovery receipts and 20 semantic receipts (including two omission rejection
   process cases), with **36 fresh worker starts** overall.
   No first-class epoch API, runtime algorithm, schema or occurrence codec change.
+- ZG-3b.5 source: `3ca11057c5c43463bc9c82304058d68e60b3433e`, starting from
+  `7d230a3ebcecb5ef9bdc733fb2e2fe41e1e087ca`. Optional parent start/wait bindings
+  and independent child trees are qualified through native retry/restart, fork
+  provenance, authorization, cancellation and process loss. All **1,639 tests**,
+  full formatting verification, seven packages and both isolated package/binary
+  probes passed on .NET 8/10. The record retains 16 recovery receipts, 48 semantic
+  receipts and **38 fresh worker starts**, covering ten distinct crash boundaries
+  per framework. Schema 9, child IDs, serialized start requests and occurrence
+  encoders are unchanged. Typed loop/fan-out child lowering remains open.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
 - Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
