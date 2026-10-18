@@ -1,0 +1,1263 @@
+{
+  "SchemaVersion": 1,
+  "Stage": "ZG-3b.6",
+  "Status": "passed",
+  "AuditedAtUtc": "2026-10-18T10:07:35.2806096+08:00",
+  "AuditedHead": "0684ee515873efc5a9b52701f988d6ba977d3609",
+  "RuntimePackageSource": "3ca11057c5c43463bc9c82304058d68e60b3433e",
+  "Scope": "Consolidation of retained exact-source profile evidence plus focused new composition rejection tests; no new runtime code or process-loss executions.",
+  "RuntimeAndTestTreeMatch": "Runtime and both consumer probes match the latest full-suite/package source. Existing tests are unchanged; only the supplemental composition test file is added.",
+  "LatestFullSuiteTests": 1639,
+  "ProfileRecords": [
+    {
+      "Stage": "ZG-3b.1",
+      "Evidence": "docs/qualification/activity-groups/zg3b1.json",
+      "EvidenceSha256": "92f27d10ccbe9e6d247ac69bb1ab2164290ba67b12e6117488d05ff6264430ef",
+      "RuntimeSource": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3",
+      "Schema": 9,
+      "FullSuiteTests": 1441,
+      "PositiveProcessReceipts": 8,
+      "NegativeOmissionCases": 0,
+      "HistoricalNewWorkerStarts": 16,
+      "SourceChecks": [
+        {
+          "Path": "eng/Verify-LegacyWorkflowConsumer.ps1",
+          "Sha256": "570e361bba4ad6ef00797c34c50cbb8734425ffe3d84a186297555e577b3bff1",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "eng/Verify-WorkflowPackageClosure.ps1",
+          "Sha256": "068cf78a5d5e6dee39e8afb3519dffa0541b2bbc8a31752dcc8a45abc044b033",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupFanOutRepository.cs",
+          "Sha256": "0a6619870c01204cc2e5b49c2eebf732d6e094e6832ebc6891affb10084a922f",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupRepository.cs",
+          "Sha256": "8f8fefe04c97b79215ce2af5eae008c8e3867d817f55725667549f963690807c",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/SqliteStoreSupport.cs",
+          "Sha256": "544d99e58c5ee0cb178cea61db265002054ec6844f947845d9c63b768f60787f",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Steps/SqliteStepRepository.Claims.cs",
+          "Sha256": "708000ee7214d3b529cd0de926ebf76bd2f73b81de168ed644c90c16369f9d31",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Workflows/Commands/InsertRunCommand.cs",
+          "Sha256": "44c6574d7975ddb00a75b2a913749c889dc31987c74395bc6f0e8b8649274cdb",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Workflows/SqliteWorkflowRepository.cs",
+          "Sha256": "c0e810fa07ef6bf1c853be03e0c0bbaf8c09e79d4fbb104320d007ba5a224978",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/PublicAPI.Unshipped.txt",
+          "Sha256": "f5f717812ce2df5864f17826309b0f2773f8f3b54ea633027d7281d22fea0aa7",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/SqliteDatabase.cs",
+          "Sha256": "e5708899a7b3d197cbd5d5c7afcbed6e5307af64f36ba6da0f0e504749bd4cad",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/SqliteWorkflowStore.cs",
+          "Sha256": "7836a910b6f7d1430ab827582ea3cbe4b6ab7e05dd64a9536c8579da71558091",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/ZhinuSchemaCompatibilityException.cs",
+          "Sha256": "87bee173e90d451d1df3854a63053331b1426c2d9552eaaee8da2c67851e6277",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupFanOut.cs",
+          "Sha256": "3f34ab68c6b10612c650fbe3bffb859733b3c8195fed54c4b5a8cb83cf71c612",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupManifest.cs",
+          "Sha256": "1997fb07460984c96bf0cd146c5171ff6b3a75e753b0015e9550456949dabee2",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupOccurrence.cs",
+          "Sha256": "137f334f3d5dc7eae7e5a89aca414c42eeb6f55b3e741e5d3ddc8df675c0fc15",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupRuntime.cs",
+          "Sha256": "22f502b18106f1b50d7657137f4487970969f37d9550a9b90456bad5a71f2762",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/Execution/Steps/RunExecutionPipeline.cs",
+          "Sha256": "906f8b9845b2ed86e784ac036e19f9611115b2b3b487fc56f119676f0dc3ca7b",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/PublicAPI.Unshipped.txt",
+          "Sha256": "6a9255d5ed92cd22ab4cd499691064a1ce81892a679849c37efce3a3c017f5c0",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/StepClaimRequest.cs",
+          "Sha256": "37ba450ba505a2f0c0965419e1401d558d296971ca24f8780acea06afc3c6acb",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/StepOptions.cs",
+          "Sha256": "68fbb96666f302e43aa89c0e299a8a47c877913dc5355040758e27e753f18470",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowContext.GroupedFanOut.cs",
+          "Sha256": "69354f1e097dda558088416e9f5b2ebc6420e7afd683dc98362f47ed913cc369",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowContext.cs",
+          "Sha256": "8f685071d25cce91bf15aad0a85014617e747a2db70ff3552644b2d983d8a24e",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowLoopIteration.cs",
+          "Sha256": "3896fec223b013a956a0426d3650be1b5ca3574677b3382cb6049b2889f366e6",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowRun.cs",
+          "Sha256": "91b9dd0915deb6f54bcdda5ccfdb8f0beabc1bbd4e1637d7b2ecfa927fc19139",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupFanOutProbe.cs",
+          "Sha256": "e3587f40fd2556802479d3033fe900f7377c6f9124bf19c7d65d40afbdab8aa2",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs",
+          "Sha256": "5491d28c9a7e2e91b43ab6ad9815dbcb2d34c53a0aae48440efda973f5191bfe",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutAdmissionTests.cs",
+          "Sha256": "8e0bbe2d459f6a834fc6a5cf1a0b3ea4591760003d5f76320c07eaf142933c4a",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutEngineTests.cs",
+          "Sha256": "41c835351593e07c8900b3648fae877c6fd634f899b2a0070feb4332db68d2b9",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutRecoveryTests.cs",
+          "Sha256": "364fc7ca36fb631aaeb6221b311c17ddeb56bb5f8d667d8eb4afb3dd52d9e4b1",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutStoreTests.cs",
+          "Sha256": "5aafb631ea247fd89e04e441f1559d8da74fa1035d857a291eda2db50857b703",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupSqliteTests.cs",
+          "Sha256": "2d2b28d7df1b264fb29e389a30b892e440088800799694d1818dedd4c970424a",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Tests/ActivityGroupFanOutContractTests.cs",
+          "Sha256": "a18d690801450bb0c6dd5912531233e87804dc47eb2248e82e2b0b6b38a4b9b9",
+          "Encoding": "git-blob"
+        }
+      ],
+      "TestChecks": [
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_41_net8.0.trx",
+          "Sha256": "48a75e148eb6cfa62378cb5756812b650bee070cde3f5855297949f885ca3b7d",
+          "Passed": 133
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_44_net10.0.trx",
+          "Sha256": "2653ad57f312362f3864275e89f619890dae9748b2e5db5f97248bef2c2dec72",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_44_net8.0.trx",
+          "Sha256": "ae58d8ee7340db9849ceb1300565d6e4998f4f0d216ff46bf3bbf7f0669dcd42",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_45_net10.0.trx",
+          "Sha256": "986747901728f4b7a6e189a1cd06d55588b1d6b5b04cbbe3f631992831020dd0",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_45_net10.0[1].trx",
+          "Sha256": "9902fed2efd4587c5660c75a31dfc3d574a8007a02bbc8a247e00c312004a64b",
+          "Passed": 133
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_45_net10.0[2].trx",
+          "Sha256": "34ef3bd4573516333375ab52daca7b1c13db24eed38ba346e70865a26c5897ba",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_46_net8.0.trx",
+          "Sha256": "5823c9595d7658cddbf1dcac9e24d96b4e30677c76a86a712ea6dc58f489a8cd",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_47_net10.0.trx",
+          "Sha256": "f7347d8657c93def1c9b057d1c407ad2d2bd2d760c3eb60b15a47e594af24254",
+          "Passed": 5
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_48_net8.0.trx",
+          "Sha256": "e603aa0283937eeb33507bc8df41f206e59b94fe4c01485e5795f0fa89756ab8",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_49_17_net10.0.trx",
+          "Sha256": "a71e15265baa4a357096184a3a81d5e3292672da751b2c605f975cff1a1df289",
+          "Passed": 542
+        },
+        {
+          "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_49_17_net8.0.trx",
+          "Sha256": "e9bb14257cf83bd27f295b6a629be738f4b4f40eee87e5cf03b0a6844e5585ea",
+          "Passed": 542
+        }
+      ],
+      "PackageChecks": [
+        {
+          "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+          "Sha256": "7e35fe4fde695bcf97a1aaf6b27a1bffb5107557a6a0ce0f9891a3edacb6ec0f",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        },
+        {
+          "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+          "Sha256": "4703475d16a0d49df11d126b88a983270888f02eb2f3c0348243957433fe49c9",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+          "Sha256": "906612683d84fed37bc53925f20d7cf073719aa4e9bd9068bbe78047d0055598",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+          "Sha256": "36b5b572cae15be85a723579f9d083a785dae63b516c971b637a62f1a23ce541",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        },
+        {
+          "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+          "Sha256": "7708bf30d4327b1064a83980a558006691e93f3b02a12cfa7396afb0b1ac72fb",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        },
+        {
+          "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+          "Sha256": "27ebcfe47db05c32f326144377df3f032ae88e3bc92b20e02996afd5e0874d11",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        },
+        {
+          "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+          "Sha256": "73e4aae185d3323ee389ee77891b2d4f2583afea819032749a5051f08831d2a6",
+          "RepositoryCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3"
+        }
+      ],
+      "Compatibility": "Two framework package consumers, legacy candidate substitution, schema migration and old-worker rejection passed in the retained qualification."
+    },
+    {
+      "Stage": "ZG-3b.2",
+      "Evidence": "docs/qualification/activity-groups/zg3b2.json",
+      "EvidenceSha256": "cdcc30c04957be32099e2bf3d122543c39046877ca53d981dabbcd576e27eb20",
+      "RuntimeSource": "28818cfc12831978a06b2fcd46d258699f0b9204",
+      "Schema": 9,
+      "FullSuiteTests": 1499,
+      "PositiveProcessReceipts": 14,
+      "NegativeOmissionCases": 0,
+      "HistoricalNewWorkerStarts": 28,
+      "SourceChecks": [
+        {
+          "Path": "eng/Verify-WorkflowPackageClosure.ps1",
+          "Sha256": "4e9f5ab93356d9c99b48468f26398b72845142965c7b5d931e312684ef289378",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupRepository.Fork.cs",
+          "Sha256": "b497e62fab2410d2d02556906c9f1570fa8b36c52214ee034fc716a33dac8b53",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupRepository.cs",
+          "Sha256": "9e54b97660bc2b6d2213d8b04a024a15e53b6d3cd8f20819ca7bf02c74a95db9",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Steps/SqliteStepRepository.Claims.cs",
+          "Sha256": "acc5f23dd91c4a966235790a437cf08b2f8a5e4e6030d542c9b1b02505431ddb",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Steps/SqliteStepRepository.Fork.cs",
+          "Sha256": "4cc5f01a5b20d5a0b36f9c1fb00ac256380c34367a8d60af96fd52486dad92ab",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/PublicAPI.Unshipped.txt",
+          "Sha256": "feaeab302cfe361bd66244b903e4eaf379308565d44722f3c8a2a6f3536dad7b",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu.Sqlite/SqliteWorkflowStore.cs",
+          "Sha256": "841f9cae8cf9171f392aa2e3d3e30fdbb2e49571b1925a218b0b0f0ebb7f7792",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ActivityGroups/IWorkflowGroupForkRepository.cs",
+          "Sha256": "f45909a08d537452d9a6e049b93418e0a18789c528248cc61ed6dfd45f855035",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/PublicAPI.Unshipped.txt",
+          "Sha256": "c42003ac45a440d51b25eb5ae1a2ce273b3870a447a575042d3bf3dbcf3bc35e",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowEngine.cs",
+          "Sha256": "6c785b5a4ddfae7b7352e7d3f50708818cb8cd6c8b0d7b825d1875a0fb1170be",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupForkProbe.cs",
+          "Sha256": "058c84d0ac7feeba58390cd923b3b90f03b40905e48301e4d20c07e1d86989d9",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupForkWorkflow.cs",
+          "Sha256": "46eabf695fb37d9783d8d9fe219879a41ad6a7880f8ea8d65a9d292793e4a76f",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs",
+          "Sha256": "926a35f8ba31beed95e9e9d89e3164b785b46257603d5651212f09994261d5bc",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupBoundaryTests.cs",
+          "Sha256": "3e6a96a07a1b8a9f60f9ca1752ef3257d5b3404049362c87fa83e0fa92f35fa9",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupForkRecoveryTests.cs",
+          "Sha256": "61bf7a0fb6ce9137157a7757cc9cdfce7f8735efd2989523af9f622e658b9c33",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupForkStoreTests.cs",
+          "Sha256": "61beca55fd7b5688c8e3c532bd94f565e260ccd576a66fd6c446e10cbba4f855",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupForkTests.cs",
+          "Sha256": "3f5792064b0801e1724438b8d376eb3c8a2f3d14edfa0c018ff75d16e322a517",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/Penghou.Zhinu.Sqlite.Tests.csproj",
+          "Sha256": "c4c593518646bd0d29b3ddd5e191dba07da1e259d93af5bde92819bb1cb80cc5",
+          "Encoding": "git-blob"
+        }
+      ],
+      "TestChecks": [
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_24_59_net8.0.trx",
+          "Sha256": "244fb8de011b65e12d49b3af4af1b294a515279819d824706f449a3dd9d6eac1",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_00_net10.0.trx",
+          "Sha256": "bb6a24d26d47c0047de738eefbfed89f4efeb17d94177263858a7b12e26cf4a6",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_00_net8.0.trx",
+          "Sha256": "c2787dcfa0f53e20b4970fb94ac087fa354f85e9a1a55e62af05700e5dc14679",
+          "Passed": 133
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_01_net10.0.trx",
+          "Sha256": "7c4fe70871b8e35a290ee610792c298a4bcd3d98d88778283546ef91cf4b9e82",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_01_net8.0.trx",
+          "Sha256": "f2366bd9053ea3bdb4c6fe1457e6f4fbea76f1fdeecf941a8f0e55fcb7f3dd6d",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_02_net10.0.trx",
+          "Sha256": "2849c8154b1b431e4280f9e3e1c622dbd83b9a2e77c02b01a2332269e26f4faf",
+          "Passed": 133
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_04_net10.0.trx",
+          "Sha256": "c57add472e3d02670aae29b238cdddbe8d6d78f7bab96f344bad1e16cdaaa305",
+          "Passed": 5
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_05_net10.0.trx",
+          "Sha256": "6c14de403d91628d6e9df627ed5415e054be771a0d3a23daa9a3fca4cb18a900",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_05_net8.0.trx",
+          "Sha256": "01e139b1b13a31c1d27734ed28f96ef229ed7c6bc2ecfca423a10f61d8e99ea1",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_12_net10.0.trx",
+          "Sha256": "a3213e18aed04351f004540b873408a2f90943c9bf43b78ba271d473a7a85cd0",
+          "Passed": 571
+        },
+        {
+          "File": "artifacts/zg3b2-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_22_25_12_net8.0.trx",
+          "Sha256": "8b36fe85ba4234d727549b51e081ebdb3105e2ab20d1b83ab6fc6b8f604b8e5e",
+          "Passed": 571
+        }
+      ],
+      "PackageChecks": [
+        {
+          "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+          "Sha256": "2ee3273951c5f4a848e3b8187c89da388ea5bf83d737e77ae2ef4d2a426737eb",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        },
+        {
+          "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+          "Sha256": "9c93f32003f8f685a0b4e144b7f86a235482a2832eb2f6cf66d33efbc227036c",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+          "Sha256": "501a7809305e12da601f06a6f00ceadc4cecb19c90e1314c296a703f400d2519",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+          "Sha256": "a63db466fce1d4348a7aaa453853ea34ce80303aee4ade68a403af7078f7a70d",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        },
+        {
+          "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+          "Sha256": "16a3b23ac01227b28bc241adc699ad0a146c5d2067e3bc5ff461d37a3d6d717e",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        },
+        {
+          "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+          "Sha256": "c816ece24b54524d350a8fbee7363d1346b8b175c10ace609b1e5e8e1f03757a",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        },
+        {
+          "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+          "Sha256": "a4786bd2e24ce4d862fd9080d33c04fbf1a57c23eb6a27e4ae2b61a2416c803a",
+          "RepositoryCommit": "28818cfc12831978a06b2fcd46d258699f0b9204"
+        }
+      ],
+      "Compatibility": "Two framework package consumers, legacy candidate substitution, schema migration and old-worker rejection passed in the retained qualification."
+    },
+    {
+      "Stage": "ZG-3b.3",
+      "Evidence": "docs/qualification/activity-groups/zg3b3.json",
+      "EvidenceSha256": "e65abfe88922e98b80917caa89f99986ec70f9f596288b105a7358142158014a",
+      "RuntimeSource": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d",
+      "Schema": 9,
+      "FullSuiteTests": 1531,
+      "PositiveProcessReceipts": 14,
+      "NegativeOmissionCases": 0,
+      "HistoricalNewWorkerStarts": 28,
+      "SourceChecks": [
+        {
+          "Path": "eng/Verify-WorkflowPackageClosure.ps1",
+          "Sha256": "723fd860bd3d9ffcd7924cc499b6f6217f5b97cbaba6789c8088fe1396a5ce7b",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowLoopIteration.cs",
+          "Sha256": "ea2de6b204b384f1edc8e6146b46747e00ff972ce10121a65961aedc8f72d46e",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupNestedProbe.cs",
+          "Sha256": "ece98c1876b0509757c80055686f33dd20e7676d11ea3225603c9d64baef97b0",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupNestedWorkflow.cs",
+          "Sha256": "9b4bc60ab11cac45ec05fd424887d47afb41283df33cec17dcbf7ef6b87e224e",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs",
+          "Sha256": "7dcd0c07f5d0d70ac097d37717f45319edb58a8623b95bb373142816d944b47b",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupNestedTests.cs",
+          "Sha256": "f254462fcef698e029effe3cec2d2d4faa727d5ec7b6727f1afb96a30e6c9894",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/Penghou.Zhinu.Sqlite.Tests.csproj",
+          "Sha256": "7c9bc3d053e114bc958f7d69de913756d60f2a8bf713724f404daa2b995539fd",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Tests/ActivityGroupNestedScopeTests.cs",
+          "Sha256": "73d96f6a8a2d519f201ebfb4daed00957f4be8bec46d54739d7885bd2238092b",
+          "Encoding": "git-blob"
+        }
+      ],
+      "TestChecks": [
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_18_net10.0.trx",
+          "Sha256": "cbaaf96bdcc1a6496ea64a846780591ad876af7a66eac726a688e4b037c59096",
+          "Passed": 137
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_18_net8.0.trx",
+          "Sha256": "27bed4a7e941535f244d36c6a176a95490d4a146e37a4dbd4f8f455b09b5a45b",
+          "Passed": 137
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_24_net10.0.trx",
+          "Sha256": "8b5548f970d7209641a1644082d32585fd051e644d3dbb5827148c6271a96297",
+          "Passed": 5
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_25_net10.0.trx",
+          "Sha256": "fcbb0eeee0f72f930f0d7f02f0e668868589320ed238ae396ca6f30beb718550",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_27_net8.0.trx",
+          "Sha256": "c6d07643e8881064eb8643acee1d04200781e2a51501f5c5bc9775c5180c72d1",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_30_net10.0.trx",
+          "Sha256": "6c9f1ca94d232a02579ceb711ceb6cd4597cc286c2d54cdca948f70fe816bea7",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_32_net8.0.trx",
+          "Sha256": "02ed50b40b18258c8cc5cda3bc3b3e6f61d38173c168b43f4dcdc2f323d7885d",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_33_net10.0.trx",
+          "Sha256": "d16da863a47f1428a9a230091caa394357f46dec9e4ab3af9ac2258288889135",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_33_net8.0.trx",
+          "Sha256": "1f3f150aa455bc349fd7128ffbc58cf903dd82aefead8c1a59f787dfcb148cca",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_34_net8.0.trx",
+          "Sha256": "65c3f075f77b39ecb542cb6a929d5899b1f4d78a30f3d93d4d26b31c74156d34",
+          "Passed": 583
+        },
+        {
+          "File": "artifacts/zg3b3-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_09_52_35_net10.0.trx",
+          "Sha256": "b56304e8f64095eabe746fa29c8eda961e4a516bfd0e687a7b2f2e7af6d9ffd1",
+          "Passed": 583
+        }
+      ],
+      "PackageChecks": [
+        {
+          "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+          "Sha256": "890377f6fb02a3e1d14636c4a7ead768c0f78d52b6cca742bfe61d7e17aab72c",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        },
+        {
+          "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+          "Sha256": "b1ca21c9faaa2a3235b807b53b8de613d7fffdb6ce47d677626aad3692d7e541",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+          "Sha256": "b929a253898799257b702cfb0188da9b2f3561bd7920fb08becc15a8efb14e01",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+          "Sha256": "a9a2b82cacb00bb39120eda015d7171f5063c2968b7f9e371662dbb7d4167be6",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        },
+        {
+          "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+          "Sha256": "1fd824d636e6d38e2d6c7590917fe638ff1336627462948a560e50fbeddac5cd",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        },
+        {
+          "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+          "Sha256": "6642ac76a19b7b1d36857f0e43a40fd3f7231698952de016110784a3e1c7572e",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        },
+        {
+          "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+          "Sha256": "db47f8fad978bfa7d122937bb68aad9ef87ba593759a84dc9ec570c0cebbc0be",
+          "RepositoryCommit": "4d24d6c4e25efc4efdf99b4e3f44f461e227019d"
+        }
+      ],
+      "Compatibility": "Two framework package consumers, legacy candidate substitution, schema migration and old-worker rejection passed in the retained qualification."
+    },
+    {
+      "Stage": "ZG-3b.4",
+      "Evidence": "docs/qualification/activity-groups/zg3b4.json",
+      "EvidenceSha256": "bb7a0a9295bb790a4bc7cea28fbfd0671bee3e5a49e2030155333fc67b40e2c1",
+      "RuntimeSource": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6",
+      "Schema": 9,
+      "FullSuiteTests": 1571,
+      "PositiveProcessReceipts": 16,
+      "NegativeOmissionCases": 2,
+      "HistoricalNewWorkerStarts": 36,
+      "SourceChecks": [
+        {
+          "Path": "eng/Verify-WorkflowPackageClosure.ps1",
+          "Sha256": "bc5866c6575cfe8a44bb53331000259bc0b6958babab97ca5efb453191d4f895",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupFanOut.cs",
+          "Sha256": "70e7e0f22699142320cb8a68497540e26953621da3b64e360201cf36b9da1350",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupSelectionProbe.cs",
+          "Sha256": "8eca7c01cf960f1c0e12ebafa797d2bdf54762da10bea821aefed502bf5bce27",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupSelectionWorkflow.cs",
+          "Sha256": "e49741fc380213ed7b740378deaa31053ecda853bf4c7663ed464c76190ff5f3",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs",
+          "Sha256": "92edc068678b82e5f5f3ce7061f51284607acc355d44b294cc10813a8a24ef63",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupSelectionTests.cs",
+          "Sha256": "e92f97e9c2513611666747e96f3516989eb454a9fe6578da08253d5d18fcc7d1",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/Penghou.Zhinu.Sqlite.Tests.csproj",
+          "Sha256": "f220a6c866382b0f7a835c2bb88c974401c440c0dbe33e2f5a3d6faa65a24baa",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Tests/ActivityGroupSelectionEpochTests.cs",
+          "Sha256": "4332d5177431eff94d7a6fe5026e5ce428a19faab39591c1f1ae0bdbe22b5a28",
+          "Encoding": "git-blob"
+        }
+      ],
+      "TestChecks": [
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_37_net10.0.trx",
+          "Sha256": "a19224a55c2283191e46219142088c0910fec29733adda55f7f39fa7d42f9804",
+          "Passed": 5
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_37_net8.0.trx",
+          "Sha256": "e95996589b4cab7a170bf1763792c565aea72352eb16d2961c465dd02ab28792",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_38_net10.0.trx",
+          "Sha256": "8b0b189fa1792dbd2c4f7f04e9e9a861490a429035aa2ac556d108b2f9b0f882",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_38_net10.0[1].trx",
+          "Sha256": "e5cf8eb0ae239e80610b116da966ed274540eb2000a2cd1e49bbf430af42ce6c",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_38_net8.0.trx",
+          "Sha256": "0c9af1a5600925e8aef71064a0cd93fb84608ddf965fb885865c3fd3e35c6d6c",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_39_net10.0.trx",
+          "Sha256": "638c466d85911ee365ed8884845634cbf54742cc04e3f48c78fbef25141fd6a3",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_39_net8.0.trx",
+          "Sha256": "1f8546e26d9cb01e84e6ced4e5297064e00b02253b9d9f17739a2dfea0431d7d",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_44_net10.0.trx",
+          "Sha256": "0a1e2921103e3f6baae98d7454c1014ccdd9d1c6fe0bf8e94b9c30bbb1928276",
+          "Passed": 139
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_44_net8.0.trx",
+          "Sha256": "b7b6477dc39869f64fc5a77bca08f3162a79d3af14396e40970ca51cabdc35df",
+          "Passed": 139
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_48_net10.0.trx",
+          "Sha256": "4041c686407c7e1e4237c52fd46c65a8d9aeb2d2253ed775c136418747ed3be0",
+          "Passed": 601
+        },
+        {
+          "File": "artifacts/zg3b4-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-17_11_58_48_net8.0.trx",
+          "Sha256": "a99dff6aed553a17cf8cbe9a465ac0958767ae1ee7786c21effd840fa987bf82",
+          "Passed": 601
+        }
+      ],
+      "PackageChecks": [
+        {
+          "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+          "Sha256": "e13a1b42248ea8c27e1f74deb8e954dbe1fd73801ba049f5204319d956e0b306",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        },
+        {
+          "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+          "Sha256": "5b898ae74020811cf2bf644ae68b6ecb99ec293390f3500fbc424611859c4452",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+          "Sha256": "6ae6574f9895e79c3c8f352a3be81b4beda4f7c569310c405b9f48c82e9be181",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+          "Sha256": "ebd9da45eae0ca418de2ebf769fff565c0f87e9c9867a7e3207b8051ac76feb5",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        },
+        {
+          "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+          "Sha256": "ab579acbea425579b1f6c9466f93bccca672fb8ecc46e8aac6876071c1e52d9b",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        },
+        {
+          "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+          "Sha256": "5a0f89fbcf25ddfc6e3f9a84b6d69e0330573924839559d8535526ec9656e7a9",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        },
+        {
+          "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+          "Sha256": "dc57479b09193d34a9c60bbc6c511f3c50cb72116797a0cfdc3ca981d00f5cd3",
+          "RepositoryCommit": "bfa1bf6c71b5bf4a29fe09a508f9a237b0f4cea6"
+        }
+      ],
+      "Compatibility": "Two framework package consumers, legacy candidate substitution, schema migration and old-worker rejection passed in the retained qualification."
+    },
+    {
+      "Stage": "ZG-3b.5",
+      "Evidence": "docs/qualification/activity-groups/zg3b5.json",
+      "EvidenceSha256": "c8ed050a73644e6a0073f48c3c5f9d87ea52d64c5e21afb681080133a3c4fb54",
+      "RuntimeSource": "3ca11057c5c43463bc9c82304058d68e60b3433e",
+      "Schema": 9,
+      "FullSuiteTests": 1639,
+      "PositiveProcessReceipts": 16,
+      "NegativeOmissionCases": 0,
+      "HistoricalNewWorkerStarts": 38,
+      "SourceChecks": [
+        {
+          "Path": "eng/Verify-WorkflowPackageClosure.ps1",
+          "Sha256": "19f32932ea768bb5bac2080f85553173e78804e28eb55459e1fa0eaa9f351225",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/ChildRunOptions.cs",
+          "Sha256": "4ea7db1035c5e8aa9c6dedc45033a3d2c16c449af35c3e7601a6bcc8f6be72cc",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/PublicAPI.Unshipped.txt",
+          "Sha256": "3f95d34d5d62d0933e8d318c6bc114721d1a61b389472d719860ccd7324d49b4",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "src/Penghou.Zhinu/WorkflowContext.cs",
+          "Sha256": "8af8cb5e51f283d2198cb3ea387fdfc0bc154955feb6061b601a945bc75aea33",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupChildProbe.cs",
+          "Sha256": "0fa9f59e89281355a9911cdcc509f163467b735612752499a41a11075d448d51",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupChildWorkflow.cs",
+          "Sha256": "c03834d35670ebcdd759aa73ea18d7f5ebd7746b37568cebbe548cb5bc440097",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs",
+          "Sha256": "d1f64c0642ded4c4f4b3bb005ed6b012df9b9dfb4e590ea883d2491a89d277d3",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupChildAuthorizationTests.cs",
+          "Sha256": "49ac33ea64fe2bee24bbb2d080d04296fff1a5946da5dd5151e9b009c3d2e3e7",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupChildRecoveryTests.cs",
+          "Sha256": "712718612ef9fc3aaab9c3028bca4809f0cb7e46b1bbf8c7a548bdd8d2430039",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupChildTests.cs",
+          "Sha256": "8163e5c7a2b8a3a1467509972fc0da186c536a0da4f346c8266a1d98ba219bf1",
+          "Encoding": "git-blob"
+        },
+        {
+          "Path": "tests/Penghou.Zhinu.Sqlite.Tests/Penghou.Zhinu.Sqlite.Tests.csproj",
+          "Sha256": "27753c7398d0e20ef0ba93d33ee72f25113fe4c0c7171acbbbdb2632cd19e6d3",
+          "Encoding": "git-blob"
+        }
+      ],
+      "TestChecks": [
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_45_net8.0.trx",
+          "Sha256": "38610335db1ee9005d3dd4d4b05403cc1f5ca9dbe8e923da2d1da8a79f061ae4",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_46_net10.0.trx",
+          "Sha256": "3b0a6c86b142924a567a06e2c606e79713572982370a9f5897de6981205fed3c",
+          "Passed": 29
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_47_net10.0.trx",
+          "Sha256": "a87813e8b85a921f5c9887ac656cab7015208491b28b5b20a05580b7105fbec0",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_47_net10.0[1].trx",
+          "Sha256": "dd1f810b59264bdf52f3bc92d5004b53fee765602adebdb2dfba3dddb13fc674",
+          "Passed": 5
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_47_net10.0[2].trx",
+          "Sha256": "61885e0915e25be71c9dd0b4fccc2868c8290a0ebcd6721fe59337efdd2e2246",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_47_net8.0.trx",
+          "Sha256": "972ef1199ccb39f00681c62dcb0a56714c6f0bbdc583f64f42a9afb2b6c42905",
+          "Passed": 1
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_47_net8.0[1].trx",
+          "Sha256": "b39f5b92c93b2b6f4721f02bd29cc3fa0a85c0a15c2927fe062635ea098e3e74",
+          "Passed": 13
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_52_net10.0.trx",
+          "Sha256": "fe225f46d8615cf3a00c27986f4b60f154078cc92831ded24f99556e418f33b3",
+          "Passed": 139
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_52_net8.0.trx",
+          "Sha256": "00abece27aaa0c5339062e60df25a7fabbf9c0833d7db3ae4e4c557e389f048d",
+          "Passed": 139
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_53_net8.0.trx",
+          "Sha256": "af507d38a57bce650263d5298c5a0e23747141d30257391b83283038a3fb7843",
+          "Passed": 635
+        },
+        {
+          "File": "artifacts/zg3b5-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_09_47_54_net10.0.trx",
+          "Sha256": "6d875c978866e5209117046f779ff0b90e565bd3424a7ab4110cfc9917cedcd1",
+          "Passed": 635
+        }
+      ],
+      "PackageChecks": [
+        {
+          "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+          "Sha256": "eec37da4e093435430afa1f3813e677db93a476ad5d2c98ca4f30b8141582b45",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        },
+        {
+          "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+          "Sha256": "233f497ecce00606b901a119e8fb0810cfefbc062888a403833b7f796e7ae1b7",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+          "Sha256": "797a954e319157c5090096beafbc33da5b2465f1393405e81d6aefbd4d7823d4",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        },
+        {
+          "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+          "Sha256": "671d227651c7efd8fee774a12a8782d734b4e7889548b94b814b5a7640fad264",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        },
+        {
+          "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+          "Sha256": "6fef6ea3e47072fc21f8cf1666668ab86eb3cb8197c05ee067c4932eaa8a9476",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        },
+        {
+          "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+          "Sha256": "5b1c592ad6d2a9cd988faee47b6125ba937f08b8d92b91a064c0963715477e0f",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        },
+        {
+          "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+          "Sha256": "7d57a8abbc1920e31267b03ffbdc72596752d2a5c0c2794fd40caca2f649f8be",
+          "RepositoryCommit": "3ca11057c5c43463bc9c82304058d68e60b3433e"
+        }
+      ],
+      "Compatibility": "Two framework package consumers, legacy candidate substitution, schema migration and old-worker rejection passed in the retained qualification."
+    }
+  ],
+  "VerifiedLocalTestFiles": 55,
+  "VerifiedLocalPackages": 35,
+  "VerifiedSourceHashEntries": 77,
+  "VerifiedRetainedSourceHashEntries": 36,
+  "PositiveHistoricalProcessReceipts": 68,
+  "NegativeHistoricalOmissionCases": 2,
+  "HistoricalTrancheWorkerStarts": 146,
+  "WorkerCounting": "Tranche-specific historical workers, including the child five-worker sequence. Not a count of new executions or every repeated worker in cumulative full-suite runs.",
+  "ConsolidationFinding": "Nested repetition required no runtime algorithm, schema, or identity redesign.",
+  "RetainedGuardChecks": [
+    {
+      "Guard": "Direct Group on fan-out",
+      "Framework": "net8.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: FunctionalIndex)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: FunctionalKeyed)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: ClassIndex)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: ClassKeyed)"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Direct Group on fan-out",
+      "Framework": "net10.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: FunctionalIndex)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: ClassKeyed)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: FunctionalKeyed)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBoundaryTests.GroupedFanOutOverloads_RejectBeforeAnyItemCallback(variant: ClassIndex)"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Explicit loop parent on grouped fan-out",
+      "Framework": "net8.0",
+      "Tests": [
+        "Penghou.Zhinu.Tests.ActivityGroupNestedScopeTests.GroupedFanOutUnderNestedLoopParent_RejectsBeforeItemExecution(kind: Keyed)",
+        "Penghou.Zhinu.Tests.ActivityGroupNestedScopeTests.GroupedFanOutUnderNestedLoopParent_RejectsBeforeItemExecution(kind: Positional)"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Explicit loop parent on grouped fan-out",
+      "Framework": "net10.0",
+      "Tests": [
+        "Penghou.Zhinu.Tests.ActivityGroupNestedScopeTests.GroupedFanOutUnderNestedLoopParent_RejectsBeforeItemExecution(kind: Keyed)",
+        "Penghou.Zhinu.Tests.ActivityGroupNestedScopeTests.GroupedFanOutUnderNestedLoopParent_RejectsBeforeItemExecution(kind: Positional)"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Competing typed loop/fan-out coordinate",
+      "Framework": "net8.0",
+      "Tests": [
+        "Penghou.Zhinu.Tests.ActivityGroupNestedScopeTests.NestedLoopAndFanOutCoordinate_CannotBeCombinedIntoCompetingScope"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Competing typed loop/fan-out coordinate",
+      "Framework": "net10.0",
+      "Tests": [
+        "Penghou.Zhinu.Tests.ActivityGroupNestedScopeTests.NestedLoopAndFanOutCoordinate_CannotBeCombinedIntoCompetingScope"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Store grouped fan-out/fork rejection",
+      "Framework": "net8.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupForkStoreTests.GroupedFork_RejectsFanOutEvidenceAndExistingDestinationWithoutChangingSource"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Store grouped fan-out/fork rejection",
+      "Framework": "net10.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupForkStoreTests.GroupedFork_RejectsFanOutEvidenceAndExistingDestinationWithoutChangingSource"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Wrong-manifest and loop-coordinate child binding",
+      "Framework": "net8.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupChildTests.SameRunWrongManifestAndUntypedLoopScopeFailBeforeChildBoundaryClaims(loopScoped: False)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupChildTests.SameRunWrongManifestAndUntypedLoopScopeFailBeforeChildBoundaryClaims(loopScoped: True)"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Wrong-manifest and loop-coordinate child binding",
+      "Framework": "net10.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupChildTests.SameRunWrongManifestAndUntypedLoopScopeFailBeforeChildBoundaryClaims(loopScoped: False)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupChildTests.SameRunWrongManifestAndUntypedLoopScopeFailBeforeChildBoundaryClaims(loopScoped: True)"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Missing grouped fan-out capability",
+      "Framework": "net8.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutEngineTests.MissingFanOutCapability_FailsBeforeSelectorAndOnMarkedResume"
+      ],
+      "Outcome": "Passed"
+    },
+    {
+      "Guard": "Missing grouped fan-out capability",
+      "Framework": "net10.0",
+      "Tests": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutEngineTests.MissingFanOutCapability_FailsBeforeSelectorAndOnMarkedResume"
+      ],
+      "Outcome": "Passed"
+    }
+  ],
+  "SupplementalSource": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupCompositionBoundaryTests.cs",
+  "SupplementalSourceSha256": "646b7056e2d1b9fb3136d863864bd9baf87b7ea72cd203090a05328df2b27446",
+  "SupplementalTestExecutions": 8,
+  "SupplementalTests": [
+    {
+      "File": "artifacts/zg3b6-composition-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_10_07_13_net10.0.trx",
+      "Sha256": "bd2abcba6c29b61267203cc5f11a0ac043084e78b0ef5197a79897687d91ba8f",
+      "Framework": "net10.0",
+      "Passed": 4,
+      "Cases": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: True)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: False)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: False)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: True)"
+      ]
+    },
+    {
+      "File": "artifacts/zg3b6-composition-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_10_07_13_net8.0.trx",
+      "Sha256": "a1f16c34c4c2ed0ebca59c666096d5bfe8368921af18ad306235d64f40afe069",
+      "Framework": "net8.0",
+      "Passed": 4,
+      "Cases": [
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: False)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: True)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: True)",
+        "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: False)"
+      ]
+    }
+  ],
+  "SupplementalReceipts": [
+    {
+      "Framework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: True)",
+      "Receipt": {
+        "boundary": "grouped-fan-out-fork",
+        "explicitDestinationId": true,
+        "sourceId": "33796b02-3c26-4cb6-826c-061218263929",
+        "destinationId": "6d1f908f-31ae-4b84-8295-2f59bf610558",
+        "exception": "Forking a run with grouped fan-out evidence is not qualified by this fork profile.",
+        "sourceSnapshotBefore": "{\"Run\":{\"Id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.0527761+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:12.3915196+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3915196+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"6024c36d3477c4b5f143f5b5cc678f21\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.1599811+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.1599811+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.2110327+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.2848161+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.2848161+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3016832+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.3137268+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.3137268+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3293493+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"4f72146e-e24e-4ed3-b0bc-9dcbda829122\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.3513661+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.3513661+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3659874+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"Membership\":null},{\"Id\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"Membership\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepId\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"Role\":0}},{\"Id\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"Membership\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepId\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"Role\":0}},{\"Id\":\"4f72146e-e24e-4ed3-b0bc-9dcbda829122\",\"Membership\":null}],\"Occurrences\":{\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"GroupOccurrenceId\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"GroupOccurrenceId\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"GroupOccurrenceId\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"ExpansionId\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"BoundaryRevision\":1,\"PlanDigest\":\"ed919c6bb5d06d435c896b595ae794e69cfef39cf0307e085f6ed4a67112f051\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.0527761+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.1599811+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.2110327+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.2848161+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3016832+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.3137268+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3293493+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.3513661+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3659874+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3915196+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.2848161\\u002B00:00\"},{\"run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.3137268\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"group_occurrence_id\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"group_occurrence_id\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"group_occurrence_id\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_id\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"role\":0},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_id\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"ed919c6bb5d06d435c896b595ae794e69cfef39cf0307e085f6ed4a67112f051\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u002233796b02-3c26-4cb6-826c-061218263929\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u0022d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u00221594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u00228cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"role\":0},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u002238028fba-5efa-4276-b12a-928b291fa2fc\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u002289059ea0-a479-4cf9-8fd2-4ca54ea17090\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"af311dc9dd087f79d4436c708904f38882a30ec4820e0f687fc6b08af1085380\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:12.3374030\\u002B00:00\"}]}}",
+        "sourceSnapshotAfter": "{\"Run\":{\"Id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.0527761+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:12.3915196+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3915196+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"6024c36d3477c4b5f143f5b5cc678f21\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.1599811+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.1599811+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.2110327+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.2848161+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.2848161+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3016832+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.3137268+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.3137268+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3293493+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"4f72146e-e24e-4ed3-b0bc-9dcbda829122\",\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.3513661+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.3513661+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.3659874+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"Membership\":null},{\"Id\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"Membership\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepId\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"Role\":0}},{\"Id\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"Membership\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepId\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"Role\":0}},{\"Id\":\"4f72146e-e24e-4ed3-b0bc-9dcbda829122\",\"Membership\":null}],\"Occurrences\":{\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"GroupOccurrenceId\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"GroupOccurrenceId\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"GroupOccurrenceId\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"ExpansionId\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"BoundaryRevision\":1,\"PlanDigest\":\"ed919c6bb5d06d435c896b595ae794e69cfef39cf0307e085f6ed4a67112f051\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.0527761+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.1599811+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.2110327+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.2848161+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3016832+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.3137268+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3293493+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.3513661+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3659874+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"33796b02-3c26-4cb6-826c-061218263929\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:12.3915196+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.2848161\\u002B00:00\"},{\"run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.3137268\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"group_occurrence_id\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"group_occurrence_id\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"group_occurrence_id\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_id\":\"38028fba-5efa-4276-b12a-928b291fa2fc\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"role\":0},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"step_id\":\"89059ea0-a479-4cf9-8fd2-4ca54ea17090\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"02f82a09-69ae-4c5e-8500-ff014c8991ae\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"ed919c6bb5d06d435c896b595ae794e69cfef39cf0307e085f6ed4a67112f051\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u002233796b02-3c26-4cb6-826c-061218263929\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u0022d19ab839f2d1608cca0b74dc2056489227395c0f661f016382d88a534d66090a\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u00221594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u00228cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"1594f63022d23c36f28ab25f3dd0430d55d73d068f247848da9228eea9ba9997\",\"role\":0},{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"8cc1f28febc2c878f4052f777d7483d9d675ef325edd70c56fb8b54a1ff569ee\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"33796b02-3c26-4cb6-826c-061218263929\",\"expansion_id\":\"3d84fea216f10f39271e11cf5da093c49eb8143a75990ab41eb90b16b6765b4c\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u002238028fba-5efa-4276-b12a-928b291fa2fc\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u002289059ea0-a479-4cf9-8fd2-4ca54ea17090\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"af311dc9dd087f79d4436c708904f38882a30ec4820e0f687fc6b08af1085380\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:12.3374030\\u002B00:00\"}]}}",
+        "runCountBefore": 1,
+        "runCountAfter": 1
+      }
+    },
+    {
+      "Framework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: False)",
+      "Receipt": {
+        "boundary": "grouped-fan-out-fork",
+        "explicitDestinationId": false,
+        "sourceId": "f4dcf921-90ca-4dd8-b124-ce2c53bddb7b",
+        "destinationId": null,
+        "exception": "Forking a run with grouped fan-out evidence is not qualified by this fork profile.",
+        "sourceSnapshotBefore": "{\"Run\":{\"Id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.6679018+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:12.7973796+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7973796+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"246086a4482dce6cf399cacbb1f66dd9\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7047283+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7047283+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7149411+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7306487+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7306487+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7432161+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7520074+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7520074+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.763174+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"774a50c9-d5dd-4d4d-8bcc-340fa3da6bf7\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7742454+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7742454+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7845414+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"Membership\":null},{\"Id\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"Membership\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepId\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"Role\":0}},{\"Id\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"Membership\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepId\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"Role\":0}},{\"Id\":\"774a50c9-d5dd-4d4d-8bcc-340fa3da6bf7\",\"Membership\":null}],\"Occurrences\":{\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"GroupOccurrenceId\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"GroupOccurrenceId\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"GroupOccurrenceId\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"ExpansionId\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"BoundaryRevision\":1,\"PlanDigest\":\"f45bf8fbe80ce76ce58b01e35eb07dd303ed4a02972c1b1ec3b20b6ce982c488\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.6679018+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7047283+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7149411+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7306487+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7432161+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7520074+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.763174+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7742454+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7845414+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7973796+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.7306487\\u002B00:00\"},{\"run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.7520074\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"group_occurrence_id\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"group_occurrence_id\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"group_occurrence_id\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_id\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"role\":0},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_id\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"f45bf8fbe80ce76ce58b01e35eb07dd303ed4a02972c1b1ec3b20b6ce982c488\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u0022f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u00224fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u0022afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u00227c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"role\":0},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00221f90cd4d-866a-4aba-b9ac-89c8103760c4\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u002206e7739b-8086-43bc-a9f5-900af078b4e7\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"000da22524e4dd30df43ba71a49e6fbaaf65dcdb519e8bf995a8df3d677cadbd\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:12.7670616\\u002B00:00\"}]}}",
+        "sourceSnapshotAfter": "{\"Run\":{\"Id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.6679018+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:12.7973796+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7973796+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"246086a4482dce6cf399cacbb1f66dd9\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7047283+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7047283+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7149411+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7306487+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7306487+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7432161+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7520074+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7520074+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.763174+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"774a50c9-d5dd-4d4d-8bcc-340fa3da6bf7\",\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7742454+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7742454+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7845414+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"Membership\":null},{\"Id\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"Membership\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepId\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"Role\":0}},{\"Id\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"Membership\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepId\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"Role\":0}},{\"Id\":\"774a50c9-d5dd-4d4d-8bcc-340fa3da6bf7\",\"Membership\":null}],\"Occurrences\":{\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"GroupOccurrenceId\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"GroupOccurrenceId\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"GroupOccurrenceId\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"ExpansionId\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"BoundaryRevision\":1,\"PlanDigest\":\"f45bf8fbe80ce76ce58b01e35eb07dd303ed4a02972c1b1ec3b20b6ce982c488\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.6679018+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7047283+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7149411+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7306487+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7432161+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7520074+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.763174+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7742454+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7845414+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7973796+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.7306487\\u002B00:00\"},{\"run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.7520074\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"group_occurrence_id\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"group_occurrence_id\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"group_occurrence_id\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"4fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_id\":\"1f90cd4d-866a-4aba-b9ac-89c8103760c4\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"role\":0},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"step_id\":\"06e7739b-8086-43bc-a9f5-900af078b4e7\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"acf19aed-21c4-40af-9b9a-881f48fbacc0\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"f45bf8fbe80ce76ce58b01e35eb07dd303ed4a02972c1b1ec3b20b6ce982c488\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u0022f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u00224fe81fe39615fc579ab74e8b43cc64bb3e388d5982c58e1b50e4f099cb926891\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u0022afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u00227c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"afd4a9b1d3c75fa90d5177761ae4c5198034c88aed6f5d2a8ede76ac1aee68ae\",\"role\":0},{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"7c50f821d4700b3b70f0f5cc9590bd30131724fb0e5c64e0c9c2dc4454aaf473\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"f4dcf921-90ca-4dd8-b124-ce2c53bddb7b\",\"expansion_id\":\"79cc9c0d549baf03ce46f141c28c48b8fbd10ab684c9fd7a4cd05f9e616ff7f6\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00221f90cd4d-866a-4aba-b9ac-89c8103760c4\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u002206e7739b-8086-43bc-a9f5-900af078b4e7\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"000da22524e4dd30df43ba71a49e6fbaaf65dcdb519e8bf995a8df3d677cadbd\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:12.7670616\\u002B00:00\"}]}}",
+        "runCountBefore": 1,
+        "runCountAfter": 1
+      }
+    },
+    {
+      "Framework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: False)",
+      "Receipt": {
+        "boundary": "ordinary-step-fan-out-group",
+        "hasParent": false,
+        "runId": "558bc501-418b-44c9-90e1-33bd8cf88c51",
+        "exception": "A per-item fan-out group declaration can only be consumed by native FanOutAsync.",
+        "callbackCalls": 0,
+        "stepKeys": [
+          "select"
+        ],
+        "groupFanOutUsed": false
+      }
+    },
+    {
+      "Framework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: True)",
+      "Receipt": {
+        "boundary": "ordinary-step-fan-out-group",
+        "hasParent": true,
+        "runId": "c2b63e78-a545-4e06-b4c8-b47584f04ecb",
+        "exception": "A per-item fan-out group declaration can only be consumed by native FanOutAsync.",
+        "callbackCalls": 0,
+        "stepKeys": [
+          "select"
+        ],
+        "groupFanOutUsed": false
+      }
+    },
+    {
+      "Framework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: False)",
+      "Receipt": {
+        "boundary": "grouped-fan-out-fork",
+        "explicitDestinationId": false,
+        "sourceId": "88a83bd4-5e41-459c-9a60-5ef627a45d26",
+        "destinationId": null,
+        "exception": "Forking a run with grouped fan-out evidence is not qualified by this fork profile.",
+        "sourceSnapshotBefore": "{\"Run\":{\"Id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.5804889+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:12.7507833+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7507833+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"758b8f6dab5e1dc7aab24172ca16ab5c\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.6174088+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.6174088+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.6278715+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.6685355+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.6685355+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.6843915+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.6953984+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.6953984+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.705537+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"ffb16581-bcad-4a95-a7c0-f1960c39b5b3\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7211989+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7211989+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7313911+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"Membership\":null},{\"Id\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"Membership\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepId\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"Role\":0}},{\"Id\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"Membership\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepId\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"Role\":0}},{\"Id\":\"ffb16581-bcad-4a95-a7c0-f1960c39b5b3\",\"Membership\":null}],\"Occurrences\":{\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"GroupOccurrenceId\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"GroupOccurrenceId\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"GroupOccurrenceId\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"ExpansionId\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"BoundaryRevision\":1,\"PlanDigest\":\"5f3f80d913b6c1a9e5754897988ae9b36da0083a418e54c566b736015e53017a\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.5804889+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.6174088+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.6278715+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.6685355+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.6843915+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.6953984+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.705537+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7211989+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7313911+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7507833+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.6685355\\u002B00:00\"},{\"run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.6953984\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"group_occurrence_id\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"group_occurrence_id\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"group_occurrence_id\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_id\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"role\":0},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_id\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"5f3f80d913b6c1a9e5754897988ae9b36da0083a418e54c566b736015e53017a\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u002288a83bd4-5e41-459c-9a60-5ef627a45d26\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u002296c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u0022a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u0022f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"role\":0},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00224d42171e-6489-4a19-b087-251f24401e6c\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u0022e6e3560b-19fc-4fa4-adce-7c24649b32cd\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"135f5c88b9f1ead2bf2644ebd2489ba6d0d138f8f198db9181d79c18160a4a71\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:12.7120441\\u002B00:00\"}]}}",
+        "sourceSnapshotAfter": "{\"Run\":{\"Id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.5804889+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:12.7507833+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7507833+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"758b8f6dab5e1dc7aab24172ca16ab5c\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.6174088+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.6174088+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.6278715+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.6685355+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.6685355+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.6843915+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.6953984+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.6953984+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.705537+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"ffb16581-bcad-4a95-a7c0-f1960c39b5b3\",\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.7211989+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.7211989+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.7313911+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"Membership\":null},{\"Id\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"Membership\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepId\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"Role\":0}},{\"Id\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"Membership\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepId\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"Role\":0}},{\"Id\":\"ffb16581-bcad-4a95-a7c0-f1960c39b5b3\",\"Membership\":null}],\"Occurrences\":{\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"GroupOccurrenceId\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"GroupOccurrenceId\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"GroupOccurrenceId\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"ExpansionId\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"BoundaryRevision\":1,\"PlanDigest\":\"5f3f80d913b6c1a9e5754897988ae9b36da0083a418e54c566b736015e53017a\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.5804889+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.6174088+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.6278715+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.6685355+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.6843915+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.6953984+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.705537+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.7211989+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7313911+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:12.7507833+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.6685355\\u002B00:00\"},{\"run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.6953984\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"group_occurrence_id\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"group_occurrence_id\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"group_occurrence_id\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"96c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_id\":\"4d42171e-6489-4a19-b087-251f24401e6c\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"role\":0},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"step_id\":\"e6e3560b-19fc-4fa4-adce-7c24649b32cd\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"6af91663-0908-41a0-9ddb-b4103dac9c06\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"5f3f80d913b6c1a9e5754897988ae9b36da0083a418e54c566b736015e53017a\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u002288a83bd4-5e41-459c-9a60-5ef627a45d26\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u002296c3b4e72f812ffa9f1810173861343bbf531bb97a9533bba67136e62208062a\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u0022a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u0022f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"a2c15603e79187a936786792c32e2387e4b77c1c343cfc917ef5fe7e65ab7ebe\",\"role\":0},{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"f44f9c6086fc4e7ff13aabd9f403ba867aae1797a66cedce03c15bd346f26870\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"88a83bd4-5e41-459c-9a60-5ef627a45d26\",\"expansion_id\":\"52923d6a72444ec2b29dee548b94eeb240c7a7fd3c6b3cf6db955bfacd401626\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00224d42171e-6489-4a19-b087-251f24401e6c\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u0022e6e3560b-19fc-4fa4-adce-7c24649b32cd\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"135f5c88b9f1ead2bf2644ebd2489ba6d0d138f8f198db9181d79c18160a4a71\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:12.7120441\\u002B00:00\"}]}}",
+        "runCountBefore": 1,
+        "runCountAfter": 1
+      }
+    },
+    {
+      "Framework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.ForkAsync_RejectsCompletedGroupedFanOutBeforeAnySourceOrDestinationChange(explicitDestinationId: True)",
+      "Receipt": {
+        "boundary": "grouped-fan-out-fork",
+        "explicitDestinationId": true,
+        "sourceId": "d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640",
+        "destinationId": "51ba409a-8f2c-48fa-ac00-820916e460f2",
+        "exception": "Forking a run with grouped fan-out evidence is not qualified by this fork profile.",
+        "sourceSnapshotBefore": "{\"Run\":{\"Id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.9321985+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:13.0564341+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.0564341+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"a3a5b5e88543fbb520dba1bf24708561\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.9674359+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.9674359+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.9784481+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.9934353+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.9934353+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.0035442+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:13.013185+00:00\",\"StartedAt\":\"2026-10-18T02:07:13.013185+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.023647+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"2c1e067d-dcdb-413b-bf69-1c58b3aa1e9d\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:13.0335218+00:00\",\"StartedAt\":\"2026-10-18T02:07:13.0335218+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.0446374+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"Membership\":null},{\"Id\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"Membership\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepId\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"Role\":0}},{\"Id\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"Membership\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepId\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"Role\":0}},{\"Id\":\"2c1e067d-dcdb-413b-bf69-1c58b3aa1e9d\",\"Membership\":null}],\"Occurrences\":{\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"GroupOccurrenceId\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"GroupOccurrenceId\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"GroupOccurrenceId\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"ExpansionId\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"BoundaryRevision\":1,\"PlanDigest\":\"8da92a2635bea9e71a28338a6bc6dfe66d4ad2d0f94d559c16d0a68ab3f9c591\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.9321985+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.9674359+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.9784481+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.9934353+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:13.0035442+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:13.013185+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:13.023647+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:13.0335218+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:13.0446374+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:13.0564341+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.9934353\\u002B00:00\"},{\"run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:13.0131850\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"group_occurrence_id\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"group_occurrence_id\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"group_occurrence_id\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_id\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"role\":0},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_id\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"8da92a2635bea9e71a28338a6bc6dfe66d4ad2d0f94d559c16d0a68ab3f9c591\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u0022d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u00225fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u002250d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u00222e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"role\":0},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00220a8d1136-354a-433b-8f0c-d37fc6b774c7\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00224684c164-5eb4-4439-b71d-415b9f167c29\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"ce966ca5b89ef92f432b56678fc741a3b8138536ecc9095e5fb6f1ccf85dd65f\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:13.0281309\\u002B00:00\"}]}}",
+        "sourceSnapshotAfter": "{\"Run\":{\"Id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"WorkflowName\":\"group-composition-boundary\",\"WorkflowVersion\":\"1\",\"Status\":2,\"CreatedAt\":\"2026-10-18T02:07:12.9321985+00:00\",\"UpdatedAt\":\"2026-10-18T02:07:13.0564341+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.0564341+00:00\",\"Deadline\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"ParentRunId\":null,\"SourceRunId\":null,\"MetadataJson\":null,\"TraceId\":\"a3a5b5e88543fbb520dba1bf24708561\",\"DefinitionFingerprint\":null,\"GroupManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"GroupFanOutUsed\":true,\"AuthorizationProviderId\":null,\"AuthorizationBindingId\":null,\"AuthoritySubjectBinding\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"LeaseGeneration\":2},\"Steps\":[{\"Id\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"select\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.9674359+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.9674359+00:00\",\"CompletedAt\":\"2026-10-18T02:07:12.9784481+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022payload\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"4039511016be9fd409b027671e524636a2b973c15ce85d89465092155f92c9f2\",\"OutputJson\":\"[\\u0022a\\u0022,\\u0022b\\u0022]\",\"OutputType\":\"System.String[], System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.a\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:12.9934353+00:00\",\"StartedAt\":\"2026-10-18T02:07:12.9934353+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.0035442+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022a\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"OutputJson\":\"\\u0022A\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.b\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:13.013185+00:00\",\"StartedAt\":\"2026-10-18T02:07:13.013185+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.023647+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022b\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"OutputJson\":\"\\u0022B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null},{\"Id\":\"2c1e067d-dcdb-413b-bf69-1c58b3aa1e9d\",\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"finish\",\"ImplementationKey\":null,\"Status\":2,\"Attempt\":1,\"CreatedAt\":\"2026-10-18T02:07:13.0335218+00:00\",\"StartedAt\":\"2026-10-18T02:07:13.0335218+00:00\",\"CompletedAt\":\"2026-10-18T02:07:13.0446374+00:00\",\"AvailableAt\":null,\"InputJson\":\"\\u0022A:B\\u0022\",\"InputType\":\"System.String, System.Private.CoreLib\",\"InputHash\":\"634e2386d57dad007014a967fcef0e719b98d52c3a8533104636589d869c6a5e\",\"OutputJson\":\"\\u0022A:B\\u0022\",\"OutputType\":\"System.String, System.Private.CoreLib\",\"Error\":null,\"SignalName\":null,\"LeaseOwner\":null,\"LeaseExpiresAt\":null,\"Revision\":1,\"LeaseGeneration\":2,\"AuthorizationDeclarationHash\":null}],\"Memberships\":[{\"Id\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"Membership\":null},{\"Id\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"Membership\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepId\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"StepKey\":\"items.a\",\"StepRevision\":1,\"GroupOccurrenceId\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"Role\":0}},{\"Id\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"Membership\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepId\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"StepKey\":\"items.b\",\"StepRevision\":1,\"GroupOccurrenceId\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"Role\":0}},{\"Id\":\"2c1e067d-dcdb-413b-bf69-1c58b3aa1e9d\",\"Membership\":null}],\"Occurrences\":{\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"GroupOccurrenceId\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\"},\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"GroupOccurrenceId\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"GroupKey\":\"work\",\"ParentGroupOccurrenceId\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"ExecutionCoordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\"},\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"GroupOccurrenceId\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"GroupKey\":\"root\",\"ParentGroupOccurrenceId\":null,\"ExecutionCoordinate\":\"[]\"}},\"Manifest\":{\"ContractVersion\":1,\"Definitions\":[{\"GroupKey\":\"root\",\"ParentGroupKey\":null,\"Kind\":0,\"DisplayName\":\"Root\",\"ChildOrdinal\":0,\"Provenance\":null},{\"GroupKey\":\"work\",\"ParentGroupKey\":\"root\",\"Kind\":1,\"DisplayName\":\"Work\",\"ChildOrdinal\":0,\"Provenance\":{\"MacroName\":\"AnyMacro\",\"MacroDefinitionFingerprint\":\"pin\",\"InvocationKey\":\"invocation\",\"MacroVersion\":null,\"SourceReference\":null}}],\"CanonicalJson\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\",\"ManifestDigest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},\"FanOut\":{\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"ExpansionId\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"FanOutKey\":\"items\",\"BoundaryStepId\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"BoundaryRevision\":1,\"PlanDigest\":\"8da92a2635bea9e71a28338a6bc6dfe66d4ad2d0f94d559c16d0a68ab3f9c591\",\"ItemCount\":2,\"IsComplete\":true},\"Events\":[{\"Sequence\":1,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":null,\"EventType\":\"workflow-started\",\"Timestamp\":\"2026-10-18T02:07:12.9321985+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0},{\"Sequence\":2,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"select\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.9674359+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":3,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"select\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:12.9784481+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":4,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.a\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:12.9934353+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":5,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.a\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:13.0035442+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":6,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.b\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:13.013185+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":7,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"items.b\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:13.023647+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":8,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"finish\",\"EventType\":\"step-started\",\"Timestamp\":\"2026-10-18T02:07:13.0335218+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":9,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":\"finish\",\"EventType\":\"step-completed\",\"Timestamp\":\"2026-10-18T02:07:13.0446374+00:00\",\"Attempt\":1,\"DataJson\":null,\"Durability\":0},{\"Sequence\":10,\"WorkflowRunId\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"StepKey\":null,\"EventType\":\"workflow-completed\",\"Timestamp\":\"2026-10-18T02:07:13.0564341+00:00\",\"Attempt\":null,\"DataJson\":null,\"Durability\":0}],\"Dependencies\":[{\"run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_key\":\"items.a\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:12.9934353\\u002B00:00\"},{\"run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_key\":\"items.b\",\"depends_on_step_key\":\"select\",\"created_at\":\"2026-10-18T02:07:13.0131850\\u002B00:00\"}],\"PersistedGroupRows\":{\"workflow_group_manifests\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"contract_version\":1,\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\",\"canonical_json\":\"{\\u0022contractVersion\\u0022:1,\\u0022definitions\\u0022:[{\\u0022groupKey\\u0022:\\u0022root\\u0022,\\u0022parentGroupKey\\u0022:null,\\u0022kind\\u0022:\\u0022Logical\\u0022,\\u0022displayName\\u0022:\\u0022Root\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:null},{\\u0022groupKey\\u0022:\\u0022work\\u0022,\\u0022parentGroupKey\\u0022:\\u0022root\\u0022,\\u0022kind\\u0022:\\u0022Macro\\u0022,\\u0022displayName\\u0022:\\u0022Work\\u0022,\\u0022childOrdinal\\u0022:0,\\u0022provenance\\u0022:{\\u0022macroName\\u0022:\\u0022AnyMacro\\u0022,\\u0022macroDefinitionFingerprint\\u0022:\\u0022pin\\u0022,\\u0022invocationKey\\u0022:\\u0022invocation\\u0022,\\u0022macroVersion\\u0022:null,\\u0022sourceReference\\u0022:null}}]}\"}],\"workflow_group_occurrences\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"group_occurrence_id\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"group_key\":\"root\",\"parent_group_occurrence_id\":null,\"execution_coordinate\":\"[]\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"group_occurrence_id\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022a\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"group_occurrence_id\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"group_key\":\"work\",\"parent_group_occurrence_id\":\"5fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\",\"execution_coordinate\":\"{\\u0022version\\u0022:2,\\u0022frames\\u0022:[{\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022kind\\u0022:\\u0022key\\u0022,\\u0022item\\u0022:\\u0022b\\u0022}]}\",\"manifest_digest\":\"87745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\"}],\"workflow_step_group_memberships\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_id\":\"0a8d1136-354a-433b-8f0c-d37fc6b774c7\",\"step_key\":\"items.a\",\"step_revision\":1,\"group_occurrence_id\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"role\":0},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"step_id\":\"4684c164-5eb4-4439-b71d-415b9f167c29\",\"step_key\":\"items.b\",\"step_revision\":1,\"group_occurrence_id\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"role\":0}],\"workflow_group_fanout_expansions\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"fan_out_key\":\"items\",\"boundary_step_id\":\"655da1c1-581d-4f9e-8538-a72a0c6fd2ac\",\"boundary_step_key\":\"select\",\"boundary_revision\":1,\"plan_digest\":\"8da92a2635bea9e71a28338a6bc6dfe66d4ad2d0f94d559c16d0a68ab3f9c591\",\"canonical_json\":\"{\\u0022version\\u0022:1,\\u0022run\\u0022:\\u0022d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\\u0022,\\u0022manifest\\u0022:\\u002287745bfc70a86e41ed2ce755ed605830eb8a519156a06599e8d530d43844e58e\\u0022,\\u0022fanOut\\u0022:\\u0022items\\u0022,\\u0022selection\\u0022:\\u0022select\\u0022,\\u0022group\\u0022:\\u0022work\\u0022,\\u0022parent\\u0022:\\u00225fc6778452adbcaf7b2d46ae27d2da34f8791d165f8219e40347121876e7a289\\u0022,\\u0022role\\u0022:0,\\u0022kind\\u0022:0,\\u0022inputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022outputType\\u0022:\\u0022System.String, System.Private.CoreLib\\u0022,\\u0022implementation\\u0022:null,\\u0022authorization\\u0022:null,\\u0022compensation\\u0022:\\u0022none\\u0022,\\u0022dependencies\\u0022:[\\u0022select\\u0022],\\u0022items\\u0022:[{\\u0022key\\u0022:\\u0022a\\u0022,\\u0022step\\u0022:\\u0022items.a\\u0022,\\u0022input\\u0022:\\u0022ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\\u0022,\\u0022occurrence\\u0022:\\u002250d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\\u0022},{\\u0022key\\u0022:\\u0022b\\u0022,\\u0022step\\u0022:\\u0022items.b\\u0022,\\u0022input\\u0022:\\u0022c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\\u0022,\\u0022occurrence\\u0022:\\u00222e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\\u0022}]}\",\"item_count\":2,\"admitted_generation\":2}],\"workflow_group_fanout_items\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"item_key\":\"a\",\"step_key\":\"items.a\",\"input_hash\":\"ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c\",\"group_occurrence_id\":\"50d4b8d8b60189c3d13ae50e697b15f7ff7df2e60f14d9d03aeca3cc539d4604\",\"role\":0},{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"item_key\":\"b\",\"step_key\":\"items.b\",\"input_hash\":\"c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed\",\"group_occurrence_id\":\"2e9e44b3387ccda0df5c979f9ca46fbeb2eea1fc9aa5fbcb9400f792357941e1\",\"role\":0}],\"workflow_group_fanout_closures\":[{\"workflow_run_id\":\"d36a6ad7-7c1f-47b1-bbb3-07a0c3de1640\",\"expansion_id\":\"5100ac974be8641867e35a20d4df93b71b9d3a55d7442eab9d59c1ba1af33de4\",\"current_steps_json\":\"[\\u0022{\\\\u0022key\\\\u0022:\\\\u0022a\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00220a8d1136-354a-433b-8f0c-d37fc6b774c7\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022,\\u0022{\\\\u0022key\\\\u0022:\\\\u0022b\\\\u0022,\\\\u0022step\\\\u0022:\\\\u00224684c164-5eb4-4439-b71d-415b9f167c29\\\\u0022,\\\\u0022revision\\\\u0022:1}\\u0022]\",\"closure_digest\":\"ce966ca5b89ef92f432b56678fc741a3b8138536ecc9095e5fb6f1ccf85dd65f\",\"closure_generation\":2,\"completed_at\":\"2026-10-18T02:07:13.0281309\\u002B00:00\"}]}}",
+        "runCountBefore": 1,
+        "runCountAfter": 1
+      }
+    },
+    {
+      "Framework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: True)",
+      "Receipt": {
+        "boundary": "ordinary-step-fan-out-group",
+        "hasParent": true,
+        "runId": "094cbc5f-e0fb-4483-8250-866f775839cf",
+        "exception": "A per-item fan-out group declaration can only be consumed by native FanOutAsync.",
+        "callbackCalls": 0,
+        "stepKeys": [
+          "select"
+        ],
+        "groupFanOutUsed": false
+      }
+    },
+    {
+      "Framework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupCompositionBoundaryTests.OrdinaryStepAsync_RejectsFanOutGroupBeforeCallbackOrStepClaim(hasParent: False)",
+      "Receipt": {
+        "boundary": "ordinary-step-fan-out-group",
+        "hasParent": false,
+        "runId": "04dc3db9-e2ad-403c-8839-77190213ae11",
+        "exception": "A per-item fan-out group declaration can only be consumed by native FanOutAsync.",
+        "callbackCalls": 0,
+        "stepKeys": [
+          "select"
+        ],
+        "groupFanOutUsed": false
+      }
+    }
+  ],
+  "NewProcessLossWorkers": 0,
+  "Date": "2026-10-18",
+  "BaseCommit": "bbd98d5bd330e360d64d8b77d0205a6b6828a136",
+  "ConsolidationSourceCommit": "0684ee515873efc5a9b52701f988d6ba977d3609",
+  "QualificationCommit": "The commit containing this record adds evidence/docs only.",
+  "AuditTool": "eng/Verify-ActivityGroupQualification.ps1",
+  "AuditToolSha256": "cc75e04b7d54db332f5417caca61f37d475c78a6bdbc813439caa93148091aa8",
+  "FormatVerification": {
+    "Command": "dotnet format Penghou.Zhinu.slnx --verify-no-changes --no-restore",
+    "ExitCode": 0
+  },
+  "NegativeAuditControls": [
+    {
+      "Mutation": "source-hash",
+      "ExpectedErrorPrefix": "Source hash mismatch",
+      "ObservedError": "Source hash mismatch at e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3 eng/Verify-LegacyWorkflowConsumer.ps1",
+      "PassedArtifactWritten": false,
+      "Status": "rejected-as-expected"
+    },
+    {
+      "Mutation": "package-hash",
+      "ExpectedErrorPrefix": "Artifact hash mismatch",
+      "ObservedError": "Artifact hash mismatch: C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\zg3b1-packages\\Penghou.Zhinu.0.2.0-preview.4.nupkg",
+      "PassedArtifactWritten": false,
+      "Status": "rejected-as-expected"
+    },
+    {
+      "Mutation": "test-counter",
+      "ExpectedErrorPrefix": "Test receipt mismatch",
+      "ObservedError": "Test receipt mismatch: ZG-3b.1 artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_41_net8.0.trx",
+      "PassedArtifactWritten": false,
+      "Status": "rejected-as-expected"
+    },
+    {
+      "Mutation": "total",
+      "ExpectedErrorPrefix": "Invalid profile header",
+      "ObservedError": "Invalid profile header: ZG-3b.1",
+      "PassedArtifactWritten": false,
+      "Status": "rejected-as-expected"
+    },
+    {
+      "Mutation": "compatibility",
+      "ExpectedErrorPrefix": "Compatibility gate mismatch",
+      "ObservedError": "Compatibility gate mismatch: ZG-3b.1",
+      "PassedArtifactWritten": false,
+      "Status": "rejected-as-expected"
+    }
+  ],
+  "NotQualified": [
+    "Arbitrary mixed loop/fan-out/child nesting and multi-step item bodies",
+    "Typed child lowering",
+    "In-place changed plans or implicit retirement",
+    "Atomic subtree cancellation",
+    "Coherent hierarchy/progress APIs",
+    "Fuwen and cross-repository closure",
+    "Linux/remote CI or package publication"
+  ]
+}
