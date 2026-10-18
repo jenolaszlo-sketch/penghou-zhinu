@@ -374,6 +374,8 @@ Penghou.Zhinu.IWorkflowGroupRepository.GetStepGroupMembershipAsync(System.Guid s
 Penghou.Zhinu.IWorkflowGroupSnapshotRepository
 Penghou.Zhinu.IWorkflowGroupSnapshotRepository.GetGroupSnapshotRunStampAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<long?>
 Penghou.Zhinu.IWorkflowGroupSnapshotRepository.ReadGroupSnapshotAsync(System.Guid workflowRunId, Penghou.Zhinu.WorkflowGroupReadLimits! limits, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupSnapshotData!>!>
+Penghou.Zhinu.IWorkflowGroupStateReader
+Penghou.Zhinu.IWorkflowGroupStateReader.GetGroupStateAsync(System.Guid workflowRunId, string! snapshotToken, string! occurrenceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupStateSnapshot!>!>
 Penghou.Zhinu.IWorkflowInstanceRepository
 Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
 Penghou.Zhinu.IWorkflowInstanceRepository.ActivateGenerationAsync(System.Guid generationId, System.Guid? expectedPredecessorGenerationId, string? previewJson, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGeneration!>
@@ -821,6 +823,10 @@ Penghou.Zhinu.WorkflowGroupClosureFact.LeaseGeneration.init -> void
 Penghou.Zhinu.WorkflowGroupClosureFact.Steps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupRevisionFact!>!
 Penghou.Zhinu.WorkflowGroupClosureFact.Steps.init -> void
 Penghou.Zhinu.WorkflowGroupClosureFact.WorkflowGroupClosureFact(string! Digest, long LeaseGeneration, System.DateTimeOffset CompletedAt, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupRevisionFact!>! Steps) -> void
+Penghou.Zhinu.WorkflowGroupCoverage
+Penghou.Zhinu.WorkflowGroupCoverage.Complete = 0 -> Penghou.Zhinu.WorkflowGroupCoverage
+Penghou.Zhinu.WorkflowGroupCoverage.Partial = 1 -> Penghou.Zhinu.WorkflowGroupCoverage
+Penghou.Zhinu.WorkflowGroupCoverage.Unknown = 2 -> Penghou.Zhinu.WorkflowGroupCoverage
 Penghou.Zhinu.WorkflowGroupDefinitionFact
 Penghou.Zhinu.WorkflowGroupDefinitionFact.ChildOrdinal.get -> int
 Penghou.Zhinu.WorkflowGroupDefinitionFact.ChildOrdinal.init -> void
@@ -867,6 +873,10 @@ Penghou.Zhinu.WorkflowGroupExpansionFact.Items.init -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact.PlanDigest.get -> string!
 Penghou.Zhinu.WorkflowGroupExpansionFact.PlanDigest.init -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact.WorkflowGroupExpansionFact(string! ExpansionId, string! FanOutKey, System.Guid BoundaryStepId, int BoundaryRevision, string! PlanDigest, int ItemCount, bool IsCurrent, bool IsComplete, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupFanOutItemFact!>! Items, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupClosureFact!>! Closures) -> void
+Penghou.Zhinu.WorkflowGroupExtent
+Penghou.Zhinu.WorkflowGroupExtent.Closed = 1 -> Penghou.Zhinu.WorkflowGroupExtent
+Penghou.Zhinu.WorkflowGroupExtent.Interrupted = 2 -> Penghou.Zhinu.WorkflowGroupExtent
+Penghou.Zhinu.WorkflowGroupExtent.Open = 0 -> Penghou.Zhinu.WorkflowGroupExtent
 Penghou.Zhinu.WorkflowGroupFanOutItemFact
 Penghou.Zhinu.WorkflowGroupFanOutItemFact.ItemKey.get -> string!
 Penghou.Zhinu.WorkflowGroupFanOutItemFact.ItemKey.init -> void
@@ -987,6 +997,7 @@ Penghou.Zhinu.WorkflowGroupReadAccess.Structure = 1 -> Penghou.Zhinu.WorkflowGro
 Penghou.Zhinu.WorkflowGroupReader
 Penghou.Zhinu.WorkflowGroupReader.Dispose() -> void
 Penghou.Zhinu.WorkflowGroupReader.GetGroupOccurrenceAsync(System.Guid workflowRunId, string! snapshotToken, string! occurrenceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupNode!>!>
+Penghou.Zhinu.WorkflowGroupReader.GetGroupStateAsync(System.Guid workflowRunId, string! snapshotToken, string! occurrenceId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupStateSnapshot!>!>
 Penghou.Zhinu.WorkflowGroupReader.GetRunGroupSnapshotAsync(System.Guid workflowRunId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupSnapshot!>!>
 Penghou.Zhinu.WorkflowGroupReader.QueryGroupChildrenAsync(System.Guid workflowRunId, string! snapshotToken, string? parentOccurrenceId = null, int pageSize = 100, string? cursor = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupPage<Penghou.Zhinu.WorkflowGroupNode!>!>!>
 Penghou.Zhinu.WorkflowGroupReader.QueryGroupDefinitionsAsync(System.Guid workflowRunId, string! snapshotToken, string? parentGroupKey = null, int pageSize = 100, string? cursor = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowGroupQueryResult<Penghou.Zhinu.WorkflowGroupPage<Penghou.Zhinu.WorkflowGroupDefinitionFact!>!>!>
@@ -1047,6 +1058,12 @@ Penghou.Zhinu.WorkflowGroupRunFact.WorkflowName.get -> string!
 Penghou.Zhinu.WorkflowGroupRunFact.WorkflowName.init -> void
 Penghou.Zhinu.WorkflowGroupRunFact.WorkflowVersion.get -> string!
 Penghou.Zhinu.WorkflowGroupRunFact.WorkflowVersion.init -> void
+Penghou.Zhinu.WorkflowGroupSelectedMember
+Penghou.Zhinu.WorkflowGroupSelectedMember.Role.get -> Penghou.Zhinu.ActivityGroupMemberRole
+Penghou.Zhinu.WorkflowGroupSelectedMember.Role.init -> void
+Penghou.Zhinu.WorkflowGroupSelectedMember.StepKey.get -> string!
+Penghou.Zhinu.WorkflowGroupSelectedMember.StepKey.init -> void
+Penghou.Zhinu.WorkflowGroupSelectedMember.WorkflowGroupSelectedMember(string! StepKey, Penghou.Zhinu.ActivityGroupMemberRole Role) -> void
 Penghou.Zhinu.WorkflowGroupSnapshot
 Penghou.Zhinu.WorkflowGroupSnapshot.CapturedAt.get -> System.DateTimeOffset
 Penghou.Zhinu.WorkflowGroupSnapshot.CapturedAt.init -> void
@@ -1112,6 +1129,109 @@ Penghou.Zhinu.WorkflowGroupSnapshotData.ThroughDurableSequence.get -> long
 Penghou.Zhinu.WorkflowGroupSnapshotData.ThroughDurableSequence.init -> void
 Penghou.Zhinu.WorkflowGroupSnapshotData.Waits.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupWaitFact!>!
 Penghou.Zhinu.WorkflowGroupSnapshotData.Waits.init -> void
+Penghou.Zhinu.WorkflowGroupState
+Penghou.Zhinu.WorkflowGroupState.ActiveStepKeys.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowGroupState.ActiveStepKeys.init -> void
+Penghou.Zhinu.WorkflowGroupState.BlockingStepKeys.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowGroupState.BlockingStepKeys.init -> void
+Penghou.Zhinu.WorkflowGroupState.Control.get -> Penghou.Zhinu.WorkflowGroupStateCounts!
+Penghou.Zhinu.WorkflowGroupState.Control.init -> void
+Penghou.Zhinu.WorkflowGroupState.Coverage.get -> Penghou.Zhinu.WorkflowGroupCoverage
+Penghou.Zhinu.WorkflowGroupState.Coverage.init -> void
+Penghou.Zhinu.WorkflowGroupState.Generation.get -> Penghou.Zhinu.WorkflowGroupGenerationFact?
+Penghou.Zhinu.WorkflowGroupState.Generation.init -> void
+Penghou.Zhinu.WorkflowGroupState.IsBlocked.get -> bool
+Penghou.Zhinu.WorkflowGroupState.IsBlocked.init -> void
+Penghou.Zhinu.WorkflowGroupState.IsExpansionClosed.get -> bool
+Penghou.Zhinu.WorkflowGroupState.IsExpansionClosed.init -> void
+Penghou.Zhinu.WorkflowGroupState.Operation.get -> Penghou.Zhinu.WorkflowGroupOperationFact?
+Penghou.Zhinu.WorkflowGroupState.Operation.init -> void
+Penghou.Zhinu.WorkflowGroupState.Reason.get -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupState.Reason.init -> void
+Penghou.Zhinu.WorkflowGroupState.Reasons.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupStateReason>!
+Penghou.Zhinu.WorkflowGroupState.Reasons.init -> void
+Penghou.Zhinu.WorkflowGroupState.RunStatus.get -> Penghou.Zhinu.WorkflowStatus
+Penghou.Zhinu.WorkflowGroupState.RunStatus.init -> void
+Penghou.Zhinu.WorkflowGroupState.Status.get -> Penghou.Zhinu.StepStatus?
+Penghou.Zhinu.WorkflowGroupState.Status.init -> void
+Penghou.Zhinu.WorkflowGroupState.TotalCount.get -> int?
+Penghou.Zhinu.WorkflowGroupState.TotalCount.init -> void
+Penghou.Zhinu.WorkflowGroupState.Work.get -> Penghou.Zhinu.WorkflowGroupStateCounts!
+Penghou.Zhinu.WorkflowGroupState.Work.init -> void
+Penghou.Zhinu.WorkflowGroupState.WorkflowGroupState(Penghou.Zhinu.StepStatus? Status, Penghou.Zhinu.WorkflowGroupStateReason Reason, bool IsBlocked, Penghou.Zhinu.WorkflowGroupCoverage Coverage, bool IsExpansionClosed, int? TotalCount, Penghou.Zhinu.WorkflowGroupStateCounts! Work, Penghou.Zhinu.WorkflowGroupStateCounts! Control, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupStateReason>! Reasons, System.Collections.Generic.IReadOnlyList<string!>! ActiveStepKeys, System.Collections.Generic.IReadOnlyList<string!>! BlockingStepKeys, Penghou.Zhinu.WorkflowStatus RunStatus, Penghou.Zhinu.WorkflowGroupGenerationFact? Generation, Penghou.Zhinu.WorkflowGroupOperationFact? Operation) -> void
+Penghou.Zhinu.WorkflowGroupStateCounts
+Penghou.Zhinu.WorkflowGroupStateCounts.Cancelled.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Cancelled.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.Completed.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Completed.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.Failed.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Failed.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.Known.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Known.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.Pending.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Pending.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.Running.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Running.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.Waiting.get -> int
+Penghou.Zhinu.WorkflowGroupStateCounts.Waiting.init -> void
+Penghou.Zhinu.WorkflowGroupStateCounts.WorkflowGroupStateCounts(int Known, int Pending, int Running, int Completed, int Failed, int Waiting, int Cancelled) -> void
+Penghou.Zhinu.WorkflowGroupStateInput
+Penghou.Zhinu.WorkflowGroupStateInput.Approvals.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupApprovalFact!>!
+Penghou.Zhinu.WorkflowGroupStateInput.Approvals.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Coverage.get -> Penghou.Zhinu.WorkflowGroupCoverage
+Penghou.Zhinu.WorkflowGroupStateInput.Coverage.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Dependencies.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.StepDependency!>!
+Penghou.Zhinu.WorkflowGroupStateInput.Dependencies.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Extent.get -> Penghou.Zhinu.WorkflowGroupExtent
+Penghou.Zhinu.WorkflowGroupStateInput.Extent.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Generation.get -> Penghou.Zhinu.WorkflowGroupGenerationFact?
+Penghou.Zhinu.WorkflowGroupStateInput.Generation.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Members.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupSelectedMember!>!
+Penghou.Zhinu.WorkflowGroupStateInput.Members.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Operation.get -> Penghou.Zhinu.WorkflowGroupOperationFact?
+Penghou.Zhinu.WorkflowGroupStateInput.Operation.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Run.get -> Penghou.Zhinu.WorkflowGroupRunFact!
+Penghou.Zhinu.WorkflowGroupStateInput.Run.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Steps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupStepFact!>!
+Penghou.Zhinu.WorkflowGroupStateInput.Steps.init -> void
+Penghou.Zhinu.WorkflowGroupStateInput.Waits.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupWaitFact!>!
+Penghou.Zhinu.WorkflowGroupStateInput.Waits.init -> void
+Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.ActiveOperation = 19 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Approval = 5 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.AwaitingDispatch = 11 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.AwaitingRecovery = 4 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Child = 7 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Compensated = 20 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Completed = 12 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Delay = 9 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.DependencyBlocked = 14 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.ExpansionOpen = 18 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.FailedMember = 2 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.HistoricalSelection = 1 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.IncompleteData = 0 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Interrupted = 13 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.NotStarted = 17 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.OtherWait = 10 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Quiescing = 15 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Retry = 8 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.RunFailed = 16 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.RunningMember = 3 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Signal = 6 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReason.Superseded = 21 -> Penghou.Zhinu.WorkflowGroupStateReason
+Penghou.Zhinu.WorkflowGroupStateReducer
+Penghou.Zhinu.WorkflowGroupStateSnapshot
+Penghou.Zhinu.WorkflowGroupStateSnapshot.ObservedAt.get -> System.DateTimeOffset
+Penghou.Zhinu.WorkflowGroupStateSnapshot.ObservedAt.init -> void
+Penghou.Zhinu.WorkflowGroupStateSnapshot.OccurrenceId.get -> string!
+Penghou.Zhinu.WorkflowGroupStateSnapshot.OccurrenceId.init -> void
+Penghou.Zhinu.WorkflowGroupStateSnapshot.SnapshotToken.get -> string!
+Penghou.Zhinu.WorkflowGroupStateSnapshot.SnapshotToken.init -> void
+Penghou.Zhinu.WorkflowGroupStateSnapshot.State.get -> Penghou.Zhinu.WorkflowGroupState!
+Penghou.Zhinu.WorkflowGroupStateSnapshot.State.init -> void
+Penghou.Zhinu.WorkflowGroupStateSnapshot.ThroughDurableSequence.get -> long
+Penghou.Zhinu.WorkflowGroupStateSnapshot.ThroughDurableSequence.init -> void
+Penghou.Zhinu.WorkflowGroupStateSnapshot.WorkflowGroupStateSnapshot(string! SnapshotToken, long ThroughDurableSequence, System.DateTimeOffset ObservedAt, string! OccurrenceId, Penghou.Zhinu.WorkflowGroupState! State) -> void
 Penghou.Zhinu.WorkflowGroupStepFact
 Penghou.Zhinu.WorkflowGroupStepFact.Attempt.get -> int
 Penghou.Zhinu.WorkflowGroupStepFact.Attempt.init -> void
@@ -1349,6 +1469,7 @@ Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.get -> System.TimeSpan
 Penghou.Zhinu.ZhinuOptions.ShutdownTimeout.set -> void
 static Penghou.Zhinu.Declarative.DeclarativeWorkflowRegistryExtensions.RegisterDeclarative(this Penghou.Zhinu.WorkflowRegistry! registry, Penghou.Zhinu.Declarative.CompiledWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.WorkflowRegistry!
 static Penghou.Zhinu.Declarative.WorkflowCompiler.Compile(Penghou.Zhinu.Declarative.DeclarativeWorkflowDefinition! definition, Penghou.Zhinu.Declarative.IActivityCatalogue! catalogue) -> Penghou.Zhinu.Declarative.WorkflowCompilationResult!
+static Penghou.Zhinu.WorkflowGroupStateReducer.Evaluate(Penghou.Zhinu.WorkflowGroupStateInput! input, System.DateTimeOffset observedAt) -> Penghou.Zhinu.WorkflowGroupState!
 static Penghou.Zhinu.WorkflowLoopReference.Root(string! name) -> Penghou.Zhinu.WorkflowLoopReference!
 Penghou.Zhinu.WorkflowEvent.Durability.get -> Penghou.Zhinu.WorkflowEventDurability
 Penghou.Zhinu.WorkflowEventDurability

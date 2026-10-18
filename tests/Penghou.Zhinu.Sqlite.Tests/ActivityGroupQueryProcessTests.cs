@@ -84,6 +84,11 @@ public sealed class ActivityGroupQueryProcessTests(ITestOutputHelper testOutput)
         members.Should().OnlyContain(item => occurrenceIds.Contains(item.GetProperty("GroupOccurrenceId").GetString()!));
         members.Select(item => item.GetProperty("StepKey").GetString()).Should().OnlyHaveUniqueItems();
         rootElement.GetProperty("PayloadFieldsAbsent").GetBoolean().Should().BeTrue();
+        var states = rootElement.GetProperty("GroupStates").EnumerateArray().ToArray();
+        states.Should().HaveCount(15);
+        states.Select(state => state.GetProperty("Status").GetString()).Should().OnlyContain(status => status == "Completed");
+        states.Where(state => roots.Any(occurrence => occurrence.GetProperty("OccurrenceId").GetString() == state.GetProperty("OccurrenceId").GetString()))
+            .Sum(state => state.GetProperty("Work").GetProperty("Known").GetInt32()).Should().Be(15);
 
         testOutput.WriteLine("GROUP_QUERY_PROCESS_EVIDENCE " + JsonSerializer.Serialize(new
         {
@@ -96,6 +101,8 @@ public sealed class ActivityGroupQueryProcessTests(ITestOutputHelper testOutput)
             innerCount = inners.Length,
             leafCount = leaves.Length,
             definitions = rootElement.GetProperty("DefinitionKeys").EnumerateArray().Select(item => item.GetString()).ToArray()
+            ,
+            aggregateStates = states.Length
         }));
     }
 

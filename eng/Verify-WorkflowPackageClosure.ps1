@@ -428,16 +428,32 @@ await using (var builderEngine = new WorkflowEngineBuilder()
     }
     if (rootOccurrences.Count != 3 || rootOccurrences.Distinct().Count() != 3)
         throw new InvalidOperationException("Packaged hierarchy paging aliased occurrences.");
+    foreach (var rootOccurrence in rootOccurrences)
+    {
+        var state = await hierarchyReader.GetGroupStateAsync(nestedId, token, rootOccurrence);
+        if (state.Status != WorkflowGroupReadStatus.Success || state.Value!.State.Status != StepStatus.Completed ||
+            state.Value.State.Work.Known != 2 || state.Value.State.TotalCount != 2 || state.Value.ObservedAt != hierarchy.Value.CapturedAt)
+            throw new InvalidOperationException("Packaged aggregate double-counted containers or lost snapshot consistency.");
+    }
     var parentSnapshot = await hierarchyReader.GetRunGroupSnapshotAsync(parentId);
     var parentRoots = await hierarchyReader.QueryGroupChildrenAsync(parentId, parentSnapshot.Value!.SnapshotToken);
     if (!parentRoots.Value!.Items.Any(node => node.ChildRun is { IsAvailable: true } link && link.RunId == childId && link.ParentRunId == parentId))
         throw new InvalidOperationException("Packaged hierarchy omitted the independent native child link.");
+    var parentGroup = parentRoots.Value.Items.Single(node => node.Occurrence is not null).Occurrence!;
+    var parentState = (await hierarchyReader.GetGroupStateAsync(parentId, parentSnapshot.Value.SnapshotToken, parentGroup.OccurrenceId)).Value!;
+    if (parentState.State.Work.Known != 1 || parentState.State.Control.Known != 1 || parentState.State.Status != StepStatus.Completed)
+        throw new InvalidOperationException("Packaged aggregate folded child work into its parent or lost Control roles.");
+    var epochsSnapshot = (await hierarchyReader.GetRunGroupSnapshotAsync(epochsId)).Value!;
+    var epochsRoot = (await hierarchyReader.QueryGroupChildrenAsync(epochsId, epochsSnapshot.SnapshotToken)).Value!.Items.Single(node => node.Occurrence is not null).Occurrence!;
+    var epochState = (await hierarchyReader.GetGroupStateAsync(epochsId, epochsSnapshot.SnapshotToken, epochsRoot.OccurrenceId)).Value!;
+    if (epochState.State.Status != StepStatus.Completed || epochState.State.Work.Known != 14 || epochState.State.TotalCount != 14)
+        throw new InvalidOperationException("Packaged aggregate lost independently admitted epoch obligations.");
     using var otherReader = builderEngine.CreateGroupReader();
     if ((await otherReader.QueryGroupChildrenAsync(nestedId, token)).Status != WorkflowGroupReadStatus.ResyncRequired)
         throw new InvalidOperationException("A reader accepted another cache's token.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition, five immutable evolving-selection epochs, independent grouped child boundaries and bounded hierarchy query paging.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition, five immutable evolving-selection epochs, independent grouped child boundaries, bounded hierarchy query paging and coherent aggregate state/progress.");
 
 sealed class GroupedChildWorkflow(bool parent) : IWorkflow<string, string>
 {

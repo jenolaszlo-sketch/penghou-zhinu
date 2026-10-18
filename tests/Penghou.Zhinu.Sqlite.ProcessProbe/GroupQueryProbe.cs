@@ -26,10 +26,14 @@ internal static class GroupQueryProbe
         var occurrenceNodes = rootNodes.Where(node => node.Kind == WorkflowGroupNodeKind.Occurrence).ToList();
         var allOccurrences = new List<WorkflowGroupOccurrenceFact>();
         var members = new List<WorkflowGroupMember>();
+        var states = new List<WorkflowGroupStateSnapshot>();
         var pending = new Queue<WorkflowGroupOccurrenceFact>(occurrenceNodes.Select(node => node.Occurrence!));
         while (pending.TryDequeue(out var occurrence))
         {
             allOccurrences.Add(occurrence);
+            var state = await reader.GetGroupStateAsync(runId, snapshot.SnapshotToken, occurrence.OccurrenceId, CancellationToken.None).ConfigureAwait(false);
+            if (state.Status != WorkflowGroupReadStatus.Success || state.Value is null) return 12;
+            states.Add(state.Value);
             members.AddRange(await CollectMembersAsync(reader, runId, snapshot.SnapshotToken, occurrence.OccurrenceId)
                 .ConfigureAwait(false));
             var children = await CollectChildrenAsync(reader, runId, snapshot.SnapshotToken, occurrence.OccurrenceId)
@@ -71,6 +75,16 @@ internal static class GroupQueryProbe
                 Role = item.Step.Role?.ToString()
             }).ToArray(),
             PayloadFieldsAbsent = payloadFieldsAbsent
+            ,
+            GroupStates = states.Select(state => new
+            {
+                state.OccurrenceId,
+                Status = state.State.Status?.ToString(),
+                state.State.Work,
+                state.State.Control,
+                state.State.TotalCount,
+                state.ObservedAt
+            }).ToArray()
         };
         await File.WriteAllTextAsync(receiptPath, JsonSerializer.Serialize(receipt), CancellationToken.None).ConfigureAwait(false);
         return stale.Status == WorkflowGroupReadStatus.ResyncRequired && allOccurrences.Count == 15 && members.Count == 15 ? 0 : 11;

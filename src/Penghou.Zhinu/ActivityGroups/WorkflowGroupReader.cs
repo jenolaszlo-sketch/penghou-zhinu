@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Penghou.Zhinu;
 
 /// <summary>Bounded, immutable hierarchy snapshots for trusted embedded hosts.</summary>
-public sealed class WorkflowGroupReader : IWorkflowGroupReader, IDisposable
+public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflowGroupStateReader, IDisposable
 {
     private readonly IWorkflowGroupSnapshotRepository? repository;
     private readonly WorkflowGroupQueryOptions options;
