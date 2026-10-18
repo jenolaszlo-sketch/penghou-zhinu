@@ -1,19 +1,19 @@
 # Activity groups: continuation handoff
 
-Updated 2026-10-17. No chat history is required.
+Updated 2026-10-18. No chat history is required.
 
 ## Checkout and checkpoint
 
-**Safe handoff requested by the user because usage is low.** ZG-3b.4 is qualified;
-no ZG-3b.5 runtime work has started. Resume with **ZG-3b.5 child boundaries** only
-when asked: inspect child start/wait identity, admission/grouping, reuse/restart,
-cancellation and recovery before writing a bounded implementation note. Read the
-3b.4 contract/evidence first. There is no pending product defect or failed gate.
-Previously admitted unfinished work remains an obligation; this checkpoint does
+The user resumed implementation after the earlier usage pause. The current
+bounded profile is **ZG-3b.5 native child boundaries**; read its
+[contract/pre-code note](activity-groups-zg3b5.md) and
+[qualification record](qualification/activity-groups/zg3b5.md). Next is
+**ZG-3b.6 consolidated dynamic qualification**, then ZG-4/5, Fuwen and
+cross-repository gates. Each prior profile retains separate evidence and limits.
+Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
-After child qualification, continue to 3b.6 consolidation, then ZG-4/5, Fuwen and
-cross-repository gates. Preserve the exact-source evidence; rerun checks when
-subsequent changes warrant them rather than restarting completed qualification.
+Preserve exact-source evidence and rerun checks when subsequent changes warrant
+them rather than restarting completed qualification.
 
 - Repository: `https://github.com/jenolaszlo-sketch/penghou-zhinu.git`.
 - Branch: `codex/zhinu-activity-groups`.
@@ -21,8 +21,8 @@ subsequent changes warrant them rather than restarting completed qualification.
 - ZG-1/base: `d2821b20a3ae767aa24627cd345f1880416829bc` (from `b7f1009`).
 - Foundation implementation commit: `130e927f2d08f803e69a2e5f4c437e4e1bbacb30`.
 - Qualified foundation/evidence commit: `33c051ed4907178e13d273e930d1f63342321f3f`.
-- Current dynamic slice: [ZG-3b.4 explicit evolving-selection epochs](activity-groups-zg3b4.md) and
-  [evidence/source commits](qualification/activity-groups/zg3b4.md). The commits
+- Current dynamic slice: [ZG-3b.5 native child boundaries](activity-groups-zg3b5.md) and
+  [evidence/source commits](qualification/activity-groups/zg3b5.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
@@ -59,7 +59,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b.4 supported explicit-epoch profile and pre-code note](activity-groups-zg3b4.md),
+1. [ZG-3b.5 native child profile and pre-code note](activity-groups-zg3b5.md),
+   [ZG-3b.4 supported explicit-epoch profile and pre-code note](activity-groups-zg3b4.md),
    [ZG-3b.3 supported nested profile and pre-code note](activity-groups-zg3b3.md),
    [ZG-3b.2 supported fork profile](activity-groups-zg3b2.md),
    [ZG-3b.1 supported fan-out profile](activity-groups-zg3b1.md),
@@ -145,9 +146,12 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
   including when a newer epoch excludes their items. Omitting an incomplete scope
   fails the exact existing completion guard. Same-scope changed plans still reject;
   no implicit retirement/cancellation or active-only progress model is added.
-- Parent child-invocation start/wait membership is not exposed by ChildRunOptions.
-  Child-owned manifest admission is tested; broader child restart/reuse/fork,
-  cancellation and boundary-group operation recovery remain open.
+- `ChildRunOptions.StartGroup` and `WaitGroup` independently attach membership to
+  native parent start/wait steps, with both bindings validated before start.
+  Children admit their own manifest and run-local group tree. Native child IDs,
+  reuse/restart/fork provenance, authorization, cancellation and interrupted
+  execution/wait recovery retain their existing semantics. Typed iteration and
+  fan-out child lowering remain outside the root invocation profile.
 - No hierarchy/tree queries, aggregate state/progress, group controls, cache,
   UI, Fuwen macro adapter or DSL runtime support is claimed. Point reads are
   bounded diagnostic persistence reads, not a coherent multi-call tree snapshot.
@@ -155,10 +159,10 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
 
 ## Next checkpoint
 
-Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with **3b.5 child-workflow
-boundaries**, then **3b.6 consolidated qualification**. ZG-3b.1's fixed-selection fan-out,
+Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with
+**3b.6 consolidated qualification**. ZG-3b.1's fixed-selection fan-out,
 ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
-explicit immutable selection epochs have separate
+explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate
 evidence; they do not close the entire dynamic model. Nested repetition/fork
 composition is not newly qualified. The accepted grouped fan-out/fork rejection
 and root-only grouped fan-out profile remain intact.

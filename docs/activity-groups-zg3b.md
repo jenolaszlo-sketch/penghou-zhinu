@@ -1,11 +1,12 @@
 # ZG-3b: dynamic occurrence durability
 
-Status: **ZG-3b.1 root native fan-out, ZG-3b.2 grouped native forks, ZG-3b.3 fixed nested repetition and ZG-3b.4 explicit immutable selection epochs implemented**;
+Status: **ZG-3b.1 root native fan-out, ZG-3b.2 grouped native forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries implemented**;
 the remaining independent verticals below are open. See the
 [3b.1 contract](activity-groups-zg3b1.md), [3b.2 contract](activity-groups-zg3b2.md)
 and [3b.3 contract](activity-groups-zg3b3.md), plus
-[3b.4 contract](activity-groups-zg3b4.md), with construct-specific evidence.
-The next proof is **3b.5 child boundaries**, then **3b.6 consolidation**.
+[3b.4 contract](activity-groups-zg3b4.md) and
+[3b.5 contract](activity-groups-zg3b5.md), with construct-specific evidence.
+The next proof is **3b.6 consolidation**.
 The explicit-epoch profile preserves historical obligations; in-place changed-plan
 replacement and implicit retirement are not enabled.
 Decision recorded 2026-10-16. Start from qualified checkpoint
@@ -47,7 +48,7 @@ profile until enumeration/closure rebinding is qualified.
 | Evolving selection | ZG-3b.4 qualifies distinct stable root fan-out scopes/selection steps per durable epoch. Sets expand/contract/reorder and items disappear/reappear without relabeling historical occurrences. Old selectors replay; only unselected future epochs consult today's selection. Earlier unfinished scopes remain obligations. Same-scope changed plans still reject. |
 | Restart during partial fan-out/fork execution | Terminate inside the affected transaction and after committed partial work, then restart/recover. Retain committed work and history, rebuild only the correct current occurrences, and prevent stale generations from extending or sealing invalidated expansion. A failed fork transaction must leave no partial destination. |
 | Resume/recovery identity | Reconstruct in a fresh process before running callbacks; compare occurrence IDs, coordinates, parent IDs and exact revision memberships. Retry/reclaim must not invent occurrences, and recovery must reuse committed activity results. Unfinished attempts retain existing retry/effect semantics. Apply this proof to each supported dynamic construct, not just a static fixture. |
-| Child-workflow boundaries | Qualify parent start/wait membership, the child's separate tree, existing deterministic child IDs, reuse/restart/cancellation and interrupted boundary recovery. Parent occurrence pointers stay in the parent run; child occurrences stay in the child run. Existing authority and child execution semantics remain intact. |
+| Child-workflow boundaries | ZG-3b.5 qualifies optional parent start/wait membership, the child's separate tree, existing deterministic child IDs, native reuse/restart/fork provenance, authorization/cancellation and fresh-process admission/execution/wait recovery. Parent occurrence pointers stay in the parent run; child occurrences stay in the child run. Typed loop/fan-out child lowering remains outside this profile. |
 
 ## Evidence and exit gates
 

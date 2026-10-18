@@ -1233,6 +1233,10 @@ public sealed partial class WorkflowContext
         activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, stepKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowName);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowVersion);
+        // Validate both parent boundaries before claiming either one. In
+        // particular, an invalid wait binding must not admit a child first.
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, options?.StartGroup);
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, options?.WaitGroup);
         var request = new ChildRunCoordinator.ChildStartRequest(
             workflowName,
             workflowVersion,
@@ -1253,7 +1257,7 @@ public sealed partial class WorkflowContext
                 step.Revision,
                 value,
                 ct),
-            new StepOptions { Authorization = options?.StartAuthorization },
+            new StepOptions { Authorization = options?.StartAuthorization, Group = options?.StartGroup },
             cancellationToken: cancellationToken).ConfigureAwait(false);
         return await StepAsync(
             $"{stepKey}:wait",
@@ -1264,7 +1268,12 @@ public sealed partial class WorkflowContext
                 step.Revision,
                 step.StepExecutionId,
                 ct),
-            new StepOptions { DependsOn = [$"{stepKey}:start"], Authorization = options?.WaitAuthorization },
+            new StepOptions
+            {
+                DependsOn = [$"{stepKey}:start"],
+                Authorization = options?.WaitAuthorization,
+                Group = options?.WaitGroup
+            },
             cancellationToken).ConfigureAwait(false);
     }
 

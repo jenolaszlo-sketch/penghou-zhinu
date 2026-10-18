@@ -160,8 +160,12 @@ Penghou.Zhinu.BlockedRun.Run.get -> Penghou.Zhinu.WorkflowRun!
 Penghou.Zhinu.BlockedRun.Run.init -> void
 Penghou.Zhinu.ChildRunOptions.StartAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
 Penghou.Zhinu.ChildRunOptions.StartAuthorization.init -> void
+Penghou.Zhinu.ChildRunOptions.StartGroup.get -> Penghou.Zhinu.ActivityGroupStepBinding?
+Penghou.Zhinu.ChildRunOptions.StartGroup.init -> void
 Penghou.Zhinu.ChildRunOptions.WaitAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
 Penghou.Zhinu.ChildRunOptions.WaitAuthorization.init -> void
+Penghou.Zhinu.ChildRunOptions.WaitGroup.get -> Penghou.Zhinu.ActivityGroupStepBinding?
+Penghou.Zhinu.ChildRunOptions.WaitGroup.init -> void
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>
 Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensatingWorkflowStep() -> void
 Penghou.Zhinu.CompensationMetadata.AuthorizationDeclarationJson.get -> string?

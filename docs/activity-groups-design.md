@@ -351,10 +351,15 @@ separate. Scalar status is deliberately lossy; counts/reasons preserve mixed wor
 
 ## 7. Child workflows
 
-Attach both existing `invocation:start` and `invocation:wait` boundary steps to
-the caller's innermost group. They retain their normal dependency and respective
-authorization. The start is Control, the wait is Work for initial count purposes;
-either can fail the group. Link the child using the existing child ID/wait facts.
+The native root invocation profile uses nullable `ChildRunOptions.StartGroup`
+and `WaitGroup` bindings for the existing `invocation:start` and
+`invocation:wait` parent steps. Bind both to the caller's innermost group, with
+Control for start and Work for wait, for the standard macro count profile.
+Roles and null absence remain explicit author choices; the runtime does not
+infer either binding. Both are validated before claiming start. The boundaries
+retain their normal dependency and respective authorization; either can fail the
+group. Link the child using the existing child ID/wait facts. See the bounded
+[ZG-3b.5 contract](activity-groups-zg3b5.md).
 
 The child has a different RunId, its own manifest and group occurrence namespace.
 No parent occurrence pointer crosses the run boundary. A drill-through query
@@ -479,7 +484,9 @@ The ZG-2/3a foundation freezes explicit runtime factories, occurrence v1 bytes,
 optional provider/store capabilities and schema 8. ZG-3b.1 freezes root native
 fan-out coordinates, fixed-selection admission/closure and schema 9. ZG-3b.3
 qualifies fixed nested loops without changing those contracts. ZG-3b.4 qualifies
-explicit immutable root selection epochs using existing scope identity. Snapshot-cache
+explicit immutable root selection epochs using existing scope identity. ZG-3b.5
+adds optional explicit parent child-start/wait membership while retaining separate
+child run trees and native identity/recovery semantics. Snapshot-cache
 limits, mixed dynamic scopes, in-place selection mutation and retirement remain later decisions.
 These are bounded engineering decisions,
 not permission to redesign execution semantics.

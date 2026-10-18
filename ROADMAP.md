@@ -187,7 +187,8 @@ Product harness such as Solo
 Added **2026-10-15** from the macro activities/activity groups proposal. The
 repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
 ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks, ZG-3b.3 fixed nested repetition
-and ZG-3b.4 explicit immutable evolving-selection epochs are implemented. Child boundaries, consolidated dynamic durability, queries,
+ZG-3b.4 explicit immutable evolving-selection epochs and ZG-3b.5 native child
+boundaries are implemented. Consolidated dynamic durability, queries,
 progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
@@ -273,8 +274,16 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   runtime algorithm or schema change. See [contract](docs/activity-groups-zg3b4.md)
   and [evidence](docs/qualification/activity-groups/zg3b4.md). This does not permit
   changed plans under an old prefix or automatic retirement of unfinished work.
-  Next is **3b.5 child boundaries**, then **3b.6 consolidated qualification**.
   Grouped fan-out/fork copying and mixed loop/fan-out scopes remain rejected.
+- [x] **ZG-3b.5:** optional explicit parent `StartGroup`/`WaitGroup` bindings,
+  independently owned child manifests/trees, native retry/restart/fork provenance,
+  separate boundary authorization, cancellation and fresh-process recovery through
+  admission, generation binding, execution and parked/ready/completed waits. Schema
+  9 and existing identity encoders remain unchanged. See
+  [contract](docs/activity-groups-zg3b5.md) and
+  [evidence](docs/qualification/activity-groups/zg3b5.md).
+- [ ] **ZG-3b.6:** consolidated dynamic qualification is next; retain each
+  construct's supported profile and explicit composition limits.
 - [ ] **ZG-4:** coherent query model and progressive drill-down.
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.

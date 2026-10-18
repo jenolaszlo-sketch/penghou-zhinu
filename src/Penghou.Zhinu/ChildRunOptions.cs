@@ -3,6 +3,20 @@ namespace Penghou.Zhinu;
 /// <summary>Controls how a child workflow is started.</summary>
 public sealed record ChildRunOptions
 {
+    /// <summary>
+    /// Optional membership for the parent's durable child-start step. This
+    /// occurrence belongs to the parent run; use Control for an admission boundary.
+    /// It is never inherited by the child run.
+    /// </summary>
+    public ActivityGroupStepBinding? StartGroup { get; init; }
+
+    /// <summary>
+    /// Optional membership for the parent's durable child-result wait step.
+    /// This occurrence belongs to the parent run; use Work for the result boundary.
+    /// The child independently owns its registered manifest and group tree.
+    /// </summary>
+    public ActivityGroupStepBinding? WaitGroup { get; init; }
+
     /// <summary>Explicit declaration for the durable child admission operation.</summary>
     public WorkflowAuthorizationDeclaration? StartAuthorization { get; init; }
 

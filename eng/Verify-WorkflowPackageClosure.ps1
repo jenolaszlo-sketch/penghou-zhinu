@@ -233,7 +233,11 @@ var registry = new WorkflowRegistry()
     .Register(new WorkflowRegistration<string, string>(
         new WorkflowDefinition { Name = "grouped-nested", Version = "1" }, () => new GroupedNestedWorkflow(), nestedManifest))
     .Register(new WorkflowRegistration<string, string>(
-        new WorkflowDefinition { Name = "grouped-epochs", Version = "1" }, () => new GroupedEpochWorkflow(), groupManifest));
+        new WorkflowDefinition { Name = "grouped-epochs", Version = "1" }, () => new GroupedEpochWorkflow(), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-parent", Version = "1" }, () => new GroupedChildWorkflow(true), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-child", Version = "1" }, () => new GroupedChildWorkflow(false), groupManifest));
 
 await using (var directEngine = new WorkflowEngine(store, registry, new ZhinuOptions()))
 {
@@ -378,9 +382,56 @@ await using (var builderEngine = new WorkflowEngineBuilder()
         }
     }
     if (epochOccurrences.Count != 14) throw new InvalidOperationException("Evolving epoch cardinality changed.");
+
+    var parentId = await builderEngine.StartAsync("grouped-parent", "1", "package-closure");
+    await builderEngine.ExecuteAsync(parentId);
+    if (await builderEngine.WaitForCompletionAsync<string>(parentId) != "package-closure:child")
+        throw new InvalidOperationException("Grouped child invocation changed native output.");
+    var parentSteps = await reopened.GetStepsAsync(parentId);
+    string? parentOccurrence = null;
+    foreach (var (key, role) in new[] { ("child:start", ActivityGroupMemberRole.Control), ("child:wait", ActivityGroupMemberRole.Work) })
+    {
+        var step = parentSteps.Single(step => step.StepKey == key);
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Child parent boundary lost membership.");
+        if (membership.Role != role || (parentOccurrence is not null && parentOccurrence != membership.GroupOccurrenceId))
+            throw new InvalidOperationException("Child boundary role or shared parent occurrence changed.");
+        parentOccurrence = membership.GroupOccurrenceId;
+    }
+    var childId = System.Text.Json.JsonSerializer.Deserialize<Guid>(parentSteps.Single(step => step.StepKey == "child:start").OutputJson!);
+    if ((await reopened.GetRunAsync(childId))?.ParentRunId != parentId ||
+        (await reopened.GetGroupManifestAsync(childId))?.CanonicalJson != groupManifest.CanonicalJson)
+        throw new InvalidOperationException("Child admission lost native parent or independent manifest.");
+    var childStep = (await reopened.GetStepsAsync(childId)).Single();
+    var childMember = await reopened.GetStepGroupMembershipAsync(childStep.Id)
+        ?? throw new InvalidOperationException("Child work lost its own membership.");
+    var childGroup = await reopened.GetGroupOccurrenceAsync(childId, childMember.GroupOccurrenceId);
+    if (childGroup?.WorkflowRunId != childId || childGroup.GroupOccurrenceId == parentOccurrence ||
+        childGroup.ParentGroupOccurrenceId is null ||
+        (await reopened.GetGroupOccurrenceAsync(childId, childGroup.ParentGroupOccurrenceId))?.WorkflowRunId != childId ||
+        await reopened.GetGroupOccurrenceAsync(parentId, childGroup.GroupOccurrenceId) is not null)
+        throw new InvalidOperationException("Child group tree crossed its run boundary.");
 }
 
-Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition and five immutable evolving-selection epochs.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition, five immutable evolving-selection epochs and independent grouped child boundaries.");
+
+sealed class GroupedChildWorkflow(bool parent) : IWorkflow<string, string>
+{
+    public Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var root = context.GetActivityGroup("root");
+        var work = context.GetActivityGroup("work", root);
+        var binding = new ActivityGroupStepBinding(new ActivityGroupMembership("work"), work);
+        return parent
+            ? context.StartChildAsync<string, string>("child", "grouped-child", "1", input, new ChildRunOptions
+            {
+                StartGroup = new ActivityGroupStepBinding(new ActivityGroupMembership("work", ActivityGroupMemberRole.Control), work),
+                WaitGroup = binding
+            }, cancellationToken)
+            : context.StepAsync("work", input, (value, _) => Task.FromResult(value + ":child"),
+                new StepOptions { Group = binding }, cancellationToken);
+    }
+}
 
 sealed class GroupedEpochWorkflow : IWorkflow<string, string>
 {
