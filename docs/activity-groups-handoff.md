@@ -5,10 +5,10 @@ Updated 2026-10-18. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-3b.6 consolidated native durability**; read its
-[capability matrix](activity-groups-zg3b6.md) and
-[qualification record](qualification/activity-groups/zg3b6.md). Next is
-**ZG-4 coherent hierarchy queries**, then ZG-5, Fuwen and
+boundary is **ZG-4 coherent hierarchy queries**; read its
+[contract](activity-groups-zg4.md) and
+[qualification record](qualification/activity-groups/zg4.md). Next is
+**ZG-5 aggregate state/progress**, then Fuwen and
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
@@ -24,6 +24,13 @@ them rather than restarting completed qualification.
 - Current dynamic boundary: [ZG-3b.6 consolidation](activity-groups-zg3b6.md) and
   [evidence/source commits](qualification/activity-groups/zg3b6.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
+- Current reader/runtime/package source: `f911630e52743373ced9f5be0e8d33e1142e63b2`.
+  ZG-4 adds safe coherent hierarchy snapshots, bounded immutable pagination,
+  explicit resync outcomes and host read policy. All **1,749 tests** pass in the
+  clean final full run, including **102 new query executions**; formatting,
+  seven packages and isolated package/binary/schema probes pass on .NET 8/10.
+  The evidence retains 36 query receipts and two new fresh-process inspectors.
+  Schema 9 and identity/scheduling/admission algorithms remain unchanged.
 - ZG-3b.1 runtime/package source: `e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3`;
   1,441 tests, formatting and both package/binary probes passed on .NET 8/10.
   Qualification/evidence commit: `1d3c232d6c19b6a618a5a5feeb55cd3cd0b7e2fe`.
@@ -76,7 +83,9 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-3b.6 capability boundary and ZG-4 entry contract](activity-groups-zg3b6.md),
+1. [ZG-4 query contract](activity-groups-zg4.md) and
+   [qualification](qualification/activity-groups/zg4.md), then
+   [ZG-3b.6 native capability boundary](activity-groups-zg3b6.md),
    [ZG-3b.5 native child profile and pre-code note](activity-groups-zg3b5.md),
    [ZG-3b.4 supported explicit-epoch profile and pre-code note](activity-groups-zg3b4.md),
    [ZG-3b.3 supported nested profile and pre-code note](activity-groups-zg3b3.md),
@@ -170,15 +179,17 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
   reuse/restart/fork provenance, authorization, cancellation and interrupted
   execution/wait recovery retain their existing semantics. Typed iteration and
   fan-out child lowering remain outside the root invocation profile.
-- No hierarchy/tree queries, aggregate state/progress, group controls, cache,
-  UI, Fuwen macro adapter or DSL runtime support is claimed. Point reads are
-  bounded diagnostic persistence reads, not a coherent multi-call tree snapshot.
+- ZG-4 qualifies hierarchy/tree queries and a bounded reader-local snapshot cache.
+  Older point reads remain diagnostic capabilities without a multi-call snapshot
+  guarantee. Aggregate state/progress, group controls, UI, Fuwen macro adapter
+  and DSL runtime support remain outside this checkpoint.
 - Local Windows .NET qualification is not Linux/remote CI or package publication.
 
 ## Next checkpoint
 
-Continue [ZG-3b dynamic durability](activity-groups-zg3b.md) with
-**ZG-4 coherent hierarchy queries**, using the consolidated capability boundary.
+Continue with **ZG-5 aggregate state/progress** over the
+[qualified ZG-4 query facts](activity-groups-zg4.md), preserving the consolidated
+native durability boundary.
 ZG-3b.1's fixed-selection fan-out,
 ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
 explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate

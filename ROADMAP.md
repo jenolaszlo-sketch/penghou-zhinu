@@ -293,12 +293,18 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   `3ca1105`; schema and identity encoders are unchanged. See
   [contract](docs/activity-groups-zg3b6.md) and
   [evidence](docs/qualification/activity-groups/zg3b6.md).
-- [ ] **ZG-4:** coherent query model and progressive drill-down.
+- [x] **ZG-4:** coherent query model and progressive drill-down. Optional safe
+  SQLite snapshot capability and bounded reader-local pagination separate
+  definitions, occurrences, current/history membership and independent child
+  links. Full suite **1,749 tests**, formatting, seven unpublished packages and
+  isolated package/binary/schema probes pass on .NET 8/10. Schema and identity
+  encoders remain unchanged. See [contract](docs/activity-groups-zg4.md) and
+  [evidence](docs/qualification/activity-groups/zg4.md).
 - [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
-Next is ZG-4 queries over the bounded qualified profiles, then ZG-5 aggregate state/progress, ZG-6 Fuwen
+Next is ZG-5 aggregate state/progress over the qualified query facts, then ZG-6 Fuwen
 integration and ZG-7 cross-repository qualification. This supersedes the earlier
 reducer-before-query stage ordering. Preserve the foundation architecture and
 avoid coupling Fuwen to temporary native-runtime limits. The checklist below

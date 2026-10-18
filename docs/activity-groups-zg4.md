@@ -1,6 +1,8 @@
 # ZG-4 bounded hierarchy queries
 
-Status: implementation in progress; qualification pending.
+Status: implemented and qualified at `f911630e52743373ced9f5be0e8d33e1142e63b2`.
+The [qualification record](qualification/activity-groups/zg4.md) retains the
+1,749-test clean full run, formatting and isolated package/binary probes.
 
 The optional snapshot repository captures safe structural facts in one SQLite read transaction. A standalone reader needs no workflow registry or executor. Definitions and entered occurrences remain separate planes. Child workflow links retain actual native ownership and require their own snapshots; their trees are never merged into the caller's tree.
 
@@ -10,7 +12,7 @@ The trusted embedded host may supply a read authorizer, evaluated on every reque
 
 Default limits: 262,144 projected rows, 32 MiB per capture, 8 cached snapshots, 128 MiB total cache, two-minute lifetime, 100 rows per page (maximum 1,000). Source queries preflight row/string sizes before materializing fields. The reader also accounts for serialized safe facts and row overhead, freezes nested collections, and rejects inconsistent provider graphs.
 
-This slice adds no schema, identity, scheduling, aggregate lifecycle, progress reducer, or Fuwen behavior. Tests must establish immutable pagination, concurrent writer consistency, historical membership, process-independent inspection, permission downgrade, resource limits, and package compatibility before this status becomes qualified.
+This slice adds no schema, identity, scheduling, aggregate lifecycle, progress reducer, or Fuwen behavior. Qualification covers immutable pagination, concurrent writer consistency, historical membership, process-independent inspection, permission downgrade, resource limits, and package compatibility.
 
 ## Host usage
 
@@ -37,5 +39,12 @@ Capture a new snapshot after resync; replace the old view as a unit. Do not appe
 `QueryGroupDefinitionsAsync` pages immediate definition children (null means definition roots), including definitions that have never entered. `QueryGroupChildrenAsync` pages immediate occurrence children. At the run root it also includes current ungrouped steps and native child-run links. `QueryGroupMembersAsync` returns direct memberships; null selects ungrouped steps, and `includeHistory` adds retained revisions. Work/Control roles and failed control steps remain visible. Child links preserve actual native parent IDs even when a fork reuses a source run's child.
 
 Fan-out expansions expose all selected items, exact boundary revisions, historical closure vectors and effective current-revision closure. This is structural evidence, not an aggregate lifecycle or a percentage. The reader observes retained history and never synthesizes occurrences for unentered definitions.
+
+Definition children sort by ordinal then key. Occurrences sort by definition
+ordinal/key, canonical coordinate text, then occurrence ID; this is stable
+structural ordering, not a chronological ordering of iterations. Root ungrouped
+steps follow occurrences, then child-run links. Members sort by step key and
+revision; expansions sort by fan-out key and boundary revision. Cursors bind the
+page size as well as the query and parent/history selection.
 
 The default constructor trusts the embedded host. Services exposing this surface to remote callers must provide `IWorkflowGroupReadAuthorizer`; execution authorization does not grant read access. Set `IncludeProvenance` and `IncludeSourceReferences` explicitly when needed. Privilege loss invalidates a privileged snapshot. Limits are finite deployment controls, not a performance claim at every maximum. Capture reads the complete bounded graph; pages do not hold a SQLite transaction open.
