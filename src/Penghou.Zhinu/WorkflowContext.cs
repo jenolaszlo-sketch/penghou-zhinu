@@ -613,11 +613,32 @@ public sealed partial class WorkflowContext
         return WaitForSignalAsync<T>(stepKey, signal.Name, timeout, cancellationToken);
     }
 
-    public async Task<T> WaitForSignalAsync<T>(
+    public Task<T> WaitForSignalAsync<T>(
         string stepKey,
         string signalName,
         TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default) =>
+        WaitForSignalCoreAsync<T>(stepKey, signalName, timeout, null, cancellationToken);
+
+    /// <summary>Durably waits for a signal and records the wait step's explicit group membership.</summary>
+    public Task<T> WaitForGroupedSignalAsync<T>(
+        string stepKey,
+        string signalName,
+        ActivityGroupStepBinding group,
+        TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, group);
+        return WaitForSignalCoreAsync<T>(stepKey, signalName, timeout, group, cancellationToken);
+    }
+
+    private async Task<T> WaitForSignalCoreAsync<T>(
+        string stepKey,
+        string signalName,
+        TimeSpan? timeout,
+        ActivityGroupStepBinding? group,
+        CancellationToken cancellationToken)
     {
         ValidateStepKey(stepKey);
         using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.SignalWait);
@@ -655,7 +676,8 @@ public sealed partial class WorkflowContext
                     ResolveDependencies(null),
                     null,
                     null,
-                    linkedCancellation.Token).ConfigureAwait(false);
+                    linkedCancellation.Token,
+                    group: group).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
                     case StepClaimDisposition.Reused:
