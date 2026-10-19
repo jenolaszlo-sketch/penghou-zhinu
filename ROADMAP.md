@@ -318,6 +318,11 @@ totals until authoritative closure. The
 [pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
 snapshot integrity and stale approval projection, indexes manifest definitions,
 and passes **1,877 tests**; it preserves the bounded ZG-5 contract.
+The [measured follow-up](docs/qualification/activity-groups/pre-fuwen-followup.md)
+adds snapshot-owned state indexes with cache-budget accounting, closure-digest
+verification and a Unicode fan-out query fix; **1,897 tests**, formatting and both
+package/binary/schema probes passed. Projection-only local measurements
+and exact-source qualification remain separate from Fuwen integration evidence.
 This supersedes the earlier
 reducer-before-query stage ordering. Preserve the foundation architecture and
 avoid coupling Fuwen to temporary native-runtime limits. The checklist below

@@ -12,6 +12,11 @@ The trusted embedded host may supply a read authorizer, evaluated on every reque
 
 Default limits: 262,144 projected rows, 32 MiB per capture, 8 cached snapshots, 128 MiB total cache, two-minute lifetime, 100 rows per page (maximum 1,000). Source queries preflight row/string sizes before materializing fields. The reader also accounts for serialized safe facts and row overhead, freezes nested collections, and rejects inconsistent provider graphs.
 
+The [pre-Fuwen follow-up](qualification/activity-groups/pre-fuwen-followup.md)
+adds snapshot-owned aggregate indexes. Their retained memory is charged to the
+total cache budget in addition to the frozen DTO budget, so a snapshot whose
+required indexes cannot fit returns `LimitExceeded` before cache admission.
+
 This slice adds no schema, identity, scheduling, aggregate lifecycle, progress reducer, or Fuwen behavior. Qualification covers immutable pagination, concurrent writer consistency, historical membership, process-independent inspection, permission downgrade, resource limits, and package compatibility.
 
 ## Host usage

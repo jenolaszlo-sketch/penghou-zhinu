@@ -8,7 +8,8 @@ The user resumed implementation after the earlier usage pause. The current
 boundary is **ZG-5 aggregate state/progress**; read its
 [contract](activity-groups-zg5.md) and
 [qualification record](qualification/activity-groups/zg5.md), followed by the
-[pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md). Next is
+[pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
+[measured follow-up](qualification/activity-groups/pre-fuwen-followup.md). Next is
 **ZG-6 Fuwen metadata handoff and exact package integration**, then ZG-7
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
@@ -25,7 +26,15 @@ them rather than restarting completed qualification.
 - Current dynamic boundary: [ZG-3b.6 consolidation](activity-groups-zg3b6.md) and
   [evidence/source commits](qualification/activity-groups/zg3b6.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
-- Pre-Fuwen review source: `5bd107b857b16cc810530756ba5d212e32930c4e`.
+- Pre-Fuwen follow-up source: `7a5f87637ac68c877b4e2f933b829d67f3703c4c`.
+  Shares prepared state facts through snapshot-owned, cache-budgeted indexes;
+  verifies closure vector digests and fixes Unicode fan-out snapshot ordering.
+  Local projection measurement for 1,024 item groups plus root: 259 ms / 573 MiB
+  allocated becomes 1.04 ms / 2.49 MiB. The follow-up record retains the exact
+  measurement scope and final qualification evidence: **1,897 tests**, formatting,
+  seven packages and both consumer/binary/schema probes passed. Fuwen integration
+  remains next.
+- Original pre-Fuwen review source: `5bd107b857b16cc810530756ba5d212e32930c4e`.
   Fixes stale approval projection, silently omitted damaged membership and
   incomplete provider snapshot validation; indexes immutable manifest definitions.
   Full suite: **1,877 tests**, including 32 new regression executions; formatting,
@@ -103,7 +112,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [Pre-Fuwen review and follow-ups](qualification/activity-groups/pre-fuwen-review.md), then
+1. [Measured pre-Fuwen follow-up](qualification/activity-groups/pre-fuwen-followup.md) and
+   [original review](qualification/activity-groups/pre-fuwen-review.md), then
    [ZG-5 aggregate contract and limits](activity-groups-zg5.md) and
    [qualification](qualification/activity-groups/zg5.md), then
    [ZG-4 query contract](activity-groups-zg4.md) and

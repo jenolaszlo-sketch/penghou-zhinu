@@ -6,6 +6,11 @@ Fix source: `5bd107b857b16cc810530756ba5d212e32930c4e`.
 Status: **passed**. Full regression suite, formatting and both package consumer
 probes passed on Windows, .NET 8/10. Packages remain unpublished.
 
+The [2026-10-19 follow-up](pre-fuwen-followup.md) addresses the remaining
+projection performance opportunity and adds closure-digest and Unicode-ordering
+fixes. Its source, measurements and qualification are recorded separately below
+that checkpoint; the original evidence here retains its own source and totals.
+
 ## Findings and fixes
 
 1. **Stale approval checkpoints appeared as current approval waits (P2).**
@@ -69,12 +74,12 @@ retained separately and are not counted as passing qualification.
   Fuwen's admitted expansion can inform a future qualified closure contract;
   macro syntax alone is not proof that no more durable work can appear. Keep
   Unknown/Partial coverage visible during adapter integration.
-- **Measure whole-tree aggregate reads before adding a batch API.** Each current
-  `GetGroupStateAsync` builds indexes and validates run facts again. Requesting
-  every group separately scales with group count times snapshot size. Establish
-  representative Fuwen sizes and a benchmark; then consider snapshot-local
-  indexes or a compatible batch capability with cache-budget accounting. This
-  is a performance opportunity, not a reason to add persisted aggregate state.
+- **Whole-tree projection follow-up implemented.** The
+  [measurement and fix](pre-fuwen-followup.md) replace repeated preparation with
+  snapshot-owned indexes and explicit cache-budget accounting. At 1,024 item
+  groups plus a root, the local projection sweep drops from 259 ms / 573 MiB
+  allocated to 1.04 ms / 2.49 MiB. Database stamp I/O and representative Fuwen
+  plans still need integration measurements before considering a batch API.
 - **Preserve the evidence boundary.** Windows local tests/packages do not close
   Linux CI, arbitrary mixed composition, Fuwen execution or publication. ZG-6
   and ZG-7 remain open. No identity/schema redesign was justified by this review.

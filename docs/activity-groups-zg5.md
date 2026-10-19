@@ -7,6 +7,9 @@ See the [qualification and exact-source ledger](qualification/activity-groups/zg
 Next is ZG-6 Fuwen metadata handoff and package integration.
 The subsequent [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md)
 hardens snapshot integrity and approval projection and records the latest source.
+Its [measured follow-up](qualification/activity-groups/pre-fuwen-followup.md)
+shares prepared facts through cache-budgeted snapshot indexes, validates closure
+digests and supports Unicode fan-out snapshot inspection.
 
 The reducer is pure: selected Work/Control declarations, current/historical step
 facts, dependencies, safe waits/approvals, run/generation/operation context, an
