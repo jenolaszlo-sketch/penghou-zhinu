@@ -1,4 +1,7 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using FluentAssertions;
 
 namespace Penghou.Zhinu.Tests;
@@ -7,6 +10,94 @@ public sealed class WorkflowGroupReaderTests
 {
     private static readonly DateTimeOffset Epoch = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task SnapshotIndexMemoryIsChargedBeforeAdmission()
+    {
+        var runId = Guid.NewGuid();
+        var proxy = NewStore(Snapshot(runId, estimatedBytes: 65_536 - 1024));
+        using var reader = Reader(proxy.Store, new WorkflowGroupQueryOptions
+        {
+            ReadLimits = new WorkflowGroupReadLimits { MaximumBytes = 65_536 },
+            MaximumCacheBytes = 65_536
+        }, new FakeTimeProvider(Epoch));
+        var result = await reader.GetRunGroupSnapshotAsync(runId, Ct);
+        result.Status.Should().Be(WorkflowGroupReadStatus.LimitExceeded);
+        result.Value.Should().BeNull("the data fits but its required indexes do not fit the cache");
+    }
+
+    [Theory]
+    [InlineData(StepStatus.Pending)]
+    [InlineData(StepStatus.Running)]
+    [InlineData(StepStatus.Completed)]
+    [InlineData(StepStatus.Failed)]
+    [InlineData(StepStatus.Waiting)]
+    [InlineData(StepStatus.Cancelled)]
+    public async Task IndexedStatesMatchPureReductionAndRemainFrozenAcrossConcurrentReads(StepStatus status)
+    {
+        var runId = Guid.NewGuid();
+        var rootId = ActivityGroupOccurrence.ComputeId(runId, "root", null, "[]");
+        var leafId = ActivityGroupOccurrence.ComputeId(runId, "leaf", rootId, "[]");
+        var work = new WorkflowGroupStepFact(runId, Guid.NewGuid(), "work", 2, 3, status,
+            true, leafId, ActivityGroupMemberRole.Work, 1, Epoch.AddMinutes(1), null, Epoch, null, null);
+        var control = work with { StepId = Guid.NewGuid(), StepKey = "control", Role = ActivityGroupMemberRole.Control, Status = StepStatus.Completed };
+        var steps = new List<WorkflowGroupStepFact>
+        {
+            work with { StepId = Guid.NewGuid(), Revision = 1, Status = StepStatus.Failed, IsCurrent = false },
+            work, control,
+            work with { StepId = Guid.NewGuid(), StepKey = "outside", GroupOccurrenceId = null, Role = null, Status = StepStatus.Pending }
+        };
+        var data = Snapshot(runId, definitions:
+            [Definition("root", null, 0) with { OccurrenceCount = 1 }, Definition("leaf", "root", 0) with { OccurrenceCount = 1 }],
+            occurrences: [new(runId, rootId, "root", null, "[]"), new(runId, leafId, "leaf", rootId, "[]")], steps: steps) with
+        {
+            Run = Snapshot(runId).Run with { Status = WorkflowStatus.Completed },
+            Dependencies = [new("work", "outside")],
+            Waits = status == StepStatus.Waiting ? [new(Guid.NewGuid(), work.StepId, "work", 2, WaitKind.Signal, WaitStatus.Ready, null, null, null)] : []
+        };
+        var expected = WorkflowGroupStateReducer.Evaluate(new WorkflowGroupStateInput
+        {
+            Run = data.Run,
+            Members = [new("work", ActivityGroupMemberRole.Work), new("control", ActivityGroupMemberRole.Control)],
+            Steps = steps.ToArray(),
+            Dependencies = data.Dependencies,
+            Waits = data.Waits,
+            Extent = WorkflowGroupExtent.Closed
+        }, Epoch);
+        using var reader = Reader(NewStore(data).Store, time: new FakeTimeProvider(Epoch));
+        var snapshot = (await reader.GetRunGroupSnapshotAsync(runId, Ct)).Value!;
+        steps.Clear();
+        var results = await Task.WhenAll(Enumerable.Range(0, 12).Select(index =>
+            reader.GetGroupStateAsync(runId, snapshot.SnapshotToken, index % 2 == 0 ? rootId : leafId, Ct).AsTask()));
+        foreach (var result in results)
+        {
+            result.Status.Should().Be(WorkflowGroupReadStatus.Success);
+            result.Value!.State.Should().BeEquivalentTo(expected);
+            result.Value.ObservedAt.Should().Be(Epoch);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task EffectiveClosureRequiresItsActualVectorDigest(bool correctDigest)
+    {
+        var runId = Guid.NewGuid();
+        var id = ActivityGroupOccurrence.ComputeId(runId, "work", null, "[]");
+        var selection = new WorkflowGroupStepFact(runId, Guid.NewGuid(), "select", 1, 1, StepStatus.Completed,
+            true, null, null, 1, null, null, Epoch, Epoch, null);
+        var item = selection with { StepId = Guid.NewGuid(), StepKey = "item", GroupOccurrenceId = id, Role = ActivityGroupMemberRole.Work };
+        var json = JsonSerializer.Serialize(new[] { JsonSerializer.Serialize(new { key = "a", step = item.StepId.ToString("D"), revision = 1 }) });
+        var digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("penghou.zhinu.activity-group-fanout-closure.v1\n" + json))).ToLowerInvariant();
+        var data = Snapshot(runId, definitions: [Definition("work", null, 0) with { OccurrenceCount = 1 }],
+            occurrences: [new(runId, id, "work", null, "[]")], steps: [selection, item], expansions:
+            [new("expansion", "items", selection.StepId, 1, "plan", 1, true, true,
+                [new("a", "item", id, ActivityGroupMemberRole.Work)],
+                [new(correctDigest ? digest : "incorrect-digest", 1, Epoch, [new(item.StepId, 1)])])]);
+        using var reader = Reader(NewStore(data).Store, time: new FakeTimeProvider(Epoch));
+        var result = await reader.GetRunGroupSnapshotAsync(runId, Ct);
+        result.Status.Should().Be(correctDigest ? WorkflowGroupReadStatus.Success : WorkflowGroupReadStatus.InconsistentData);
+    }
 
     [Theory]
     [InlineData("null-definition")]
@@ -244,7 +335,7 @@ public sealed class WorkflowGroupReaderTests
         var closureSteps = new List<WorkflowGroupRevisionFact>();
         var closures = new List<WorkflowGroupClosureFact>
         {
-            new(new string('a', 64), 0, Epoch, closureSteps)
+            new(Convert.ToHexString(SHA256.HashData("penghou.zhinu.activity-group-fanout-closure.v1\n[]"u8)).ToLowerInvariant(), 0, Epoch, closureSteps)
         };
         var items = new List<WorkflowGroupFanOutItemFact>();
         var expansions = new List<WorkflowGroupExpansionFact>

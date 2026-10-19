@@ -52,7 +52,10 @@ public interface IWorkflowGroupStateReader
 public static class WorkflowGroupStateReducer
 {
     /// <summary>No I/O or ambient clock. Selection and extent must come from authoritative, coherent facts.</summary>
-    public static WorkflowGroupState Evaluate(WorkflowGroupStateInput input, DateTimeOffset observedAt)
+    public static WorkflowGroupState Evaluate(WorkflowGroupStateInput input, DateTimeOffset observedAt) =>
+        Evaluate(input, observedAt, null);
+
+    internal static WorkflowGroupState Evaluate(WorkflowGroupStateInput input, DateTimeOffset observedAt, Facts? facts)
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(input.Run);
@@ -61,7 +64,6 @@ public static class WorkflowGroupStateReducer
         var blockers = new SortedSet<string>(StringComparer.Ordinal);
         var work = new int[6];
         var control = new int[6];
-        var current = new Dictionary<string, WorkflowGroupStepFact>(StringComparer.Ordinal);
         var selected = new Dictionary<string, ActivityGroupMemberRole>(StringComparer.Ordinal);
 
         WorkflowGroupState Result(StepStatus? status, WorkflowGroupStateReason reason, bool blocked = false,
@@ -82,31 +84,16 @@ public static class WorkflowGroupStateReducer
         if (input.Run.RunId == Guid.Empty || !Enum.IsDefined(input.Extent) || !Enum.IsDefined(input.Coverage) || !Enum.IsDefined(input.Run.Status)
             || input.Members is null || input.Steps is null || input.Dependencies is null || input.Waits is null || input.Approvals is null)
             return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
-        if (input.Waits.Any(wait => wait is null || !Enum.IsDefined(wait.Kind) || !Enum.IsDefined(wait.Status))
-            || input.Approvals.Any(approval => approval is null || !Enum.IsDefined(approval.Decision))
-            || input.Dependencies.Any(edge => edge is null || string.IsNullOrWhiteSpace(edge.StepKey) || string.IsNullOrWhiteSpace(edge.DependsOnStepKey)))
-            return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
         foreach (var member in input.Members)
             if (member is null || string.IsNullOrWhiteSpace(member.StepKey) || !Enum.IsDefined(member.Role)
                 || !selected.TryAdd(member.StepKey, member.Role)) return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
-        var identities = new HashSet<Guid>();
-        var revisions = new HashSet<(string, int)>();
-        foreach (var step in input.Steps)
-        {
-            if (step is null || step.WorkflowRunId != input.Run.RunId || string.IsNullOrWhiteSpace(step.StepKey)
-                || step.StepId == Guid.Empty || step.Revision < 1 || step.Attempt < 0 || !Enum.IsDefined(step.Status)
-                || !identities.Add(step.StepId) || !revisions.Add((step.StepKey, step.Revision)))
-                return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
-            if (step.IsCurrent && !current.TryAdd(step.StepKey, step)) return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
-        }
-        foreach (var group in input.Steps.GroupBy(step => step.StepKey, StringComparer.Ordinal))
-            if (!current.TryGetValue(group.Key, out var latest) || latest.Revision != group.Max(step => step.Revision))
-                return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
-
-        var waits = input.Waits.ToLookup(wait => (wait.StepId, wait.Revision));
-        var approvals = input.Approvals.Where(approval => !approval.IsCompensation).ToLookup(approval => (approval.StepKey, approval.Revision));
+        facts ??= Prepare(input);
+        if (facts is null) return Result(null, WorkflowGroupStateReason.IncompleteData, invalid: true);
+        var current = facts.Current;
+        var waits = facts.Waits;
+        var approvals = facts.Approvals;
         var waitCandidates = new List<(int Priority, WorkflowGroupStateReason Reason, bool Ready)>();
-        var dependencies = input.Dependencies.ToLookup(edge => edge.StepKey, StringComparer.Ordinal);
+        var dependencies = facts.Dependencies;
         foreach (var (key, role) in selected)
         {
             current.TryGetValue(key, out var step);
@@ -178,4 +165,31 @@ public static class WorkflowGroupStateReducer
             return Result(StepStatus.Pending, WorkflowGroupStateReason.ActiveOperation, true);
         return Result(StepStatus.Pending, allCompleted || selected.Count == 0 ? WorkflowGroupStateReason.ExpansionOpen : WorkflowGroupStateReason.NotStarted);
     }
+
+    // Prepared only from one frozen reader entry; the public pure reducer still validates every input.
+    internal static Facts? Prepare(WorkflowGroupStateInput input)
+    {
+        if (input.Waits.Any(wait => wait is null || !Enum.IsDefined(wait.Kind) || !Enum.IsDefined(wait.Status))
+            || input.Approvals.Any(approval => approval is null || !Enum.IsDefined(approval.Decision))
+            || input.Dependencies.Any(edge => edge is null || string.IsNullOrWhiteSpace(edge.StepKey) || string.IsNullOrWhiteSpace(edge.DependsOnStepKey))) return null;
+        var current = new Dictionary<string, WorkflowGroupStepFact>(StringComparer.Ordinal);
+        var identities = new HashSet<Guid>();
+        var revisions = new HashSet<(string, int)>();
+        foreach (var step in input.Steps)
+        {
+            if (step is null || step.WorkflowRunId != input.Run.RunId || string.IsNullOrWhiteSpace(step.StepKey)
+                || step.StepId == Guid.Empty || step.Revision < 1 || step.Attempt < 0 || !Enum.IsDefined(step.Status)
+                || !identities.Add(step.StepId) || !revisions.Add((step.StepKey, step.Revision))) return null;
+            if (step.IsCurrent && !current.TryAdd(step.StepKey, step)) return null;
+        }
+        foreach (var group in input.Steps.GroupBy(step => step.StepKey, StringComparer.Ordinal))
+            if (!current.TryGetValue(group.Key, out var latest) || latest.Revision != group.Max(step => step.Revision)) return null;
+        return new(current, input.Waits.ToLookup(wait => (wait.StepId, wait.Revision)),
+            input.Approvals.Where(approval => !approval.IsCompensation).ToLookup(approval => (approval.StepKey, approval.Revision)),
+            input.Dependencies.ToLookup(edge => edge.StepKey, StringComparer.Ordinal));
+    }
+
+    internal sealed record Facts(IReadOnlyDictionary<string, WorkflowGroupStepFact> Current,
+        ILookup<(Guid, int), WorkflowGroupWaitFact> Waits,
+        ILookup<(string, int), WorkflowGroupApprovalFact> Approvals, ILookup<string, StepDependency> Dependencies);
 }

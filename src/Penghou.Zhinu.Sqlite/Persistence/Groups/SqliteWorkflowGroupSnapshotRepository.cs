@@ -633,11 +633,13 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
             var items = await ReadFanOutItemsAsync(connection, transaction, runId, expansion, itemCount, cancellationToken)
                 .ConfigureAwait(false);
             if (planItems.Length != items.Count) throw new WorkflowStateException("Fan-out canonical items are incomplete.");
+            // Canonical plans use UTF-16 ordinal ordering; SQLite BINARY uses UTF-8.
+            // Compare keyed content without changing the durable closure vector order.
+            var planItemsByKey = planItems.ToDictionary(item => item.GetProperty("key").GetString()!, StringComparer.Ordinal);
             for (var index = 0; index < items.Count; index++)
             {
-                var planItem = planItems[index];
                 var stored = items[index];
-                if (planItem.GetProperty("key").GetString() != stored.Fact.ItemKey ||
+                if (!planItemsByKey.TryGetValue(stored.Fact.ItemKey, out var planItem) ||
                     planItem.GetProperty("step").GetString() != stored.Fact.StepKey ||
                     planItem.GetProperty("input").GetString() != stored.InputHash ||
                     planItem.GetProperty("occurrence").GetString() != stored.Fact.OccurrenceId ||

@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Penghou.Zhinu;
@@ -74,6 +75,10 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         // well as wire bytes; this is a conservative cache admission budget.
         var bytes = Math.Max(data.EstimatedBytes, counter.Length * 2 + rows * 256L);
         if (bytes > limits.MaximumBytes) return new(WorkflowGroupReadStatus.LimitExceeded);
+        bytes += StateIndex.EstimateBytes(data);
+        if (bytes > options.MaximumCacheBytes) return new(WorkflowGroupReadStatus.LimitExceeded);
+        var stateIndex = StateIndex.Create(data);
+        if (stateIndex is null) return new(WorkflowGroupReadStatus.InconsistentData);
         cancellationToken.ThrowIfCancellationRequested();
         var now = clock.GetUtcNow();
         var header = new WorkflowGroupSnapshot(Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), now,
@@ -86,7 +91,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
             foreach (var expired in snapshots.Values.Where(e => e.Header.ExpiresAt <= now).ToArray()) Remove(expired.Header.SnapshotToken);
             while (snapshots.Count >= options.MaximumSnapshots || cachedBytes + bytes > options.MaximumCacheBytes)
                 Remove(snapshots.Values.MinBy(e => e.Sequence)!.Header.SnapshotToken);
-            snapshots.Add(header.SnapshotToken, new(header, data, bytes, ++sequence));
+            snapshots.Add(header.SnapshotToken, new(header, data, stateIndex, bytes, ++sequence));
             cachedBytes += bytes;
         }
         return new(WorkflowGroupReadStatus.Success, header);
@@ -354,7 +359,8 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
             foreach (var closure in expansion.Closures)
                 if (string.IsNullOrWhiteSpace(closure.Digest) || closure.Steps.Count != expansion.ItemCount
                     || closure.Steps.Select(step => step.StepId).Distinct().Count() != closure.Steps.Count
-                    || closure.Steps.Any(step => !steps.TryGetValue(step.StepId, out var stored) || stored.Revision != step.Revision)) return false;
+                    || closure.Steps.Any(step => !steps.TryGetValue(step.StepId, out var stored) || stored.Revision != step.Revision)
+                    || !ValidClosureDigest(expansion, closure, steps)) return false;
             if (!expansion.IsComplete) continue;
             if (!expansion.IsCurrent || expansion.Items.Any(item => !current.TryGetValue(item.StepKey, out var step)
                 || step.Status != StepStatus.Completed || step.GroupOccurrenceId != item.OccurrenceId || step.Role != item.Role)) return false;
@@ -363,6 +369,24 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
                 .SetEquals(expansion.Items.Select(item => (current[item.StepKey].StepId, current[item.StepKey].Revision))))) return false;
         }
         return true;
+    }
+
+    private static bool ValidClosureDigest(WorkflowGroupExpansionFact expansion, WorkflowGroupClosureFact closure,
+        IReadOnlyDictionary<Guid, WorkflowGroupStepFact> steps)
+    {
+        var items = expansion.Items.ToDictionary(item => item.StepKey, StringComparer.Ordinal);
+        var selected = new HashSet<string>(StringComparer.Ordinal);
+        var vector = new List<string>(closure.Steps.Count);
+        foreach (var revision in closure.Steps)
+        {
+            var step = steps[revision.StepId];
+            if (!items.TryGetValue(step.StepKey, out var item) || !selected.Add(step.StepKey)
+                || step.GroupOccurrenceId != item.OccurrenceId || step.Role != item.Role) return false;
+            vector.Add(JsonSerializer.Serialize(new { key = item.ItemKey, step = step.StepId.ToString("D"), revision = step.Revision }));
+        }
+        var json = "penghou.zhinu.activity-group-fanout-closure.v1\n" + JsonSerializer.Serialize(vector);
+        var digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json))).ToLowerInvariant();
+        return digest == closure.Digest;
     }
 
     private static long RowCount(WorkflowGroupSnapshotData d) => 1L + d.Definitions.Count + d.Occurrences.Count + d.Steps.Count
@@ -392,7 +416,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         lock (gate) { disposed = true; snapshots.Clear(); cachedBytes = 0; }
     }
 
-    private sealed record Entry(WorkflowGroupSnapshot Header, WorkflowGroupSnapshotData Data, long Bytes, long Sequence);
+    private sealed record Entry(WorkflowGroupSnapshot Header, WorkflowGroupSnapshotData Data, StateIndex StateIndex, long Bytes, long Sequence);
     private sealed record Cursor(string Token, string Kind, string? Parent, bool History, int Size, int Offset);
 
     private sealed class SnapshotLimitException : Exception;

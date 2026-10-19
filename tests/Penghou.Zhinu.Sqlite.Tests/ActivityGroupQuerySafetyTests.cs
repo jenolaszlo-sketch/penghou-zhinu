@@ -8,6 +8,35 @@ public sealed class ActivityGroupQuerySafetyTests : WorkflowEngineTestBase
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Fact]
+    public async Task UnicodeFanOutSnapshotPreservesPlanAndClosureAcrossDifferentStringOrderings()
+    {
+        var store = CreateStore();
+        // This fixture uses the same nested definition layout as the existing fan-out probes.
+        var manifest = ActivityGroupManifest.Create([
+            new ActivityGroupDefinition("root", ActivityGroupKind.Logical, "Root"),
+            new ActivityGroupDefinition("middle", ActivityGroupKind.Logical, "Middle", "root"),
+            new ActivityGroupDefinition("work", ActivityGroupKind.Logical, "Work", "middle")
+        ]);
+        var registration = new WorkflowRegistration<string, string>(
+            new WorkflowDefinition { Name = "query-unicode-fanout", Version = "1" },
+            () => new FanOutSnapshotWorkflow(nested: true, unicode: true), manifest);
+        await using var engine = new WorkflowEngine(store, new WorkflowRegistry().Register(registration));
+        var runId = await engine.StartAsync("query-unicode-fanout", "1", "input", cancellationToken: Ct);
+        await engine.ExecuteAsync(runId, Ct);
+        (await engine.WaitForCompletionAsync<string>(runId, cancellationToken: Ct)).Should().Be("\U0001F600:\uE000");
+        using var reader = new WorkflowGroupReader(store);
+        var snapshot = await reader.GetRunGroupSnapshotAsync(runId, Ct);
+        snapshot.Status.Should().Be(WorkflowGroupReadStatus.Success, snapshot.Reason);
+        var expansions = await reader.QueryGroupExpansionsAsync(runId, snapshot.Value!.SnapshotToken, cancellationToken: Ct);
+        expansions.Value!.Items.Single().IsComplete.Should().BeTrue();
+        var rootId = (await reader.QueryGroupChildrenAsync(runId, snapshot.Value.SnapshotToken, cancellationToken: Ct)).Value!.Items
+            .Single(node => node.Kind == WorkflowGroupNodeKind.Occurrence).Occurrence!.OccurrenceId;
+        var state = (await reader.GetGroupStateAsync(runId, snapshot.Value.SnapshotToken, rootId, Ct)).Value!.State;
+        state.Status.Should().Be(StepStatus.Completed);
+        state.Work.Completed.Should().Be(2);
+    }
+
     [Theory]
     [InlineData("step-key")]
     [InlineData("revision")]
@@ -358,12 +387,12 @@ public sealed class ActivityGroupQuerySafetyTests : WorkflowEngineTestBase
     }
 
     private sealed class FanOutSnapshotWorkflow(bool nested, TaskCompletionSource? entered = null,
-        TaskCompletionSource? release = null) : IWorkflow<string, string>
+        TaskCompletionSource? release = null, bool unicode = false) : IWorkflow<string, string>
     {
         public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
         {
             var selected = await context.StepAsync("select", input,
-                (_, _) => Task.FromResult(new[] { "a", "b" }), cancellationToken: cancellationToken);
+                (_, _) => Task.FromResult(unicode ? new[] { "\U0001F600", "\uE000" } : new[] { "a", "b" }), cancellationToken: cancellationToken);
             var parent = nested ? context.GetActivityGroup("middle", context.GetActivityGroup("root")) : null;
             var membership = new ActivityGroupMembership(nested ? "work" : "root");
             var result = await context.FanOutAsync("items", selected, value => value,
