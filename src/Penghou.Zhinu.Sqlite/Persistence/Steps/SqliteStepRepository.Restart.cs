@@ -21,6 +21,9 @@ internal sealed partial class SqliteStepRepository
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
+        if (mode == StepRestartMode.StepOnly && await SqliteWorkflowGroupFanOutRepository.IsBodyModeStepAsync(
+                connection, transaction, workflowRunId, stepKey, cancellationToken).ConfigureAwait(false))
+            throw new WorkflowStateException("StepOnly restart is not supported for a grouped fan-out body operation; use Dependents.");
         var plan = await ResolveRestartPlanAsync(
             connection,
             transaction,
@@ -264,6 +267,9 @@ internal sealed partial class SqliteStepRepository
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        if (mode == StepRestartMode.StepOnly && await SqliteWorkflowGroupFanOutRepository.IsBodyModeStepAsync(
+                connection, transaction, workflowRunId, stepKey, cancellationToken).ConfigureAwait(false))
+            throw new WorkflowStateException("StepOnly restart is not supported for a grouped fan-out body operation; use Dependents.");
         var plan = await ResolveRestartPlanAsync(
             connection,
             transaction,

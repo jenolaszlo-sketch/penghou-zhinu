@@ -331,6 +331,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         && d.Waits.All(item => item is not null) && d.Approvals.All(item => item is not null)
         && d.ChildRuns.All(item => item is not null) && d.Dispositions.All(item => item is not null)
         && d.Expansions.All(expansion => expansion is not null && expansion.Items is not null && expansion.Closures is not null
+            && expansion.RequiredDependencies is not null
             && expansion.Items.All(item => item is not null)
             && expansion.Closures.All(closure => closure is not null && closure.Steps is not null
                 && closure.Steps.All(step => step is not null)));
@@ -345,6 +346,8 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         {
             if (string.IsNullOrWhiteSpace(expansion.ExpansionId) || !expansions.Add(expansion.ExpansionId)
                 || string.IsNullOrWhiteSpace(expansion.FanOutKey) || string.IsNullOrWhiteSpace(expansion.PlanDigest)
+                || expansion.RequiredDependencies.Count > ActivityGroupFanOutPlan.MaximumAllowedItems
+                || expansion.RequiredDependencies.Any(string.IsNullOrWhiteSpace)
                 || expansion.ItemCount != expansion.Items.Count
                 || !steps.TryGetValue(expansion.BoundaryStepId, out var boundary)
                 || boundary.Revision != expansion.BoundaryRevision || boundary.IsCurrent != expansion.IsCurrent) return false;
@@ -357,11 +360,17 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
                     || string.IsNullOrWhiteSpace(item.OccurrenceId) || !occurrenceIds.Add(item.OccurrenceId)
                     || !occurrences.ContainsKey(item.OccurrenceId) || !Enum.IsDefined(item.Role)) return false;
             foreach (var closure in expansion.Closures)
-                if (string.IsNullOrWhiteSpace(closure.Digest) || closure.Steps.Count != expansion.ItemCount
+                if (string.IsNullOrWhiteSpace(closure.Digest) ||
+                    (expansion.BodyContract is null ? closure.Steps.Count != expansion.ItemCount : closure.Steps.Count < expansion.ItemCount * 2)
                     || closure.Steps.Select(step => step.StepId).Distinct().Count() != closure.Steps.Count
                     || closure.Steps.Any(step => !steps.TryGetValue(step.StepId, out var stored) || stored.Revision != step.Revision)
                     || !ValidClosureDigest(expansion, closure, steps)) return false;
             if (!expansion.IsComplete) continue;
+            if (expansion.BodyContract is not null)
+            {
+                if (!expansion.IsCurrent || !ValidCurrentBodyClosure(expansion, current, d.Dependencies, occurrences)) return false;
+                continue;
+            }
             if (!expansion.IsCurrent || expansion.Items.Any(item => !current.TryGetValue(item.StepKey, out var step)
                 || step.Status != StepStatus.Completed || step.GroupOccurrenceId != item.OccurrenceId || step.Role != item.Role)) return false;
             // Provider closure must reference the exact current selected revisions.
@@ -374,6 +383,28 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
     private static bool ValidClosureDigest(WorkflowGroupExpansionFact expansion, WorkflowGroupClosureFact closure,
         IReadOnlyDictionary<Guid, WorkflowGroupStepFact> steps)
     {
+        if (expansion.BodyContract is not null)
+        {
+            var bodyVector = new List<string>(closure.Steps.Count);
+            foreach (var revision in closure.Steps)
+            {
+                if (revision.StepKey is null || revision.InputHash is null || revision.OccurrenceId is null || revision.Role is null)
+                    return false;
+                bodyVector.Add(JsonSerializer.Serialize(new
+                {
+                    key = revision.StepKey,
+                    step = revision.StepId.ToString("D"),
+                    revision = revision.Revision,
+                    inputHash = revision.InputHash,
+                    occurrence = revision.OccurrenceId,
+                    role = (int?)revision.Role
+                }));
+            }
+            var bodyJson = JsonSerializer.Serialize(bodyVector);
+            var bodyDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
+                "penghou.zhinu.activity-group-fanout-closure.v2\n" + bodyJson))).ToLowerInvariant();
+            return bodyDigest == closure.Digest;
+        }
         var items = expansion.Items.ToDictionary(item => item.StepKey, StringComparer.Ordinal);
         var selected = new HashSet<string>(StringComparer.Ordinal);
         var vector = new List<string>(closure.Steps.Count);
@@ -389,10 +420,61 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         return digest == closure.Digest;
     }
 
+    private static bool ValidCurrentBodyClosure(WorkflowGroupExpansionFact expansion,
+        IReadOnlyDictionary<string, WorkflowGroupStepFact> current, IReadOnlyList<StepDependency> dependencies,
+        IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrences)
+    {
+        var required = expansion.RequiredDependencies.ToHashSet(StringComparer.Ordinal);
+        var boundary = current.Values.FirstOrDefault(step => step.StepId == expansion.BoundaryStepId);
+        if (required.Count == 0 || boundary is null || !required.Contains(boundary.StepKey))
+            return false;
+        var expected = new List<(Guid Id, int Revision)>();
+        var allBodySteps = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in expansion.Items)
+        {
+            if (!current.TryGetValue(item.StepKey, out var completion) || completion.Status != StepStatus.Completed ||
+                completion.GroupOccurrenceId != item.OccurrenceId || completion.Role != ActivityGroupMemberRole.Control ||
+                !occurrences.TryGetValue(item.OccurrenceId, out var root)) return false;
+            var dependencyKeys = dependencies.Where(edge => edge.StepKey == item.StepKey)
+                .Select(edge => edge.DependsOnStepKey).ToHashSet(StringComparer.Ordinal);
+            if (!required.IsSubsetOf(dependencyKeys)) return false;
+            var childKeys = dependencyKeys.Where(key => !required.Contains(key) && key != item.StepKey)
+                .Order(StringComparer.Ordinal).ToArray();
+            if (childKeys.Length == 0) return false;
+            expected.Add((completion.StepId, completion.Revision));
+            foreach (var key in childKeys)
+            {
+                if (!allBodySteps.Add(key) || !current.TryGetValue(key, out var child) || child.Status != StepStatus.Completed ||
+                    child.Role != ActivityGroupMemberRole.Work || child.GroupOccurrenceId is null ||
+                    !IsOccurrenceUnder(occurrences, child.GroupOccurrenceId, item.OccurrenceId, root.ExecutionCoordinate)) return false;
+                expected.Add((child.StepId, child.Revision));
+            }
+            foreach (var member in current.Values.Where(step => step.GroupOccurrenceId is not null &&
+                         IsOccurrenceUnder(occurrences, step.GroupOccurrenceId, item.OccurrenceId, root.ExecutionCoordinate)))
+                if (member.StepKey != item.StepKey && !childKeys.Contains(member.StepKey, StringComparer.Ordinal)) return false;
+        }
+        // The provider already computes current validity; independently ensure that one immutable closure
+        // names exactly the same selected completions and all current body-operation revisions.
+        return expansion.IsComplete && expansion.Closures.Where(candidate => candidate.Steps.Count == expected.Count)
+            .Any(candidate => candidate.Steps.Select(step => (step.StepId, step.Revision)).SequenceEqual(expected));
+    }
+
+    private static bool IsOccurrenceUnder(IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrences,
+        string occurrenceId, string rootOccurrenceId, string coordinate)
+    {
+        for (var currentId = occurrenceId; occurrences.TryGetValue(currentId, out var current); currentId = current.ParentOccurrenceId!)
+        {
+            if (current.ExecutionCoordinate != coordinate) return false;
+            if (currentId == rootOccurrenceId) return true;
+            if (current.ParentOccurrenceId is null) return false;
+        }
+        return false;
+    }
+
     private static long RowCount(WorkflowGroupSnapshotData d) => 1L + d.Definitions.Count + d.Occurrences.Count + d.Steps.Count
         + d.Dependencies.Count + d.Waits.Count + d.Approvals.Count + d.ChildRuns.Count + d.Dispositions.Count
         + (d.SourceRun is null ? 0 : 1) + (d.Generation is null ? 0 : 1) + (d.Operation is null ? 0 : 1)
-        + d.Expansions.Sum(e => 1L + e.Items.Count + e.Closures.Sum(c => 1L + c.Steps.Count));
+        + d.Expansions.Sum(e => 1L + e.Items.Count + e.RequiredDependencies.Count + e.Closures.Sum(c => 1L + c.Steps.Count));
 
     private static WorkflowGroupSnapshotData Freeze(WorkflowGroupSnapshotData d, WorkflowGroupReadLimits limits) => d with
     {
@@ -404,7 +486,12 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
         Approvals = Copy(d.Approvals),
         ChildRuns = Copy(d.ChildRuns),
         Dispositions = Copy(d.Dispositions),
-        Expansions = Copy(d.Expansions.Select(e => e with { Items = Copy(e.Items), Closures = Copy(e.Closures.Select(c => c with { Steps = Copy(c.Steps) })) }))
+        Expansions = Copy(d.Expansions.Select(e => e with
+        {
+            Items = Copy(e.Items),
+            RequiredDependencies = Copy(e.RequiredDependencies),
+            Closures = Copy(e.Closures.Select(c => c with { Steps = Copy(c.Steps) }))
+        }))
     };
 
     private static IReadOnlyList<T> Copy<T>(IEnumerable<T> values) => values.ToList().AsReadOnly();

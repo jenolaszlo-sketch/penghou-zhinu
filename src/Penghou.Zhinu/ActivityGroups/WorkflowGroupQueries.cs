@@ -87,14 +87,27 @@ public sealed record WorkflowGroupOperationFact(Guid OperationId, string Operati
 public sealed record WorkflowGroupChildRunFact(Guid RunId, Guid? ParentRunId, WorkflowStatus? Status, bool IsAvailable);
 
 public sealed record WorkflowGroupFanOutItemFact(string ItemKey, string StepKey, string OccurrenceId, ActivityGroupMemberRole Role);
-public sealed record WorkflowGroupRevisionFact(Guid StepId, int Revision);
+public sealed record WorkflowGroupRevisionFact(Guid StepId, int Revision)
+{
+    /// <summary>Body-mode closure projection fields; null for the original single-step closure format.</summary>
+    public string? StepKey { get; init; }
+    public string? InputHash { get; init; }
+    public string? OccurrenceId { get; init; }
+    public ActivityGroupMemberRole? Role { get; init; }
+}
 public sealed record WorkflowGroupClosureFact(string Digest, long LeaseGeneration, DateTimeOffset CompletedAt,
     IReadOnlyList<WorkflowGroupRevisionFact> Steps);
 
 /// <summary>IsComplete is an effective current-revision closure fact, not aggregate group lifecycle.</summary>
 public sealed record WorkflowGroupExpansionFact(string ExpansionId, string FanOutKey, Guid BoundaryStepId,
     int BoundaryRevision, string PlanDigest, int ItemCount, bool IsCurrent, bool IsComplete,
-    IReadOnlyList<WorkflowGroupFanOutItemFact> Items, IReadOnlyList<WorkflowGroupClosureFact> Closures);
+    IReadOnlyList<WorkflowGroupFanOutItemFact> Items, IReadOnlyList<WorkflowGroupClosureFact> Closures)
+{
+    /// <summary>Static item-body contract for multi-step expansions; null for the original one-step format.</summary>
+    public string? BodyContract { get; init; }
+    /// <summary>Selection and declared dependencies included in each body item completion edge.</summary>
+    public IReadOnlyList<string> RequiredDependencies { get; init; } = [];
+}
 
 /// <summary>Payload-free facts from one storage transaction. Providers must enforce row/byte limits before materializing large fields.</summary>
 public sealed record WorkflowGroupSnapshotData

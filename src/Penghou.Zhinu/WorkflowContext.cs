@@ -642,6 +642,8 @@ public sealed partial class WorkflowContext
         IReadOnlyCollection<string>? dependenciesOverride = null,
         bool serializeSignalInput = false)
     {
+        if (IsInGroupedFanOutBody)
+            throw new WorkflowConfigurationException("Signal waits are not supported inside a grouped fan-out body.");
         ValidateStepKey(stepKey);
         using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.SignalWait);
         activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
@@ -1127,6 +1129,8 @@ public sealed partial class WorkflowContext
 
     private void RejectGroupedFanOut(StepOptions? stepOptions)
     {
+        if (IsInGroupedFanOutBody)
+            throw new WorkflowConfigurationException("Nested dynamic fan-out is not supported inside a grouped fan-out body.");
         if (stepOptions?.Group is not null)
             throw new WorkflowConfigurationException("Direct Group cannot select a native fan-out item scope; use FanOutGroup.");
         if (stepOptions?.FanOutGroup is not null)

@@ -7,6 +7,8 @@ namespace Penghou.Zhinu.Sqlite.Persistence.Groups;
 
 internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase factory)
 {
+    private const string ClosureDomain = "penghou.zhinu.activity-group-fanout-closure.v1\n";
+    private const string BodyClosureDomain = "penghou.zhinu.activity-group-fanout-closure.v2\n";
     public async ValueTask<ActivityGroupFanOutState> AdmitAsync(
         ActivityGroupFanOutRequest request,
         CancellationToken cancellationToken)
@@ -142,8 +144,8 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         await ValidateRunPinAndParentAsync(connection, transaction, plan, cancellationToken).ConfigureAwait(false);
         var currentSteps = await ReadCompletedItemsAsync(connection, transaction, plan.WorkflowRunId, expansionId,
             plan.Items.Count, cancellationToken).ConfigureAwait(false);
-        var currentJson = JsonSerializer.Serialize(currentSteps);
-        var closureDigest = Digest("penghou.zhinu.activity-group-fanout-closure.v1\n" + currentJson);
+        var currentJson = JsonSerializer.Serialize(currentSteps.Entries);
+        var closureDigest = Digest((currentSteps.IsBody ? BodyClosureDomain : ClosureDomain) + currentJson);
         await using (var insert = SqliteStoreSupport.CreateCommand(connection, transaction, """
             INSERT INTO workflow_group_fanout_closures
                 (workflow_run_id, expansion_id, current_steps_json, closure_digest, closure_generation, completed_at)
@@ -231,11 +233,36 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         var expected = await FindReservedItemAsync(connection, transaction, request.WorkflowRunId,
             request.StepKey, cancellationToken).ConfigureAwait(false);
         var claim = request.FanOut;
-        if (expected is null)
+        if (expected?.BodyContract is not null)
         {
-            if (claim is not null) throw new WorkflowStateException("The grouped fan-out item claim is not in an admitted enumeration.");
+            await ValidateBodyItemClaimAsync(connection, transaction, request, expected, cancellationToken)
+                .ConfigureAwait(false);
             return;
         }
+        if (expected is null)
+        {
+            if (claim is not null && (claim.BodyOperationKey is not null || claim.IsBodyCompletion))
+            {
+                var bodyItem = await FindBodyItemAsync(connection, transaction, request.WorkflowRunId,
+                    claim.ExpansionId, claim.ItemKey, cancellationToken).ConfigureAwait(false)
+                    ?? throw new WorkflowStateException("The grouped fan-out body claim is not in an admitted body enumeration.");
+                await ValidateBodyItemClaimAsync(connection, transaction, request, bodyItem, cancellationToken)
+                    .ConfigureAwait(false);
+                return;
+            }
+            if (claim is not null) throw new WorkflowStateException("The grouped fan-out item claim is not in an admitted enumeration.");
+            if (await IsBodyOperationNamespaceKeyAsync(connection, transaction, request.WorkflowRunId,
+                    request.StepKey, cancellationToken).ConfigureAwait(false))
+                throw new WorkflowStateException("A grouped fan-out body namespace requires its typed item scope claim.");
+            if (request.Group is not null && await IsBodyOccurrenceAsync(connection, transaction, request,
+                    cancellationToken).ConfigureAwait(false))
+                throw new WorkflowStateException("A grouped fan-out body occurrence requires its admitted item claim.");
+            return;
+        }
+        if (claim is not null && (claim.BodyOperationKey is not null || claim.IsBodyCompletion))
+            throw new WorkflowStateException("A legacy grouped fan-out item cannot be reinterpreted as a body-mode claim.");
+        if (expected.BodyContract is not null)
+            throw new WorkflowStateException("The grouped fan-out completion claim changed its body-mode contract.");
         if (claim is null || claim.ExpansionId != expected.ExpansionId || claim.ItemKey != expected.ItemKey)
             throw new WorkflowStateException("A selected grouped fan-out item must claim its admitted expansion and item key.");
         if (request.InputHash != expected.InputHash || request.Group?.Occurrence.GroupOccurrenceId != expected.OccurrenceId ||
@@ -258,6 +285,198 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
             throw new WorkflowStateException("The grouped fan-out selection boundary is no longer current and complete.");
         using var json = JsonDocument.Parse(reader.GetString(0));
         ValidateClaimContract(json.RootElement, request);
+    }
+
+    internal static async ValueTask<bool> IsBodyModeStepAsync(
+        SqliteConnection connection, SqliteTransaction transaction, Guid workflowRunId, string stepKey,
+        CancellationToken cancellationToken)
+    {
+        const string separator = ":body:";
+        var separatorAt = stepKey.LastIndexOf(separator, StringComparison.Ordinal);
+        if (separatorAt >= 0)
+        {
+            var key = stepKey[..separatorAt];
+            var tail = stepKey[(separatorAt + separator.Length)..];
+            var itemSeparator = tail.IndexOf(':');
+            if (itemSeparator <= 0 || !TryDecodeSegment(tail[..itemSeparator], out var itemKey)) return false;
+            await using var bodyCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+                SELECT e.canonical_json FROM workflow_group_fanout_expansions e
+                JOIN workflow_group_fanout_items i
+                  ON i.workflow_run_id=e.workflow_run_id AND i.expansion_id=e.expansion_id
+                WHERE e.workflow_run_id=$run AND e.fan_out_key=$key AND i.item_key=$item
+                ORDER BY e.boundary_revision DESC LIMIT 1;
+                """);
+            bodyCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+            bodyCommand.Parameters.AddWithValue("$key", key);
+            bodyCommand.Parameters.AddWithValue("$item", itemKey);
+            var canonical = await bodyCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) as string;
+            return canonical is not null && ReadBodyContract(canonical) is not null;
+        }
+
+        await using var completionCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT e.canonical_json FROM workflow_group_fanout_items i
+            JOIN workflow_group_fanout_expansions e
+              ON e.workflow_run_id=i.workflow_run_id AND e.expansion_id=i.expansion_id
+            WHERE i.workflow_run_id=$run AND i.step_key=$step
+            ORDER BY e.boundary_revision DESC LIMIT 1;
+            """);
+        completionCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        completionCommand.Parameters.AddWithValue("$step", stepKey);
+        var completionPlan = await completionCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) as string;
+        return completionPlan is not null && ReadBodyContract(completionPlan) is not null;
+    }
+
+    private static string EncodeSegment(string value) =>
+        Convert.ToBase64String(Encoding.UTF8.GetBytes(value)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+    private static bool TryDecodeSegment(string value, out string decoded)
+    {
+        try
+        {
+            var base64 = value.Replace('-', '+').Replace('_', '/');
+            base64 += new string('=', (4 - base64.Length % 4) % 4);
+            decoded = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+            return EncodeSegment(decoded) == value;
+        }
+        catch (FormatException)
+        {
+            decoded = "";
+            return false;
+        }
+    }
+
+    private static async ValueTask<bool> IsBodyOperationNamespaceKeyAsync(
+        SqliteConnection connection, SqliteTransaction transaction, Guid workflowRunId, string stepKey,
+        CancellationToken cancellationToken)
+    {
+        const string separator = ":body:";
+        var separatorAt = stepKey.LastIndexOf(separator, StringComparison.Ordinal);
+        if (separatorAt < 0) return false;
+        var tail = stepKey[(separatorAt + separator.Length)..];
+        var itemSeparator = tail.IndexOf(':');
+        if (itemSeparator <= 0 || !TryDecodeSegment(tail[..itemSeparator], out var itemKey)) return false;
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT e.canonical_json FROM workflow_group_fanout_expansions e
+            JOIN workflow_group_fanout_items i
+              ON i.workflow_run_id=e.workflow_run_id AND i.expansion_id=e.expansion_id
+            WHERE e.workflow_run_id=$run AND e.fan_out_key=$key AND i.item_key=$item
+            ORDER BY e.boundary_revision DESC LIMIT 1;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(workflowRunId));
+        command.Parameters.AddWithValue("$key", stepKey[..separatorAt]);
+        command.Parameters.AddWithValue("$item", itemKey);
+        var canonical = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) as string;
+        return canonical is not null && ReadBodyContract(canonical) is not null;
+    }
+
+    private static async ValueTask ValidateBodyItemClaimAsync(
+        SqliteConnection connection, SqliteTransaction transaction, StepClaimRequest request,
+        ReservedItem expected, CancellationToken cancellationToken)
+    {
+        var claim = request.FanOut;
+        if (claim is null || claim.ExpansionId != expected.ExpansionId || claim.ItemKey != expected.ItemKey)
+            throw new WorkflowStateException("A body-mode fan-out claim must identify its exact admitted item.");
+        await ValidateBodyBoundaryAsync(connection, transaction, request.WorkflowRunId, expected.ExpansionId,
+            cancellationToken).ConfigureAwait(false);
+        using var plan = JsonDocument.Parse(expected.CanonicalJson);
+        var root = plan.RootElement;
+        if (root.GetProperty("bodyContract").GetString() != expected.BodyContract)
+            throw new WorkflowStateException("The admitted fan-out body contract is malformed.");
+        if (claim.IsBodyCompletion)
+        {
+            if (claim.BodyOperationKey is not null || request.StepKey != expected.StepKey ||
+                request.InputHash != expected.InputHash || request.Group is null ||
+                request.Group.Occurrence.GroupOccurrenceId != expected.OccurrenceId ||
+                request.Group.Membership.Role != ActivityGroupMemberRole.Control)
+                throw new WorkflowStateException("The grouped fan-out body completion does not match its reserved item claim.");
+            if (request.InputType != root.GetProperty("inputType").GetString() ||
+                request.OutputType != root.GetProperty("outputType").GetString() ||
+                request.ImplementationKey != root.GetProperty("implementation").GetString() ||
+                request.AuthorizationDeclarationHash != root.GetProperty("authorization").GetString() ||
+                request.Compensation is not null)
+                throw new WorkflowStateException("The grouped fan-out body completion changed its admitted execution contract.");
+            var required = root.GetProperty("dependencies").EnumerateArray().Select(item => item.GetString()!)
+                .ToHashSet(StringComparer.Ordinal);
+            var actual = (request.DependsOn ?? []).ToHashSet(StringComparer.Ordinal);
+            if (!required.IsSubsetOf(actual) || actual.Contains(request.StepKey))
+                throw new WorkflowStateException("A grouped fan-out body completion omitted its admitted selection or item operations.");
+            return;
+        }
+
+        if (claim.BodyOperationKey is null || request.StepKey != claim.BodyOperationKey ||
+            request.StepKey == expected.StepKey || request.Group is null ||
+            !IsOccurrenceDescendant(request.Group.Occurrence, expected.OccurrenceId) ||
+            request.Group.Membership.Role != ActivityGroupMemberRole.Work)
+            throw new WorkflowStateException("A grouped fan-out body operation is outside its admitted item scope.");
+        var prefix = root.GetProperty("fanOut").GetString() + ":body:";
+        if (!request.StepKey.StartsWith(prefix, StringComparison.Ordinal))
+            throw new WorkflowStateException("A grouped fan-out body operation key is outside its reserved namespace.");
+        var requiredBodyDependencies = root.GetProperty("dependencies").EnumerateArray().Select(item => item.GetString()!)
+            .ToHashSet(StringComparer.Ordinal);
+        var actualBodyDependencies = (request.DependsOn ?? []).ToHashSet(StringComparer.Ordinal);
+        if (!requiredBodyDependencies.IsSubsetOf(actualBodyDependencies))
+            throw new WorkflowStateException("A grouped fan-out body operation omitted an admitted selection dependency.");
+        if (request.DependsOn?.Any(dependency => dependency == request.StepKey) == true)
+            throw new WorkflowStateException("A grouped fan-out body operation cannot depend on itself.");
+    }
+
+    private static async ValueTask ValidateBodyBoundaryAsync(
+        SqliteConnection connection, SqliteTransaction transaction, Guid runId, string expansionId,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT e.boundary_step_key,e.boundary_step_id,e.boundary_revision,b.status,
+                   (SELECT MAX(s.revision) FROM workflow_steps s
+                    WHERE s.workflow_run_id=e.workflow_run_id AND s.step_key=e.boundary_step_key)
+            FROM workflow_group_fanout_expansions e
+            JOIN workflow_steps b ON b.workflow_run_id=e.workflow_run_id AND b.id=e.boundary_step_id
+                AND b.step_key=e.boundary_step_key AND b.revision=e.boundary_revision
+            WHERE e.workflow_run_id=$run AND e.expansion_id=$expansion;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        command.Parameters.AddWithValue("$expansion", expansionId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false) ||
+            (StepStatus)reader.GetInt32(3) != StepStatus.Completed || reader.GetInt32(4) != reader.GetInt32(2))
+            throw new WorkflowStateException("The grouped fan-out body selection boundary is no longer current and complete.");
+    }
+
+    private static async ValueTask<bool> IsBodyOccurrenceAsync(
+        SqliteConnection connection, SqliteTransaction transaction, StepClaimRequest request,
+        CancellationToken cancellationToken)
+    {
+        var occurrence = request.Group!.Occurrence;
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT 1 FROM workflow_group_fanout_items i
+            JOIN workflow_group_fanout_expansions e
+              ON e.workflow_run_id=i.workflow_run_id AND e.expansion_id=i.expansion_id
+            WHERE i.workflow_run_id=$run AND json_extract(e.canonical_json,'$.bodyContract') IS NOT NULL
+              AND i.group_occurrence_id=$occurrence LIMIT 1;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(request.WorkflowRunId));
+        command.Parameters.AddWithValue("$occurrence", occurrence.GroupOccurrenceId);
+        if (await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null) return true;
+        for (var parent = occurrence.Parent; parent is not null; parent = parent.Parent)
+        {
+            await using var parentCheck = SqliteStoreSupport.CreateCommand(connection, transaction, """
+                SELECT 1 FROM workflow_group_fanout_items i
+                JOIN workflow_group_fanout_expansions e
+                  ON e.workflow_run_id=i.workflow_run_id AND e.expansion_id=i.expansion_id
+                WHERE i.workflow_run_id=$run AND json_extract(e.canonical_json,'$.bodyContract') IS NOT NULL
+                  AND i.group_occurrence_id=$occurrence LIMIT 1;
+                """);
+            parentCheck.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(request.WorkflowRunId));
+            parentCheck.Parameters.AddWithValue("$occurrence", parent.GroupOccurrenceId);
+            if (await parentCheck.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null) return true;
+        }
+        return false;
+    }
+
+    private static bool IsOccurrenceDescendant(ActivityGroupOccurrence occurrence, string rootOccurrenceId)
+    {
+        for (ActivityGroupOccurrence? current = occurrence; current is not null; current = current.Parent)
+            if (current.GroupOccurrenceId == rootOccurrenceId) return true;
+        return false;
     }
 
     private static async ValueTask<BoundaryRow> ValidateFenceAndReadBoundaryAsync(
@@ -344,14 +563,35 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
             throw new WorkflowStateException("The grouped fan-out expansion does not match its admitted selection.");
     }
 
-    private static async ValueTask<IReadOnlyList<string>> ReadCompletedItemsAsync(
+    private static async ValueTask<ClosureVector> ReadCompletedItemsAsync(
         SqliteConnection connection, SqliteTransaction? transaction, Guid runId, string expansionId,
         int expectedCount, CancellationToken cancellationToken)
     {
+        string canonicalPlan;
+        string boundaryStepKey;
+        await using (var planCommand = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT canonical_json, boundary_step_key FROM workflow_group_fanout_expansions
+            WHERE workflow_run_id=$run AND expansion_id=$expansion;
+            """))
+        {
+            planCommand.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+            planCommand.Parameters.AddWithValue("$expansion", expansionId);
+            await using var planReader = await planCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            if (!await planReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                throw new WorkflowStateException("The grouped fan-out expansion is missing its immutable plan.");
+            canonicalPlan = planReader.GetString(0);
+            boundaryStepKey = planReader.GetString(1);
+        }
+        using var plan = JsonDocument.Parse(canonicalPlan);
+        var bodyMode = ReadBodyContract(canonicalPlan) is not null;
+        var requiredDependencies = plan.RootElement.GetProperty("dependencies").EnumerateArray()
+            .Select(item => item.GetString()!).ToArray();
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             SELECT i.item_key,i.step_key,i.input_hash,i.group_occurrence_id,i.role,
-                   s.id,s.revision,s.status,m.group_occurrence_id,m.role,s.input_hash
+                   s.id,s.revision,s.status,m.group_occurrence_id,m.role,s.input_hash,
+                   e.boundary_step_key,e.canonical_json
             FROM workflow_group_fanout_items i
+            JOIN workflow_group_fanout_expansions e ON e.workflow_run_id=i.workflow_run_id AND e.expansion_id=i.expansion_id
             LEFT JOIN workflow_steps s ON s.workflow_run_id=i.workflow_run_id AND s.step_key=i.step_key
                 AND s.revision=(SELECT MAX(x.revision) FROM workflow_steps x
                     WHERE x.workflow_run_id=i.workflow_run_id AND x.step_key=i.step_key)
@@ -361,20 +601,184 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
         command.Parameters.AddWithValue("$expansion", expansionId);
         var snapshots = new List<string>(expectedCount);
+        var itemRows = 0;
+        var completedItems = new List<CompletedItemRow>(expectedCount);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
+            itemRows++;
+            if (reader.GetString(11) != boundaryStepKey || bodyMode != (ReadBodyContract(reader.GetString(12)) is not null))
+                throw new WorkflowStateException("A fan-out expansion mixes body and single-step item contracts.");
             if (reader.IsDBNull(5) || reader.GetInt32(7) != (int)StepStatus.Completed ||
                 reader.GetString(2) != reader.GetString(10) ||
                 reader.IsDBNull(8) || reader.GetString(3) != reader.GetString(8) ||
-                reader.GetInt32(4) != reader.GetInt32(9))
+                reader.GetInt32(4) != reader.GetInt32(9) ||
+                (bodyMode == true && reader.GetInt32(9) != (int)ActivityGroupMemberRole.Control))
                 throw new WorkflowStateException($"Grouped fan-out item '{reader.GetString(0)}' is not completed at its admitted input and occurrence.");
-            snapshots.Add(JsonSerializer.Serialize(new { key = reader.GetString(0), step = reader.GetString(5), revision = reader.GetInt32(6) }));
+            completedItems.Add(new CompletedItemRow(reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetInt32(4), reader.GetString(5), reader.GetInt32(6),
+                reader.GetString(8), reader.GetInt32(9), reader.GetString(10), reader.GetString(11)));
         }
-        if (snapshots.Count != expectedCount)
-            throw new WorkflowStateException("The grouped fan-out enumeration is incomplete.");
-        return snapshots;
+        await reader.DisposeAsync().ConfigureAwait(false);
+        if (itemRows != expectedCount) throw new WorkflowStateException("The grouped fan-out enumeration is incomplete.");
+        IEnumerable<CompletedItemRow> orderedItems = bodyMode
+            ? completedItems.OrderBy(item => item.ItemKey, StringComparer.Ordinal)
+            : completedItems;
+        foreach (var item in orderedItems)
+        {
+            if (bodyMode != true)
+            {
+                snapshots.Add(JsonSerializer.Serialize(new { key = item.ItemKey, step = item.StepId, revision = item.Revision }));
+                continue;
+            }
+            snapshots.Add(SerializeBodyRevision(item.StepKey, item.StepId, item.Revision,
+                item.CurrentInputHash, item.MembershipOccurrenceId, item.MembershipRole));
+            var body = await ReadBodyOperationRevisionsAsync(connection, transaction, runId, item.StepKey,
+                item.ItemOccurrenceId, boundaryStepKey, requiredDependencies, cancellationToken).ConfigureAwait(false);
+            snapshots.AddRange(body);
+        }
+        return new ClosureVector(bodyMode, snapshots.AsReadOnly());
     }
+
+    private static async ValueTask<IReadOnlyList<string>> ReadBodyOperationRevisionsAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, Guid runId, string itemStepKey,
+        string itemOccurrenceId, string boundaryStepKey, IReadOnlyCollection<string> planDependencies,
+        CancellationToken cancellationToken)
+    {
+        var dependencies = new HashSet<string>(planDependencies, StringComparer.Ordinal) { boundaryStepKey };
+        var rows = new List<BodyDependencyRow>();
+        await using (var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT d.depends_on_step_key,s.id,s.revision,s.status,s.input_hash,m.group_occurrence_id,m.role
+            FROM workflow_step_dependencies d
+            LEFT JOIN workflow_steps s ON s.workflow_run_id=d.run_id AND s.step_key=d.depends_on_step_key
+              AND s.revision=(SELECT MAX(x.revision) FROM workflow_steps x
+                  WHERE x.workflow_run_id=d.run_id AND x.step_key=d.depends_on_step_key)
+            LEFT JOIN workflow_step_group_memberships m ON m.workflow_run_id=s.workflow_run_id AND m.step_id=s.id
+            WHERE d.run_id=$run AND d.step_key=$item
+            ORDER BY d.depends_on_step_key;
+            """))
+        {
+            command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+            command.Parameters.AddWithValue("$item", itemStepKey);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                rows.Add(new BodyDependencyRow(reader.GetString(0),
+                    reader.IsDBNull(1) ? null : reader.GetString(1),
+                    reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    reader.IsDBNull(3) ? null : (StepStatus)reader.GetInt32(3),
+                    reader.IsDBNull(4) ? null : reader.GetString(4),
+                    reader.IsDBNull(5) ? null : reader.GetString(5),
+                    reader.IsDBNull(6) ? null : reader.GetInt32(6)));
+            }
+        }
+        var actualDependencies = rows.Select(row => row.StepKey).ToHashSet(StringComparer.Ordinal);
+        var hasBoundary = actualDependencies.Contains(boundaryStepKey);
+        if (dependencies.Any(required => !actualDependencies.Contains(required)))
+            throw new WorkflowStateException("A grouped fan-out body completion is missing an admitted static dependency.");
+        var childRows = rows.Where(row => !dependencies.Contains(row.StepKey))
+            .OrderBy(row => row.StepKey, StringComparer.Ordinal).ToArray();
+        if (!hasBoundary || childRows.Length == 0)
+            throw new WorkflowStateException("A grouped fan-out body completion has no valid selection dependency or body operation.");
+        var childKeys = new HashSet<string>(StringComparer.Ordinal);
+        var result = new List<string>(childRows.Length);
+        foreach (var row in childRows)
+        {
+            var isDescendant = row.OccurrenceId is not null && await IsOccurrenceDescendantAsync(connection, transaction,
+                runId, row.OccurrenceId, itemOccurrenceId, cancellationToken).ConfigureAwait(false);
+            if (row.StepId is null || row.Revision is null || row.Status != StepStatus.Completed ||
+                row.InputHash is null || row.OccurrenceId is null || row.Role != (int)ActivityGroupMemberRole.Work ||
+                !isDescendant)
+                throw new WorkflowStateException("A grouped fan-out body operation is not complete in its admitted item scope.");
+            childKeys.Add(row.StepKey);
+            result.Add(SerializeBodyRevision(row.StepKey, row.StepId, row.Revision.Value,
+                row.InputHash, row.OccurrenceId, row.Role.Value));
+        }
+        await ValidateBodyMembershipSetAsync(connection, transaction, runId, itemStepKey, itemOccurrenceId,
+            childKeys, cancellationToken).ConfigureAwait(false);
+        return result.AsReadOnly();
+    }
+
+    private static async ValueTask<bool> IsOccurrenceDescendantAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, Guid runId, string occurrenceId,
+        string rootOccurrenceId, CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            WITH RECURSIVE chain(id,parent_id,coordinate,depth) AS (
+                SELECT group_occurrence_id,parent_group_occurrence_id,execution_coordinate,0
+                FROM workflow_group_occurrences WHERE workflow_run_id=$run AND group_occurrence_id=$occurrence
+                UNION ALL
+                SELECT p.group_occurrence_id,p.parent_group_occurrence_id,p.execution_coordinate,c.depth+1
+                FROM workflow_group_occurrences p JOIN chain c
+                  ON p.workflow_run_id=$run AND p.group_occurrence_id=c.parent_id
+                WHERE c.parent_id IS NOT NULL AND c.id<>$root AND c.depth < 64
+            )
+            SELECT CASE WHEN EXISTS(SELECT 1 FROM chain WHERE id=$root)
+                  AND NOT EXISTS(SELECT 1 FROM chain WHERE coordinate<>(SELECT execution_coordinate FROM workflow_group_occurrences
+                      WHERE workflow_run_id=$run AND group_occurrence_id=$root)) THEN 1 ELSE 0 END;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        command.Parameters.AddWithValue("$occurrence", occurrenceId);
+        command.Parameters.AddWithValue("$root", rootOccurrenceId);
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) == 1;
+    }
+
+    private static async ValueTask ValidateBodyMembershipSetAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, Guid runId, string itemStepKey,
+        string itemOccurrenceId, IReadOnlySet<string> childKeys, CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            WITH RECURSIVE descendants(id,coordinate) AS (
+                SELECT group_occurrence_id,execution_coordinate FROM workflow_group_occurrences
+                WHERE workflow_run_id=$run AND group_occurrence_id=$root
+                UNION ALL
+                SELECT child.group_occurrence_id,child.execution_coordinate
+                FROM workflow_group_occurrences child JOIN descendants parent
+                  ON child.workflow_run_id=$run AND child.parent_group_occurrence_id=parent.id
+                  AND child.execution_coordinate=parent.coordinate
+            )
+            SELECT m.step_key,m.role
+            FROM workflow_step_group_memberships m
+            JOIN workflow_steps s ON s.workflow_run_id=m.workflow_run_id AND s.id=m.step_id
+              AND s.step_key=m.step_key AND s.revision=m.step_revision
+              AND s.revision=(SELECT MAX(x.revision) FROM workflow_steps x
+                  WHERE x.workflow_run_id=s.workflow_run_id AND x.step_key=s.step_key)
+            JOIN descendants d ON d.id=m.group_occurrence_id
+            WHERE m.workflow_run_id=$run;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        command.Parameters.AddWithValue("$root", itemOccurrenceId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        var foundCompletion = false;
+        var foundChildren = new HashSet<string>(StringComparer.Ordinal);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var key = reader.GetString(0);
+            var role = (ActivityGroupMemberRole)reader.GetInt32(1);
+            if (key == itemStepKey)
+            {
+                if (role != ActivityGroupMemberRole.Control) throw new WorkflowStateException("The item completion membership is not Control.");
+                foundCompletion = true;
+                continue;
+            }
+            if (role != ActivityGroupMemberRole.Work || !childKeys.Contains(key))
+                throw new WorkflowStateException("A fan-out body membership is not included in its item's completion dependencies.");
+            foundChildren.Add(key);
+        }
+        if (!foundCompletion || !foundChildren.SetEquals(childKeys))
+            throw new WorkflowStateException("The fan-out body completion does not cover every current item operation.");
+    }
+
+    private static string SerializeBodyRevision(string key, string stepId, int revision,
+        string inputHash, string occurrenceId, int role) => JsonSerializer.Serialize(new
+        {
+            key,
+            step = stepId,
+            revision,
+            inputHash,
+            occurrence = occurrenceId,
+            role = (int?)role
+        });
 
     private static async ValueTask<ActivityGroupFanOutState> ReadStateAsync(
         SqliteConnection connection, SqliteTransaction? transaction, Guid runId, string expansionId,
@@ -382,7 +786,7 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         CancellationToken cancellationToken)
     {
         var complete = false;
-        IReadOnlyList<string>? current = null;
+        ClosureVector? current = null;
         try
         {
             current = await ReadCompletedItemsAsync(connection, transaction, runId, expansionId,
@@ -391,8 +795,8 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         catch (WorkflowStateException) { }
         if (current is not null)
         {
-            var json = JsonSerializer.Serialize(current);
-            var digest = Digest("penghou.zhinu.activity-group-fanout-closure.v1\n" + json);
+            var json = JsonSerializer.Serialize(current.Entries);
+            var digest = Digest((current.IsBody ? BodyClosureDomain : ClosureDomain) + json);
             await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
                 SELECT c.current_steps_json,
                        (SELECT MAX(s.revision) FROM workflow_steps s
@@ -435,7 +839,7 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         CancellationToken cancellationToken)
     {
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
-            SELECT i.expansion_id,i.item_key,i.input_hash,i.group_occurrence_id,i.role
+            SELECT i.expansion_id,i.item_key,i.input_hash,i.group_occurrence_id,i.role,i.step_key,e.canonical_json
             FROM workflow_group_fanout_items i
             JOIN workflow_group_fanout_expansions e ON e.workflow_run_id=i.workflow_run_id AND e.expansion_id=i.expansion_id
             WHERE i.workflow_run_id=$run AND i.step_key=$step
@@ -447,7 +851,41 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         command.Parameters.AddWithValue("$step", stepKey);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;
-        return new ReservedItem(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetInt32(4));
+        var canonical = reader.GetString(6);
+        return new ReservedItem(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+            reader.GetInt32(4), reader.GetString(5), ReadBodyContract(canonical), canonical);
+    }
+
+    private static async ValueTask<ReservedItem?> FindBodyItemAsync(
+        SqliteConnection connection, SqliteTransaction transaction, Guid runId, string expansionId, string itemKey,
+        CancellationToken cancellationToken)
+    {
+        await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
+            SELECT i.expansion_id,i.item_key,i.input_hash,i.group_occurrence_id,i.role,i.step_key,e.canonical_json
+            FROM workflow_group_fanout_items i
+            JOIN workflow_group_fanout_expansions e ON e.workflow_run_id=i.workflow_run_id AND e.expansion_id=i.expansion_id
+            WHERE i.workflow_run_id=$run AND i.expansion_id=$expansion AND i.item_key=$item
+              AND json_extract(e.canonical_json,'$.bodyContract') IS NOT NULL;
+            """);
+        command.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+        command.Parameters.AddWithValue("$expansion", expansionId);
+        command.Parameters.AddWithValue("$item", itemKey);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) return null;
+        var canonical = reader.GetString(6);
+        return new ReservedItem(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+            reader.GetInt32(4), reader.GetString(5), ReadBodyContract(canonical), canonical);
+    }
+
+    private static string? ReadBodyContract(string canonical)
+    {
+        using var json = JsonDocument.Parse(canonical);
+        var root = json.RootElement;
+        var version = root.GetProperty("version").GetInt32();
+        if (version == 1) return null;
+        if (version != 2 || !root.TryGetProperty("bodyContract", out var body) || body.ValueKind != JsonValueKind.String)
+            throw new WorkflowStateException("A grouped fan-out plan has an unsupported body contract version.");
+        return body.GetString();
     }
 
     private static async ValueTask EnsureStepKeyAvailableAsync(
@@ -511,5 +949,11 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
     private sealed record ExpansionRow(string ExpansionId, string FanOutKey, Guid BoundaryStepId,
         int BoundaryRevision, string PlanDigest, int ItemCount);
     private sealed record ReservedItem(string ExpansionId, string ItemKey, string InputHash,
-        string OccurrenceId, int Role);
+        string OccurrenceId, int Role, string StepKey, string? BodyContract, string CanonicalJson);
+    private sealed record BodyDependencyRow(string StepKey, string? StepId, int? Revision, StepStatus? Status,
+        string? InputHash, string? OccurrenceId, int? Role);
+    private sealed record CompletedItemRow(string ItemKey, string StepKey, string InputHash, string ItemOccurrenceId,
+        int ItemRole, string StepId, int Revision, string MembershipOccurrenceId, int MembershipRole,
+        string CurrentInputHash, string BoundaryStepKey);
+    private sealed record ClosureVector(bool IsBody, IReadOnlyList<string> Entries);
 }

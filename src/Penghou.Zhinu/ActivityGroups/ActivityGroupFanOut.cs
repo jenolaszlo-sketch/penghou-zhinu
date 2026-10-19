@@ -46,7 +46,8 @@ public sealed class ActivityGroupFanOutPlan
     private ActivityGroupFanOutPlan(Guid runId, string manifestDigest, string fanOutKey,
         ActivityGroupFanOutBinding binding, ActivityGroupFanOutIdentityKind kind,
         string inputType, string outputType, string? implementationKey, string? declarationHash,
-        string compensationContract, IReadOnlyList<string> dependencies, IReadOnlyList<ActivityGroupFanOutItem> items)
+        string compensationContract, IReadOnlyList<string> dependencies, IReadOnlyList<ActivityGroupFanOutItem> items,
+        string? bodyContract)
     {
         WorkflowRunId = runId;
         GroupManifestDigest = manifestDigest;
@@ -60,10 +61,13 @@ public sealed class ActivityGroupFanOutPlan
         CompensationContract = compensationContract;
         Dependencies = dependencies;
         Items = items;
+        BodyContract = bodyContract;
         CanonicalJson = Encode();
         if (Encoding.UTF8.GetByteCount(CanonicalJson) > MaximumAllowedCanonicalBytes)
             throw new WorkflowConfigurationException("Grouped fan-out enumeration exceeds its byte limit.");
-        PlanDigest = Hash("penghou.zhinu.activity-group-fanout-plan.v1\n" + CanonicalJson);
+        PlanDigest = Hash((bodyContract is null
+            ? "penghou.zhinu.activity-group-fanout-plan.v1\n"
+            : "penghou.zhinu.activity-group-fanout-plan.v2\n") + CanonicalJson);
     }
 
     public Guid WorkflowRunId { get; }
@@ -78,16 +82,25 @@ public sealed class ActivityGroupFanOutPlan
     public string CompensationContract { get; }
     public IReadOnlyList<string> Dependencies { get; }
     public IReadOnlyList<ActivityGroupFanOutItem> Items { get; }
+    /// <summary>Stable body fingerprint for a per-item multi-step fan-out expansion.</summary>
+    public string? BodyContract { get; }
     public string CanonicalJson { get; }
     public string PlanDigest { get; }
 
     internal static ActivityGroupFanOutPlan Create(Guid runId, ActivityGroupManifest manifest, string fanOutKey,
         ActivityGroupFanOutBinding binding, ActivityGroupFanOutIdentityKind kind,
         string inputType, string outputType, string? implementationKey, string? declarationHash,
-        string compensationContract, IEnumerable<string> dependencies, IEnumerable<(string Key, string Hash)> items)
+        string compensationContract, IEnumerable<string> dependencies, IEnumerable<(string Key, string Hash)> items,
+        string? bodyContract = null)
     {
         ActivityGroupText.Required(fanOutKey, 512, nameof(fanOutKey));
         if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (bodyContract is not null)
+        {
+            ActivityGroupText.Required(bodyContract, 512, nameof(bodyContract));
+            if (binding.Membership.Role != ActivityGroupMemberRole.Control)
+                throw new WorkflowConfigurationException("A grouped fan-out body requires Control membership for its item completion step.");
+        }
         var dependencyArray = dependencies.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         if (dependencyArray.Length > MaximumAllowedItems || !dependencyArray.Contains(binding.SelectionStepKey, StringComparer.Ordinal))
             throw new WorkflowConfigurationException("Grouped fan-out must declare its existing selection step as a dependency.");
@@ -122,7 +135,7 @@ public sealed class ActivityGroupFanOutPlan
             throw new WorkflowConfigurationException("A grouped fan-out item cannot depend on a selected sibling or itself.");
         return new ActivityGroupFanOutPlan(runId, manifest.ManifestDigest, fanOutKey, binding, kind,
             inputType, outputType, implementationKey, declarationHash, compensationContract,
-            Array.AsReadOnly(dependencyArray), new ReadOnlyCollection<ActivityGroupFanOutItem>(selected));
+            Array.AsReadOnly(dependencyArray), new ReadOnlyCollection<ActivityGroupFanOutItem>(selected), bodyContract);
     }
 
     /// <summary>Identifies the immutable enumeration attached to one exact selection-step revision.</summary>
@@ -137,7 +150,7 @@ public sealed class ActivityGroupFanOutPlan
         using (var writer = new Utf8JsonWriter(stream))
         {
             writer.WriteStartObject();
-            writer.WriteNumber("version", 1);
+            writer.WriteNumber("version", BodyContract is null ? 1 : 2);
             WriteString(writer, "run", WorkflowRunId.ToString("D"));
             WriteString(writer, "manifest", GroupManifestDigest);
             WriteString(writer, "fanOut", FanOutKey);
@@ -151,6 +164,8 @@ public sealed class ActivityGroupFanOutPlan
             WriteString(writer, "implementation", ImplementationKey);
             WriteString(writer, "authorization", AuthorizationDeclarationHash);
             WriteString(writer, "compensation", CompensationContract);
+            if (BodyContract is not null)
+                WriteString(writer, "bodyContract", BodyContract);
             writer.WriteStartArray("dependencies");
             foreach (var dependency in Dependencies) ActivityGroupManifest.WriteStringValue(writer, dependency);
             writer.WriteEndArray();
@@ -221,6 +236,10 @@ public sealed record ActivityGroupFanOutItemClaim
 {
     public required string ExpansionId { get; init; }
     public required string ItemKey { get; init; }
+    /// <summary>Non-null only for an independently durable operation inside a fan-out body.</summary>
+    public string? BodyOperationKey { get; init; }
+    /// <summary>Marks the reserved per-item completion claim, separate from body operations.</summary>
+    public bool IsBodyCompletion { get; init; }
 }
 
 /// <summary>Optional dynamic-group capability. Existing group stores remain valid for the foundation profile.</summary>
@@ -230,4 +249,9 @@ public interface IWorkflowGroupFanOutRepository
     ValueTask<ActivityGroupFanOutState> CompleteGroupFanOutAsync(ActivityGroupFanOutRequest request, CancellationToken cancellationToken = default);
     ValueTask<ActivityGroupFanOutState?> GetGroupFanOutAsync(Guid workflowRunId, string fanOutKey, CancellationToken cancellationToken = default);
     ValueTask<bool> HasIncompleteGroupFanOutAsync(Guid workflowRunId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Marker capability for stores that atomically validate bounded multi-step fan-out body claims.</summary>
+public interface IWorkflowGroupFanOutBodyRepository : IWorkflowGroupFanOutRepository
+{
 }

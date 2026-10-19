@@ -12,7 +12,9 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
 {
     private const int FixedRowBytes = 160;
     private const string FanOutPlanDomain = "penghou.zhinu.activity-group-fanout-plan.v1\n";
+    private const string FanOutBodyPlanDomain = "penghou.zhinu.activity-group-fanout-plan.v2\n";
     private const string FanOutClosureDomain = "penghou.zhinu.activity-group-fanout-closure.v1\n";
+    private const string FanOutBodyClosureDomain = "penghou.zhinu.activity-group-fanout-closure.v2\n";
 
     public async ValueTask<WorkflowGroupQueryResult<WorkflowGroupSnapshotData>> ReadGroupSnapshotAsync(
         Guid workflowRunId, WorkflowGroupReadLimits limits, CancellationToken cancellationToken)
@@ -95,7 +97,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                 .ConfigureAwait(false);
             var approvals = await ReadApprovalsAsync(connection, transaction, run.RunId, cancellationToken)
                 .ConfigureAwait(false);
-            var expansions = await ReadExpansionsAsync(connection, transaction, run.RunId, manifest, occurrenceById, steps,
+            var expansions = await ReadExpansionsAsync(connection, transaction, run.RunId, manifest, occurrenceById, steps, dependencies,
                 cancellationToken).ConfigureAwait(false);
             if (run.GroupFanOutUsed != (expansions.Count > 0))
                 throw new WorkflowStateException("The run's grouped fan-out marker does not match its durable expansions.");
@@ -558,6 +560,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
     private static async ValueTask<IReadOnlyList<WorkflowGroupExpansionFact>> ReadExpansionsAsync(
         SqliteConnection connection, SqliteTransaction transaction, Guid runId, ActivityGroupManifest? manifest,
         IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrenceById, IReadOnlyList<StepFactRow> steps,
+        IReadOnlyList<StepDependency> dependencies,
         CancellationToken cancellationToken)
     {
         var currentSteps = steps.Where(row => row.IsCurrent).ToDictionary(row => row.StepKey, StringComparer.Ordinal);
@@ -584,16 +587,30 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
             var digest = header.PlanDigest;
             var itemCount = header.ItemCount;
             var canonical = header.CanonicalJson;
-            if (Digest(FanOutPlanDomain + canonical) != digest)
-                throw new WorkflowStateException("A fan-out plan digest does not match its canonical bytes.");
             JsonElement[] planItems;
             ActivityGroupMemberRole planRole;
             string planGroup;
             ActivityGroupFanOutIdentityKind planKind;
             string? planParent;
+            string? bodyContract;
+            string[] planDependencies;
             using (var plan = JsonDocument.Parse(canonical, new JsonDocumentOptions { MaxDepth = 16 }))
             {
                 var root = plan.RootElement;
+                var planVersion = root.GetProperty("version").GetInt32();
+                var planDomain = planVersion switch
+                {
+                    1 => FanOutPlanDomain,
+                    2 => FanOutBodyPlanDomain,
+                    _ => throw new WorkflowStateException("A fan-out plan version is unsupported.")
+                };
+                if (Digest(planDomain + canonical) != digest)
+                    throw new WorkflowStateException("A fan-out plan digest does not match its canonical bytes.");
+                bodyContract = planVersion == 2 && root.TryGetProperty("bodyContract", out var body)
+                    ? body.GetString()
+                    : null;
+                if (planVersion == 2 && string.IsNullOrWhiteSpace(bodyContract))
+                    throw new WorkflowStateException("A fan-out body plan omits its stable body contract.");
                 if (root.GetProperty("run").GetString() != SqliteStoreSupport.Format(runId) ||
                     root.GetProperty("fanOut").GetString() != fanOutKey ||
                     root.GetProperty("selection").GetString() != boundaryKey ||
@@ -602,11 +619,15 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                 if (manifest is null || root.GetProperty("manifest").GetString() != manifest.ManifestDigest)
                     throw new WorkflowStateException("A fan-out plan does not match the run's pinned manifest.");
                 planRole = ReadEnum<ActivityGroupMemberRole>(root.GetProperty("role").GetInt32());
+                if (bodyContract is not null && planRole != ActivityGroupMemberRole.Control)
+                    throw new WorkflowStateException("A grouped fan-out body plan requires Control membership for item completion.");
                 planGroup = root.GetProperty("group").GetString()!;
                 planKind = ReadEnum<ActivityGroupFanOutIdentityKind>(root.GetProperty("kind").GetInt32());
                 planParent = root.GetProperty("parent").ValueKind == JsonValueKind.Null
                     ? null
                     : root.GetProperty("parent").GetString();
+                planDependencies = root.GetProperty("dependencies").EnumerateArray()
+                    .Select(item => item.GetString()!).ToArray();
                 planItems = root.GetProperty("items").EnumerateArray().Select(element => element.Clone()).ToArray();
             }
             if (manifest is null)
@@ -650,11 +671,13 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                         StringComparison.Ordinal))
                     throw new WorkflowStateException("Fan-out item rows do not match the immutable canonical plan.");
             }
-            var closures = await ReadClosuresAsync(connection, transaction, runId, expansion, cancellationToken)
+            var closures = await ReadClosuresAsync(connection, transaction, runId, expansion, bodyContract is not null, cancellationToken)
                 .ConfigureAwait(false);
-            var isComplete = isCurrent && IsExpansionClosed(items, closures, currentSteps);
+            var isComplete = isCurrent && IsExpansionClosed(items, closures, currentSteps, dependencies,
+                occurrenceById, planDependencies, bodyContract);
             result.Add(new WorkflowGroupExpansionFact(expansion, fanOutKey, boundaryId, boundaryRevision,
-                digest, itemCount, isCurrent, isComplete, Array.AsReadOnly(items.Select(item => item.Fact).ToArray()), closures));
+                digest, itemCount, isCurrent, isComplete, Array.AsReadOnly(items.Select(item => item.Fact).ToArray()), closures)
+            { BodyContract = bodyContract, RequiredDependencies = Array.AsReadOnly(planDependencies) });
         }
         return result.AsReadOnly();
     }
@@ -682,7 +705,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
     }
 
     private static async ValueTask<IReadOnlyList<WorkflowGroupClosureFact>> ReadClosuresAsync(
-        SqliteConnection connection, SqliteTransaction transaction, Guid runId, string expansionId,
+        SqliteConnection connection, SqliteTransaction transaction, Guid runId, string expansionId, bool bodyMode,
         CancellationToken cancellationToken)
     {
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
@@ -697,15 +720,15 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
         {
             var json = reader.GetString(0);
             var digest = reader.GetString(1);
-            if (Digest(FanOutClosureDomain + json) != digest)
+            if (Digest((bodyMode ? FanOutBodyClosureDomain : FanOutClosureDomain) + json) != digest)
                 throw new WorkflowStateException("A fan-out closure digest does not match its current-step vector.");
             result.Add(new WorkflowGroupClosureFact(digest, reader.GetInt64(2),
-                SqliteStoreSupport.ParseTimestamp(reader.GetString(3)), ParseClosureVector(json)));
+                SqliteStoreSupport.ParseTimestamp(reader.GetString(3)), ParseClosureVector(json, bodyMode)));
         }
         return result.AsReadOnly();
     }
 
-    private static IReadOnlyList<WorkflowGroupRevisionFact> ParseClosureVector(string json)
+    private static IReadOnlyList<WorkflowGroupRevisionFact> ParseClosureVector(string json, bool bodyMode)
     {
         using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 4 });
         if (document.RootElement.ValueKind != JsonValueKind.Array) throw new WorkflowStateException("Fan-out closure vector is not an array.");
@@ -714,16 +737,39 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
         {
             if (entry.ValueKind != JsonValueKind.String) throw new WorkflowStateException("Fan-out closure vector entry is malformed.");
             using var item = JsonDocument.Parse(entry.GetString()!, new JsonDocumentOptions { MaxDepth = 2 });
-            result.Add(new WorkflowGroupRevisionFact(Guid.Parse(item.RootElement.GetProperty("step").GetString()!),
-                item.RootElement.GetProperty("revision").GetInt32()));
+            var root = item.RootElement;
+            var revision = new WorkflowGroupRevisionFact(Guid.Parse(root.GetProperty("step").GetString()!),
+                root.GetProperty("revision").GetInt32());
+            if (bodyMode)
+                revision = revision with
+                {
+                    StepKey = root.GetProperty("key").GetString(),
+                    InputHash = root.GetProperty("inputHash").GetString(),
+                    OccurrenceId = root.GetProperty("occurrence").GetString(),
+                    Role = root.GetProperty("role").ValueKind == JsonValueKind.Null
+                        ? null
+                        : ReadEnum<ActivityGroupMemberRole>(root.GetProperty("role").GetInt32())
+                };
+            result.Add(revision);
         }
         return result.AsReadOnly();
     }
 
     private static bool IsExpansionClosed(
         IReadOnlyList<FanOutItemRow> items, IReadOnlyList<WorkflowGroupClosureFact> closures,
-        IReadOnlyDictionary<string, StepFactRow> currentSteps)
+        IReadOnlyDictionary<string, StepFactRow> currentSteps, IReadOnlyList<StepDependency> dependencies,
+        IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrences, IReadOnlyCollection<string> planDependencies,
+        string? bodyContract)
     {
+        if (bodyContract is not null)
+        {
+            var vector = BuildBodyClosureVector(items, currentSteps, dependencies, occurrences, planDependencies);
+            if (vector is null) return false;
+            var json = JsonSerializer.Serialize(vector);
+            var digest = Digest(FanOutBodyClosureDomain + json);
+            return closures.Any(closure => closure.Digest == digest &&
+                closure.Steps.Count == vector.Count && VectorMatches(closure.Steps, vector));
+        }
         var selected = new List<string>(items.Count);
         foreach (var storedItem in items)
         {
@@ -737,6 +783,80 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
         var closureDigest = Digest(FanOutClosureDomain + currentJson);
         return closures.Any(closure => closure.Digest == closureDigest &&
             closure.Steps.Count == items.Count && VectorMatches(closure.Steps, items, currentSteps));
+    }
+
+    private static IReadOnlyList<string>? BuildBodyClosureVector(
+        IReadOnlyList<FanOutItemRow> items, IReadOnlyDictionary<string, StepFactRow> currentSteps,
+        IReadOnlyList<StepDependency> dependencies, IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrences,
+        IReadOnlyCollection<string> planDependencies)
+    {
+        var vector = new List<string>();
+        foreach (var stored in items)
+        {
+            var item = stored.Fact;
+            if (!currentSteps.TryGetValue(item.StepKey, out var completion) || completion.Status != StepStatus.Completed ||
+                completion.GroupOccurrenceId != item.OccurrenceId || completion.Role != ActivityGroupMemberRole.Control ||
+                completion.InputHash != stored.InputHash || !occurrences.TryGetValue(item.OccurrenceId, out var rootOccurrence))
+                return null;
+            var allDependencyKeys = dependencies.Where(edge => edge.StepKey == item.StepKey)
+                .Select(edge => edge.DependsOnStepKey).ToHashSet(StringComparer.Ordinal);
+            if (planDependencies.Any(key => !allDependencyKeys.Contains(key))) return null;
+            var childKeys = allDependencyKeys.Where(key => !planDependencies.Contains(key, StringComparer.Ordinal))
+                .Where(key => key != item.StepKey)
+                .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+            if (childKeys.Length == 0)
+                return null;
+            vector.Add(SerializeBodyRevision(item.StepKey, completion));
+            foreach (var childKey in childKeys)
+            {
+                if (!currentSteps.TryGetValue(childKey, out var child) || child.Status != StepStatus.Completed ||
+                    child.Role != ActivityGroupMemberRole.Work || child.GroupOccurrenceId is null ||
+                    !IsOccurrenceUnder(occurrences, child.GroupOccurrenceId, item.OccurrenceId, rootOccurrence.ExecutionCoordinate))
+                    return null;
+                vector.Add(SerializeBodyRevision(childKey, child));
+            }
+            var dependencySet = childKeys.ToHashSet(StringComparer.Ordinal);
+            foreach (var member in currentSteps.Values.Where(step => step.GroupOccurrenceId is not null &&
+                         IsOccurrenceUnder(occurrences, step.GroupOccurrenceId, item.OccurrenceId, rootOccurrence.ExecutionCoordinate)))
+                if (member.StepKey != item.StepKey && !dependencySet.Contains(member.StepKey))
+                    return null;
+        }
+        return vector.AsReadOnly();
+    }
+
+    private static bool IsOccurrenceUnder(IReadOnlyDictionary<string, WorkflowGroupOccurrenceFact> occurrences,
+        string occurrenceId, string rootOccurrenceId, string coordinate)
+    {
+        for (var currentId = occurrenceId; occurrences.TryGetValue(currentId, out var current); currentId = current.ParentOccurrenceId!)
+        {
+            if (current.ExecutionCoordinate != coordinate) return false;
+            if (currentId == rootOccurrenceId) return true;
+            if (current.ParentOccurrenceId is null) return false;
+        }
+        return false;
+    }
+
+    private static string SerializeBodyRevision(string key, StepFactRow step) => JsonSerializer.Serialize(new
+    {
+        key,
+        step = step.Id.ToString("D"),
+        revision = step.Revision,
+        inputHash = step.InputHash,
+        occurrence = step.GroupOccurrenceId,
+        role = (int?)step.Role
+    });
+
+    private static bool VectorMatches(IReadOnlyList<WorkflowGroupRevisionFact> vector,
+        IReadOnlyList<string> expected)
+    {
+        if (vector.Count != expected.Count) return false;
+        for (var index = 0; index < expected.Count; index++)
+        {
+            using var json = JsonDocument.Parse(expected[index], new JsonDocumentOptions { MaxDepth = 2 });
+            if (vector[index].StepId != Guid.Parse(json.RootElement.GetProperty("step").GetString()!) ||
+                vector[index].Revision != json.RootElement.GetProperty("revision").GetInt32()) return false;
+        }
+        return true;
     }
 
     private static bool VectorMatches(IReadOnlyList<WorkflowGroupRevisionFact> vector,

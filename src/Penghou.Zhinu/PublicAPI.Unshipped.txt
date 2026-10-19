@@ -41,13 +41,24 @@ Penghou.Zhinu.ActivityGroupFanOutItem.ItemKey.init -> void
 Penghou.Zhinu.ActivityGroupFanOutItem.StepKey.get -> string!
 Penghou.Zhinu.ActivityGroupFanOutItem.StepKey.init -> void
 Penghou.Zhinu.ActivityGroupFanOutItemClaim
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.BodyOperationKey.get -> string?
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.BodyOperationKey.init -> void
 Penghou.Zhinu.ActivityGroupFanOutItemClaim.ExpansionId.get -> string!
 Penghou.Zhinu.ActivityGroupFanOutItemClaim.ExpansionId.init -> void
 Penghou.Zhinu.ActivityGroupFanOutItemClaim.ItemKey.get -> string!
 Penghou.Zhinu.ActivityGroupFanOutItemClaim.ItemKey.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.IsBodyCompletion.get -> bool
+Penghou.Zhinu.ActivityGroupFanOutItemClaim.IsBodyCompletion.init -> void
+Penghou.Zhinu.ActivityGroupFanOutItemScope
+Penghou.Zhinu.ActivityGroupFanOutItemScope.GetActivityGroup(string! groupKey, Penghou.Zhinu.ActivityGroupOccurrence? parent = null) -> Penghou.Zhinu.ActivityGroupOccurrence!
+Penghou.Zhinu.ActivityGroupFanOutItemScope.GetStepKey(string! operationKey) -> string!
+Penghou.Zhinu.ActivityGroupFanOutItemScope.Group.get -> Penghou.Zhinu.ActivityGroupStepBinding!
+Penghou.Zhinu.ActivityGroupFanOutItemScope.StepAsync<TInput, TOutput>(string! operationKey, TInput input, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.ActivityGroupFanOutItemScope.StepAsync<TInput, TOutput>(string! operationKey, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.ActivityGroupFanOutPlan
 Penghou.Zhinu.ActivityGroupFanOutPlan.AuthorizationDeclarationHash.get -> string?
 Penghou.Zhinu.ActivityGroupFanOutPlan.Binding.get -> Penghou.Zhinu.ActivityGroupFanOutBinding!
+Penghou.Zhinu.ActivityGroupFanOutPlan.BodyContract.get -> string?
 Penghou.Zhinu.ActivityGroupFanOutPlan.CanonicalJson.get -> string!
 Penghou.Zhinu.ActivityGroupFanOutPlan.CompensationContract.get -> string!
 Penghou.Zhinu.ActivityGroupFanOutPlan.Dependencies.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -348,6 +359,7 @@ Penghou.Zhinu.IWorkflowExternalOperationRepository.ListAsync(System.Guid workflo
 Penghou.Zhinu.IWorkflowExternalOperationRepository.RegisterAsync(Penghou.Zhinu.ExternalOperationRegistration! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.WorkflowExternalOperation!>
 Penghou.Zhinu.IWorkflowFingerprint
 Penghou.Zhinu.IWorkflowFingerprint.Fingerprint.get -> string!
+Penghou.Zhinu.IWorkflowGroupFanOutBodyRepository
 Penghou.Zhinu.IWorkflowGroupFanOutRepository
 Penghou.Zhinu.IWorkflowGroupFanOutRepository.AdmitGroupFanOutAsync(Penghou.Zhinu.ActivityGroupFanOutRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState!>
 Penghou.Zhinu.IWorkflowGroupFanOutRepository.CompleteGroupFanOutAsync(Penghou.Zhinu.ActivityGroupFanOutRequest! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Penghou.Zhinu.ActivityGroupFanOutState!>
@@ -698,6 +710,7 @@ Penghou.Zhinu.WorkflowConfigurationException.WorkflowConfigurationException(stri
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.FanOutAsync<TInput, TOutput>(string! stepKeyPrefix, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
+Penghou.Zhinu.WorkflowContext.FanOutBodyAsync<TInput, TOutput>(string! stepKeyPrefix, System.Collections.Generic.IReadOnlyList<TInput>! inputs, System.Func<TInput, string!>! keySelector, System.Func<TInput, Penghou.Zhinu.ActivityGroupFanOutItemScope!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! body, string! bodyContract, Penghou.Zhinu.FanOutOptions! options, Penghou.Zhinu.StepOptions! stepOptions, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TOutput>!>!
 Penghou.Zhinu.WorkflowContext.GetActivityGroup(string! groupKey, Penghou.Zhinu.ActivityGroupOccurrence? parent = null) -> Penghou.Zhinu.ActivityGroupOccurrence!
 Penghou.Zhinu.WorkflowContext.LoopAsync<TState>(string! loopKey, TState initialState, System.Func<TState, bool>! continueWhile, System.Func<Penghou.Zhinu.WorkflowLoopIteration<TState>!, System.Threading.CancellationToken, System.Threading.Tasks.Task<Penghou.Zhinu.LoopBodyOutcome<TState>!>!>! body, Penghou.Zhinu.LoopOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TState>!
 Penghou.Zhinu.WorkflowContext.StepAsync<TInput, TOutput>(string! stepKey, Penghou.Zhinu.StepImplementationKey implementationKey, TInput input, Penghou.Zhinu.StepOptions? stepOptions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
@@ -855,6 +868,8 @@ Penghou.Zhinu.WorkflowGroupDispositionFact.DispositionId.get -> System.Guid
 Penghou.Zhinu.WorkflowGroupDispositionFact.DispositionId.init -> void
 Penghou.Zhinu.WorkflowGroupDispositionFact.WorkflowGroupDispositionFact(System.Guid DispositionId, Penghou.Zhinu.CheckpointDisposition Disposition, System.DateTimeOffset CreatedAt) -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact
+Penghou.Zhinu.WorkflowGroupExpansionFact.BodyContract.get -> string?
+Penghou.Zhinu.WorkflowGroupExpansionFact.BodyContract.init -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact.BoundaryRevision.get -> int
 Penghou.Zhinu.WorkflowGroupExpansionFact.BoundaryRevision.init -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact.BoundaryStepId.get -> System.Guid
@@ -875,6 +890,8 @@ Penghou.Zhinu.WorkflowGroupExpansionFact.Items.get -> System.Collections.Generic
 Penghou.Zhinu.WorkflowGroupExpansionFact.Items.init -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact.PlanDigest.get -> string!
 Penghou.Zhinu.WorkflowGroupExpansionFact.PlanDigest.init -> void
+Penghou.Zhinu.WorkflowGroupExpansionFact.RequiredDependencies.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Penghou.Zhinu.WorkflowGroupExpansionFact.RequiredDependencies.init -> void
 Penghou.Zhinu.WorkflowGroupExpansionFact.WorkflowGroupExpansionFact(string! ExpansionId, string! FanOutKey, System.Guid BoundaryStepId, int BoundaryRevision, string! PlanDigest, int ItemCount, bool IsCurrent, bool IsComplete, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupFanOutItemFact!>! Items, System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowGroupClosureFact!>! Closures) -> void
 Penghou.Zhinu.WorkflowGroupExtent
 Penghou.Zhinu.WorkflowGroupExtent.Closed = 1 -> Penghou.Zhinu.WorkflowGroupExtent
@@ -1028,10 +1045,18 @@ Penghou.Zhinu.WorkflowGroupReadStatus.RunNotFound = 1 -> Penghou.Zhinu.WorkflowG
 Penghou.Zhinu.WorkflowGroupReadStatus.Success = 0 -> Penghou.Zhinu.WorkflowGroupReadStatus
 Penghou.Zhinu.WorkflowGroupReadStatus.Unsupported = 4 -> Penghou.Zhinu.WorkflowGroupReadStatus
 Penghou.Zhinu.WorkflowGroupRevisionFact
+Penghou.Zhinu.WorkflowGroupRevisionFact.InputHash.get -> string?
+Penghou.Zhinu.WorkflowGroupRevisionFact.InputHash.init -> void
+Penghou.Zhinu.WorkflowGroupRevisionFact.OccurrenceId.get -> string?
+Penghou.Zhinu.WorkflowGroupRevisionFact.OccurrenceId.init -> void
 Penghou.Zhinu.WorkflowGroupRevisionFact.Revision.get -> int
 Penghou.Zhinu.WorkflowGroupRevisionFact.Revision.init -> void
+Penghou.Zhinu.WorkflowGroupRevisionFact.Role.get -> Penghou.Zhinu.ActivityGroupMemberRole?
+Penghou.Zhinu.WorkflowGroupRevisionFact.Role.init -> void
 Penghou.Zhinu.WorkflowGroupRevisionFact.StepId.get -> System.Guid
 Penghou.Zhinu.WorkflowGroupRevisionFact.StepId.init -> void
+Penghou.Zhinu.WorkflowGroupRevisionFact.StepKey.get -> string?
+Penghou.Zhinu.WorkflowGroupRevisionFact.StepKey.init -> void
 Penghou.Zhinu.WorkflowGroupRevisionFact.WorkflowGroupRevisionFact(System.Guid StepId, int Revision) -> void
 Penghou.Zhinu.WorkflowGroupRunFact
 Penghou.Zhinu.WorkflowGroupRunFact.CreatedAt.get -> System.DateTimeOffset
