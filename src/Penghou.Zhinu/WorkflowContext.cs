@@ -638,7 +638,8 @@ public sealed partial class WorkflowContext
         string signalName,
         TimeSpan? timeout,
         ActivityGroupStepBinding? group,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<string>? dependenciesOverride = null)
     {
         ValidateStepKey(stepKey);
         using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.SignalWait);
@@ -673,7 +674,7 @@ public sealed partial class WorkflowContext
                     SerializationIdentity.TypeId(typeof(string)),
                     SerializationIdentity.Hash(signalName),
                     outputType,
-                    ResolveDependencies(null),
+                    dependenciesOverride ?? ResolveDependencies(null),
                     null,
                     null,
                     linkedCancellation.Token,
@@ -757,6 +758,36 @@ public sealed partial class WorkflowContext
         {
             stepLock.Dispose();
         }
+    }
+
+    internal Task<T> WaitForLoopSignalAsync<T>(
+        string stepKey,
+        string signalName,
+        ActivityGroupStepBinding? group,
+        DurableLoopIterationIdentity iteration,
+        string conditionStepKey,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(conditionStepKey);
+        if (group is not null)
+            ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, group, iteration);
+
+        var dependenciesForWait = new HashSet<string>(StringComparer.Ordinal)
+        {
+            conditionStepKey
+        };
+        var ambientDependencies = ResolveDependencies(null);
+        if (ambientDependencies is not null)
+            dependenciesForWait.UnionWith(ambientDependencies);
+
+        return WaitForSignalCoreAsync<T>(
+            stepKey,
+            signalName,
+            timeout,
+            group,
+            cancellationToken,
+            dependenciesForWait);
     }
 
     /// <summary>

@@ -120,6 +120,44 @@ public sealed class WorkflowLoopIteration<TState>
             compensation);
     }
 
+    /// <summary>Durably waits for a signal owned by this loop iteration.</summary>
+    public Task<T> WaitForSignalAsync<T>(
+        string stepName,
+        string signalName,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var stepKey = RegisterStep(stepName);
+        return workflow.WaitForLoopSignalAsync<T>(
+            stepKey,
+            signalName,
+            null,
+            identity,
+            conditionStepKey,
+            timeout,
+            cancellationToken);
+    }
+
+    /// <summary>Durably waits for a signal and records this iteration's group membership.</summary>
+    public Task<T> WaitForGroupedSignalAsync<T>(
+        string stepName,
+        string signalName,
+        ActivityGroupStepBinding group,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+        var stepKey = RegisterStep(stepName);
+        return workflow.WaitForLoopSignalAsync<T>(
+            stepKey,
+            signalName,
+            group,
+            identity,
+            conditionStepKey,
+            timeout,
+            cancellationToken);
+    }
+
     /// <summary>
     /// Executes or reuses a durable iteration step with an explicit input.
     /// </summary>

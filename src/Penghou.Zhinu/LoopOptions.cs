@@ -15,6 +15,9 @@ public sealed class LoopOptions
     /// <summary>The maximum number of loop-body executions.</summary>
     public int MaxIterations { get; }
 
+    /// <summary>Optional Control membership for loop conditions, commits, completion and limit evidence, using the enclosing execution coordinate.</summary>
+    public ActivityGroupStepBinding? ControlGroup { get; init; }
+
     /// <summary>Optional authorization for each continuation-predicate evaluation.</summary>
     public WorkflowAuthorizationDeclaration? ContinueWhileAuthorization { get; init; }
 

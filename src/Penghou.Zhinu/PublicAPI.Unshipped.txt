@@ -489,6 +489,8 @@ Penghou.Zhinu.LoopNestingLimitExceededException.MaximumDepth.get -> int
 Penghou.Zhinu.LoopOptions
 Penghou.Zhinu.LoopOptions.ContinueWhileAuthorization.get -> Penghou.Zhinu.WorkflowAuthorizationDeclaration?
 Penghou.Zhinu.LoopOptions.ContinueWhileAuthorization.init -> void
+Penghou.Zhinu.LoopOptions.ControlGroup.get -> Penghou.Zhinu.ActivityGroupStepBinding?
+Penghou.Zhinu.LoopOptions.ControlGroup.init -> void
 Penghou.Zhinu.LoopOptions.Deadline.get -> System.DateTimeOffset?
 Penghou.Zhinu.LoopOptions.Deadline.init -> void
 Penghou.Zhinu.LoopOptions.LoopOptions(int maxIterations) -> void
@@ -1310,6 +1312,8 @@ Penghou.Zhinu.WorkflowLoopIteration<TState>.State.get -> TState
 Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TInput, TOutput>(string! stepName, Penghou.Zhinu.WorkflowStepReference<TInput, TOutput>! step, TInput input, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), Penghou.Zhinu.StepCompensationMode compensation = Penghou.Zhinu.StepCompensationMode.None) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TInput, TOutput>(string! stepName, TInput input, System.Func<TInput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), System.Func<TOutput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? compensation = null) -> System.Threading.Tasks.Task<TOutput>!
 Penghou.Zhinu.WorkflowLoopIteration<TState>.StepAsync<TOutput>(string! stepName, System.Func<Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<TOutput>!>! operation, Penghou.Zhinu.StepOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), System.Func<TOutput, Penghou.Zhinu.WorkflowStepContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>? compensation = null) -> System.Threading.Tasks.Task<TOutput>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.WaitForGroupedSignalAsync<T>(string! stepName, string! signalName, Penghou.Zhinu.ActivityGroupStepBinding! group, System.TimeSpan? timeout = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+Penghou.Zhinu.WorkflowLoopIteration<TState>.WaitForSignalAsync<T>(string! stepName, string! signalName, System.TimeSpan? timeout = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 Penghou.Zhinu.WorkflowLoopIterationProgress
 Penghou.Zhinu.WorkflowLoopIterationProgress.BodySteps.get -> System.Collections.Generic.IReadOnlyList<Penghou.Zhinu.WorkflowStepRun!>!
 Penghou.Zhinu.WorkflowLoopIterationProgress.BodySteps.init -> void
