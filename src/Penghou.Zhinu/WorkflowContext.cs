@@ -639,7 +639,8 @@ public sealed partial class WorkflowContext
         TimeSpan? timeout,
         ActivityGroupStepBinding? group,
         CancellationToken cancellationToken,
-        IReadOnlyCollection<string>? dependenciesOverride = null)
+        IReadOnlyCollection<string>? dependenciesOverride = null,
+        bool serializeSignalInput = false)
     {
         ValidateStepKey(stepKey);
         using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.SignalWait);
@@ -649,6 +650,10 @@ public sealed partial class WorkflowContext
         if (timeout is { } waitTimeout && waitTimeout < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(timeout));
         var outputType = SerializationIdentity.TypeId(typeof(T));
+        var inputJson = serializeSignalInput
+            ? JsonSerializer.Serialize(signalName, serializerOptions)
+            : signalName;
+        var inputHash = SerializationIdentity.Hash(inputJson);
         using var linkedCancellation = CancellationTokenSource
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
@@ -670,9 +675,9 @@ public sealed partial class WorkflowContext
             {
                 var claim = await ClaimAsync(
                     stepKey,
-                    signalName,
+                    inputJson,
                     SerializationIdentity.TypeId(typeof(string)),
-                    SerializationIdentity.Hash(signalName),
+                    inputHash,
                     outputType,
                     dependenciesOverride ?? ResolveDependencies(null),
                     null,
@@ -787,7 +792,8 @@ public sealed partial class WorkflowContext
             timeout,
             group,
             cancellationToken,
-            dependenciesForWait);
+            dependenciesForWait,
+            serializeSignalInput: true);
     }
 
     /// <summary>

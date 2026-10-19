@@ -134,16 +134,75 @@ public sealed class ActivityGroupLoopSignalWaitTests : WorkflowEngineTestBase
         (await store.GetRunAsync(runId, Ct))!.Status.Should().Be(WorkflowStatus.Failed);
     }
 
+    [Fact]
+    public async Task NativeIterationWaitReclaimsLegacyWrappedWaitWithSameSerializedInputIdentity()
+    {
+        var store = CreateStore();
+        var legacyRegistry = Registry(invalidBinding: false, legacyWrapper: true);
+        var waitKey = "$loop/approval-loop/1/body/approval";
+        Guid runId;
+        WorkflowStepRun legacyWait;
+
+        await using (var legacyEngine = new WorkflowEngine(
+            store,
+            legacyRegistry,
+            new ZhinuOptions
+            {
+                LeaseDuration = TimeSpan.FromMilliseconds(200),
+                LeaseRenewalInterval = TimeSpan.FromMilliseconds(50),
+                PollInterval = TimeSpan.FromMilliseconds(10)
+            }))
+        {
+            runId = await legacyEngine.StartAsync("grouped-loop-signal", "1", "input", cancellationToken: Ct);
+            using var interruption = new CancellationTokenSource();
+            var execution = legacyEngine.ExecuteAsync(runId, interruption.Token);
+            await WaitUntilAsync(
+                () => HasStepStatusAsync(legacyEngine, runId, waitKey, StepStatus.Running, Ct), Ct);
+            await interruption.CancelAsync();
+            await execution;
+            legacyWait = (await legacyEngine.GetStepsAsync(runId, Ct)).Single(step => step.StepKey == waitKey);
+            legacyWait.Status.Should().Be(StepStatus.Running);
+        }
+
+        await using (var reopened = new WorkflowEngine(
+            CreateStore(),
+            Registry(invalidBinding: false, nativeUngrouped: true),
+            new ZhinuOptions
+            {
+                LeaseDuration = TimeSpan.FromMilliseconds(200),
+                LeaseRenewalInterval = TimeSpan.FromMilliseconds(50),
+                PollInterval = TimeSpan.FromMilliseconds(10)
+            }))
+        {
+            await reopened.SendSignalAsync(runId, "release", "accepted", Ct);
+            await reopened.ExecuteAsync(runId, Ct);
+            (await reopened.WaitForCompletionAsync<string>(runId, cancellationToken: Ct)).Should().Be("accepted");
+
+            var recovered = (await reopened.GetStepsAsync(runId, Ct)).Single(step => step.StepKey == waitKey);
+            recovered.Id.Should().Be(legacyWait.Id);
+            recovered.Revision.Should().Be(legacyWait.Revision);
+            recovered.InputJson.Should().Be(legacyWait.InputJson);
+            recovered.InputHash.Should().Be(legacyWait.InputHash);
+            recovered.Attempt.Should().BeGreaterThan(legacyWait.Attempt);
+            recovered.Status.Should().Be(StepStatus.Completed);
+            (await CreateStore().GetStepGroupMembershipAsync(recovered.Id, Ct)).Should().BeNull();
+        }
+    }
+
     private static WorkflowRegistry Registry(
         bool invalidBinding,
-        ActivityGroupMemberRole? controlRole = null) => new WorkflowRegistry().Register(
+        ActivityGroupMemberRole? controlRole = null,
+        bool legacyWrapper = false,
+        bool nativeUngrouped = false) => new WorkflowRegistry().Register(
         new WorkflowRegistration<string, string>(
             new WorkflowDefinition { Name = "grouped-loop-signal", Version = "1" },
-            () => new GroupedLoopSignalWorkflow(invalidBinding, controlRole), GroupedLoopSignalWorkflow.Manifest()));
+            () => new GroupedLoopSignalWorkflow(invalidBinding, controlRole, legacyWrapper, nativeUngrouped), GroupedLoopSignalWorkflow.Manifest()));
 
     private sealed class GroupedLoopSignalWorkflow(
         bool invalidBinding,
-        ActivityGroupMemberRole? controlRole) : IWorkflow<string, string>
+        ActivityGroupMemberRole? controlRole,
+        bool legacyWrapper,
+        bool nativeUngrouped) : IWorkflow<string, string>
     {
         public Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken) =>
             context.LoopAsync(
@@ -159,8 +218,17 @@ public sealed class ActivityGroupLoopSignalWaitTests : WorkflowEngineTestBase
                         : iteration.GetActivityGroup("work", context.GetActivityGroup("root"));
                     var binding = new ActivityGroupStepBinding(
                         new ActivityGroupMembership(invalidBinding ? "root" : "work"), occurrence);
-                    var signal = await iteration.WaitForGroupedSignalAsync<string>(
-                        "approval", "release", binding, cancellationToken: ct);
+                    var signal = legacyWrapper
+                        ? await iteration.StepAsync<string, string>(
+                            "approval",
+                            "release",
+                            (value, _, token) => context.WaitForSignalAsync<string>(
+                                "$loop/approval-loop/1/body/approval", value, cancellationToken: token),
+                            cancellationToken: ct)
+                        : nativeUngrouped
+                        ? await iteration.WaitForSignalAsync<string>("approval", "release", cancellationToken: ct)
+                        : await iteration.WaitForGroupedSignalAsync<string>(
+                            "approval", "release", binding, cancellationToken: ct);
                     return iteration.Break(signal);
                 },
                 new LoopOptions(maxIterations: 2)
