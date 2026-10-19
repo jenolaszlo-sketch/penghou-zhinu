@@ -5,16 +5,17 @@ Updated 2026-10-19. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-6.2a single-level grouped Fuwen repeats**; read its
-[qualification](qualification/activity-groups/zg6-repeat.md), the earlier
+boundary is **ZG-6.2b independently durable grouped Fuwen fan-out**; read its
+[qualification](qualification/activity-groups/zg6-fanout.md), the
+[repeat checkpoint](qualification/activity-groups/zg6-repeat.md), the earlier
 [static integration record](qualification/activity-groups/zg6-static.md), then
 ZG-5
 [contract](activity-groups-zg5.md) and
 [qualification record](qualification/activity-groups/zg5.md), followed by the
 [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
 [measured follow-up](qualification/activity-groups/pre-fuwen-followup.md). Next is
-**fan-out per-operation Fuwen lowering within ZG-6**, then ZG-7
-cross-repository gates. Each prior profile retains separate evidence and limits.
+**broader dynamic composition and adapter closure/progress qualification within
+ZG-6**, then ZG-7 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
 Preserve exact-source evidence and rerun checks when subsequent changes warrant
@@ -288,3 +289,23 @@ historical Fuwen fingerprints. No group callback, lease, output, retry policy or
 persisted autonomous state machine should be introduced. Manifest limits and
 canonical encodings are compatibility contracts. Keep provenance bounded and
 safe; do not copy macro arguments or executable Fuwen IR into group storage.
+
+
+## ZG-6.2b exact-source checkpoint
+
+Native runtime/package source `fa0297b9dc21b235f27ac92b979dcf9faeb6b7b6`,
+unpublished preview.8, qualifies independently durable keyed item bodies, typed
+claim/closure fencing and dependent restart. Schema9 and existing v2 coordinates
+remain unchanged. Native regression: 1,925; Fuwen companion: 1,690 plus 12
+package-only executions. See the new [ledger](qualification/activity-groups/zg6-fanout.json).
+
+One fan-out scope, no repeat composition, explicit item root, providers and
+control-only conditionals are the bounded Fuwen contract. Broader compositions,
+evolving selection, item waits/checkpoints and full progress/closure integration
+are deferred. `StepOnly` body/item-completion restart is explicitly rejected.
+Use the current Fuwen preview.16 native pin, not the preserved preview.7 repeat
+or preview.5 static pins. Packages are not published.
+
+Use `D:/temp/activity-groups/tmp` for TEMP/TMP. Generated artifacts and all
+src/tests bin/obj directories are on D: through workspace junctions. Preserve
+these paths and exact package archives; C: previously exhausted during copying.

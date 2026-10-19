@@ -313,7 +313,9 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
 ZG-6.1 static Fuwen handoff and [ZG-6.2a single-level grouped repeats](docs/qualification/activity-groups/zg6-repeat.md)
-are qualified. Next is fan-out per-operation adapter lowering within ZG-6, then ZG-7
+and [ZG-6.2b keyed fan-out bodies](docs/qualification/activity-groups/zg6-fanout.md)
+are qualified. Next are broader composition and adapter closure/progress within
+ZG-6, then ZG-7
 cross-repository qualification. Active code-first/loop groups retain unknown
 totals until authoritative closure. The
 [pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
@@ -1641,5 +1643,19 @@ loop Control bindings and iteration signal waits for independently durable Fuwen
 repeat operations. Legacy in-flight wait claim identity is preserved. Production/
 package source is `45e831a82593048dc1ea7266cbc1e9b306d8c92c`, unpublished
 `0.2.0-preview.7`; schema remains 9. The qualification commit stabilizes only an
-existing authorization test timing barrier. Next is fan-out per-operation Fuwen
-lowering, followed by broader composition and ZG-7. Full ZG-6/Q45 remains open.
+existing authorization test timing barrier. The later ZG-6.2b checkpoint adds
+bounded fan-out lowering; broader composition and ZG-7 remain open.
+
+
+### Activity groups: keyed Fuwen fan-out checkpoint -- 2026-10-19
+
+[ZG-6.2b qualification](docs/qualification/activity-groups/zg6-fanout.md) adds
+independently durable grouped item-body operations with exact typed claims,
+child revision/membership closure, dependent restart and source-byte-only
+process-loss recovery. Native preview.8 source is
+`fa0297b9dc21b235f27ac92b979dcf9faeb6b7b6`; schema remains 9 and the existing
+v2 fan-out coordinate is reused. Native regression: 1,925; Fuwen preview.16:
+1,690 plus 12 package-only consumer executions. Packages remain unpublished.
+One fixed scope with an explicit item root is qualified; mixed/nested dynamic
+composition, evolving-selection adapter support, item waits/checkpoints and
+broader closure/progress integration remain open before full ZG-6/Q45/ZG-7.
