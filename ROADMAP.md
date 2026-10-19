@@ -312,7 +312,8 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
-Next is ZG-6 Fuwen metadata handoff and exact package integration, then ZG-7
+ZG-6.1 static Fuwen handoff is qualified; next is dynamic per-operation
+adapter lowering within ZG-6, then ZG-7
 cross-repository qualification. Active code-first/loop groups retain unknown
 totals until authoritative closure. The
 [pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
@@ -1621,3 +1622,14 @@ release gates. Lower-priority proposals are recorded in [ideas for later](docs/i
   `Activity` context and reads the child's exact trace ID. The parent/link
   relation is documented in [observability](docs/observability.md); trace
   correlation is durable and distinct from execution identity.
+
+
+### Activity groups: bounded Fuwen checkpoint — 2026-10-19
+
+[ZG-6.1 static integration](docs/qualification/activity-groups/zg6-static.md)
+qualifies real Fuwen macro/logical-group expansion, pinned companion admission,
+native static memberships and signal-wait process-loss recovery against exact
+unpublished Zhinu 0.2.0-preview.5 packages. Native qualification passes 1,901
+Windows .NET 8/10 tests plus package and legacy binary/schema probes. Full ZG-6
+and ZG-7 remain open for per-child dynamic Fuwen lowering, closure evidence and
+cross-platform/public-package qualification. No publication is implied.

@@ -5,12 +5,14 @@ Updated 2026-10-19. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-5 aggregate state/progress**; read its
+boundary is **ZG-6.1 static Fuwen integration**; read its
+[qualification](qualification/activity-groups/zg6-static.md), then the earlier
+ZG-5
 [contract](activity-groups-zg5.md) and
 [qualification record](qualification/activity-groups/zg5.md), followed by the
 [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
 [measured follow-up](qualification/activity-groups/pre-fuwen-followup.md). Next is
-**ZG-6 Fuwen metadata handoff and exact package integration**, then ZG-7
+**ZG-6.2 dynamic per-operation Fuwen lowering**, then ZG-7
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
@@ -102,7 +104,9 @@ them rather than restarting completed qualification.
   tranche-specific worker starts; consolidation starts no process-loss workers.
   Explicit rejection is distinguished from unqualified lexical composition.
 - SQLite schema: **9**, additive migrations **5→6→7→8→9**.
-- Package source candidate stays `0.2.0-preview.4`; local packages are not publication evidence.
+- Current candidate: `0.2.0-preview.5`, exact source
+  `fd1875886e67e3aacd9c03c5689238788575d1e5`; earlier preview.4 evidence retains
+  its original source. Local packages are not publication evidence.
 - Qualification: [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md) and its JSON record.
 
 Each profile's qualification record identifies its exact runtime/package source;
@@ -223,12 +227,14 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
 
 ## Next checkpoint
 
-Continue with **ZG-6 Fuwen metadata handoff and exact package integration** over
+Continue with **ZG-6.2 dynamic per-operation Fuwen lowering** after the
+[qualified static integration](qualification/activity-groups/zg6-static.md), over
 the [qualified ZG-4 facts](activity-groups-zg4.md) and
 [ZG-5 aggregate projection](activity-groups-zg5.md), preserving the consolidated
 native durability boundary and conservative closure policy. Inspect the Fuwen
-adapter's actual lowering and pin its selected profile before making support
-claims; no package is published by this checkpoint.
+adapter's next lowering profile before extending support claims. The static
+profile rejects grouped repeat/fan-out/coordinated inference; no package is
+published by this checkpoint.
 ZG-3b.1's fixed-selection fan-out,
 ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
 explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate
