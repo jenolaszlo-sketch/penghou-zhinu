@@ -5,14 +5,15 @@ Updated 2026-10-19. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-6.1 static Fuwen integration**; read its
-[qualification](qualification/activity-groups/zg6-static.md), then the earlier
+boundary is **ZG-6.2a single-level grouped Fuwen repeats**; read its
+[qualification](qualification/activity-groups/zg6-repeat.md), the earlier
+[static integration record](qualification/activity-groups/zg6-static.md), then
 ZG-5
 [contract](activity-groups-zg5.md) and
 [qualification record](qualification/activity-groups/zg5.md), followed by the
 [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
 [measured follow-up](qualification/activity-groups/pre-fuwen-followup.md). Next is
-**ZG-6.2 dynamic per-operation Fuwen lowering**, then ZG-7
+**fan-out per-operation Fuwen lowering within ZG-6**, then ZG-7
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
@@ -34,8 +35,8 @@ them rather than restarting completed qualification.
   Local projection measurement for 1,024 item groups plus root: 259 ms / 573 MiB
   allocated becomes 1.04 ms / 2.49 MiB. The follow-up record retains the exact
   measurement scope and final qualification evidence: **1,897 tests**, formatting,
-  seven packages and both consumer/binary/schema probes passed. Fuwen integration
-  remains next.
+  seven packages and both consumer/binary/schema probes passed. This remains the
+  exact earlier pre-Fuwen baseline.
 - Original pre-Fuwen review source: `5bd107b857b16cc810530756ba5d212e32930c4e`.
   Fixes stale approval projection, silently omitted damaged membership and
   incomplete provider snapshot validation; indexes immutable manifest definitions.
@@ -227,14 +228,18 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
 
 ## Next checkpoint
 
-Continue with **ZG-6.2 dynamic per-operation Fuwen lowering** after the
-[qualified static integration](qualification/activity-groups/zg6-static.md), over
+Continue with **fan-out per-operation Fuwen lowering** after the
+[qualified single-level repeat integration](qualification/activity-groups/zg6-repeat.md), over
 the [qualified ZG-4 facts](activity-groups-zg4.md) and
 [ZG-5 aggregate projection](activity-groups-zg5.md), preserving the consolidated
 native durability boundary and conservative closure policy. Inspect the Fuwen
-adapter's next lowering profile before extending support claims. The static
-profile rejects grouped repeat/fan-out/coordinated inference; no package is
-published by this checkpoint.
+adapter's next lowering profile before extending support claims. ZG-6.2a adds
+one repeat level, native Control bindings and iteration wait APIs; grouped
+fan-out, nested repeats, coordinated inference and repeat-local fallback remain
+rejected. Source `45e831a82593048dc1ea7266cbc1e9b306d8c92c` packages as
+unpublished preview.7. Schema remains 9. The qualification commit changes only
+an existing authorization test timing barrier plus documentation; packaged
+production binaries match the source commit. No package is published.
 ZG-3b.1's fixed-selection fan-out,
 ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
 explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate

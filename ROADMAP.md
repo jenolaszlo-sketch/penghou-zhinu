@@ -312,8 +312,8 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
 - [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
 
-ZG-6.1 static Fuwen handoff is qualified; next is dynamic per-operation
-adapter lowering within ZG-6, then ZG-7
+ZG-6.1 static Fuwen handoff and [ZG-6.2a single-level grouped repeats](docs/qualification/activity-groups/zg6-repeat.md)
+are qualified. Next is fan-out per-operation adapter lowering within ZG-6, then ZG-7
 cross-repository qualification. Active code-first/loop groups retain unknown
 totals until authoritative closure. The
 [pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
@@ -1633,3 +1633,13 @@ unpublished Zhinu 0.2.0-preview.5 packages. Native qualification passes 1,901
 Windows .NET 8/10 tests plus package and legacy binary/schema probes. Full ZG-6
 and ZG-7 remain open for per-child dynamic Fuwen lowering, closure evidence and
 cross-platform/public-package qualification. No publication is implied.
+
+### Activity groups: single-level Fuwen repeat checkpoint -- 2026-10-19
+
+[ZG-6.2a qualification](docs/qualification/activity-groups/zg6-repeat.md) adds native
+loop Control bindings and iteration signal waits for independently durable Fuwen
+repeat operations. Legacy in-flight wait claim identity is preserved. Production/
+package source is `45e831a82593048dc1ea7266cbc1e9b306d8c92c`, unpublished
+`0.2.0-preview.7`; schema remains 9. The qualification commit stabilizes only an
+existing authorization test timing barrier. Next is fan-out per-operation Fuwen
+lowering, followed by broader composition and ZG-7. Full ZG-6/Q45 remains open.

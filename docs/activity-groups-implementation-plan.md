@@ -13,7 +13,8 @@ The [ZG-4 query surface](activity-groups-zg4.md) and
 bounded model; see [ZG-4 evidence](qualification/activity-groups/zg4.md) and
 [ZG-5 evidence](qualification/activity-groups/zg5.md). The bounded
 [ZG-6.1 static Fuwen profile](qualification/activity-groups/zg6-static.md) is now
-qualified. Next is dynamic per-operation adapter lowering within ZG-6.
+qualified. [ZG-6.2a single-level grouped repeats](qualification/activity-groups/zg6-repeat.md)
+are also qualified. Next is fan-out per-operation adapter lowering within ZG-6.
 See the [foundation evidence](qualification/activity-groups/zg2-3a.md),
 [foundation scope](activity-groups-zg2-3a.md),
 [ZG-1 contract](activity-groups-zg1.md) and [ZG-1 evidence](qualification/activity-groups/zg1.md).
@@ -276,8 +277,10 @@ acceptance/quality judgments, group-specific cancellation or retry behavior.
 **2026-10-19 bounded checkpoint:** [ZG-6.1 static integration](qualification/activity-groups/zg6-static.md)
 is implemented and qualified against real Fuwen macro/group source. It adds the
 native grouped signal-wait seam and exact candidate package handoff. Full ZG-6
-remains open: Fuwen grouped repeat/fan-out/coordinated inference are rejected
-until scoped per-operation lowering and closure evidence are qualified.
+remains open. [ZG-6.2a](qualification/activity-groups/zg6-repeat.md) now qualifies
+single-level grouped repeat lowering, native loop Control bindings and iteration
+wait recovery. Grouped fan-out, nested repeats, coordinated inference and
+repeat-local fallback remain rejected; closure and broader composition are open.
 
 **Scope:** consume a pinned group manifest with ordinary expanded workflow
 structure; map identities and safe provenance through the existing public step
@@ -349,10 +352,12 @@ records, audited by [ZG-3b.6 consolidation](activity-groups-zg3b6.md).
 [ZG-5 aggregate state/progress](activity-groups-zg5.md) are now separately
 qualified over that bounded durability contract.
 [ZG-6.1](qualification/activity-groups/zg6-static.md) now qualifies real static
-Fuwen expansion and exact package adoption. Next implement and qualify
-**ZG-6.2 dynamic per-operation Fuwen lowering**, preserving historical item keys,
-construct-specific evidence and conservative closure limits. Static integration
-does not close Q45, full FM-2/ZG-6 or the ZG-7 cross-repository matrix.
+Fuwen expansion and exact package adoption. [ZG-6.2a](qualification/activity-groups/zg6-repeat.md)
+adds independently durable single-level repeat operations, Control memberships
+and native iteration waits while preserving historical macro-free keys and
+claim input identity. Next implement **fan-out per-operation Fuwen lowering**
+with separate process-loss evidence and conservative closure limits. These
+bounded profiles do not close Q45, full FM-2/ZG-6 or ZG-7.
 
 ZG-0 documentation is ready when all four documents and roadmap links are
 consistent. Its readiness alone does not qualify runtime behavior. ZG-1 contract
