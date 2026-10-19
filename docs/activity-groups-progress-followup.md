@@ -22,6 +22,8 @@ The sealed occurrence set is prepared once in the frozen snapshot using shared
 indexes; per-query seal lookup is constant time. Cache budgets include the new
 retained data. The occurrence dictionary used during preparation is not retained.
 
-Native preview.9 and Fuwen preview.17 qualification is in progress. The final
-ZG-7 evidence will identify exact source, archives, platforms and regression
-receipts. Earlier static, repeat and fan-out records retain their original pins.
+Native preview.9 and final Fuwen preview.18 local qualification passes. The
+[ZG-7 record](qualification/activity-groups/zg7.md) identifies exact source,
+archives, regression receipts and passing Windows/Linux CI gates. Preview.17 remains
+an intermediate checkpoint; preview.18 adds the structural body-work admission
+correction found during the second pass. Earlier static, repeat and fan-out records retain their original pins.

@@ -278,13 +278,16 @@ acceptance/quality judgments, group-specific cancellation or retry behavior.
 
 **2026-10-19 bounded checkpoint:** [ZG-6.1 static integration](qualification/activity-groups/zg6-static.md)
 is implemented and qualified against real Fuwen macro/group source. It adds the
-native grouped signal-wait seam and exact candidate package handoff. Full ZG-6
-remains open. [ZG-6.2a](qualification/activity-groups/zg6-repeat.md) now qualifies
+native grouped signal-wait seam and exact candidate package handoff. The
+[2026-10-20 consolidation](qualification/activity-groups/zg7.md) closes the selected
+adapter profile on Windows/Linux .NET 8/10; full Q33 remains open. [ZG-6.2a](qualification/activity-groups/zg6-repeat.md) now qualifies
 single-level grouped repeat lowering, native loop Control bindings and iteration
 wait recovery. [ZG-6.2b](qualification/activity-groups/zg6-fanout.md) qualifies
 one fixed keyed fan-out with independently durable providers and explicit item
 root groups. Mixed/nested dynamic composition, coordinated inference and
-item-local fallback remain rejected; broader closure/progress qualification is open.
+item-local fallback remain rejected. Current consolidation qualifies mechanical
+progress, cancellation, substantive macro vocabularies and nested macro/repeat
+byte-only recovery; the broader rejected combinations remain future work.
 
 **Scope:** consume a pinned group manifest with ordinary expanded workflow
 structure; map identities and safe provenance through the existing public step
@@ -361,9 +364,11 @@ adds independently durable single-level repeat operations, Control memberships
 and native iteration waits while preserving historical macro-free keys and
 claim input identity. [ZG-6.2b](qualification/activity-groups/zg6-fanout.md) now
 adds bounded fan-out per-operation lowering with separate process-loss evidence
-and conservative closure limits. Next are broader dynamic composition and
-adapter closure/progress qualification. These
-bounded profiles do not close Q45, full FM-2/ZG-6 or ZG-7.
+and conservative closure limits. The [current consolidation](qualification/activity-groups/zg7.md)
+adds Q43–Q46 fixtures, mechanical progress and a second correctness pass. Windows/Linux Q47 evidence now closes the selected profile. Full Q33 generic
+branch retirement remains open and must not be inferred from history projection.
+Broader nested/mixed dynamic authoring and package publication are separate work;
+the original full FM roadmap includes richer interfaces outside this subset.
 
 ZG-0 documentation is ready when all four documents and roadmap links are
 consistent. Its readiness alone does not qualify runtime behavior. ZG-1 contract

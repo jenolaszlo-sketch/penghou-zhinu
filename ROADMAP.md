@@ -189,8 +189,10 @@ repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
 ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks, ZG-3b.3 fixed nested repetition
 ZG-3b.4 explicit immutable evolving-selection epochs and ZG-3b.5 native child
 boundaries are implemented. ZG-3b.6 consolidates the selected native durability
-profiles and their explicit composition limits. Queries,
-progress and Fuwen integration remain **open**. Read the [design](docs/activity-groups-design.md),
+profiles and their explicit composition limits. ZG-4 queries and ZG-5 aggregate
+state/progress are qualified separately; Fuwen integration is consolidated in
+[ZG-7](docs/qualification/activity-groups/zg7.md), qualified on Windows/Linux
+.NET 8/10; full Q33 remains open. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
 [next-agent handoff](docs/activity-groups-handoff.md).
@@ -309,14 +311,27 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   execution semantics are unchanged; no aggregate state is persisted. See
   [contract](docs/activity-groups-zg5.md) and
   [evidence](docs/qualification/activity-groups/zg5.md).
-- [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
-- [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
+- [x] **ZG-6 selected profile:** immutable Fuwen macro/group handoff, single-level
+  repeat and independently durable keyed fan-out, public inspection/progress,
+  byte-only recovery and exact candidate package qualification. Native preview.9
+  and Fuwen preview.18; [consolidation](docs/qualification/activity-groups/zg7.md).
+- [x] **ZG-7 selected profile:** Windows/Linux .NET 8/10 regression, exact
+  package-only consumers and both legacy probes pass. All eleven consumer
+  archives match the same Ubuntu producer on both OS.
+  [Second review](docs/qualification/activity-groups/second-pass-review.md)
+  corrections are implemented.
+- [ ] **Full original matrix:** Q33's generic controlling-branch replacement and
+  retirement of old pending membership remain unqualified. Broader DSL dynamic
+  combinations and publication remain separate work.
 
 ZG-6.1 static Fuwen handoff and [ZG-6.2a single-level grouped repeats](docs/qualification/activity-groups/zg6-repeat.md)
 and [ZG-6.2b keyed fan-out bodies](docs/qualification/activity-groups/zg6-fanout.md)
-are qualified. Next are broader composition and adapter closure/progress within
-ZG-6, then ZG-7
-cross-repository qualification. Active code-first/loop groups retain unknown
+retain their original qualification. The current ZG-7 record adds distinct
+methodology fixtures, nested macro/repeat process recovery, immutable changed-pin
+rejection and mechanical progress. Broader DSL dynamic composition, evolving
+selection, fan-out item waits/checkpoints/merges and grouped coordinated inference
+remain explicitly rejected future work. Both OS CI gates pass; the full Q33
+branch-selection case remains open. Active code-first/loop groups retain unknown
 totals until authoritative closure. The
 [pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
 snapshot integrity and stale approval projection, indexes manifest definitions,
@@ -1659,3 +1674,15 @@ v2 fan-out coordinate is reused. Native regression: 1,925; Fuwen preview.16:
 One fixed scope with an explicit item root is qualified; mixed/nested dynamic
 composition, evolving-selection adapter support, item waits/checkpoints and
 broader closure/progress integration remain open before full ZG-6/Q45/ZG-7.
+
+
+### Activity groups: selected-profile consolidation -- 2026-10-20
+
+[ZG-7](docs/qualification/activity-groups/zg7.md) qualifies native preview.9 and
+Fuwen preview.18 on Windows/Linux .NET 8/10: 1,935 native regression tests,
+1,712 Fuwen tests and 26 package-only consumer executions per OS. Both consumers
+resolve identical Ubuntu producer archives. [The second pass](docs/qualification/activity-groups/second-pass-review.md)
+fixes item progress, empty-path admission and qualification portability, and
+makes full Q33 branch-selection retirement explicitly partial. The original full
+matrix, broader DSL features and publication remain open; earlier checkpoints
+retain their original versions, counts and exclusions.

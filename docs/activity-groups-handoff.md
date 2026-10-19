@@ -1,21 +1,29 @@
 # Activity groups: continuation handoff
 
-Updated 2026-10-19. No chat history is required.
+Updated 2026-10-20. No chat history is required.
 
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-6.2b independently durable grouped Fuwen fan-out**; read its
-[qualification](qualification/activity-groups/zg6-fanout.md), the
+boundary is **ZG-7 selected-profile consolidation and second review**; read its
+[current qualification](qualification/activity-groups/zg7.md),
+[second pass](qualification/activity-groups/second-pass-review.md), then the original
+[fan-out qualification](qualification/activity-groups/zg6-fanout.md), the
 [repeat checkpoint](qualification/activity-groups/zg6-repeat.md), the earlier
 [static integration record](qualification/activity-groups/zg6-static.md), then
 ZG-5
 [contract](activity-groups-zg5.md) and
 [qualification record](qualification/activity-groups/zg5.md), followed by the
 [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
-[measured follow-up](qualification/activity-groups/pre-fuwen-followup.md). Next is
-**broader dynamic composition and adapter closure/progress qualification within
-ZG-6**, then ZG-7 cross-repository gates. Each prior profile retains separate evidence and limits.
+[measured follow-up](qualification/activity-groups/pre-fuwen-followup.md).
+The selected profile is qualified on Windows/Linux .NET 8/10. Next full-matrix
+work is **Q33 generic controlling-branch replacement/current-selection retirement**;
+existing conservative history projection is not proof of that behavior. The local
+full suites, exact package consumers and both legacy probes
+pass for native preview.9 (`246d535`) and Fuwen preview.18 (`535f82e`). CI-only
+harness commits do not change those frozen runtime sources. Broader rejected
+DSL combinations and package publication are separate future work. Each prior
+profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
 not implement in-place replanning, implicit retirement or a first-class epoch API.
 Preserve exact-source evidence and rerun checks when subsequent changes warrant
@@ -223,43 +231,37 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
   guarantee. ZG-5 adds aggregate state/progress over that immutable snapshot with
   explicit extent/coverage and separate Work/Control counts. It does not invent
   closure for active arbitrary code-first/loop groups or reinterpret retained
-  historical fan-out selections as current work. Group controls, UI, Fuwen macro
-  adapter and DSL runtime support remain outside this checkpoint.
+  historical fan-out selections as current work. The Fuwen adapter is qualified
+  separately in ZG-7; group controls, UI and broader DSL dynamics remain outside
+  the selected profile.
 - Local Windows .NET qualification is not Linux/remote CI or package publication.
 
 ## Next checkpoint
 
-Continue with **fan-out per-operation Fuwen lowering** after the
-[qualified single-level repeat integration](qualification/activity-groups/zg6-repeat.md), over
-the [qualified ZG-4 facts](activity-groups-zg4.md) and
-[ZG-5 aggregate projection](activity-groups-zg5.md), preserving the consolidated
-native durability boundary and conservative closure policy. Inspect the Fuwen
-adapter's next lowering profile before extending support claims. ZG-6.2a adds
-one repeat level, native Control bindings and iteration wait APIs; grouped
-fan-out, nested repeats, coordinated inference and repeat-local fallback remain
-rejected. Source `45e831a82593048dc1ea7266cbc1e9b306d8c92c` packages as
-unpublished preview.7. Schema remains 9. The qualification commit changes only
-an existing authorization test timing barrier plus documentation; packaged
-production binaries match the source commit. No package is published.
-ZG-3b.1's fixed-selection fan-out,
-ZG-3b.2's native fork lineage, ZG-3b.3's fixed nested repetition and ZG-3b.4's
-explicit immutable selection epochs and ZG-3b.5's native child boundaries have separate
-evidence; they do not close the entire dynamic model. Nested repetition/fork
-composition is not newly qualified. The accepted grouped fan-out/fork rejection
-and root-only grouped fan-out profile remain intact.
-In-place old-plan replacement and automatic retirement remain outside the accepted
-explicit-epoch profile. The consolidated record prominently preserves:
-**Nested repetition required no runtime algorithm, schema, or identity redesign.**
-Preserve explicit rejection until each complete durable vertical passes its own
-real-process and compatibility gates. Static/restart correctness does not imply
-fan-out/fork correctness; retain separate evidence for every dynamic construct.
+The selected static/repeat/fan-out Fuwen profile and Windows/Linux package gates
+are complete. Use [ZG-7](qualification/activity-groups/zg7.md) and its
+[second review](qualification/activity-groups/second-pass-review.md) as the current
+checkpoint; the original preview.5/.7/.8 records retain their own source and limits.
 
-The user-directed sequence is ZG-3b → ZG-4 hierarchy/query projection → ZG-5
-aggregate state/progress → ZG-6 Fuwen handoff/integration → ZG-7 cross-repository
-qualification. This supersedes the earlier reducer-before-query stage ordering.
-Queries/progress must build on the qualified dynamic occurrence model, and Fuwen
-adoption must wait for the structures its selected profile can emit. Extend the
-established architecture rather than revisiting its fundamental contracts.
+The full-matrix follow-up is **Q33 generic controlling-branch replacement and
+current-selection retirement**. Existing superseded fan-out history is excluded
+from current progress, and unresolved parents expose Partial/Unknown coverage.
+That is not evidence that an arbitrary changed branch can retire old pending
+membership. Establish the explicit supported selection/retirement contract and
+its durable evidence before claiming that broader behavior; unfinished admitted
+work must not disappear by inference from a later selector result.
+
+Nested/mixed DSL dynamics, evolving-selection lowering, item waits/checkpoints/
+merges, grouped coordinated inference/fallback and group controls remain separate
+work. Native forks, fixed nested loops, explicit selection epochs and native
+child boundaries retain their independent qualified profiles. No broader
+fan-out-aware fork or arbitrary mixed composition is inferred from them.
+**Nested repetition required no runtime algorithm, schema, or identity redesign.**
+
+The completed selected-profile sequence is ZG-3b → ZG-4 queries → ZG-5 aggregate
+state/progress → ZG-6 Fuwen adapter → ZG-7 cross-repository qualification.
+Keep the runtime/source/CI-harness commit distinction and exact archive pins;
+publication and downstream application adoption require their own gates.
 
 ## Checks and known traps
 

@@ -1,9 +1,10 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-18. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries qualified separately;
+Updated: 2026-10-20. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries qualified separately;
 ZG-3b.6 consolidates the selected native profiles; ZG-4 queries and ZG-5
-aggregate state/progress are qualified over that bounded model. The full
-milestone matrix remains open; ZG-6 Fuwen integration is next**.
+aggregate state/progress are qualified over that bounded model. The
+selected-profile matrix is consolidated in [ZG-7](qualification/activity-groups/zg7.md);
+qualification passes on Windows/Linux .NET 8/10; full Q33 remains open**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
 contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
 records the narrow root/loop durability, admission and process-loss slice.
