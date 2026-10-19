@@ -1,13 +1,14 @@
 # Activity groups: continuation handoff
 
-Updated 2026-10-18. No chat history is required.
+Updated 2026-10-19. No chat history is required.
 
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
 boundary is **ZG-5 aggregate state/progress**; read its
 [contract](activity-groups-zg5.md) and
-[qualification record](qualification/activity-groups/zg5.md). Next is
+[qualification record](qualification/activity-groups/zg5.md), followed by the
+[pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md). Next is
 **ZG-6 Fuwen metadata handoff and exact package integration**, then ZG-7
 cross-repository gates. Each prior profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation; this does
@@ -24,7 +25,14 @@ them rather than restarting completed qualification.
 - Current dynamic boundary: [ZG-3b.6 consolidation](activity-groups-zg3b6.md) and
   [evidence/source commits](qualification/activity-groups/zg3b6.md). The commits
   above remain the exact foundation baseline, not the current runtime head.
-- Current qualified source/packages: `01f2ac64173a625f3bf745704391871aac014a72`.
+- Pre-Fuwen review source: `5bd107b857b16cc810530756ba5d212e32930c4e`.
+  Fixes stale approval projection, silently omitted damaged membership and
+  incomplete provider snapshot validation; indexes immutable manifest definitions.
+  Full suite: **1,877 tests**, including 32 new regression executions; formatting,
+  seven packages and both consumer/binary/schema probes passed. The review
+  record identifies final package evidence and retained pre-fix failures.
+  No public API, schema, identity or durable execution-transition changes.
+- Original ZG-5 qualified source/packages: `01f2ac64173a625f3bf745704391871aac014a72`.
   Feature implementation: `e8bb89c975f32695364b7836e6ba41856e681094`.
   ZG-5 adds a pure aggregate reducer and optional state reader over the same
   frozen ZG-4 facts and timestamp. All **1,845 tests** pass (96 new executions),
@@ -95,7 +103,8 @@ the canonical main checkout or disturb its unrelated `docs/ideas.md` edit.
 
 ## Read first
 
-1. [ZG-5 aggregate contract and limits](activity-groups-zg5.md) and
+1. [Pre-Fuwen review and follow-ups](qualification/activity-groups/pre-fuwen-review.md), then
+   [ZG-5 aggregate contract and limits](activity-groups-zg5.md) and
    [qualification](qualification/activity-groups/zg5.md), then
    [ZG-4 query contract](activity-groups-zg4.md) and
    [qualification](qualification/activity-groups/zg4.md), then

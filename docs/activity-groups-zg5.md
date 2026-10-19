@@ -5,6 +5,8 @@ Status: **qualified** on Windows, .NET 8/10 at source
 seven unpublished packages and both package/binary/schema probes passed.
 See the [qualification and exact-source ledger](qualification/activity-groups/zg5.md).
 Next is ZG-6 Fuwen metadata handoff and package integration.
+The subsequent [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md)
+hardens snapshot integrity and approval projection and records the latest source.
 
 The reducer is pure: selected Work/Control declarations, current/historical step
 facts, dependencies, safe waits/approvals, run/generation/operation context, an

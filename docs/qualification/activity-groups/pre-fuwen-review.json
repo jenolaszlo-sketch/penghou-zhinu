@@ -1,0 +1,5384 @@
+{
+  "SchemaVersion": 1,
+  "Stage": "Pre-Fuwen review",
+  "Status": "passed",
+  "Date": "2026-10-18",
+  "Branch": "codex/zhinu-activity-groups",
+  "BaseCommit": "2116cceff9012fb9e5868c14ca86208b0f404ac0",
+  "RuntimeImplementationCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+  "PackageSourceCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+  "QualificationCommit": "The commit containing this record adds documentation/evidence only.",
+  "Platform": "Windows",
+  "TargetFrameworks": [
+    "net8.0",
+    "net10.0"
+  ],
+  "PersistedSchemaVersion": 9,
+  "PackageVersion": "0.2.0-preview.4",
+  "Publication": "Not published",
+  "TestTotal": 1877,
+  "BaselineTests": 1845,
+  "NewTestExecutions": 32,
+  "Tests": [
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_18_net10.0.trx",
+      "Sha256": "6467054323d840cb552c85b7f152311ab092fea26081e8633c58a5cb4fd69da1",
+      "Total": 212,
+      "Passed": 212,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_18_net8.0.trx",
+      "Sha256": "f84f67f95e50ba196843c32d08f534544ecf341e25604d961c1446e311c94727",
+      "Total": 212,
+      "Passed": 212,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_19_net10.0.trx",
+      "Sha256": "c8a186c4ad8f16874147759ae8472ecef8e5e79cca30d46554b956a8fedcad60",
+      "Total": 5,
+      "Passed": 5,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_20_net10.0.trx",
+      "Sha256": "8663abaa8751f6351c30bd56eb6562df7a53020dd3610f1b242d50eb1fcf5be4",
+      "Total": 29,
+      "Passed": 29,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_21_net8.0.trx",
+      "Sha256": "9191eb0b7a316e54881ca844aacb1a8b8721ae2ff397639ae11ed3c8e599b486",
+      "Total": 29,
+      "Passed": 29,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Sha256": "4f79f9c69e49fa99eaea599b4dcc0d02223723c54b4bff9cb90cb2df050a559d",
+      "Total": 681,
+      "Passed": 681,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_28_net8.0.trx",
+      "Sha256": "4184dd5bf3e78835c2cc340c63607c96f0e0b5cd3adcd135dc21970171758b30",
+      "Total": 1,
+      "Passed": 1,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net10.0.trx",
+      "Sha256": "bfba5e4a34785e8343dc0f9cdb8f54a77a0944e61c9d654479348778bb419c27",
+      "Total": 1,
+      "Passed": 1,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Sha256": "d07ba96403fc09cf8b17916cb40b79230248c2fb94feea5f739f3640bea111d1",
+      "Total": 681,
+      "Passed": 681,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_30_net10.0.trx",
+      "Sha256": "19be48395efbdc45bd121cca1abe31a64efbc6e355877e593234e6f637e75e79",
+      "Total": 13,
+      "Passed": 13,
+      "Failed": 0,
+      "NotExecuted": 0
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_30_net8.0.trx",
+      "Sha256": "c377a1934f800c84147d0de073ee727220d1cbbccbfbb5e9a6b13b03f2cb3a3b",
+      "Total": 13,
+      "Passed": 13,
+      "Failed": 0,
+      "NotExecuted": 0
+    }
+  ],
+  "QueryReceipts": [
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-only-generation-same-watermark",
+        "runId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+        "first": {
+          "SnapshotToken": "4781FA9D7183E5568B2CD189E81AC901EC855CA1510426C346B852D9E95683DD",
+          "CapturedAt": "2026-10-18T21:06:31.8434819+08:00",
+          "ExpiresAt": "2026-10-18T21:08:31.8434819+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:31.6453072+08:00",
+            "UpdatedAt": "2026-10-18T21:06:31.8198517+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "88b8fb69-43f2-4059-8e94-2bab99838e20",
+            "InstanceId": "e0bd4116-7c7f-4077-a1b2-a25114d8785c",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "second": {
+          "SnapshotToken": "55CC55BE5C7477676830435257534EBD793F56D7BE6E28C8E481DA51DEBBB010",
+          "CapturedAt": "2026-10-18T21:06:31.8605127+08:00",
+          "ExpiresAt": "2026-10-18T21:08:31.8605127+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:31.6453072+08:00",
+            "UpdatedAt": "2026-10-18T21:06:36.8198517+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "88b8fb69-43f2-4059-8e94-2bab99838e20",
+            "InstanceId": "e0bd4116-7c7f-4077-a1b2-a25114d8785c",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "updatedAt": "2026-10-18T21:06:36.8198517+08:00",
+        "oldPage": {
+          "Items": [
+            {
+              "Kind": 0,
+              "Occurrence": {
+                "WorkflowRunId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+                "OccurrenceId": "d1e2e7f41dbaf314053a519fa8d1fd3f3070a1c42ecbd920600e8a56b5365d08",
+                "GroupKey": "root",
+                "ParentOccurrenceId": null,
+                "ExecutionCoordinate": "[]"
+              },
+              "Step": null,
+              "ChildRun": null,
+              "HasChildren": true
+            },
+            {
+              "Kind": 1,
+              "Occurrence": null,
+              "Step": {
+                "WorkflowRunId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+                "StepId": "4f8fe799-2af3-4f01-bd0b-47da53fc066a",
+                "StepKey": "plain",
+                "Revision": 1,
+                "Attempt": 1,
+                "Status": 2,
+                "IsCurrent": true,
+                "GroupOccurrenceId": null,
+                "Role": null,
+                "LeaseGeneration": 2,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": "2026-10-18T21:06:31.7829028+08:00",
+                "CompletedAt": "2026-10-18T21:06:31.8024464+08:00",
+                "ChildRunId": null
+              },
+              "ChildRun": null,
+              "HasChildren": false
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 2,
+          "SnapshotToken": "4781FA9D7183E5568B2CD189E81AC901EC855CA1510426C346B852D9E95683DD",
+          "ThroughDurableSequence": 6
+        },
+        "newPage": {
+          "Items": [
+            {
+              "Kind": 0,
+              "Occurrence": {
+                "WorkflowRunId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+                "OccurrenceId": "d1e2e7f41dbaf314053a519fa8d1fd3f3070a1c42ecbd920600e8a56b5365d08",
+                "GroupKey": "root",
+                "ParentOccurrenceId": null,
+                "ExecutionCoordinate": "[]"
+              },
+              "Step": null,
+              "ChildRun": null,
+              "HasChildren": true
+            },
+            {
+              "Kind": 1,
+              "Occurrence": null,
+              "Step": {
+                "WorkflowRunId": "5a941f92-b834-4d4f-b1b8-408df6b6e081",
+                "StepId": "4f8fe799-2af3-4f01-bd0b-47da53fc066a",
+                "StepKey": "plain",
+                "Revision": 1,
+                "Attempt": 1,
+                "Status": 2,
+                "IsCurrent": true,
+                "GroupOccurrenceId": null,
+                "Role": null,
+                "LeaseGeneration": 2,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": "2026-10-18T21:06:31.7829028+08:00",
+                "CompletedAt": "2026-10-18T21:06:31.8024464+08:00",
+                "ChildRunId": null
+              },
+              "ChildRun": null,
+              "HasChildren": false
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 2,
+          "SnapshotToken": "55CC55BE5C7477676830435257534EBD793F56D7BE6E28C8E481DA51DEBBB010",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "provenance-redaction-and-permission-drop",
+        "runId": "a7d3a5db-57fb-4e4a-a163-b8dac49aded9",
+        "privilegedSnapshot": {
+          "SnapshotToken": "EB5EF4886C08728EAC7DB05EF6A7452BB76BCD66EC5E6070E8F21528B10E4BB5",
+          "CapturedAt": "2026-10-18T21:06:35.0587527+08:00",
+          "ExpiresAt": "2026-10-18T21:08:35.0587527+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "a7d3a5db-57fb-4e4a-a163-b8dac49aded9",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:34.8494836+08:00",
+            "UpdatedAt": "2026-10-18T21:06:35.0242236+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": true,
+          "SourceReferencesIncluded": true,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "ac79fd20-40fd-4399-bd90-a3ce9c8f8a77",
+            "InstanceId": "b0029a5d-b667-4868-a731-761ec46be223",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "definitions": {
+          "Items": [
+            {
+              "GroupKey": "macro",
+              "ParentGroupKey": "root",
+              "Kind": 1,
+              "DisplayName": "Macro",
+              "ChildOrdinal": 0,
+              "Provenance": {
+                "MacroName": "Macro",
+                "MacroDefinitionFingerprint": "source-sensitive-fingerprint",
+                "InvocationKey": "invocation",
+                "MacroVersion": "1",
+                "SourceReference": "src/workflow.cs"
+              },
+              "OccurrenceCount": 1
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "EB5EF4886C08728EAC7DB05EF6A7452BB76BCD66EC5E6070E8F21528B10E4BB5",
+          "ThroughDurableSequence": 6
+        },
+        "changedStatus": 6,
+        "redactedSnapshot": {
+          "SnapshotToken": "6A98D980F31007542B7C094B551438C3050BECF1B0F75780F300BF15AAAD7E0F",
+          "CapturedAt": "2026-10-18T21:06:35.0746872+08:00",
+          "ExpiresAt": "2026-10-18T21:08:35.0746872+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "a7d3a5db-57fb-4e4a-a163-b8dac49aded9",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:34.8494836+08:00",
+            "UpdatedAt": "2026-10-18T21:06:35.0242236+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "ac79fd20-40fd-4399-bd90-a3ce9c8f8a77",
+            "InstanceId": "b0029a5d-b667-4868-a731-761ec46be223",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "redacted": {
+          "Items": [
+            {
+              "GroupKey": "macro",
+              "ParentGroupKey": "root",
+              "Kind": 1,
+              "DisplayName": "Macro",
+              "ChildOrdinal": 0,
+              "Provenance": null,
+              "OccurrenceCount": 1
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "6A98D980F31007542B7C094B551438C3050BECF1B0F75780F300BF15AAAD7E0F",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-bounded-read",
+        "runId": "bcac9816-95d0-4127-bab3-1ce17222a697",
+        "maximumRows": 1,
+        "maximumBytes": 33554432,
+        "Status": 5,
+        "Reason": "The run exceeds the configured snapshot row limit."
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "fork-reused-child-link",
+        "sourceId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+        "destinationId": "2a6efcd4-7d13-41f2-89ef-b81d66d925cf",
+        "childId": "6e86d9d7-49c6-e477-325c-16f8f34497dc",
+        "sourceSnapshot": {
+          "SnapshotToken": "EE4FB7790E71C62D104B50C4AC70891CFAEE3D098725993DC931683C8115F8D9",
+          "CapturedAt": "2026-10-18T21:06:31.5547187+08:00",
+          "ExpiresAt": "2026-10-18T21:08:31.5547187+08:00",
+          "ThroughDurableSequence": 12,
+          "Run": {
+            "RunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:30.8271517+08:00",
+            "UpdatedAt": "2026-10-18T21:06:31.2969968+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 3,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "390f4277-fbae-4060-84db-24260666bf81",
+            "InstanceId": "081cad11-3e3a-406b-a1e4-a606e993ab62",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "sourceNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+              "OccurrenceId": "41fa6179aee473d63539f028548d4ec8c7c5f458a5a45a0bc351a3e6244e7d26",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+              "StepId": "6ef15dac-7ee3-40af-9178-5df89057ab0a",
+              "StepKey": "tail",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:06:31.2477075+08:00",
+              "CompletedAt": "2026-10-18T21:06:31.2705325+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          },
+          {
+            "Kind": 2,
+            "Occurrence": null,
+            "Step": null,
+            "ChildRun": {
+              "RunId": "6e86d9d7-49c6-e477-325c-16f8f34497dc",
+              "ParentRunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+              "Status": 2,
+              "IsAvailable": true
+            },
+            "HasChildren": false
+          }
+        ],
+        "destinationSnapshot": {
+          "SnapshotToken": "FF539387C1A54DB50986985B13B85A5AA64BB176EE02C8D8E070B8047AD4C540",
+          "CapturedAt": "2026-10-18T21:06:31.5593794+08:00",
+          "ExpiresAt": "2026-10-18T21:08:31.5593794+08:00",
+          "ThroughDurableSequence": 18,
+          "Run": {
+            "RunId": "2a6efcd4-7d13-41f2-89ef-b81d66d925cf",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+            "CreatedAt": "2026-10-18T21:06:31.333781+08:00",
+            "UpdatedAt": "2026-10-18T21:06:31.5212948+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 3,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": {
+            "RunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:30.8271517+08:00",
+            "UpdatedAt": "2026-10-18T21:06:31.2969968+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "Generation": {
+            "GenerationId": "b103a146-ffa6-4684-8239-47c2bd4adba3",
+            "InstanceId": "85de110b-17d9-459e-9ed6-2fe16cbe8385",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "destNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "2a6efcd4-7d13-41f2-89ef-b81d66d925cf",
+              "OccurrenceId": "eba372d2e860df0dce6637704cfb9ae5d444c92cc49c1b3fc88966ba18991af7",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "2a6efcd4-7d13-41f2-89ef-b81d66d925cf",
+              "StepId": "130f06b4-8002-4b90-8467-52674093e5b3",
+              "StepKey": "tail",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 1,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:06:31.2477075+08:00",
+              "CompletedAt": "2026-10-18T21:06:31.2705325+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          },
+          {
+            "Kind": 2,
+            "Occurrence": null,
+            "Step": null,
+            "ChildRun": {
+              "RunId": "6e86d9d7-49c6-e477-325c-16f8f34497dc",
+              "ParentRunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+              "Status": 2,
+              "IsAvailable": true
+            },
+            "HasChildren": false
+          }
+        ],
+        "reusedLink": {
+          "RunId": "6e86d9d7-49c6-e477-325c-16f8f34497dc",
+          "ParentRunId": "3f9e2d5f-26fc-4d1d-9046-14fda7faa0d5",
+          "Status": 2,
+          "IsAvailable": true
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "member-current-versus-history",
+        "runId": "7f0e8b39-91db-4936-b5ee-80a775cdb8d1",
+        "occurrence": "de42f1bf43e35b89db7561cdd5d14080c8fde344ed59613cbf33155e4ef90224",
+        "current": {
+          "Items": [
+            {
+              "Step": {
+                "WorkflowRunId": "7f0e8b39-91db-4936-b5ee-80a775cdb8d1",
+                "StepId": "d4b3b8ec-6b66-4b92-95c5-38a2b55ecc90",
+                "StepKey": "$loop/outer/2/body/entry",
+                "Revision": 2,
+                "Attempt": 0,
+                "Status": 0,
+                "IsCurrent": true,
+                "GroupOccurrenceId": "de42f1bf43e35b89db7561cdd5d14080c8fde344ed59613cbf33155e4ef90224",
+                "Role": 0,
+                "LeaseGeneration": 3,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": null,
+                "CompletedAt": null,
+                "ChildRunId": null
+              },
+              "Dependencies": [
+                {
+                  "StepKey": "$loop/outer/2/body/entry",
+                  "DependsOnStepKey": "$loop/outer/2/condition"
+                }
+              ],
+              "Waits": [],
+              "Approvals": []
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "4B8039C1831AE60E0DE1666CDA4CD3ED3EE0B327CD4555F4A9F864EE2C52E883",
+          "ThroughDurableSequence": 104
+        },
+        "history": {
+          "Items": [
+            {
+              "Step": {
+                "WorkflowRunId": "7f0e8b39-91db-4936-b5ee-80a775cdb8d1",
+                "StepId": "bf69e6cc-cf5a-4063-aa63-8aa3613d7cfd",
+                "StepKey": "$loop/outer/2/body/entry",
+                "Revision": 1,
+                "Attempt": 1,
+                "Status": 2,
+                "IsCurrent": false,
+                "GroupOccurrenceId": "de42f1bf43e35b89db7561cdd5d14080c8fde344ed59613cbf33155e4ef90224",
+                "Role": 0,
+                "LeaseGeneration": 2,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": "2026-10-18T21:06:32.5620504+08:00",
+                "CompletedAt": "2026-10-18T21:06:32.5789866+08:00",
+                "ChildRunId": null
+              },
+              "Dependencies": [
+                {
+                  "StepKey": "$loop/outer/2/body/entry",
+                  "DependsOnStepKey": "$loop/outer/2/condition"
+                }
+              ],
+              "Waits": [],
+              "Approvals": []
+            },
+            {
+              "Step": {
+                "WorkflowRunId": "7f0e8b39-91db-4936-b5ee-80a775cdb8d1",
+                "StepId": "d4b3b8ec-6b66-4b92-95c5-38a2b55ecc90",
+                "StepKey": "$loop/outer/2/body/entry",
+                "Revision": 2,
+                "Attempt": 0,
+                "Status": 0,
+                "IsCurrent": true,
+                "GroupOccurrenceId": "de42f1bf43e35b89db7561cdd5d14080c8fde344ed59613cbf33155e4ef90224",
+                "Role": 0,
+                "LeaseGeneration": 3,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": null,
+                "CompletedAt": null,
+                "ChildRunId": null
+              },
+              "Dependencies": [
+                {
+                  "StepKey": "$loop/outer/2/body/entry",
+                  "DependsOnStepKey": "$loop/outer/2/condition"
+                }
+              ],
+              "Waits": [],
+              "Approvals": []
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 2,
+          "SnapshotToken": "4B8039C1831AE60E0DE1666CDA4CD3ED3EE0B327CD4555F4A9F864EE2C52E883",
+          "ThroughDurableSequence": 104
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-only-generation-disposition",
+        "first": {
+          "SnapshotToken": "9DB230B5FAA7F3CA56A0DE2FC4850B36F932C45FA48ED3AEEB721786641FC415",
+          "CapturedAt": "2026-10-18T21:11:26.4320187+08:00",
+          "ExpiresAt": "2026-10-18T21:13:26.4320187+08:00",
+          "ThroughDurableSequence": 1,
+          "Run": {
+            "RunId": "2692d236-9ba3-4345-a5fe-fd22759faf39",
+            "WorkflowName": "generation-query",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:11:26.3674396+08:00",
+            "UpdatedAt": "2026-10-18T21:11:26.3674396+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 1,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": null,
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 0,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 0,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "a6ab8b72-e25f-4058-be69-3f43a2ab6a0a",
+            "InstanceId": "5a3347e3-4252-43db-affe-a253de52bc40",
+            "Ordinal": 1,
+            "Status": 0,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "second": {
+          "SnapshotToken": "0EB05AF46567E26B880260DFBE12DDCC2C65B0D0FB26D32CEB792DDC0FECEFA7",
+          "CapturedAt": "2026-10-18T21:11:26.4435852+08:00",
+          "ExpiresAt": "2026-10-18T21:13:26.4435852+08:00",
+          "ThroughDurableSequence": 1,
+          "Run": {
+            "RunId": "2692d236-9ba3-4345-a5fe-fd22759faf39",
+            "WorkflowName": "generation-query",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:11:26.3674396+08:00",
+            "UpdatedAt": "2026-10-18T21:11:26.3674396+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 1,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": null,
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 0,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 0,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "a6ab8b72-e25f-4058-be69-3f43a2ab6a0a",
+            "InstanceId": "5a3347e3-4252-43db-affe-a253de52bc40",
+            "Ordinal": 1,
+            "Status": 0,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": [
+            {
+              "DispositionId": "0586f208-30e7-405d-868a-8f53078ce399",
+              "Disposition": 0,
+              "CreatedAt": "2026-10-18T21:11:26.4335268+08:00"
+            }
+          ]
+        },
+        "oldPage": {
+          "Items": [],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 0,
+          "SnapshotToken": "9DB230B5FAA7F3CA56A0DE2FC4850B36F932C45FA48ED3AEEB721786641FC415",
+          "ThroughDurableSequence": 1
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "historical-selection",
+        "history": {
+          "SnapshotToken": "A1BF16FA0A1715A2A3C1BDD2B65BE9E390312D198DDBA2B176C5939EC35A35F6",
+          "ThroughDurableSequence": 9,
+          "ObservedAt": "2026-10-18T21:09:15.5582207+08:00",
+          "OccurrenceId": "0e9c60bf9d73a411fa6414c42bf323a3c22a59855da5b87f1c4fd90ef352cb2f",
+          "State": {
+            "Status": null,
+            "Reason": 1,
+            "IsBlocked": false,
+            "Coverage": 2,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              0,
+              1
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 0,
+            "Generation": {
+              "GenerationId": "0e03809b-9bea-4bb3-a2b4-651030323ede",
+              "InstanceId": "9cc0daa1-6dbe-4627-8d38-9e98837ecabc",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "legacy-ungrouped",
+        "runId": "883bd0a2-16d8-4511-9fc2-6887bb685056",
+        "snapshot": {
+          "SnapshotToken": "5C2DABEFC76C39A7EE30913F0C414983105E00163C3EDE0825E33FA0E93DC75F",
+          "CapturedAt": "2026-10-18T21:06:36.4545385+08:00",
+          "ExpiresAt": "2026-10-18T21:08:36.4545385+08:00",
+          "ThroughDurableSequence": 4,
+          "Run": {
+            "RunId": "883bd0a2-16d8-4511-9fc2-6887bb685056",
+            "WorkflowName": "query-legacy",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:36.2994268+08:00",
+            "UpdatedAt": "2026-10-18T21:06:36.427832+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": null,
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 0,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 1,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "6daa6d68-b193-4739-91a0-a9f7f691a07f",
+            "InstanceId": "17bfeb7f-1c7e-4e98-ae83-e4c2eea4a57e",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "definitions": {
+          "Items": [],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 0,
+          "SnapshotToken": "5C2DABEFC76C39A7EE30913F0C414983105E00163C3EDE0825E33FA0E93DC75F",
+          "ThroughDurableSequence": 4
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-bounded-read",
+        "runId": "3d2e8f5e-8244-422c-af3b-ebd2b08aea85",
+        "maximumRows": 262144,
+        "maximumBytes": 1,
+        "Status": 5,
+        "Reason": "The run exceeds the configured snapshot byte limit."
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "sqlite-multiselect-snapshot-survives-writer-commit",
+        "runId": "8d9cf236-4575-4ad9-aae7-ccc79bf6d66a",
+        "oldSnapshot": {
+          "SnapshotToken": "F4E60D5368D8D036DC04A85E8B1AEDA66290E783B2FCC2EA2ABFA174660512F5",
+          "CapturedAt": "2026-10-18T21:06:30.7153374+08:00",
+          "ExpiresAt": "2026-10-18T21:08:30.7153374+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "8d9cf236-4575-4ad9-aae7-ccc79bf6d66a",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:30.2761548+08:00",
+            "UpdatedAt": "2026-10-18T21:06:30.484403+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "f6066975-2d41-4723-8994-3f598cd8d517",
+            "InstanceId": "926966d4-f5d4-4658-bcc8-a4acceb6fc58",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "oldMembers": [
+          {
+            "Step": {
+              "WorkflowRunId": "8d9cf236-4575-4ad9-aae7-ccc79bf6d66a",
+              "StepId": "135bc68e-f9e7-4e95-b4e6-68f296b0253f",
+              "StepKey": "grouped",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": "760c80b84e7998b342293f06ec6d1f42ce54c0c35d130291c2ff3335e29aac51",
+              "Role": 0,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:06:30.3933249+08:00",
+              "CompletedAt": "2026-10-18T21:06:30.4185033+08:00",
+              "ChildRunId": null
+            },
+            "Dependencies": [],
+            "Waits": [],
+            "Approvals": []
+          }
+        ],
+        "freshSnapshot": {
+          "SnapshotToken": "7BD45C09D401BB348ADABAF03F85111A38E2D4B7055C844B71D1A47FC66413C0",
+          "CapturedAt": "2026-10-18T21:06:30.7452626+08:00",
+          "ExpiresAt": "2026-10-18T21:08:30.7452626+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "8d9cf236-4575-4ad9-aae7-ccc79bf6d66a",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:30.2761548+08:00",
+            "UpdatedAt": "2026-10-18T21:06:35.5519208+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "f6066975-2d41-4723-8994-3f598cd8d517",
+            "InstanceId": "926966d4-f5d4-4658-bcc8-a4acceb6fc58",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "freshMembers": [
+          {
+            "Step": {
+              "WorkflowRunId": "8d9cf236-4575-4ad9-aae7-ccc79bf6d66a",
+              "StepId": "135bc68e-f9e7-4e95-b4e6-68f296b0253f",
+              "StepKey": "grouped",
+              "Revision": 1,
+              "Attempt": 2,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": "760c80b84e7998b342293f06ec6d1f42ce54c0c35d130291c2ff3335e29aac51",
+              "Role": 0,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:06:30.3933249+08:00",
+              "CompletedAt": "2026-10-18T21:06:30.4185033+08:00",
+              "ChildRunId": null
+            },
+            "Dependencies": [],
+            "Waits": [],
+            "Approvals": []
+          }
+        ],
+        "writerAttempt": 2
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "deep-definition-plane",
+        "runId": "c20d3930-62ec-4445-97b6-23251f5c6e9e",
+        "snapshot": {
+          "SnapshotToken": "6E5CAE22E37468F98749F8DB9D40574F5B724E419931DD6BDC49E4DF905F48D6",
+          "CapturedAt": "2026-10-18T21:06:36.5834223+08:00",
+          "ExpiresAt": "2026-10-18T21:08:36.5834223+08:00",
+          "ThroughDurableSequence": 1,
+          "Run": {
+            "RunId": "c20d3930-62ec-4445-97b6-23251f5c6e9e",
+            "WorkflowName": "query-deep",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:36.5054984+08:00",
+            "UpdatedAt": "2026-10-18T21:06:36.5054984+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 1,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "e9c260ff20def627b1290fe4dd17d3edf277c1aac2c58eb31cbbe130bd828bd7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 128,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 0,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "3305427a-3f16-4976-aeb3-61066de79c07",
+            "InstanceId": "88d4d012-2319-4559-8733-e9c81f88ef6b",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "definitionCount": 128,
+        "maximumDepth": 128,
+        "allOccurrenceCountsZero": true
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "cursor-binding-and-page-size",
+        "runId": "682a4473-2a61-4efd-a0a1-7b281a355342",
+        "snapshotToken": "AA4A9E7B1D51163C3ADDD7D032CA3F93BB915B72FFEE10A666D663D6616BBE04",
+        "definitions": {
+          "Items": [
+            {
+              "GroupKey": "macro",
+              "ParentGroupKey": "root",
+              "Kind": 1,
+              "DisplayName": "Macro",
+              "ChildOrdinal": 0,
+              "Provenance": null,
+              "OccurrenceCount": 1
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "AA4A9E7B1D51163C3ADDD7D032CA3F93BB915B72FFEE10A666D663D6616BBE04",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "reader-run-binding-and-denied-access",
+        "firstId": "f0fd6627-4917-4aa0-9e9c-a9b2bf0deb9b",
+        "secondId": "0b90a143-1b76-4781-bb34-ffefa50cbfd4",
+        "token": "3E28689479E1325281C7DFACBAB70F55426CEE3C58246FD4A6739042B8348E80"
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "nested-flattened-read-after-reopen",
+        "snapshot": {
+          "SnapshotToken": "1D1F1767553BC5A1E3E34E0A7198A5232A90C83F108A6DEDB4970FC4FC1EE839",
+          "CapturedAt": "2026-10-18T21:09:21.1986553+08:00",
+          "ExpiresAt": "2026-10-18T21:11:21.1986553+08:00",
+          "ThroughDurableSequence": 97,
+          "Run": {
+            "RunId": "3f0b1856-28a5-4be3-a8f6-2d0df3c545ac",
+            "WorkflowName": "process-group-nested",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:20.0536184+08:00",
+            "UpdatedAt": "2026-10-18T21:09:21.1815136+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "27ad5885841704a63402523fd1860a341972c2ad812c02095e0af7088b180961",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 3,
+          "OccurrenceCount": 15,
+          "StepRevisionCount": 41,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "b1a52520-539b-4116-b065-570265417775",
+            "InstanceId": "4787495b-a66b-4af4-8423-4d14b1a6c1f8",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "states": [
+          {
+            "SnapshotToken": "1D1F1767553BC5A1E3E34E0A7198A5232A90C83F108A6DEDB4970FC4FC1EE839",
+            "ThroughDurableSequence": 97,
+            "ObservedAt": "2026-10-18T21:09:21.1986553+08:00",
+            "OccurrenceId": "c3ef2206c1f37460de05cf0c00b6434b43bda489cf2ab165255e63a8e29a95b6",
+            "State": {
+              "Status": 2,
+              "Reason": 12,
+              "IsBlocked": false,
+              "Coverage": 0,
+              "IsExpansionClosed": true,
+              "TotalCount": 5,
+              "Work": {
+                "Known": 5,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 5,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Control": {
+                "Known": 0,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 0,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Reasons": [
+                12
+              ],
+              "ActiveStepKeys": [],
+              "BlockingStepKeys": [],
+              "RunStatus": 2,
+              "Generation": {
+                "GenerationId": "b1a52520-539b-4116-b065-570265417775",
+                "InstanceId": "4787495b-a66b-4af4-8423-4d14b1a6c1f8",
+                "Ordinal": 1,
+                "Status": 2,
+                "PredecessorGenerationId": null
+              },
+              "Operation": null
+            }
+          },
+          {
+            "SnapshotToken": "1D1F1767553BC5A1E3E34E0A7198A5232A90C83F108A6DEDB4970FC4FC1EE839",
+            "ThroughDurableSequence": 97,
+            "ObservedAt": "2026-10-18T21:09:21.1986553+08:00",
+            "OccurrenceId": "26c2ec443429807fe4a909ecd7f00f9746ee102220dc674dc9170c7388f1eb79",
+            "State": {
+              "Status": 2,
+              "Reason": 12,
+              "IsBlocked": false,
+              "Coverage": 0,
+              "IsExpansionClosed": true,
+              "TotalCount": 5,
+              "Work": {
+                "Known": 5,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 5,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Control": {
+                "Known": 0,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 0,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Reasons": [
+                12
+              ],
+              "ActiveStepKeys": [],
+              "BlockingStepKeys": [],
+              "RunStatus": 2,
+              "Generation": {
+                "GenerationId": "b1a52520-539b-4116-b065-570265417775",
+                "InstanceId": "4787495b-a66b-4af4-8423-4d14b1a6c1f8",
+                "Ordinal": 1,
+                "Status": 2,
+                "PredecessorGenerationId": null
+              },
+              "Operation": null
+            }
+          },
+          {
+            "SnapshotToken": "1D1F1767553BC5A1E3E34E0A7198A5232A90C83F108A6DEDB4970FC4FC1EE839",
+            "ThroughDurableSequence": 97,
+            "ObservedAt": "2026-10-18T21:09:21.1986553+08:00",
+            "OccurrenceId": "4eadfb86e5ce1ddf1fb7f4787517fad85f5649326ed87124a27944599669f5d6",
+            "State": {
+              "Status": 2,
+              "Reason": 12,
+              "IsBlocked": false,
+              "Coverage": 0,
+              "IsExpansionClosed": true,
+              "TotalCount": 5,
+              "Work": {
+                "Known": 5,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 5,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Control": {
+                "Known": 0,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 0,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Reasons": [
+                12
+              ],
+              "ActiveStepKeys": [],
+              "BlockingStepKeys": [],
+              "RunStatus": 2,
+              "Generation": {
+                "GenerationId": "b1a52520-539b-4116-b065-570265417775",
+                "InstanceId": "4787495b-a66b-4af4-8423-4d14b1a6c1f8",
+                "Ordinal": 1,
+                "Status": 2,
+                "PredecessorGenerationId": null
+              },
+              "Operation": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "child-run-link-and-independent-tree",
+        "parentSnapshot": {
+          "SnapshotToken": "0ABA74FF08A50A0DA5778C363FED072433F8299CE429388CF7B079E1166F172D",
+          "CapturedAt": "2026-10-18T21:06:34.3680826+08:00",
+          "ExpiresAt": "2026-10-18T21:08:34.3680826+08:00",
+          "ThroughDurableSequence": 12,
+          "Run": {
+            "RunId": "fdb798da-2939-4b04-8b01-9dca37b3c208",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:34.0188128+08:00",
+            "UpdatedAt": "2026-10-18T21:06:34.3457188+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 3,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "e07f22ef-4e7f-4677-b06f-6e47c2737f89",
+            "InstanceId": "6ee509f7-a07b-4648-bf54-b7a37bee1132",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "parentNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "fdb798da-2939-4b04-8b01-9dca37b3c208",
+              "OccurrenceId": "f1e9843d935ccb2830a66748878fea5bca691838ddd621aa01f345786181ef9e",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "fdb798da-2939-4b04-8b01-9dca37b3c208",
+              "StepId": "6d5bfdf6-6859-4292-919d-aae747b54758",
+              "StepKey": "tail",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:06:34.3099593+08:00",
+              "CompletedAt": "2026-10-18T21:06:34.32831+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          },
+          {
+            "Kind": 2,
+            "Occurrence": null,
+            "Step": null,
+            "ChildRun": {
+              "RunId": "e4277271-7fa6-7f53-ebd2-11b711184dd3",
+              "ParentRunId": "fdb798da-2939-4b04-8b01-9dca37b3c208",
+              "Status": 2,
+              "IsAvailable": true
+            },
+            "HasChildren": false
+          }
+        ],
+        "childSnapshot": {
+          "SnapshotToken": "E4798E9BF5263AB7833FFCF319FCE1F42784873BF6BB7DE836777912D05BA7D5",
+          "CapturedAt": "2026-10-18T21:06:34.3836144+08:00",
+          "ExpiresAt": "2026-10-18T21:08:34.3836144+08:00",
+          "ThroughDurableSequence": 8,
+          "Run": {
+            "RunId": "e4277271-7fa6-7f53-ebd2-11b711184dd3",
+            "WorkflowName": "group-child-leaf",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": "fdb798da-2939-4b04-8b01-9dca37b3c208",
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:34.1266454+08:00",
+            "UpdatedAt": "2026-10-18T21:06:34.2801477+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 1,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "4469b4a6-67b5-4178-a921-3b3202e230cb",
+            "InstanceId": "dd43cfbc-3282-4eaf-938d-7a376119e08e",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "childRoot": {
+          "WorkflowRunId": "e4277271-7fa6-7f53-ebd2-11b711184dd3",
+          "OccurrenceId": "42585a9c7cbedf918f6ef00453c3ba026075a35e5d6432c5f56542d7a2bfe17c",
+          "GroupKey": "root",
+          "ParentOccurrenceId": null,
+          "ExecutionCoordinate": "[]"
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "cancellation-after-independent-completion",
+        "completed": {
+          "SnapshotToken": "5CD0B00B3A7CA647E1370635FEE5A90E82724B7561BF71CC9BFD0F7F2956520E",
+          "ThroughDurableSequence": 7,
+          "ObservedAt": "2026-10-18T21:09:15.8141458+08:00",
+          "OccurrenceId": "e46f047dc8d9c21d8357af2b7bef06c3a13c53ae0bc87cdc680a5ed866317c27",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 4,
+            "Generation": {
+              "GenerationId": "ad07aa66-5de9-4324-9b66-b7ca2357587e",
+              "InstanceId": "643545d1-2add-4abe-8dcd-b266dfdb1495",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "parent": {
+          "SnapshotToken": "5CD0B00B3A7CA647E1370635FEE5A90E82724B7561BF71CC9BFD0F7F2956520E",
+          "ThroughDurableSequence": 7,
+          "ObservedAt": "2026-10-18T21:09:15.8141458+08:00",
+          "OccurrenceId": "852775a0af56b52ffefb86b69cb8f1343b00bf1a040c53744dc13d4c8f3545dc",
+          "State": {
+            "Status": 5,
+            "Reason": 13,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 2,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 1
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              13
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 4,
+            "Generation": {
+              "GenerationId": "ad07aa66-5de9-4324-9b66-b7ca2357587e",
+              "InstanceId": "643545d1-2add-4abe-8dcd-b266dfdb1495",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "mixed-root-and-structural-children",
+        "runId": "a512bfa2-d194-4b6b-818f-7a5352e7db51",
+        "snapshot": {
+          "SnapshotToken": "C9DDF7B09ECAD889F179874E7C0F59608DEB8ACD336F77EB241374D174E71686",
+          "CapturedAt": "2026-10-18T21:06:33.9692844+08:00",
+          "ExpiresAt": "2026-10-18T21:08:33.9692844+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "a512bfa2-d194-4b6b-818f-7a5352e7db51",
+            "WorkflowName": "query-mixed",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:33.7979836+08:00",
+            "UpdatedAt": "2026-10-18T21:06:33.945515+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "a1bae9ec-8a42-44bc-92f4-eed43035d71d",
+            "InstanceId": "bd0e68ee-8fb5-4630-ba9a-dae7cebb269c",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "rootNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "a512bfa2-d194-4b6b-818f-7a5352e7db51",
+              "OccurrenceId": "f16aff9dc915224d4759f003272efd55da84fd226dc10761d41b46deb62a8763",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "a512bfa2-d194-4b6b-818f-7a5352e7db51",
+              "StepId": "e5fcb88a-e4d3-4ee1-bce4-5733aaaffab4",
+              "StepKey": "plain",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:06:33.9085564+08:00",
+              "CompletedAt": "2026-10-18T21:06:33.9292197+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          }
+        ],
+        "occurrenceChildren": {
+          "Items": [
+            {
+              "Kind": 0,
+              "Occurrence": {
+                "WorkflowRunId": "a512bfa2-d194-4b6b-818f-7a5352e7db51",
+                "OccurrenceId": "a22f2a9c000dd4b0f0c47a79954e0e0808b8af628efc9012266388c9dd44bdc6",
+                "GroupKey": "macro",
+                "ParentOccurrenceId": "f16aff9dc915224d4759f003272efd55da84fd226dc10761d41b46deb62a8763",
+                "ExecutionCoordinate": "[]"
+              },
+              "Step": null,
+              "ChildRun": null,
+              "HasChildren": true
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "C9DDF7B09ECAD889F179874E7C0F59608DEB8ACD336F77EB241374D174E71686",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "native-child-count-isolation",
+        "state": {
+          "SnapshotToken": "FDE96DFC4B7FD56628562B41C36B405E4EA8CD79878D7002214A23EE8592ACB2",
+          "ThroughDurableSequence": 12,
+          "ObservedAt": "2026-10-18T21:09:16.4043495+08:00",
+          "OccurrenceId": "37c7bdfbe27e2c8bc1912401754a414136ccc54521e73449c80bc01b23340bf4",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "7b4832df-bfa9-4232-bec5-9d24698ed3fa",
+              "InstanceId": "7da91877-862d-46a8-abf9-f092bf06aa13",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "runId": "e743dcbc-1398-45fa-a070-c6ecd13b2366",
+        "workerExitCode": 0,
+        "priorTokenStatus": "ResyncRequired",
+        "occurrenceCount": 15,
+        "memberCount": 15,
+        "rootCount": 3,
+        "innerCount": 6,
+        "leafCount": 6,
+        "definitions": [
+          "inner",
+          "leaf",
+          "outer"
+        ],
+        "aggregateStates": 15
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "restart-invalidates-closure",
+        "before": {
+          "SnapshotToken": "62654D06AE03F544F694386A063081382ADF8D0F6112509D073F191ADD7B80BD",
+          "ThroughDurableSequence": 97,
+          "ObservedAt": "2026-10-18T21:09:19.2442471+08:00",
+          "OccurrenceId": "5404bbe9bbdc21579a53d77d989e0b192fb679b98a9f548beed527e3fc9c4a6e",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 5,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "5133f710-c1fb-4ed2-84d8-8950b060a9a3",
+              "InstanceId": "5d9d8650-a0cd-4192-9d29-8be0c76ea080",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "after": {
+          "SnapshotToken": "663ED7D77A6E9A359F8640ECE1ADDFD0E21724FD78AEF8E95890F65FC22B7573",
+          "ThroughDurableSequence": 98,
+          "ObservedAt": "2026-10-18T21:09:19.2667604+08:00",
+          "OccurrenceId": "5404bbe9bbdc21579a53d77d989e0b192fb679b98a9f548beed527e3fc9c4a6e",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 5,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 4,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 0,
+            "Generation": {
+              "GenerationId": "5133f710-c1fb-4ed2-84d8-8950b060a9a3",
+              "InstanceId": "5d9d8650-a0cd-4192-9d29-8be0c76ea080",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "final": {
+          "SnapshotToken": "AACBCA61A4FECE5D4C2F20E89DF828F4D74082F0AEB2CCE79B308B2FE58C727E",
+          "ThroughDurableSequence": 174,
+          "ObservedAt": "2026-10-18T21:09:20.0197492+08:00",
+          "OccurrenceId": "5404bbe9bbdc21579a53d77d989e0b192fb679b98a9f548beed527e3fc9c4a6e",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 5,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "5133f710-c1fb-4ed2-84d8-8950b060a9a3",
+              "InstanceId": "5d9d8650-a0cd-4192-9d29-8be0c76ea080",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "read-cancellation",
+        "runId": "240c045b-b62f-407a-9d0d-8d39881f1da3",
+        "authorizationCalls": 0
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "fanout-selected-members-and-effective-closure",
+        "incompleteSnapshot": {
+          "SnapshotToken": "4A710162DF7F0009243E20843898B088DDECE669AF3793F9075B7A9DB486E25A",
+          "CapturedAt": "2026-10-18T21:06:37.3616262+08:00",
+          "ExpiresAt": "2026-10-18T21:08:37.3616262+08:00",
+          "ThroughDurableSequence": 11,
+          "Run": {
+            "RunId": "9e8762be-8ad8-4772-b029-1c9bcebb0602",
+            "WorkflowName": "query-fanout",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:37.007359+08:00",
+            "UpdatedAt": "2026-10-18T21:06:37.3288357+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 3,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "c0f3c72d98f514990d01068f4b5fa1ab2971f74d82fdad3a43b82af6866db794",
+            "GroupFanOutUsed": true
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 3,
+          "StepRevisionCount": 5,
+          "ExpansionCount": 1,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "76d3ade4-531b-440f-8eb7-b4e620b4191f",
+            "InstanceId": "b51e5e91-7e1d-4d17-9fa4-56edefce6e17",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "beforeRecovery": {
+          "ExpansionId": "a7fd1e1d3ed8d599236541e283253dbece657274b1c182752a7a8ffbd85a7101",
+          "FanOutKey": "items",
+          "BoundaryStepId": "4ec83a18-1166-4791-aa39-34c77f7e2dc5",
+          "BoundaryRevision": 1,
+          "PlanDigest": "5dcf54979ad1a7caadad392f740dd247f3375e2d8775c4328221c6a7b1433918",
+          "ItemCount": 2,
+          "IsCurrent": true,
+          "IsComplete": false,
+          "Items": [
+            {
+              "ItemKey": "a",
+              "StepKey": "items.a",
+              "OccurrenceId": "fa4b77ca89315d8bd64e1b87eb42243970dde89a284f8ee360458c4d4a00f996",
+              "Role": 0
+            },
+            {
+              "ItemKey": "b",
+              "StepKey": "items.b",
+              "OccurrenceId": "65ea95a26fd68152c147da8c327e3550875b727f4e19720e23c2c772656a1669",
+              "Role": 0
+            }
+          ],
+          "Closures": [
+            {
+              "Digest": "6221935f3507c8a05e47d94623e9ccae9da397ab7f459dabd2da161ad995b639",
+              "LeaseGeneration": 2,
+              "CompletedAt": "2026-10-18T21:06:37.255395+08:00",
+              "Steps": [
+                {
+                  "StepId": "a294e3c7-2e0e-4aaf-b1fc-1d9c7bc7a87b",
+                  "Revision": 1
+                },
+                {
+                  "StepId": "b518ede6-3247-48f5-b000-914eaeadaf93",
+                  "Revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        "completeSnapshot": {
+          "SnapshotToken": "4AF62E427C70BD7988ABD5229CE37216481402BCAEFDCD811ED63562AB026D73",
+          "CapturedAt": "2026-10-18T21:06:37.5045137+08:00",
+          "ExpiresAt": "2026-10-18T21:08:37.5045137+08:00",
+          "ThroughDurableSequence": 17,
+          "Run": {
+            "RunId": "9e8762be-8ad8-4772-b029-1c9bcebb0602",
+            "WorkflowName": "query-fanout",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:06:37.007359+08:00",
+            "UpdatedAt": "2026-10-18T21:06:37.4789894+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 4,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "c0f3c72d98f514990d01068f4b5fa1ab2971f74d82fdad3a43b82af6866db794",
+            "GroupFanOutUsed": true
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 3,
+          "StepRevisionCount": 5,
+          "ExpansionCount": 1,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "76d3ade4-531b-440f-8eb7-b4e620b4191f",
+            "InstanceId": "b51e5e91-7e1d-4d17-9fa4-56edefce6e17",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "complete": {
+          "ExpansionId": "a7fd1e1d3ed8d599236541e283253dbece657274b1c182752a7a8ffbd85a7101",
+          "FanOutKey": "items",
+          "BoundaryStepId": "4ec83a18-1166-4791-aa39-34c77f7e2dc5",
+          "BoundaryRevision": 1,
+          "PlanDigest": "5dcf54979ad1a7caadad392f740dd247f3375e2d8775c4328221c6a7b1433918",
+          "ItemCount": 2,
+          "IsCurrent": true,
+          "IsComplete": true,
+          "Items": [
+            {
+              "ItemKey": "a",
+              "StepKey": "items.a",
+              "OccurrenceId": "fa4b77ca89315d8bd64e1b87eb42243970dde89a284f8ee360458c4d4a00f996",
+              "Role": 0
+            },
+            {
+              "ItemKey": "b",
+              "StepKey": "items.b",
+              "OccurrenceId": "65ea95a26fd68152c147da8c327e3550875b727f4e19720e23c2c772656a1669",
+              "Role": 0
+            }
+          ],
+          "Closures": [
+            {
+              "Digest": "6221935f3507c8a05e47d94623e9ccae9da397ab7f459dabd2da161ad995b639",
+              "LeaseGeneration": 2,
+              "CompletedAt": "2026-10-18T21:06:37.255395+08:00",
+              "Steps": [
+                {
+                  "StepId": "a294e3c7-2e0e-4aaf-b1fc-1d9c7bc7a87b",
+                  "Revision": 1
+                },
+                {
+                  "StepId": "b518ede6-3247-48f5-b000-914eaeadaf93",
+                  "Revision": 1
+                }
+              ]
+            },
+            {
+              "Digest": "bfc13bcc865a47cfefea51b35167aa04a210983e05ec763dcf840b49927cfb42",
+              "LeaseGeneration": 4,
+              "CompletedAt": "2026-10-18T21:06:37.4494622+08:00",
+              "Steps": [
+                {
+                  "StepId": "f51ed906-961a-4f23-aab7-ba2607a9ac20",
+                  "Revision": 2
+                },
+                {
+                  "StepId": "b518ede6-3247-48f5-b000-914eaeadaf93",
+                  "Revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "restart-invalidates-closure",
+        "before": {
+          "SnapshotToken": "25CC5A9EDE2081EC65A9E60C509F6C4C22DDC78A90A8FEFFC2DA6E94856EAB21",
+          "ThroughDurableSequence": 97,
+          "ObservedAt": "2026-10-18T21:09:17.7671481+08:00",
+          "OccurrenceId": "1b11b9aeba1c7d3ca0c11bce186581096d0ccdd1034398c1b949bfb2477a2a9a",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 5,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "4304cba9-ef6d-4ca0-a78a-53e0e801f543",
+              "InstanceId": "e357d68b-c816-4d17-a6c6-d5bf5964b286",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "after": {
+          "SnapshotToken": "C5DACE72D05220DE6465C4E100ABC05E422DD64ABD17EF816A4250D1349E38BA",
+          "ThroughDurableSequence": 98,
+          "ObservedAt": "2026-10-18T21:09:17.791892+08:00",
+          "OccurrenceId": "1b11b9aeba1c7d3ca0c11bce186581096d0ccdd1034398c1b949bfb2477a2a9a",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 5,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 4,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 0,
+            "Generation": {
+              "GenerationId": "4304cba9-ef6d-4ca0-a78a-53e0e801f543",
+              "InstanceId": "e357d68b-c816-4d17-a6c6-d5bf5964b286",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "final": {
+          "SnapshotToken": "886DB9D1A2100E6ABA5C0D69C960333EF7AFA66AEA025C4542147EA8557F9A23",
+          "ThroughDurableSequence": 104,
+          "ObservedAt": "2026-10-18T21:09:17.8962459+08:00",
+          "OccurrenceId": "1b11b9aeba1c7d3ca0c11bce186581096d0ccdd1034398c1b949bfb2477a2a9a",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 4,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "4304cba9-ef6d-4ca0-a78a-53e0e801f543",
+              "InstanceId": "e357d68b-c816-4d17-a6c6-d5bf5964b286",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "expiry-and-cache-eviction",
+        "firstId": "7316a027-b86e-433d-be64-159e1befec2e",
+        "secondId": "6dab13a4-c67c-4249-b735-2e57b6192c0a",
+        "expired": "449AD1DFAB787F93D04EE9CC8CE016DE1EBCD981C64D744F423BAD9B8B2F0597",
+        "evicted": "C4A2A5732CA413BC8D7348C658A46319EEC664D9129AD2208AEA988479C297DB"
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_24_net10.0.trx",
+      "Receipt": {
+        "scenario": "selected-before-claim",
+        "a": {
+          "SnapshotToken": "0107CB142C0F5802ECBDD5325CA9EF6807FA5F321080D68D0E7D652CA80EF52A",
+          "ThroughDurableSequence": 4,
+          "ObservedAt": "2026-10-18T21:09:15.9887033+08:00",
+          "OccurrenceId": "0a78e71ffe8e2ba1a292254553127c2afcd461a426e169543fe876c0c310ed3f",
+          "State": {
+            "Status": 1,
+            "Reason": 3,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 1,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              3
+            ],
+            "ActiveStepKeys": [
+              "items.a"
+            ],
+            "BlockingStepKeys": [],
+            "RunStatus": 1,
+            "Generation": {
+              "GenerationId": "f83a2ec1-99e5-4b24-9999-d8fe75c0fbe1",
+              "InstanceId": "f35197de-4aab-454d-a0f5-23b0a8750dc3",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "b": {
+          "SnapshotToken": "0107CB142C0F5802ECBDD5325CA9EF6807FA5F321080D68D0E7D652CA80EF52A",
+          "ThroughDurableSequence": 4,
+          "ObservedAt": "2026-10-18T21:09:15.9887033+08:00",
+          "OccurrenceId": "a205bf33fbeb17b2917ddcb714d5a7154ca886da10725d482be4105a7d4e6c87",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 1,
+            "Generation": {
+              "GenerationId": "f83a2ec1-99e5-4b24-9999-d8fe75c0fbe1",
+              "InstanceId": "f35197de-4aab-454d-a0f5-23b0a8750dc3",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "parent": {
+          "SnapshotToken": "0107CB142C0F5802ECBDD5325CA9EF6807FA5F321080D68D0E7D652CA80EF52A",
+          "ThroughDurableSequence": 4,
+          "ObservedAt": "2026-10-18T21:09:15.9887033+08:00",
+          "OccurrenceId": "8b92c4dc654ece453ee9b1dc5129ceda24ef7479472809f26d9902b8d48d59cc",
+          "State": {
+            "Status": 1,
+            "Reason": 3,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 2,
+              "Pending": 1,
+              "Running": 1,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              3
+            ],
+            "ActiveStepKeys": [
+              "items.a"
+            ],
+            "BlockingStepKeys": [],
+            "RunStatus": 1,
+            "Generation": {
+              "GenerationId": "f83a2ec1-99e5-4b24-9999-d8fe75c0fbe1",
+              "InstanceId": "f35197de-4aab-454d-a0f5-23b0a8750dc3",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "final": {
+          "SnapshotToken": "ED3B110247B094A4A6D38402491C8E29BAA11E7C20190AA8AFA84BFF8F0C77AB",
+          "ThroughDurableSequence": 8,
+          "ObservedAt": "2026-10-18T21:39:15.9887033+08:00",
+          "OccurrenceId": "8b92c4dc654ece453ee9b1dc5129ceda24ef7479472809f26d9902b8d48d59cc",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 2,
+            "Work": {
+              "Known": 2,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 2,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "f83a2ec1-99e5-4b24-9999-d8fe75c0fbe1",
+              "InstanceId": "f35197de-4aab-454d-a0f5-23b0a8750dc3",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "read-cancellation",
+        "runId": "59201799-1214-4660-9fea-ad8388159a9e",
+        "authorizationCalls": 0
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "provenance-redaction-and-permission-drop",
+        "runId": "9b029ee1-cd7f-4281-8fd4-6e146f6c834e",
+        "privilegedSnapshot": {
+          "SnapshotToken": "FDAD5EAE54BC1E7E024AA4C5E5D2BECA063ACD68A0D17EFE2E063879A788A29A",
+          "CapturedAt": "2026-10-18T21:09:05.3872344+08:00",
+          "ExpiresAt": "2026-10-18T21:11:05.3872344+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "9b029ee1-cd7f-4281-8fd4-6e146f6c834e",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:05.2340769+08:00",
+            "UpdatedAt": "2026-10-18T21:09:05.3649538+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": true,
+          "SourceReferencesIncluded": true,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "920753f2-c1fe-4ef0-9a57-4e4c6d2a506f",
+            "InstanceId": "fa976b52-13df-4249-b379-e60c2dd9bdfb",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "definitions": {
+          "Items": [
+            {
+              "GroupKey": "macro",
+              "ParentGroupKey": "root",
+              "Kind": 1,
+              "DisplayName": "Macro",
+              "ChildOrdinal": 0,
+              "Provenance": {
+                "MacroName": "Macro",
+                "MacroDefinitionFingerprint": "source-sensitive-fingerprint",
+                "InvocationKey": "invocation",
+                "MacroVersion": "1",
+                "SourceReference": "src/workflow.cs"
+              },
+              "OccurrenceCount": 1
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "FDAD5EAE54BC1E7E024AA4C5E5D2BECA063ACD68A0D17EFE2E063879A788A29A",
+          "ThroughDurableSequence": 6
+        },
+        "changedStatus": 6,
+        "redactedSnapshot": {
+          "SnapshotToken": "790A16FB2C55AFAC64C2A871FD88B67DEBD6EEA4068F43A78D5AEAFB9BAF8EF4",
+          "CapturedAt": "2026-10-18T21:09:05.3940309+08:00",
+          "ExpiresAt": "2026-10-18T21:11:05.3940309+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "9b029ee1-cd7f-4281-8fd4-6e146f6c834e",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:05.2340769+08:00",
+            "UpdatedAt": "2026-10-18T21:09:05.3649538+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "920753f2-c1fe-4ef0-9a57-4e4c6d2a506f",
+            "InstanceId": "fa976b52-13df-4249-b379-e60c2dd9bdfb",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "redacted": {
+          "Items": [
+            {
+              "GroupKey": "macro",
+              "ParentGroupKey": "root",
+              "Kind": 1,
+              "DisplayName": "Macro",
+              "ChildOrdinal": 0,
+              "Provenance": null,
+              "OccurrenceCount": 1
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "790A16FB2C55AFAC64C2A871FD88B67DEBD6EEA4068F43A78D5AEAFB9BAF8EF4",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "cancellation-after-independent-completion",
+        "completed": {
+          "SnapshotToken": "CFBCC7682D582F1C2AE9172BBC9883F03BA29727969B297C7263E18EA8975173",
+          "ThroughDurableSequence": 7,
+          "ObservedAt": "2026-10-18T21:10:27.1501855+08:00",
+          "OccurrenceId": "d79d377bcf06c4b4f820f16c4dc8171c888844451ede6b4519c1c603b5fccdae",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 4,
+            "Generation": {
+              "GenerationId": "1f78fbef-6526-4f2d-8722-0c862d14739a",
+              "InstanceId": "c2c34714-cd96-4068-84b6-264232ffb000",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "parent": {
+          "SnapshotToken": "CFBCC7682D582F1C2AE9172BBC9883F03BA29727969B297C7263E18EA8975173",
+          "ThroughDurableSequence": 7,
+          "ObservedAt": "2026-10-18T21:10:27.1501855+08:00",
+          "OccurrenceId": "811739263e079f0a41a4029a7b6c550eb6b13c59161c864c78da285bb52dbbf7",
+          "State": {
+            "Status": 5,
+            "Reason": 13,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 2,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 1
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              13
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 4,
+            "Generation": {
+              "GenerationId": "1f78fbef-6526-4f2d-8722-0c862d14739a",
+              "InstanceId": "c2c34714-cd96-4068-84b6-264232ffb000",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "selected-before-claim",
+        "a": {
+          "SnapshotToken": "08CDB1854E421BF6FF2F1D5146DB179A0AD30B478293CFA6703E36DA49F592F7",
+          "ThroughDurableSequence": 4,
+          "ObservedAt": "2026-10-18T21:10:29.3531883+08:00",
+          "OccurrenceId": "85a3008b2bd20000b0fbfb328e1587838f4c7e6819703251190738f4607de06a",
+          "State": {
+            "Status": 1,
+            "Reason": 3,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 1,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              3
+            ],
+            "ActiveStepKeys": [
+              "items.a"
+            ],
+            "BlockingStepKeys": [],
+            "RunStatus": 1,
+            "Generation": {
+              "GenerationId": "d3abc4f1-c290-409c-9771-1c9dfd369950",
+              "InstanceId": "0a13e18c-b43b-4994-9af7-bdd6646c57a0",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "b": {
+          "SnapshotToken": "08CDB1854E421BF6FF2F1D5146DB179A0AD30B478293CFA6703E36DA49F592F7",
+          "ThroughDurableSequence": 4,
+          "ObservedAt": "2026-10-18T21:10:29.3531883+08:00",
+          "OccurrenceId": "0b8a35c80c6a5b235b2393cb10949e10ba077b922dbe591c1c182a1d0ed2bce2",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 1,
+            "Generation": {
+              "GenerationId": "d3abc4f1-c290-409c-9771-1c9dfd369950",
+              "InstanceId": "0a13e18c-b43b-4994-9af7-bdd6646c57a0",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "parent": {
+          "SnapshotToken": "08CDB1854E421BF6FF2F1D5146DB179A0AD30B478293CFA6703E36DA49F592F7",
+          "ThroughDurableSequence": 4,
+          "ObservedAt": "2026-10-18T21:10:29.3531883+08:00",
+          "OccurrenceId": "c250833284a77f3ded36f275f1da85cc494ad8d351377039b1c85745ebbfb7b6",
+          "State": {
+            "Status": 1,
+            "Reason": 3,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 2,
+              "Pending": 1,
+              "Running": 1,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              3
+            ],
+            "ActiveStepKeys": [
+              "items.a"
+            ],
+            "BlockingStepKeys": [],
+            "RunStatus": 1,
+            "Generation": {
+              "GenerationId": "d3abc4f1-c290-409c-9771-1c9dfd369950",
+              "InstanceId": "0a13e18c-b43b-4994-9af7-bdd6646c57a0",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "final": {
+          "SnapshotToken": "6E8413805F101F09AE4EB3A50DA63EED50D2F3946F463FCEFEB85F1DEC835964",
+          "ThroughDurableSequence": 8,
+          "ObservedAt": "2026-10-18T21:40:29.3531883+08:00",
+          "OccurrenceId": "c250833284a77f3ded36f275f1da85cc494ad8d351377039b1c85745ebbfb7b6",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 2,
+            "Work": {
+              "Known": 2,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 2,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "d3abc4f1-c290-409c-9771-1c9dfd369950",
+              "InstanceId": "0a13e18c-b43b-4994-9af7-bdd6646c57a0",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "restart-invalidates-closure",
+        "before": {
+          "SnapshotToken": "D64542E7C30BFABDAA42FB04AD3F155EE8CF800388E6D2790CC04A45781261ED",
+          "ThroughDurableSequence": 97,
+          "ObservedAt": "2026-10-18T21:10:24.4870696+08:00",
+          "OccurrenceId": "ca2e4ba92c22473718d7116787c6efb7c698e9317096c19ef040514e600fce8f",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 5,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "1cd7eb5c-2db9-4436-b906-25cd6e58adbd",
+              "InstanceId": "d16ed30e-244b-4a91-87dd-ce8f58dcf498",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "after": {
+          "SnapshotToken": "8F736815D19980D1AC8C993C6B08109CC6256D94F4E3F8143A9A3841209A9CE6",
+          "ThroughDurableSequence": 98,
+          "ObservedAt": "2026-10-18T21:10:24.509707+08:00",
+          "OccurrenceId": "ca2e4ba92c22473718d7116787c6efb7c698e9317096c19ef040514e600fce8f",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 5,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 4,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 0,
+            "Generation": {
+              "GenerationId": "1cd7eb5c-2db9-4436-b906-25cd6e58adbd",
+              "InstanceId": "d16ed30e-244b-4a91-87dd-ce8f58dcf498",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "final": {
+          "SnapshotToken": "4033D7CED77436F8F5468707568CED67711898612C2755D881716C0083FF574C",
+          "ThroughDurableSequence": 104,
+          "ObservedAt": "2026-10-18T21:10:24.6019212+08:00",
+          "OccurrenceId": "ca2e4ba92c22473718d7116787c6efb7c698e9317096c19ef040514e600fce8f",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 4,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "1cd7eb5c-2db9-4436-b906-25cd6e58adbd",
+              "InstanceId": "d16ed30e-244b-4a91-87dd-ce8f58dcf498",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "historical-selection",
+        "history": {
+          "SnapshotToken": "6BAB21CAAAC50B9B2BBEBD8E760FDCE44E3813B10029F38CE6752F34917DDBC4",
+          "ThroughDurableSequence": 9,
+          "ObservedAt": "2026-10-18T21:10:29.1855642+08:00",
+          "OccurrenceId": "785f9fc419d99202d3581b85689a54db0ad7c1db81c6ac722c820e7de047cbe7",
+          "State": {
+            "Status": null,
+            "Reason": 1,
+            "IsBlocked": false,
+            "Coverage": 2,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              0,
+              1
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 0,
+            "Generation": {
+              "GenerationId": "3df8ce87-37c3-458b-aa72-3dcaffdff983",
+              "InstanceId": "f8742c3e-e071-44f5-9642-7cfbc0760ac0",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-only-generation-same-watermark",
+        "runId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+        "first": {
+          "SnapshotToken": "9FDEB54649D90FDC893382A6B1E7AD5DE9029D602510B4D44895298134D156AC",
+          "CapturedAt": "2026-10-18T21:09:04.2843058+08:00",
+          "ExpiresAt": "2026-10-18T21:11:04.2843058+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:04.1366776+08:00",
+            "UpdatedAt": "2026-10-18T21:09:04.2674573+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "dbc1a690-f975-4cf7-a7b6-507df205db1d",
+            "InstanceId": "d1092dd7-792d-4814-8c36-0c886e420b90",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "second": {
+          "SnapshotToken": "ED2F408CBD70799EBF83B11A47728C8EAB9F4ADD6ED522169B110DC64B167CBD",
+          "CapturedAt": "2026-10-18T21:09:04.2986781+08:00",
+          "ExpiresAt": "2026-10-18T21:11:04.2986781+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:04.1366776+08:00",
+            "UpdatedAt": "2026-10-18T21:09:09.2674573+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "dbc1a690-f975-4cf7-a7b6-507df205db1d",
+            "InstanceId": "d1092dd7-792d-4814-8c36-0c886e420b90",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "updatedAt": "2026-10-18T21:09:09.2674573+08:00",
+        "oldPage": {
+          "Items": [
+            {
+              "Kind": 0,
+              "Occurrence": {
+                "WorkflowRunId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+                "OccurrenceId": "5e0882ac428b3cb6e1e9a2f8c528bcfe55d72eec02c77d503c4b65160eeae492",
+                "GroupKey": "root",
+                "ParentOccurrenceId": null,
+                "ExecutionCoordinate": "[]"
+              },
+              "Step": null,
+              "ChildRun": null,
+              "HasChildren": true
+            },
+            {
+              "Kind": 1,
+              "Occurrence": null,
+              "Step": {
+                "WorkflowRunId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+                "StepId": "00d20d4e-5d57-434e-ab44-557df80debce",
+                "StepKey": "plain",
+                "Revision": 1,
+                "Attempt": 1,
+                "Status": 2,
+                "IsCurrent": true,
+                "GroupOccurrenceId": null,
+                "Role": null,
+                "LeaseGeneration": 2,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": "2026-10-18T21:09:04.2315555+08:00",
+                "CompletedAt": "2026-10-18T21:09:04.2509557+08:00",
+                "ChildRunId": null
+              },
+              "ChildRun": null,
+              "HasChildren": false
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 2,
+          "SnapshotToken": "9FDEB54649D90FDC893382A6B1E7AD5DE9029D602510B4D44895298134D156AC",
+          "ThroughDurableSequence": 6
+        },
+        "newPage": {
+          "Items": [
+            {
+              "Kind": 0,
+              "Occurrence": {
+                "WorkflowRunId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+                "OccurrenceId": "5e0882ac428b3cb6e1e9a2f8c528bcfe55d72eec02c77d503c4b65160eeae492",
+                "GroupKey": "root",
+                "ParentOccurrenceId": null,
+                "ExecutionCoordinate": "[]"
+              },
+              "Step": null,
+              "ChildRun": null,
+              "HasChildren": true
+            },
+            {
+              "Kind": 1,
+              "Occurrence": null,
+              "Step": {
+                "WorkflowRunId": "b974d744-57e0-4a94-a7f3-6aefcbd6169d",
+                "StepId": "00d20d4e-5d57-434e-ab44-557df80debce",
+                "StepKey": "plain",
+                "Revision": 1,
+                "Attempt": 1,
+                "Status": 2,
+                "IsCurrent": true,
+                "GroupOccurrenceId": null,
+                "Role": null,
+                "LeaseGeneration": 2,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": "2026-10-18T21:09:04.2315555+08:00",
+                "CompletedAt": "2026-10-18T21:09:04.2509557+08:00",
+                "ChildRunId": null
+              },
+              "ChildRun": null,
+              "HasChildren": false
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 2,
+          "SnapshotToken": "ED2F408CBD70799EBF83B11A47728C8EAB9F4ADD6ED522169B110DC64B167CBD",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "fanout-selected-members-and-effective-closure",
+        "incompleteSnapshot": {
+          "SnapshotToken": "CF11A1807F22A2F2A9D953182721713FC2C18D307AEEC044AE167D8CEB352F56",
+          "CapturedAt": "2026-10-18T21:09:05.0753165+08:00",
+          "ExpiresAt": "2026-10-18T21:11:05.0753165+08:00",
+          "ThroughDurableSequence": 11,
+          "Run": {
+            "RunId": "37252097-6ded-40dc-be43-e725a645a9ff",
+            "WorkflowName": "query-fanout",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:04.8339832+08:00",
+            "UpdatedAt": "2026-10-18T21:09:05.0575239+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 3,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "c0f3c72d98f514990d01068f4b5fa1ab2971f74d82fdad3a43b82af6866db794",
+            "GroupFanOutUsed": true
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 3,
+          "StepRevisionCount": 5,
+          "ExpansionCount": 1,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "96f3b911-0626-4606-a820-7711a66b3b42",
+            "InstanceId": "16f0706c-6888-4660-bfc8-ed5e479e7a82",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "beforeRecovery": {
+          "ExpansionId": "ec911bc15366d1a548f541e343b47ac2f3bf9449d623f74c7e415af877018224",
+          "FanOutKey": "items",
+          "BoundaryStepId": "dc3b06ac-b4b6-4c07-ae51-d8c353752459",
+          "BoundaryRevision": 1,
+          "PlanDigest": "d0f52a1a7f0dd937f0ca96911193a398cb7128dbb66dc9dd65d3486df263bebf",
+          "ItemCount": 2,
+          "IsCurrent": true,
+          "IsComplete": false,
+          "Items": [
+            {
+              "ItemKey": "a",
+              "StepKey": "items.a",
+              "OccurrenceId": "230becff9b1f60f263215bc393a288e2a5ce249015d6741fcf67c7d647fe6276",
+              "Role": 0
+            },
+            {
+              "ItemKey": "b",
+              "StepKey": "items.b",
+              "OccurrenceId": "6aa84c3e31b24c5046b5183aecc1b22a20070fb2f289c208082e3009bc19bb5a",
+              "Role": 0
+            }
+          ],
+          "Closures": [
+            {
+              "Digest": "1d57af0d6c108450ea6092b48e126968fd15c219068ff9f3cbdce1a0ce62f077",
+              "LeaseGeneration": 2,
+              "CompletedAt": "2026-10-18T21:09:04.9906778+08:00",
+              "Steps": [
+                {
+                  "StepId": "201c0c84-b8c5-4da4-8717-d1232e12a96c",
+                  "Revision": 1
+                },
+                {
+                  "StepId": "c95f692c-b7d2-4102-9106-86419cbb1f67",
+                  "Revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        "completeSnapshot": {
+          "SnapshotToken": "FA98661129B1D30336A648C20610BF162E9955B6A3578E0AB49952386E823A7D",
+          "CapturedAt": "2026-10-18T21:09:05.1975556+08:00",
+          "ExpiresAt": "2026-10-18T21:11:05.1975556+08:00",
+          "ThroughDurableSequence": 17,
+          "Run": {
+            "RunId": "37252097-6ded-40dc-be43-e725a645a9ff",
+            "WorkflowName": "query-fanout",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:04.8339832+08:00",
+            "UpdatedAt": "2026-10-18T21:09:05.1813297+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 4,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "c0f3c72d98f514990d01068f4b5fa1ab2971f74d82fdad3a43b82af6866db794",
+            "GroupFanOutUsed": true
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 3,
+          "StepRevisionCount": 5,
+          "ExpansionCount": 1,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "96f3b911-0626-4606-a820-7711a66b3b42",
+            "InstanceId": "16f0706c-6888-4660-bfc8-ed5e479e7a82",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "complete": {
+          "ExpansionId": "ec911bc15366d1a548f541e343b47ac2f3bf9449d623f74c7e415af877018224",
+          "FanOutKey": "items",
+          "BoundaryStepId": "dc3b06ac-b4b6-4c07-ae51-d8c353752459",
+          "BoundaryRevision": 1,
+          "PlanDigest": "d0f52a1a7f0dd937f0ca96911193a398cb7128dbb66dc9dd65d3486df263bebf",
+          "ItemCount": 2,
+          "IsCurrent": true,
+          "IsComplete": true,
+          "Items": [
+            {
+              "ItemKey": "a",
+              "StepKey": "items.a",
+              "OccurrenceId": "230becff9b1f60f263215bc393a288e2a5ce249015d6741fcf67c7d647fe6276",
+              "Role": 0
+            },
+            {
+              "ItemKey": "b",
+              "StepKey": "items.b",
+              "OccurrenceId": "6aa84c3e31b24c5046b5183aecc1b22a20070fb2f289c208082e3009bc19bb5a",
+              "Role": 0
+            }
+          ],
+          "Closures": [
+            {
+              "Digest": "1d57af0d6c108450ea6092b48e126968fd15c219068ff9f3cbdce1a0ce62f077",
+              "LeaseGeneration": 2,
+              "CompletedAt": "2026-10-18T21:09:04.9906778+08:00",
+              "Steps": [
+                {
+                  "StepId": "201c0c84-b8c5-4da4-8717-d1232e12a96c",
+                  "Revision": 1
+                },
+                {
+                  "StepId": "c95f692c-b7d2-4102-9106-86419cbb1f67",
+                  "Revision": 1
+                }
+              ]
+            },
+            {
+              "Digest": "782c758cee420ff31c62404be89cbb41387c2f63827faeb73cb3de8d847f0b17",
+              "LeaseGeneration": 4,
+              "CompletedAt": "2026-10-18T21:09:05.1528761+08:00",
+              "Steps": [
+                {
+                  "StepId": "57b118d0-d94f-4915-aa62-50c7906ad5ea",
+                  "Revision": 2
+                },
+                {
+                  "StepId": "c95f692c-b7d2-4102-9106-86419cbb1f67",
+                  "Revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "fork-reused-child-link",
+        "sourceId": "f6e56418-de99-4730-945e-dfe975407f09",
+        "destinationId": "c8b19199-d57d-4e70-b3ad-27765ca80eb1",
+        "childId": "795f4703-38b3-ccce-db8a-a2f63503d639",
+        "sourceSnapshot": {
+          "SnapshotToken": "9361424AA2C396AB8C8792E2CB56C4416D5E5D3E02930217BE2AA27930952B03",
+          "CapturedAt": "2026-10-18T21:09:04.7839475+08:00",
+          "ExpiresAt": "2026-10-18T21:11:04.7839475+08:00",
+          "ThroughDurableSequence": 12,
+          "Run": {
+            "RunId": "f6e56418-de99-4730-945e-dfe975407f09",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:04.3413467+08:00",
+            "UpdatedAt": "2026-10-18T21:09:04.6260203+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 3,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "a9690f60-dafb-4ede-9dfb-029e97e7dcaf",
+            "InstanceId": "9c62cb19-c010-4bdb-b32d-b26262ce2167",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "sourceNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "f6e56418-de99-4730-945e-dfe975407f09",
+              "OccurrenceId": "b28276266ed937f2ab01724bb2b8ed7d4125fc0504c50f6e0196b573bccf291b",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "f6e56418-de99-4730-945e-dfe975407f09",
+              "StepId": "e4acba17-a5e3-4dcb-9f46-c2ba4ffc26e0",
+              "StepKey": "tail",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:09:04.592806+08:00",
+              "CompletedAt": "2026-10-18T21:09:04.6093111+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          },
+          {
+            "Kind": 2,
+            "Occurrence": null,
+            "Step": null,
+            "ChildRun": {
+              "RunId": "795f4703-38b3-ccce-db8a-a2f63503d639",
+              "ParentRunId": "f6e56418-de99-4730-945e-dfe975407f09",
+              "Status": 2,
+              "IsAvailable": true
+            },
+            "HasChildren": false
+          }
+        ],
+        "destinationSnapshot": {
+          "SnapshotToken": "24AA0EF6B16BA5601568F369B7C7C9700FE3C063BAC1CC687E5F641D896E45DA",
+          "CapturedAt": "2026-10-18T21:09:04.787499+08:00",
+          "ExpiresAt": "2026-10-18T21:11:04.787499+08:00",
+          "ThroughDurableSequence": 18,
+          "Run": {
+            "RunId": "c8b19199-d57d-4e70-b3ad-27765ca80eb1",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": "f6e56418-de99-4730-945e-dfe975407f09",
+            "CreatedAt": "2026-10-18T21:09:04.6495904+08:00",
+            "UpdatedAt": "2026-10-18T21:09:04.7630385+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 3,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": {
+            "RunId": "f6e56418-de99-4730-945e-dfe975407f09",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:04.3413467+08:00",
+            "UpdatedAt": "2026-10-18T21:09:04.6260203+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "Generation": {
+            "GenerationId": "36bcb313-110e-4b75-a5e2-1f95b6e86c05",
+            "InstanceId": "a3df562c-0b76-4e53-8815-2bed37943073",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "destNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "c8b19199-d57d-4e70-b3ad-27765ca80eb1",
+              "OccurrenceId": "c5d57ad7925c00d22afae6ff81e5bdbaa9e65299573265eb9039fd7f46bf8949",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "c8b19199-d57d-4e70-b3ad-27765ca80eb1",
+              "StepId": "822ed342-1422-464e-8599-99c2e2190b1c",
+              "StepKey": "tail",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 1,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:09:04.592806+08:00",
+              "CompletedAt": "2026-10-18T21:09:04.6093111+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          },
+          {
+            "Kind": 2,
+            "Occurrence": null,
+            "Step": null,
+            "ChildRun": {
+              "RunId": "795f4703-38b3-ccce-db8a-a2f63503d639",
+              "ParentRunId": "f6e56418-de99-4730-945e-dfe975407f09",
+              "Status": 2,
+              "IsAvailable": true
+            },
+            "HasChildren": false
+          }
+        ],
+        "reusedLink": {
+          "RunId": "795f4703-38b3-ccce-db8a-a2f63503d639",
+          "ParentRunId": "f6e56418-de99-4730-945e-dfe975407f09",
+          "Status": 2,
+          "IsAvailable": true
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "runId": "089f342a-659c-4ded-991a-74b27cd012a1",
+        "workerExitCode": 0,
+        "priorTokenStatus": "ResyncRequired",
+        "occurrenceCount": 15,
+        "memberCount": 15,
+        "rootCount": 3,
+        "innerCount": 6,
+        "leafCount": 6,
+        "definitions": [
+          "inner",
+          "leaf",
+          "outer"
+        ],
+        "aggregateStates": 15
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "restart-invalidates-closure",
+        "before": {
+          "SnapshotToken": "33C34A246D6BE5FB16CCA4D1123E981C5AD384E90852A977AB20B0D5934B67CD",
+          "ThroughDurableSequence": 97,
+          "ObservedAt": "2026-10-18T21:10:25.9573144+08:00",
+          "OccurrenceId": "4b18f5704cc3a89b83fa8ca14fbd0308e8c8371ba20bd19ebf0c029f91484ea8",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 5,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "10f4cab9-98cc-4a56-9188-02c126a04dae",
+              "InstanceId": "73411d59-9aa9-4c61-8551-f853cc8133bc",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "after": {
+          "SnapshotToken": "DC758212305FB8B059AD42D64A3E01714868DDCB0C15A2BE55FA9D0B8188EDBB",
+          "ThroughDurableSequence": 98,
+          "ObservedAt": "2026-10-18T21:10:25.9830791+08:00",
+          "OccurrenceId": "4b18f5704cc3a89b83fa8ca14fbd0308e8c8371ba20bd19ebf0c029f91484ea8",
+          "State": {
+            "Status": 0,
+            "Reason": 17,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": false,
+            "TotalCount": null,
+            "Work": {
+              "Known": 5,
+              "Pending": 1,
+              "Running": 0,
+              "Completed": 4,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              17
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 0,
+            "Generation": {
+              "GenerationId": "10f4cab9-98cc-4a56-9188-02c126a04dae",
+              "InstanceId": "73411d59-9aa9-4c61-8551-f853cc8133bc",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        },
+        "final": {
+          "SnapshotToken": "30F6B376A1FB69D3A567F22ADDC3611859440C30020FEF019009F36D31298E4F",
+          "ThroughDurableSequence": 174,
+          "ObservedAt": "2026-10-18T21:10:26.950652+08:00",
+          "OccurrenceId": "4b18f5704cc3a89b83fa8ca14fbd0308e8c8371ba20bd19ebf0c029f91484ea8",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 5,
+            "Work": {
+              "Known": 5,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 5,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 0,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 0,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "10f4cab9-98cc-4a56-9188-02c126a04dae",
+              "InstanceId": "73411d59-9aa9-4c61-8551-f853cc8133bc",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "mixed-root-and-structural-children",
+        "runId": "9ac7647b-be61-42ba-8fea-0091b3336266",
+        "snapshot": {
+          "SnapshotToken": "381A47295F4FB85F4A89066E05DD90D0C174DB6FC5828163FA4601864AE063D9",
+          "CapturedAt": "2026-10-18T21:09:03.6637795+08:00",
+          "ExpiresAt": "2026-10-18T21:11:03.6637795+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "9ac7647b-be61-42ba-8fea-0091b3336266",
+            "WorkflowName": "query-mixed",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:03.5490871+08:00",
+            "UpdatedAt": "2026-10-18T21:09:03.6473805+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "dd78ef07-da48-454c-be81-b7ff9001e992",
+            "InstanceId": "55499ee9-4107-4f23-8762-66e50b698ead",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "rootNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "9ac7647b-be61-42ba-8fea-0091b3336266",
+              "OccurrenceId": "c52ce487c294a9d1efaebb921f7dfc928f720791f809608247f1fc97ca87d869",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "9ac7647b-be61-42ba-8fea-0091b3336266",
+              "StepId": "d1dcf141-95eb-48c1-b732-d09679964eb1",
+              "StepKey": "plain",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:09:03.6230787+08:00",
+              "CompletedAt": "2026-10-18T21:09:03.6360897+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          }
+        ],
+        "occurrenceChildren": {
+          "Items": [
+            {
+              "Kind": 0,
+              "Occurrence": {
+                "WorkflowRunId": "9ac7647b-be61-42ba-8fea-0091b3336266",
+                "OccurrenceId": "c571c14dc77e53d232b1798e31e8b8c2e854ec029b00defaf009170cf2afb9a9",
+                "GroupKey": "macro",
+                "ParentOccurrenceId": "c52ce487c294a9d1efaebb921f7dfc928f720791f809608247f1fc97ca87d869",
+                "ExecutionCoordinate": "[]"
+              },
+              "Step": null,
+              "ChildRun": null,
+              "HasChildren": true
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "381A47295F4FB85F4A89066E05DD90D0C174DB6FC5828163FA4601864AE063D9",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "sqlite-multiselect-snapshot-survives-writer-commit",
+        "runId": "64d09dc3-ef09-4232-9454-48ea8a5d4442",
+        "oldSnapshot": {
+          "SnapshotToken": "7459CAB00E8F76B08F195CD36BEDB5643D14FF9802E759B94F299928DE219F86",
+          "CapturedAt": "2026-10-18T21:09:02.0581534+08:00",
+          "ExpiresAt": "2026-10-18T21:11:02.0581534+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "64d09dc3-ef09-4232-9454-48ea8a5d4442",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:01.9221404+08:00",
+            "UpdatedAt": "2026-10-18T21:09:02.0211993+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "740f5e97-e83f-497b-b739-3970c797d8de",
+            "InstanceId": "71d82189-d10d-4b43-b7d6-47bca22ce36c",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "oldMembers": [
+          {
+            "Step": {
+              "WorkflowRunId": "64d09dc3-ef09-4232-9454-48ea8a5d4442",
+              "StepId": "23932d93-0720-436c-81d3-f890e380933d",
+              "StepKey": "grouped",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": "2dc3b3aca0cde302bac1a576c1e8748f9057c39c80cd019c0fe37a7fdc99cdc5",
+              "Role": 0,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:09:01.9742862+08:00",
+              "CompletedAt": "2026-10-18T21:09:01.9876325+08:00",
+              "ChildRunId": null
+            },
+            "Dependencies": [],
+            "Waits": [],
+            "Approvals": []
+          }
+        ],
+        "freshSnapshot": {
+          "SnapshotToken": "F483198AEF7C7C6C18C6267ECCB65488D6CEFA1A33B01CBA5B7A690944A6E878",
+          "CapturedAt": "2026-10-18T21:09:02.0789152+08:00",
+          "ExpiresAt": "2026-10-18T21:11:02.0789152+08:00",
+          "ThroughDurableSequence": 6,
+          "Run": {
+            "RunId": "64d09dc3-ef09-4232-9454-48ea8a5d4442",
+            "WorkflowName": "query-sensitive",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:01.9221404+08:00",
+            "UpdatedAt": "2026-10-18T21:09:07.0512681+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "39fc15a2ca9683e05b41920623d868fd35e3e12f57be62a2ab24e63fd6e2afb7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 2,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "740f5e97-e83f-497b-b739-3970c797d8de",
+            "InstanceId": "71d82189-d10d-4b43-b7d6-47bca22ce36c",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "freshMembers": [
+          {
+            "Step": {
+              "WorkflowRunId": "64d09dc3-ef09-4232-9454-48ea8a5d4442",
+              "StepId": "23932d93-0720-436c-81d3-f890e380933d",
+              "StepKey": "grouped",
+              "Revision": 1,
+              "Attempt": 2,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": "2dc3b3aca0cde302bac1a576c1e8748f9057c39c80cd019c0fe37a7fdc99cdc5",
+              "Role": 0,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:09:01.9742862+08:00",
+              "CompletedAt": "2026-10-18T21:09:01.9876325+08:00",
+              "ChildRunId": null
+            },
+            "Dependencies": [],
+            "Waits": [],
+            "Approvals": []
+          }
+        ],
+        "writerAttempt": 2
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "cursor-binding-and-page-size",
+        "runId": "ca8c3252-5e5f-40d4-8fe0-367dfd7e9599",
+        "snapshotToken": "7E5D762DD8C93FFFFAF212A792DAFEFAE05E448D9954524E6BB00642979807DC",
+        "definitions": {
+          "Items": [
+            {
+              "GroupKey": "macro",
+              "ParentGroupKey": "root",
+              "Kind": 1,
+              "DisplayName": "Macro",
+              "ChildOrdinal": 0,
+              "Provenance": null,
+              "OccurrenceCount": 1
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "7E5D762DD8C93FFFFAF212A792DAFEFAE05E448D9954524E6BB00642979807DC",
+          "ThroughDurableSequence": 6
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-bounded-read",
+        "runId": "52f35f1d-41ff-4b06-b444-b1e3a22c9b2c",
+        "maximumRows": 262144,
+        "maximumBytes": 1,
+        "Status": 5,
+        "Reason": "The run exceeds the configured snapshot byte limit."
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "member-current-versus-history",
+        "runId": "ce3a8744-6337-4e0a-8885-d9ad5550711f",
+        "occurrence": "d4f37089e9016c2647a7a5f5d82b74896f5beab7e5fdd644a05f03e301115bf6",
+        "current": {
+          "Items": [
+            {
+              "Step": {
+                "WorkflowRunId": "ce3a8744-6337-4e0a-8885-d9ad5550711f",
+                "StepId": "52ae4cf4-c936-4f99-9db6-c87fdff05d1d",
+                "StepKey": "$loop/outer/2/body/entry",
+                "Revision": 2,
+                "Attempt": 0,
+                "Status": 0,
+                "IsCurrent": true,
+                "GroupOccurrenceId": "d4f37089e9016c2647a7a5f5d82b74896f5beab7e5fdd644a05f03e301115bf6",
+                "Role": 0,
+                "LeaseGeneration": 3,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": null,
+                "CompletedAt": null,
+                "ChildRunId": null
+              },
+              "Dependencies": [
+                {
+                  "StepKey": "$loop/outer/2/body/entry",
+                  "DependsOnStepKey": "$loop/outer/2/condition"
+                }
+              ],
+              "Waits": [],
+              "Approvals": []
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 1,
+          "SnapshotToken": "A42863B2EB31954D7BC8D489E5CB11C4E11ECD90291C9DB941082C3DCFCB391B",
+          "ThroughDurableSequence": 104
+        },
+        "history": {
+          "Items": [
+            {
+              "Step": {
+                "WorkflowRunId": "ce3a8744-6337-4e0a-8885-d9ad5550711f",
+                "StepId": "60421acd-cab1-490c-b224-09652f511265",
+                "StepKey": "$loop/outer/2/body/entry",
+                "Revision": 1,
+                "Attempt": 1,
+                "Status": 2,
+                "IsCurrent": false,
+                "GroupOccurrenceId": "d4f37089e9016c2647a7a5f5d82b74896f5beab7e5fdd644a05f03e301115bf6",
+                "Role": 0,
+                "LeaseGeneration": 2,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": "2026-10-18T21:09:02.5379259+08:00",
+                "CompletedAt": "2026-10-18T21:09:02.5519541+08:00",
+                "ChildRunId": null
+              },
+              "Dependencies": [
+                {
+                  "StepKey": "$loop/outer/2/body/entry",
+                  "DependsOnStepKey": "$loop/outer/2/condition"
+                }
+              ],
+              "Waits": [],
+              "Approvals": []
+            },
+            {
+              "Step": {
+                "WorkflowRunId": "ce3a8744-6337-4e0a-8885-d9ad5550711f",
+                "StepId": "52ae4cf4-c936-4f99-9db6-c87fdff05d1d",
+                "StepKey": "$loop/outer/2/body/entry",
+                "Revision": 2,
+                "Attempt": 0,
+                "Status": 0,
+                "IsCurrent": true,
+                "GroupOccurrenceId": "d4f37089e9016c2647a7a5f5d82b74896f5beab7e5fdd644a05f03e301115bf6",
+                "Role": 0,
+                "LeaseGeneration": 3,
+                "LeaseExpiresAt": null,
+                "AvailableAt": null,
+                "StartedAt": null,
+                "CompletedAt": null,
+                "ChildRunId": null
+              },
+              "Dependencies": [
+                {
+                  "StepKey": "$loop/outer/2/body/entry",
+                  "DependsOnStepKey": "$loop/outer/2/condition"
+                }
+              ],
+              "Waits": [],
+              "Approvals": []
+            }
+          ],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 2,
+          "SnapshotToken": "A42863B2EB31954D7BC8D489E5CB11C4E11ECD90291C9DB941082C3DCFCB391B",
+          "ThroughDurableSequence": 104
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-bounded-read",
+        "runId": "27935746-4d1f-4f1d-a8d5-c7bca01d770a",
+        "maximumRows": 1,
+        "maximumBytes": 33554432,
+        "Status": 5,
+        "Reason": "The run exceeds the configured snapshot row limit."
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "deep-definition-plane",
+        "runId": "d20c1992-7d67-48af-bb74-2e9017361af6",
+        "snapshot": {
+          "SnapshotToken": "C661D35A3F0C0FB6A7B60A4CC2BE4FAE44B8A23CFDBE9F25C85FED59E0BA9CBF",
+          "CapturedAt": "2026-10-18T21:09:05.4971381+08:00",
+          "ExpiresAt": "2026-10-18T21:11:05.4971381+08:00",
+          "ThroughDurableSequence": 1,
+          "Run": {
+            "RunId": "d20c1992-7d67-48af-bb74-2e9017361af6",
+            "WorkflowName": "query-deep",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:05.4347155+08:00",
+            "UpdatedAt": "2026-10-18T21:09:05.4347155+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 1,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "e9c260ff20def627b1290fe4dd17d3edf277c1aac2c58eb31cbbe130bd828bd7",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 128,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 0,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "7fb18c2b-47df-4ed0-bcde-8565b25ce889",
+            "InstanceId": "ba6e2e8d-6178-4dac-806d-12e058e00179",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "definitionCount": 128,
+        "maximumDepth": 128,
+        "allOccurrenceCountsZero": true
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "snapshot-only-generation-disposition",
+        "first": {
+          "SnapshotToken": "002CAC374CF9105D9F47340F231C08C107C8DC9F9FA46424C8A1C16620226331",
+          "CapturedAt": "2026-10-18T21:07:44.012554+08:00",
+          "ExpiresAt": "2026-10-18T21:09:44.012554+08:00",
+          "ThroughDurableSequence": 1,
+          "Run": {
+            "RunId": "eead883c-9b6c-49e3-96e9-8894ad4f83b5",
+            "WorkflowName": "generation-query",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:07:43.9455711+08:00",
+            "UpdatedAt": "2026-10-18T21:07:43.9455711+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 1,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": null,
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 0,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 0,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "9c521357-71e0-4916-8bb3-2ce89ddd347f",
+            "InstanceId": "2979403d-67d6-45d3-879d-d816f4c4edf2",
+            "Ordinal": 1,
+            "Status": 0,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "second": {
+          "SnapshotToken": "BE3949E10B2E781673BA78063564C74142B79B377821E9786834A1E7620B88D4",
+          "CapturedAt": "2026-10-18T21:07:44.026762+08:00",
+          "ExpiresAt": "2026-10-18T21:09:44.026762+08:00",
+          "ThroughDurableSequence": 1,
+          "Run": {
+            "RunId": "eead883c-9b6c-49e3-96e9-8894ad4f83b5",
+            "WorkflowName": "generation-query",
+            "WorkflowVersion": "1",
+            "Status": 0,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:07:43.9455711+08:00",
+            "UpdatedAt": "2026-10-18T21:07:43.9455711+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 1,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": null,
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 0,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 0,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "9c521357-71e0-4916-8bb3-2ce89ddd347f",
+            "InstanceId": "2979403d-67d6-45d3-879d-d816f4c4edf2",
+            "Ordinal": 1,
+            "Status": 0,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": [
+            {
+              "DispositionId": "01a60981-3879-4513-9d28-aabae6429c7b",
+              "Disposition": 0,
+              "CreatedAt": "2026-10-18T21:07:44.0139341+08:00"
+            }
+          ]
+        },
+        "oldPage": {
+          "Items": [],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 0,
+          "SnapshotToken": "002CAC374CF9105D9F47340F231C08C107C8DC9F9FA46424C8A1C16620226331",
+          "ThroughDurableSequence": 1
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "reader-run-binding-and-denied-access",
+        "firstId": "756309cd-1800-4ebe-bb61-49b0961ac49a",
+        "secondId": "c721df62-99ed-4d92-b933-5e8b4d06945c",
+        "token": "DBDA01A35A84391A6751C1F9A7B241B68FC6CD5701C594D1D458795BC5B48E11"
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "expiry-and-cache-eviction",
+        "firstId": "909be8d2-5fc0-41c8-bb01-68aa100180d1",
+        "secondId": "cab6210a-d180-4122-96b7-6cb22e0cef5b",
+        "expired": "41BD22A0138DCA7B03FB80D852C5051F8EE880115709DF31A939E327B8A56A2F",
+        "evicted": "16843A65077B25EC8FD1DFE44D864C7D65084D0507980A0338AAB80A8E3D3837"
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "legacy-ungrouped",
+        "runId": "f20bb0f8-c8bd-43aa-b425-224e2fa6ac1b",
+        "snapshot": {
+          "SnapshotToken": "C93DD50AA7FFEDB97227F9D2DCF33F352C7B8CA47481F489567E10BD7DA70D28",
+          "CapturedAt": "2026-10-18T21:09:06.1583046+08:00",
+          "ExpiresAt": "2026-10-18T21:11:06.1583046+08:00",
+          "ThroughDurableSequence": 4,
+          "Run": {
+            "RunId": "f20bb0f8-c8bd-43aa-b425-224e2fa6ac1b",
+            "WorkflowName": "query-legacy",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:06.0466867+08:00",
+            "UpdatedAt": "2026-10-18T21:09:06.1355006+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": null,
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 0,
+          "OccurrenceCount": 0,
+          "StepRevisionCount": 1,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "110bd7b9-d1a5-4797-aeb3-c37252c93675",
+            "InstanceId": "92bbf852-ebb7-46ed-843f-01e7c694c516",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "definitions": {
+          "Items": [],
+          "NextCursor": null,
+          "HasMore": false,
+          "TotalCount": 0,
+          "SnapshotToken": "C93DD50AA7FFEDB97227F9D2DCF33F352C7B8CA47481F489567E10BD7DA70D28",
+          "ThroughDurableSequence": 4
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "native-child-count-isolation",
+        "state": {
+          "SnapshotToken": "C1FA5757871D3EE056066A2B90A6263C001663C9136F2213F6DF37F8D6F06024",
+          "ThroughDurableSequence": 12,
+          "ObservedAt": "2026-10-18T21:10:28.9320376+08:00",
+          "OccurrenceId": "a8cd4b64de18bfeac596471945b32540c7d131a74799a65816db8ef5282498fb",
+          "State": {
+            "Status": 2,
+            "Reason": 12,
+            "IsBlocked": false,
+            "Coverage": 0,
+            "IsExpansionClosed": true,
+            "TotalCount": 1,
+            "Work": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Control": {
+              "Known": 1,
+              "Pending": 0,
+              "Running": 0,
+              "Completed": 1,
+              "Failed": 0,
+              "Waiting": 0,
+              "Cancelled": 0
+            },
+            "Reasons": [
+              12
+            ],
+            "ActiveStepKeys": [],
+            "BlockingStepKeys": [],
+            "RunStatus": 2,
+            "Generation": {
+              "GenerationId": "c04c3a24-f43c-4245-ab5a-df6d99dbe4ad",
+              "InstanceId": "5d7919db-8113-425b-8c6b-cb7d649ed77e",
+              "Ordinal": 1,
+              "Status": 2,
+              "PredecessorGenerationId": null
+            },
+            "Operation": null
+          }
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "child-run-link-and-independent-tree",
+        "parentSnapshot": {
+          "SnapshotToken": "AC5DF01E2737E6AF0B690BD8FC77785E8AFAF4B450E2A3E9114B214141CCA456",
+          "CapturedAt": "2026-10-18T21:09:06.499671+08:00",
+          "ExpiresAt": "2026-10-18T21:11:06.499671+08:00",
+          "ThroughDurableSequence": 12,
+          "Run": {
+            "RunId": "8b3b9ce3-6fb9-40a1-bc32-5114058aa9bc",
+            "WorkflowName": "group-child-parent",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:06.1961132+08:00",
+            "UpdatedAt": "2026-10-18T21:09:06.4817034+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 3,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "d7187b4f-6a0b-4bcf-90d6-912c12220867",
+            "InstanceId": "6f4c2bd1-dc69-425a-9869-e6f224109486",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "parentNodes": [
+          {
+            "Kind": 0,
+            "Occurrence": {
+              "WorkflowRunId": "8b3b9ce3-6fb9-40a1-bc32-5114058aa9bc",
+              "OccurrenceId": "dc25f751cf1a4e2c4d8264da779efcd7fe21cc5ff83229566842d5034df483e1",
+              "GroupKey": "root",
+              "ParentOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            "Step": null,
+            "ChildRun": null,
+            "HasChildren": true
+          },
+          {
+            "Kind": 1,
+            "Occurrence": null,
+            "Step": {
+              "WorkflowRunId": "8b3b9ce3-6fb9-40a1-bc32-5114058aa9bc",
+              "StepId": "15943e2c-f1fd-4bbb-8892-85b5a4e9ab94",
+              "StepKey": "tail",
+              "Revision": 1,
+              "Attempt": 1,
+              "Status": 2,
+              "IsCurrent": true,
+              "GroupOccurrenceId": null,
+              "Role": null,
+              "LeaseGeneration": 2,
+              "LeaseExpiresAt": null,
+              "AvailableAt": null,
+              "StartedAt": "2026-10-18T21:09:06.4506947+08:00",
+              "CompletedAt": "2026-10-18T21:09:06.4682297+08:00",
+              "ChildRunId": null
+            },
+            "ChildRun": null,
+            "HasChildren": false
+          },
+          {
+            "Kind": 2,
+            "Occurrence": null,
+            "Step": null,
+            "ChildRun": {
+              "RunId": "737e6219-a993-1d0d-6a2f-7378ddf67fc9",
+              "ParentRunId": "8b3b9ce3-6fb9-40a1-bc32-5114058aa9bc",
+              "Status": 2,
+              "IsAvailable": true
+            },
+            "HasChildren": false
+          }
+        ],
+        "childSnapshot": {
+          "SnapshotToken": "F67F5617964E92EB8F332A7D97155615C7C2521C8AC85CF4096EE720F5F2CD1C",
+          "CapturedAt": "2026-10-18T21:09:06.5120769+08:00",
+          "ExpiresAt": "2026-10-18T21:11:06.5120769+08:00",
+          "ThroughDurableSequence": 8,
+          "Run": {
+            "RunId": "737e6219-a993-1d0d-6a2f-7378ddf67fc9",
+            "WorkflowName": "group-child-leaf",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": "8b3b9ce3-6fb9-40a1-bc32-5114058aa9bc",
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:09:06.2891382+08:00",
+            "UpdatedAt": "2026-10-18T21:09:06.4247308+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "f3fbe68b116a6362146380a83302637a8e217af270d8828f7eb23e3b12a45d38",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 2,
+          "OccurrenceCount": 2,
+          "StepRevisionCount": 1,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "c051864e-6697-41a7-bd31-13bb7a559569",
+            "InstanceId": "6776a24a-8685-40fa-92e6-165503928107",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "childRoot": {
+          "WorkflowRunId": "737e6219-a993-1d0d-6a2f-7378ddf67fc9",
+          "OccurrenceId": "c3d3a5b910f4dcef24e53c7d1ef9c0ee407e44daf9e36931790a872443f91733",
+          "GroupKey": "root",
+          "ParentOccurrenceId": null,
+          "ExecutionCoordinate": "[]"
+        }
+      }
+    },
+    {
+      "Trx": "artifacts/pre-fuwen-review-qualified-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_06_29_net8.0.trx",
+      "Receipt": {
+        "scenario": "nested-flattened-read-after-reopen",
+        "snapshot": {
+          "SnapshotToken": "66882CF6AD16AF9CFD0005DAE4D954B5700CF61F911F9D34AD5430C3AB6958DA",
+          "CapturedAt": "2026-10-18T21:10:28.5713154+08:00",
+          "ExpiresAt": "2026-10-18T21:12:28.5713154+08:00",
+          "ThroughDurableSequence": 97,
+          "Run": {
+            "RunId": "4043abf2-dcbe-44fd-93e1-802b452acaae",
+            "WorkflowName": "process-group-nested",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "CreatedAt": "2026-10-18T21:10:27.2022364+08:00",
+            "UpdatedAt": "2026-10-18T21:10:28.5544917+08:00",
+            "Deadline": null,
+            "LeaseGeneration": 2,
+            "LeaseExpiresAt": null,
+            "ManifestDigest": "27ad5885841704a63402523fd1860a341972c2ad812c02095e0af7088b180961",
+            "GroupFanOutUsed": false
+          },
+          "DefinitionCount": 3,
+          "OccurrenceCount": 15,
+          "StepRevisionCount": 41,
+          "ExpansionCount": 0,
+          "ProvenanceIncluded": false,
+          "SourceReferencesIncluded": false,
+          "SourceRun": null,
+          "Generation": {
+            "GenerationId": "9b00b8dd-1888-4a59-9572-8474e433ea34",
+            "InstanceId": "cb34fdba-d576-455a-a54b-5bc5b835e5b2",
+            "Ordinal": 1,
+            "Status": 2,
+            "PredecessorGenerationId": null
+          },
+          "Operation": null,
+          "Dispositions": []
+        },
+        "states": [
+          {
+            "SnapshotToken": "66882CF6AD16AF9CFD0005DAE4D954B5700CF61F911F9D34AD5430C3AB6958DA",
+            "ThroughDurableSequence": 97,
+            "ObservedAt": "2026-10-18T21:10:28.5713154+08:00",
+            "OccurrenceId": "d9a01b778ce9fba1b031a95bb8786d0269b9acb30270eb41ec16fc1392b89e40",
+            "State": {
+              "Status": 2,
+              "Reason": 12,
+              "IsBlocked": false,
+              "Coverage": 0,
+              "IsExpansionClosed": true,
+              "TotalCount": 5,
+              "Work": {
+                "Known": 5,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 5,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Control": {
+                "Known": 0,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 0,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Reasons": [
+                12
+              ],
+              "ActiveStepKeys": [],
+              "BlockingStepKeys": [],
+              "RunStatus": 2,
+              "Generation": {
+                "GenerationId": "9b00b8dd-1888-4a59-9572-8474e433ea34",
+                "InstanceId": "cb34fdba-d576-455a-a54b-5bc5b835e5b2",
+                "Ordinal": 1,
+                "Status": 2,
+                "PredecessorGenerationId": null
+              },
+              "Operation": null
+            }
+          },
+          {
+            "SnapshotToken": "66882CF6AD16AF9CFD0005DAE4D954B5700CF61F911F9D34AD5430C3AB6958DA",
+            "ThroughDurableSequence": 97,
+            "ObservedAt": "2026-10-18T21:10:28.5713154+08:00",
+            "OccurrenceId": "0056d15424695864082053e05d089e35f2ea42ea780d968c614ff196bb067398",
+            "State": {
+              "Status": 2,
+              "Reason": 12,
+              "IsBlocked": false,
+              "Coverage": 0,
+              "IsExpansionClosed": true,
+              "TotalCount": 5,
+              "Work": {
+                "Known": 5,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 5,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Control": {
+                "Known": 0,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 0,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Reasons": [
+                12
+              ],
+              "ActiveStepKeys": [],
+              "BlockingStepKeys": [],
+              "RunStatus": 2,
+              "Generation": {
+                "GenerationId": "9b00b8dd-1888-4a59-9572-8474e433ea34",
+                "InstanceId": "cb34fdba-d576-455a-a54b-5bc5b835e5b2",
+                "Ordinal": 1,
+                "Status": 2,
+                "PredecessorGenerationId": null
+              },
+              "Operation": null
+            }
+          },
+          {
+            "SnapshotToken": "66882CF6AD16AF9CFD0005DAE4D954B5700CF61F911F9D34AD5430C3AB6958DA",
+            "ThroughDurableSequence": 97,
+            "ObservedAt": "2026-10-18T21:10:28.5713154+08:00",
+            "OccurrenceId": "96e7a98e88a661e38461b4783dfdb96b7b2ac6b111a378eefc29d3284771f86e",
+            "State": {
+              "Status": 2,
+              "Reason": 12,
+              "IsBlocked": false,
+              "Coverage": 0,
+              "IsExpansionClosed": true,
+              "TotalCount": 5,
+              "Work": {
+                "Known": 5,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 5,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Control": {
+                "Known": 0,
+                "Pending": 0,
+                "Running": 0,
+                "Completed": 0,
+                "Failed": 0,
+                "Waiting": 0,
+                "Cancelled": 0
+              },
+              "Reasons": [
+                12
+              ],
+              "ActiveStepKeys": [],
+              "BlockingStepKeys": [],
+              "RunStatus": 2,
+              "Generation": {
+                "GenerationId": "9b00b8dd-1888-4a59-9572-8474e433ea34",
+                "InstanceId": "cb34fdba-d576-455a-a54b-5bc5b835e5b2",
+                "Ordinal": 1,
+                "Status": 2,
+                "PredecessorGenerationId": null
+              },
+              "Operation": null
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "SourceFiles": [
+    {
+      "File": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupFanOutRepository.cs",
+      "Sha256": "0a6619870c01204cc2e5b49c2eebf732d6e094e6832ebc6891affb10084a922f"
+    },
+    {
+      "File": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupRepository.Fork.cs",
+      "Sha256": "512bd3f16a01a8dd2e744c33a34846ba5186a55f46356d2c53f9eb8c65828abc"
+    },
+    {
+      "File": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupSnapshotRepository.cs",
+      "Sha256": "7d770521e684e4520e0a9b317411c8fbaaf08837b55cbb39a88620808634859f"
+    },
+    {
+      "File": "src/Penghou.Zhinu.Sqlite/SqliteDatabase.cs",
+      "Sha256": "e5708899a7b3d197cbd5d5c7afcbed6e5307af64f36ba6da0f0e504749bd4cad"
+    },
+    {
+      "File": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupFanOut.cs",
+      "Sha256": "f5ea55088776c679311d9bdde17516166424653522ad51bfeb5336405d3c54c0"
+    },
+    {
+      "File": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupManifest.cs",
+      "Sha256": "cf2b0891951d65eda48a7e85c03d7477b41a177a8e9af0fb7eb1a993f6b22e9e"
+    },
+    {
+      "File": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupOccurrence.cs",
+      "Sha256": "8e6bc1664ccc16b21ad69693100e6a1be7fe802a21c3491aef8d2914fde2ce2d"
+    },
+    {
+      "File": "src/Penghou.Zhinu/ActivityGroups/WorkflowGroupQueries.cs",
+      "Sha256": "0a6fa06a649dbd4a14aa8d1d039fbb656b7a549c3399b52e91d494791bb5323e"
+    },
+    {
+      "File": "src/Penghou.Zhinu/ActivityGroups/WorkflowGroupReader.cs",
+      "Sha256": "bd45ba835f104a977bb4ea2552a84ef7590159fdf427b2621a29be68663042b4"
+    },
+    {
+      "File": "src/Penghou.Zhinu/Context/ChildRunCoordinator.cs",
+      "Sha256": "b305080897edf3e899b179945ed6c1d90e5125dbfa385a7739bae2fb94c5a70d"
+    },
+    {
+      "File": "src/Penghou.Zhinu/StepStatus.cs",
+      "Sha256": "26b72fa992873d2c641cfc261e239c800a8f618d22b59c977b5209fb333f9dd7"
+    },
+    {
+      "File": "src/Penghou.Zhinu/WorkflowInstance.cs",
+      "Sha256": "fd0011acd498dc3e9fca792959c177fddd8203d9215549fa61c61bf3e90cba59"
+    },
+    {
+      "File": "src/Penghou.Zhinu/WorkflowStatus.cs",
+      "Sha256": "eb949b391ff9f26766d7ae66c6c25fba229363c8f6f2a9e2b6227e4e7b4cbc3a"
+    },
+    {
+      "File": "src/Penghou.Zhinu/WorkflowWait.cs",
+      "Sha256": "afd0782878a2f95eb47e03ffbe856679a760f41d920f8a5b1d7c72405ad87291"
+    },
+    {
+      "File": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupQuerySafetyTests.cs",
+      "Sha256": "d7dae206420bbec33207ee9ab8c79e0f2dab9f9304cf7557cd642222efc49c4d"
+    },
+    {
+      "File": "tests/Penghou.Zhinu.Tests/WorkflowGroupReaderTests.cs",
+      "Sha256": "1f756f4ac8754f92745687294ff5098fe0be79da9a69b687e9f407940d94d17f"
+    }
+  ],
+  "Artifacts": [
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.0.2.0-preview.4.nupkg",
+      "Sha256": "7d21577485731520ba430f239fda1141447d633129b56ea8455d6d4fc65bb607",
+      "Id": "Penghou.Zhinu",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.dll",
+          "BuildFile": "src/Penghou.Zhinu/bin/Release/net10.0/Penghou.Zhinu.dll",
+          "Sha256": "baa6af61961071d95f056e70cffcfa84aaf2a136efa3a2d67b9d1243743b27e9"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.dll",
+          "BuildFile": "src/Penghou.Zhinu/bin/Release/net8.0/Penghou.Zhinu.dll",
+          "Sha256": "03b1ddb6d61a6a18d2b386d631652e1f986f6b1e15be13c05cf6e1ab4e51b15a"
+        }
+      ]
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+      "Sha256": "bbeb5e0cd82e69d3c259466df525f3282bad22de43da878ccad7bfac49e790fc",
+      "Id": "Penghou.Zhinu.Agents",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Agents.dll",
+          "BuildFile": "src/Penghou.Zhinu.Agents/bin/Release/net10.0/Penghou.Zhinu.Agents.dll",
+          "Sha256": "ca0977fbf8223fe661632c1814adcb824ed0e5fa2b97d27fd704cfce52337e9c"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Agents.dll",
+          "BuildFile": "src/Penghou.Zhinu.Agents/bin/Release/net8.0/Penghou.Zhinu.Agents.dll",
+          "Sha256": "07b482e1ddaf5e47d28b8fa31cf23c1d5f32185a49da99d6da48723fdbecbde2"
+        }
+      ]
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+      "Sha256": "a5764ac1f78edcfb04acb2fad6b12feda5b2e606149a1dbf7cb5b6e1c592808f",
+      "Id": "Penghou.Zhinu.Hosting",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Hosting.dll",
+          "BuildFile": "src/Penghou.Zhinu.Hosting/bin/Release/net10.0/Penghou.Zhinu.Hosting.dll",
+          "Sha256": "354f3730f4d6301eae7f9dafe4aceb8219974fc3e44ad634d6cb8e73f8892adf"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Hosting.dll",
+          "BuildFile": "src/Penghou.Zhinu.Hosting/bin/Release/net8.0/Penghou.Zhinu.Hosting.dll",
+          "Sha256": "d6da5a7aa38ef560566a88cade5216552fa9097918b0dc67ef26696272525b9c"
+        }
+      ]
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+      "Sha256": "2a52bac858cb6c0e3c2c0ba3464e7f2bed89c77456e1e8c9849d13a37867cf3d",
+      "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "BuildFile": "src/Penghou.Zhinu.Hosting.AspNetCore/bin/Release/net10.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "Sha256": "b92835af4c52939755c114bfe4e0e87f1133af3aaa192b01477264a4fc86a1b9"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "BuildFile": "src/Penghou.Zhinu.Hosting.AspNetCore/bin/Release/net8.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "Sha256": "0dbe3f503d1bb01ebd13688750ffb76c888e547d29242491e49996adfbf9714f"
+        }
+      ]
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+      "Sha256": "4b2724beb2899bfaf138ce75927f72d210a1c4c4e9c59b9c818eb2f9f4ea5555",
+      "Id": "Penghou.Zhinu.OpenTelemetry",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "BuildFile": "src/Penghou.Zhinu.OpenTelemetry/bin/Release/net10.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "Sha256": "e6d53a46efef66dba622e92466ae4e2fdd39324337bc709865bd528c5d1301f0"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "BuildFile": "src/Penghou.Zhinu.OpenTelemetry/bin/Release/net8.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "Sha256": "f9b0191fd33b608c92b340ec2cd5e5561ecba2517a22359dfade5fc368e5bd2e"
+        }
+      ]
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+      "Sha256": "004cc1f373dd199a95e2a02bfb13701d9a710d6e19d6a533972d488aa92b5f33",
+      "Id": "Penghou.Zhinu.Sqlite",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Sqlite.dll",
+          "BuildFile": "src/Penghou.Zhinu.Sqlite/bin/Release/net10.0/Penghou.Zhinu.Sqlite.dll",
+          "Sha256": "157b6a7b393c86e53eb4c628bebba59b2b19d395a142cb95df7cfe21f1483e4c"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Sqlite.dll",
+          "BuildFile": "src/Penghou.Zhinu.Sqlite/bin/Release/net8.0/Penghou.Zhinu.Sqlite.dll",
+          "Sha256": "0c255073cac8a3f15ed796dddf225e17f98c194d1e816c265b11e31681b56bfb"
+        }
+      ]
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-packages/Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+      "Sha256": "3d5783697c4d968f651a8164121e499e6cf574e939d582efb9d7237460912df8",
+      "Id": "Penghou.Zhinu.Testing",
+      "Version": "0.2.0-preview.4",
+      "RepositoryCommit": "5bd107b857b16cc810530756ba5d212e32930c4e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Testing.dll",
+          "BuildFile": "src/Penghou.Zhinu.Testing/bin/Release/net10.0/Penghou.Zhinu.Testing.dll",
+          "Sha256": "0d1408d14867cf43c7fac6fc03d80b1a190bc6797e7cff26b4f2447419cc1209"
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Testing.dll",
+          "BuildFile": "src/Penghou.Zhinu.Testing/bin/Release/net8.0/Penghou.Zhinu.Testing.dll",
+          "Sha256": "3c9d2d53a8d39b5e169e5ee4796abcf02c1c025c108b83c81778ca1e6cf16056"
+        }
+      ]
+    }
+  ],
+  "Logs": [
+    {
+      "File": "artifacts/pre-fuwen-review-qualified-tests.log",
+      "Sha256": "b0ea57c43443c235f96e3e88f28a2ce74816ed0ecf00c5b3f20e6864986ab713"
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-format-verify.log",
+      "Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-pack.log",
+      "Sha256": "362f8a68ea1291048d9aa735f4f36bdb072562d172a9de621664d431575113f2"
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-closure.log",
+      "Sha256": "404db43c87adf780259e460648bc3f0816bde42a50d59fdcdc7b23dec872e4b1"
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-legacy.log",
+      "Sha256": "c98953e7b4af142db3184ad925115e090dab33cd6ab0bcb9db2f4dbf3ea2719c"
+    }
+  ],
+  "FormatVerification": "passed",
+  "PackageClosure": {
+    "SchemaVersion": 1,
+    "PackageVersion": "0.2.0-preview.4",
+    "NeutralPackage": {
+      "Id": "Penghou.Workflow.Abstractions",
+      "ExactVersion": "0.1.0-preview.2"
+    },
+    "ArtifactsDirectory": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\pre-fuwen-review-packages",
+    "PackageArtifacts": [
+      {
+        "Id": "Penghou.Zhinu",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Microsoft.Extensions.Logging.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Workflow.Abstractions",
+            "Version": "[0.1.0-preview.2]"
+          },
+          {
+            "Id": "Microsoft.Extensions.Logging.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Workflow.Abstractions",
+            "Version": "[0.1.0-preview.2]"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Agents",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Agents.AI.Workflows",
+            "Version": "1.17.0"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Agents.AI.Workflows",
+            "Version": "1.17.0"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Hosting",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Hosting.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Options",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Hosting.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Options",
+            "Version": "10.0.9"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.OpenTelemetry",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "OpenTelemetry.Extensions.Hosting",
+            "Version": "1.17.0"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "OpenTelemetry.Extensions.Hosting",
+            "Version": "1.17.0"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Sqlite",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Data.Sqlite",
+            "Version": "10.0.10"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "Version": "2.1.12"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Data.Sqlite",
+            "Version": "10.0.10"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "Version": "2.1.12"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Testing",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          }
+        ]
+      }
+    ],
+    "Consumer": {
+      "Project": "NuGet package references only; no project references",
+      "PackageSourceMapping": {
+        "ZhinuPackages": "Local artifacts directory, exact package ID patterns",
+        "NeutralAndExternalPackages": "nuget.org"
+      },
+      "PackageCache": "C:\\Users\\Laszlos\\AppData\\Local\\Temp\\pzc-2b2a97083db94aecbbac4a02be8f81e2",
+      "AssetsFile": "consumer\\obj\\project.assets.json",
+      "ResolvedPackageIds": [
+        "Google.Protobuf/3.30.2",
+        "Microsoft.Agents.AI/1.17.0",
+        "Microsoft.Agents.AI.Abstractions/1.17.0",
+        "Microsoft.Agents.AI.Workflows/1.17.0",
+        "Microsoft.Data.Sqlite/10.0.10",
+        "Microsoft.Data.Sqlite.Core/10.0.10",
+        "Microsoft.Extensions.AI/10.7.0",
+        "Microsoft.Extensions.AI.Abstractions/10.7.0",
+        "Microsoft.Extensions.AI.Evaluation/10.7.0",
+        "Microsoft.Extensions.Caching.Abstractions/10.0.9",
+        "Microsoft.Extensions.Compliance.Abstractions/10.5.0",
+        "Microsoft.Extensions.Configuration/8.0.0",
+        "Microsoft.Extensions.Configuration/10.0.0",
+        "Microsoft.Extensions.Configuration.Abstractions/10.0.9",
+        "Microsoft.Extensions.Configuration.Binder/8.0.0",
+        "Microsoft.Extensions.Configuration.Binder/10.0.0",
+        "Microsoft.Extensions.Configuration.EnvironmentVariables/8.0.0",
+        "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+        "Microsoft.Extensions.DependencyInjection/8.0.0",
+        "Microsoft.Extensions.DependencyInjection/10.0.0",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+        "Microsoft.Extensions.Diagnostics.Abstractions/10.0.9",
+        "Microsoft.Extensions.FileProviders.Abstractions/10.0.9",
+        "Microsoft.Extensions.FileSystemGlobbing/10.0.6",
+        "Microsoft.Extensions.Hosting.Abstractions/10.0.9",
+        "Microsoft.Extensions.Logging/8.0.0",
+        "Microsoft.Extensions.Logging/10.0.0",
+        "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+        "Microsoft.Extensions.Logging.Configuration/8.0.0",
+        "Microsoft.Extensions.Logging.Configuration/10.0.0",
+        "Microsoft.Extensions.ObjectPool/8.0.26",
+        "Microsoft.Extensions.ObjectPool/10.0.6",
+        "Microsoft.Extensions.Options/10.0.9",
+        "Microsoft.Extensions.Options.ConfigurationExtensions/8.0.0",
+        "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+        "Microsoft.Extensions.Primitives/10.0.9",
+        "Microsoft.Extensions.VectorData.Abstractions/10.7.0",
+        "Microsoft.ML.Tokenizers/2.0.0",
+        "OpenTelemetry/1.17.0",
+        "OpenTelemetry.Api/1.17.0",
+        "OpenTelemetry.Api.ProviderBuilderExtensions/1.17.0",
+        "OpenTelemetry.Extensions.Hosting/1.17.0",
+        "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+        "Penghou.Zhinu/0.2.0-preview.4",
+        "Penghou.Zhinu.Agents/0.2.0-preview.4",
+        "Penghou.Zhinu.Hosting/0.2.0-preview.4",
+        "Penghou.Zhinu.Hosting.AspNetCore/0.2.0-preview.4",
+        "Penghou.Zhinu.OpenTelemetry/0.2.0-preview.4",
+        "Penghou.Zhinu.Sqlite/0.2.0-preview.4",
+        "Penghou.Zhinu.Testing/0.2.0-preview.4",
+        "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+        "SQLitePCLRaw.core/2.1.12",
+        "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+        "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+        "System.Diagnostics.DiagnosticSource/10.0.9",
+        "System.IO.Pipelines/10.0.9",
+        "System.Numerics.Tensors/10.0.9",
+        "System.Text.Encodings.Web/10.0.9",
+        "System.Text.Json/10.0.9",
+        "System.Threading.Channels/10.0.9"
+      ],
+      "ForbiddenHufuDependencyScan": "passed"
+    },
+    "TargetFrameworkResults": [
+      {
+        "TargetFramework": "net8.0",
+        "Result": "passed",
+        "AssetsTarget": "net8.0",
+        "Log": "run-net8.0.log"
+      },
+      {
+        "TargetFramework": "net10.0",
+        "Result": "passed",
+        "AssetsTarget": "net10.0",
+        "Log": "run-net10.0.log"
+      }
+    ],
+    "Status": "passed"
+  },
+  "LegacyBinaryQualification": {
+    "SchemaVersion": 1,
+    "ExpectedCandidateSchemaVersion": 9,
+    "PackageVersion": "0.2.0-preview.4",
+    "NeutralPackage": {
+      "Id": "Penghou.Workflow.Abstractions",
+      "ExactVersion": "0.1.0-preview.2"
+    },
+    "CandidateArtifacts": [
+      {
+        "Id": "Penghou.Zhinu",
+        "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg"
+      },
+      {
+        "Id": "Penghou.Zhinu.Sqlite",
+        "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg"
+      }
+    ],
+    "PublicRestore": {
+      "PackageSources": [
+        "https://api.nuget.org/v3/index.json"
+      ],
+      "FreshPackageCache": "C:\\Users\\Laszlos\\AppData\\Local\\Temp\\pzl-b3ce72d9e73d4538bfadc8c1658cf48b",
+      "AssetsFile": "consumer\\obj\\project.assets.json",
+      "ResolvedPackages": [
+        "Microsoft.Data.Sqlite/10.0.10",
+        "Microsoft.Data.Sqlite.Core/10.0.10",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+        "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+        "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+        "Penghou.Zhinu/0.1.0-preview.15",
+        "Penghou.Zhinu.Sqlite/0.1.0-preview.15",
+        "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+        "SQLitePCLRaw.core/2.1.12",
+        "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+        "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+        "System.Diagnostics.DiagnosticSource/10.0.9"
+      ],
+      "ForbiddenHufuDependencyScan": "passed",
+      "ProjectReferences": 0
+    },
+    "TargetFrameworkResults": [
+      {
+        "TargetFramework": "net8.0",
+        "PublishedRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 5,
+          "RetainedStepRows": 2,
+          "CoreAssemblyHash": "475F9A6A70851701FB2FD91C441C577481664B8039AD0CB51FA1C7B92BCC6229",
+          "SqliteAssemblyHash": "22B1FF1015F5BE150B9E994CF36F8D341F382D293919D01E4001586667125467"
+        },
+        "CandidateRuntimeRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 9,
+          "RetainedStepRows": 4
+        },
+        "CompiledConsumerSha256": "9C89900DC65E83BE6615F2EC40CD99214DFFB43090173DD52B97C15506A9C37D",
+        "ContractAssemblySha256": "81F2DE8AEF7FA1B103036BD7839CCC13AA7486B89ED5B6783EE0FC2A433E112D",
+        "OldWorkerOnNewSchema": {
+          "ExitCode": -532462766,
+          "RejectedAsIncompatible": true,
+          "SchemaVersionAfterRejection": 9,
+          "RetainedStepRowsAfterRejection": 4
+        }
+      },
+      {
+        "TargetFramework": "net10.0",
+        "PublishedRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 5,
+          "RetainedStepRows": 2,
+          "CoreAssemblyHash": "3AE5BD44F8122653C6E6D8BBC063015916405C159749E49FEBA743F11C394ED5",
+          "SqliteAssemblyHash": "6D32F574B8A3E2089CF1E4B214E763FA7EB8D35B977E12597ECAF6BAB3ACAB85"
+        },
+        "CandidateRuntimeRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 9,
+          "RetainedStepRows": 4
+        },
+        "CompiledConsumerSha256": "CAD1A0FD3412519BFEC35DD1878A00F9B6527E23B04669B50A54693F0750C457",
+        "ContractAssemblySha256": "D1B6168049CB05F49BE10849A190993603A21F4E086C93DC656FC100DFD73020",
+        "OldWorkerOnNewSchema": {
+          "ExitCode": -532462766,
+          "RejectedAsIncompatible": true,
+          "SchemaVersionAfterRejection": 9,
+          "RetainedStepRowsAfterRejection": 4
+        }
+      }
+    ],
+    "Status": "passed"
+  },
+  "PreFixRegressionProbes": [
+    {
+      "File": "artifacts/pre-fuwen-review-red/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_01_51_net10.0.trx",
+      "Sha256": "d3a6b617d5b72f315f949880060393858838f4f952bb3fc973c1c0232116c6ef",
+      "Total": 8,
+      "Failed": 6,
+      "Passed": 2
+    },
+    {
+      "File": "artifacts/pre-fuwen-review-red/Laszlos_LAPTOP-KBD8D8JG_2026-10-18_21_02_42_net10.0.trx",
+      "Sha256": "f56afe05196144b58ac7150d805cee88d8effab911dc6ee53afd119c2616323f",
+      "Total": 8,
+      "Failed": 8,
+      "Passed": 0
+    }
+  ],
+  "PreFixInterpretation": "14 expected negative regression failures and 2 passing controls; excluded from final passing totals.",
+  "Fixes": [
+    "Filter approval projection with native pending authorization status/lease predicates and ready-wakeup exception.",
+    "Reject orphaned or mismatched membership instead of silently projecting ungrouped work.",
+    "Reject null nested provider data, duplicate step IDs and inconsistent expansion/closure facts before caching.",
+    "Index immutable manifest definitions for occurrence, fork, fanout and snapshot lookups."
+  ],
+  "Compatibility": "No public API, schema, canonical encoding, durable identity, authority or execution-transition changes.",
+  "Limitations": [
+    "Windows local qualification; not Linux/remote CI or publication.",
+    "Existing bounded native profiles and conservative closure limits remain.",
+    "Fuwen package adoption and versioned per-child fanout lowering remain ZG-6 work.",
+    "Whole-tree aggregate performance should be benchmarked before adding snapshot indexes or a batch API."
+  ]
+}

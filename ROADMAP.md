@@ -314,7 +314,11 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 
 Next is ZG-6 Fuwen metadata handoff and exact package integration, then ZG-7
 cross-repository qualification. Active code-first/loop groups retain unknown
-totals until authoritative closure. This supersedes the earlier
+totals until authoritative closure. The
+[pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
+snapshot integrity and stale approval projection, indexes manifest definitions,
+and passes **1,877 tests**; it preserves the bounded ZG-5 contract.
+This supersedes the earlier
 reducer-before-query stage ordering. Preserve the foundation architecture and
 avoid coupling Fuwen to temporary native-runtime limits. The checklist below
 remains useful, but its headings
