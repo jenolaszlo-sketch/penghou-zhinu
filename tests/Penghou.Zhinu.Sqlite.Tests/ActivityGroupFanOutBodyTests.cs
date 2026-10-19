@@ -115,6 +115,133 @@ public sealed class ActivityGroupFanOutBodyTests : WorkflowEngineTestBase
     }
 
     [Fact]
+    public async Task CompletedBodyItemAndNestedGroupAreClosedWhileSiblingIsRunning()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var store = CreateStore();
+        var workflow = new BodyWorkflow { BlockedEntered = entered, BlockedRelease = release, BlockedItem = "b" };
+        await using var engine = Engine(store, workflow);
+        var id = await engine.StartAsync("fanout-body", "1", "input", cancellationToken: Ct);
+        var execution = engine.ExecuteAsync(id, Ct);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(20), Ct);
+            using var reader = new WorkflowGroupReader(CreateStore());
+            var snapshot = (await reader.GetRunGroupSnapshotAsync(id, Ct)).Value!;
+            var expansion = (await reader.QueryGroupExpansionsAsync(id, snapshot.SnapshotToken, cancellationToken: Ct)).Value!.Items.Single();
+            expansion.IsComplete.Should().BeFalse();
+            var completedItem = expansion.Items.Single(item => item.ItemKey == "a");
+            var itemState = (await reader.GetGroupStateAsync(id, snapshot.SnapshotToken, completedItem.OccurrenceId, Ct)).Value!.State;
+            itemState.Status.Should().Be(StepStatus.Completed);
+            itemState.IsExpansionClosed.Should().BeTrue();
+            itemState.TotalCount.Should().BeGreaterThan(0);
+
+            var finish = (await store.GetStepsAsync(id, Ct)).Single(step => step.StepKey == workflow.OperationStepKey("a", "finish"));
+            var nestedOccurrence = (await store.GetStepGroupMembershipAsync(finish.Id, Ct))!.GroupOccurrenceId;
+            var nestedState = (await reader.GetGroupStateAsync(id, snapshot.SnapshotToken, nestedOccurrence, Ct)).Value!.State;
+            nestedState.Status.Should().Be(StepStatus.Completed);
+            nestedState.IsExpansionClosed.Should().BeTrue();
+            nestedState.TotalCount.Should().Be(1);
+
+            var activeItem = expansion.Items.Single(item => item.ItemKey == "b");
+            var activeState = (await reader.GetGroupStateAsync(id, snapshot.SnapshotToken, activeItem.OccurrenceId, Ct)).Value!.State;
+            activeState.Status.Should().Be(StepStatus.Running);
+            activeState.IsExpansionClosed.Should().BeFalse();
+        }
+        finally
+        {
+            release.TrySetResult();
+            await execution;
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CompletedBodyItemRemainsClosedWhenSiblingFailsOrRunIsCancelled(bool cancel)
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var store = CreateStore();
+        var workflow = new BodyWorkflow
+        {
+            BlockedEntered = entered,
+            BlockedRelease = release,
+            BlockedItem = "b",
+            FailBlockedItem = !cancel
+        };
+        await using var engine = Engine(store, workflow);
+        var id = await engine.StartAsync("fanout-body", "1", "input", cancellationToken: Ct);
+        var execution = engine.ExecuteAsync(id, Ct);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(20), Ct);
+            if (cancel)
+            {
+                await engine.CancelAsync(id, Ct);
+            }
+            else
+            {
+                release.TrySetResult();
+            }
+            await execution;
+
+            using var reader = new WorkflowGroupReader(CreateStore());
+            var snapshot = (await reader.GetRunGroupSnapshotAsync(id, Ct)).Value!;
+            var expansion = (await reader.QueryGroupExpansionsAsync(id, snapshot.SnapshotToken, cancellationToken: Ct)).Value!.Items.Single();
+            var completedItem = expansion.Items.Single(item => item.ItemKey == "a");
+            var state = (await reader.GetGroupStateAsync(id, snapshot.SnapshotToken, completedItem.OccurrenceId, Ct)).Value!.State;
+            state.Status.Should().Be(StepStatus.Completed);
+            state.IsExpansionClosed.Should().BeTrue();
+            state.RunStatus.Should().Be(cancel ? WorkflowStatus.Cancelled : WorkflowStatus.Failed);
+        }
+        finally
+        {
+            release.TrySetResult();
+            await execution;
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task BodyItemClosureStaysConservativeWhenOptionalInputHashesAreMissingOrStale(bool omitHashes)
+    {
+        var backing = CreateStore();
+        var workflow = new BodyWorkflow();
+        await using (var engine = Engine(backing, workflow))
+        {
+            var id = await engine.StartAsync("fanout-body", "1", "input", cancellationToken: Ct);
+            await engine.ExecuteAsync(id, Ct);
+            await engine.WaitForCompletionAsync<string>(id, cancellationToken: Ct);
+        }
+        var projected = DispatchProxy.Create<IProjectionStore, SnapshotProjectionProxy>();
+        ((SnapshotProjectionProxy)(object)projected).Backing = backing;
+        ((SnapshotProjectionProxy)(object)projected).Projection = data => data with
+        {
+            Run = data.Run with { Status = WorkflowStatus.Running },
+            Expansions = data.Expansions.Select(expansion => expansion with
+            {
+                IsComplete = false,
+                Items = expansion.Items.Select(item => item with
+                {
+                    InputHash = omitHashes ? null : new string('0', 64)
+                }).ToArray()
+            }).ToArray(),
+            Steps = data.Steps.Select(step => step with { InputHash = omitHashes ? null : step.InputHash }).ToArray()
+        };
+
+        using var reader = new WorkflowGroupReader(projected);
+        var snapshot = (await reader.GetRunGroupSnapshotAsync(workflow.RunId, Ct)).Value!;
+        var expansionFact = (await reader.QueryGroupExpansionsAsync(workflow.RunId, snapshot.SnapshotToken, cancellationToken: Ct)).Value!.Items.Single();
+        var item = expansionFact.Items.Single(item => item.ItemKey == "a");
+        var state = (await reader.GetGroupStateAsync(workflow.RunId, snapshot.SnapshotToken, item.OccurrenceId, Ct)).Value!.State;
+        state.IsExpansionClosed.Should().BeFalse();
+        state.TotalCount.Should().BeNull();
+    }
+
+    [Fact]
     public async Task SwallowedBodyFailure_CannotCreateAClosureOrCompleteTheRun()
     {
         var store = CreateStore();
@@ -187,12 +314,18 @@ public sealed class ActivityGroupFanOutBodyTests : WorkflowEngineTestBase
         public bool UseRawGroupedStep { get; set; }
         public bool DuplicateOperationRegistration { get; set; }
         public string BodyContract { get; set; } = "body-contract-1";
+        public TaskCompletionSource? BlockedEntered { get; set; }
+        public TaskCompletionSource? BlockedRelease { get; set; }
+        public string BlockedItem { get; set; } = "b";
+        public bool FailBlockedItem { get; set; }
+        public Guid RunId { get; private set; }
 
         public string OperationStepKey(string item, string operation) =>
             "items:body:" + Encode(item) + ":" + Encode(operation);
 
         public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken ct)
         {
+            RunId = context.WorkflowRunId;
             var selected = await context.StepAsync("select", input,
                 (_, _) => Task.FromResult(new[] { "a", "b" }), cancellationToken: ct);
             var fanOptions = new StepOptions
@@ -213,10 +346,17 @@ public sealed class ActivityGroupFanOutBodyTests : WorkflowEngineTestBase
                                 return Task.FromResult(value);
                             }, new StepOptions { Group = scope.Group }, token);
                         var loaded = await scope.StepAsync<string, string>("load", item,
-                            (value, _, _) =>
+                            async (value, _, operationToken) =>
                             {
                                 Calls.AddOrUpdate(item + ":load", 1, (_, count) => count + 1);
-                                return Task.FromResult(value + "-loaded");
+                                if (item == BlockedItem && BlockedEntered is not null && BlockedRelease is not null)
+                                {
+                                    BlockedEntered.TrySetResult();
+                                    await BlockedRelease.Task.WaitAsync(operationToken);
+                                }
+                                if (item == BlockedItem && FailBlockedItem)
+                                    throw new InvalidOperationException("injected sibling failure");
+                                return value + "-loaded";
                             }, cancellationToken: token);
                         if (DuplicateOperationRegistration)
                             _ = scope.StepAsync<string, string>("load", item,
@@ -247,6 +387,31 @@ public sealed class ActivityGroupFanOutBodyTests : WorkflowEngineTestBase
     }
 
     public interface IBodyStore : IWorkflowStore, IWorkflowGroupRepository, IWorkflowGroupFanOutBodyRepository { }
+
+    public interface IProjectionStore : IWorkflowStore, IWorkflowGroupSnapshotRepository { }
+
+    public class SnapshotProjectionProxy : DispatchProxy
+    {
+        public IWorkflowStore? Backing { get; set; }
+        public Func<WorkflowGroupSnapshotData, WorkflowGroupSnapshotData>? Projection { get; set; }
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (Backing is null || targetMethod is null || args is null) throw new InvalidOperationException();
+            if (targetMethod.Name == nameof(IWorkflowGroupSnapshotRepository.ReadGroupSnapshotAsync))
+                return ProjectAsync((Guid)args[0]!, (WorkflowGroupReadLimits)args[1]!, (CancellationToken)args[2]!);
+            return targetMethod.Invoke(Backing, args);
+        }
+
+        private async ValueTask<WorkflowGroupQueryResult<WorkflowGroupSnapshotData>> ProjectAsync(Guid runId,
+            WorkflowGroupReadLimits limits, CancellationToken cancellationToken)
+        {
+            var repository = (IWorkflowGroupSnapshotRepository)Backing!;
+            var result = await repository.ReadGroupSnapshotAsync(runId, limits, cancellationToken);
+            if (result.Value is null || Projection is null) return result;
+            return result with { Value = Projection(result.Value) };
+        }
+    }
 
     public class TamperBodyClaimProxy : DispatchProxy
     {

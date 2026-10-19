@@ -68,7 +68,11 @@ public sealed record WorkflowGroupOccurrenceFact(Guid WorkflowRunId, string Occu
 public sealed record WorkflowGroupStepFact(Guid WorkflowRunId, Guid StepId, string StepKey, int Revision, int Attempt,
     StepStatus Status, bool IsCurrent, string? GroupOccurrenceId, ActivityGroupMemberRole? Role,
     long LeaseGeneration, DateTimeOffset? LeaseExpiresAt, DateTimeOffset? AvailableAt,
-    DateTimeOffset? StartedAt, DateTimeOffset? CompletedAt, Guid? ChildRunId);
+    DateTimeOffset? StartedAt, DateTimeOffset? CompletedAt, Guid? ChildRunId)
+{
+    /// <summary>Payload-free current input identity used to validate per-item fan-out body closure.</summary>
+    public string? InputHash { get; init; }
+}
 
 public sealed record WorkflowGroupWaitFact(Guid WaitId, Guid StepId, string StepKey, int Revision,
     WaitKind Kind, WaitStatus Status, Guid? ChildRunId, DateTimeOffset? DeadlineAt, DateTimeOffset? AvailableAt);
@@ -86,7 +90,11 @@ public sealed record WorkflowGroupOperationFact(Guid OperationId, string Operati
 /// <summary>A link only. ParentRunId retains actual native ownership, including a reused fork-source child.</summary>
 public sealed record WorkflowGroupChildRunFact(Guid RunId, Guid? ParentRunId, WorkflowStatus? Status, bool IsAvailable);
 
-public sealed record WorkflowGroupFanOutItemFact(string ItemKey, string StepKey, string OccurrenceId, ActivityGroupMemberRole Role);
+public sealed record WorkflowGroupFanOutItemFact(string ItemKey, string StepKey, string OccurrenceId, ActivityGroupMemberRole Role)
+{
+    /// <summary>Payload-free selected input identity. Null for older snapshot providers.</summary>
+    public string? InputHash { get; init; }
+}
 public sealed record WorkflowGroupRevisionFact(Guid StepId, int Revision)
 {
     /// <summary>Body-mode closure projection fields; null for the original single-step closure format.</summary>

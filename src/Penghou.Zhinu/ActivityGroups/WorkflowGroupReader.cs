@@ -322,6 +322,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
                 || (s.GroupOccurrenceId is null ? s.Role is not null : s.Role is null || !Enum.IsDefined(s.Role.Value) || !occurrences.ContainsKey(s.GroupOccurrenceId))) return false;
         foreach (var steps in d.Steps.GroupBy(s => s.StepKey, StringComparer.Ordinal))
             if (steps.Count(s => s.IsCurrent) != 1 || steps.Single(s => s.IsCurrent).Revision != steps.Max(s => s.Revision)) return false;
+        if (d.Steps.Any(step => step.InputHash is not null && !ValidInputHash(step.InputHash))) return false;
         return ValidExpansions(d, occurrences);
     }
 
@@ -358,7 +359,8 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
                 if (string.IsNullOrWhiteSpace(item.ItemKey) || !itemKeys.Add(item.ItemKey)
                     || string.IsNullOrWhiteSpace(item.StepKey) || !stepKeys.Add(item.StepKey)
                     || string.IsNullOrWhiteSpace(item.OccurrenceId) || !occurrenceIds.Add(item.OccurrenceId)
-                    || !occurrences.ContainsKey(item.OccurrenceId) || !Enum.IsDefined(item.Role)) return false;
+                    || !occurrences.ContainsKey(item.OccurrenceId) || !Enum.IsDefined(item.Role)
+                    || (item.InputHash is not null && !ValidInputHash(item.InputHash))) return false;
             foreach (var closure in expansion.Closures)
                 if (string.IsNullOrWhiteSpace(closure.Digest) ||
                     (expansion.BodyContract is null ? closure.Steps.Count != expansion.ItemCount : closure.Steps.Count < expansion.ItemCount * 2)
@@ -388,7 +390,8 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
             var bodyVector = new List<string>(closure.Steps.Count);
             foreach (var revision in closure.Steps)
             {
-                if (revision.StepKey is null || revision.InputHash is null || revision.OccurrenceId is null || revision.Role is null)
+                if (revision.StepKey is null || revision.InputHash is null || !ValidInputHash(revision.InputHash)
+                    || revision.OccurrenceId is null || revision.Role is null)
                     return false;
                 bodyVector.Add(JsonSerializer.Serialize(new
                 {

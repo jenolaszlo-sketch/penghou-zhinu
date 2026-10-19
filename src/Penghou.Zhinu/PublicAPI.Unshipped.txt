@@ -898,6 +898,8 @@ Penghou.Zhinu.WorkflowGroupExtent.Closed = 1 -> Penghou.Zhinu.WorkflowGroupExten
 Penghou.Zhinu.WorkflowGroupExtent.Interrupted = 2 -> Penghou.Zhinu.WorkflowGroupExtent
 Penghou.Zhinu.WorkflowGroupExtent.Open = 0 -> Penghou.Zhinu.WorkflowGroupExtent
 Penghou.Zhinu.WorkflowGroupFanOutItemFact
+Penghou.Zhinu.WorkflowGroupFanOutItemFact.InputHash.get -> string?
+Penghou.Zhinu.WorkflowGroupFanOutItemFact.InputHash.init -> void
 Penghou.Zhinu.WorkflowGroupFanOutItemFact.ItemKey.get -> string!
 Penghou.Zhinu.WorkflowGroupFanOutItemFact.ItemKey.init -> void
 Penghou.Zhinu.WorkflowGroupFanOutItemFact.OccurrenceId.get -> string!
@@ -1271,6 +1273,8 @@ Penghou.Zhinu.WorkflowGroupStepFact.CompletedAt.get -> System.DateTimeOffset?
 Penghou.Zhinu.WorkflowGroupStepFact.CompletedAt.init -> void
 Penghou.Zhinu.WorkflowGroupStepFact.GroupOccurrenceId.get -> string?
 Penghou.Zhinu.WorkflowGroupStepFact.GroupOccurrenceId.init -> void
+Penghou.Zhinu.WorkflowGroupStepFact.InputHash.get -> string?
+Penghou.Zhinu.WorkflowGroupStepFact.InputHash.init -> void
 Penghou.Zhinu.WorkflowGroupStepFact.IsCurrent.get -> bool
 Penghou.Zhinu.WorkflowGroupStepFact.IsCurrent.init -> void
 Penghou.Zhinu.WorkflowGroupStepFact.LeaseExpiresAt.get -> System.DateTimeOffset?

@@ -299,6 +299,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
              + COALESCE((SELECT SUM($fixed + length(CAST(step_key AS BLOB))) FROM workflow_authorization_checkpoints WHERE workflow_run_id=$run),0)
              + COALESCE((SELECT SUM($fixed + length(CAST(canonical_json AS BLOB))) FROM workflow_group_fanout_expansions WHERE workflow_run_id=$run),0)
              + COALESCE((SELECT SUM($fixed + length(CAST(item_key AS BLOB))+length(CAST(step_key AS BLOB))+length(CAST(input_hash AS BLOB))+
+                   length(CAST(input_hash AS BLOB))+
                    length(CAST(group_occurrence_id AS BLOB)))
                    FROM workflow_group_fanout_items WHERE workflow_run_id=$run),0)
              + COALESCE((SELECT SUM($fixed + length(CAST(current_steps_json AS BLOB))) FROM workflow_group_fanout_closures WHERE workflow_run_id=$run),0)
@@ -697,7 +698,8 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             var fact = new WorkflowGroupFanOutItemFact(reader.GetString(0), reader.GetString(1), reader.GetString(3),
-                ReadEnum<ActivityGroupMemberRole>(reader.GetInt32(4)));
+                ReadEnum<ActivityGroupMemberRole>(reader.GetInt32(4)))
+            { InputHash = reader.GetString(2) };
             result.Add(new FanOutItemRow(fact, reader.GetString(2)));
         }
         if (result.Count != expectedCount) throw new WorkflowStateException("A fan-out item count is inconsistent.");
@@ -998,7 +1000,8 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
         return Array.AsReadOnly(rows.Select(row => new WorkflowGroupStepFact(runId, row.Id, row.StepKey, row.Revision, row.Attempt,
             row.Status, row.IsCurrent, row.GroupOccurrenceId, row.Role, row.LeaseGeneration, row.LeaseExpiresAt,
             row.AvailableAt, row.StartedAt, row.CompletedAt,
-            row.ChildRunId ?? (waitChildIds.TryGetValue(row.Id, out var childId) ? childId : null))).ToArray());
+            row.ChildRunId ?? (waitChildIds.TryGetValue(row.Id, out var childId) ? childId : null))
+        { InputHash = row.InputHash }).ToArray());
     }
 
     private static async ValueTask<WorkflowGroupGenerationFact?> ReadGenerationAsync(SqliteConnection connection,
