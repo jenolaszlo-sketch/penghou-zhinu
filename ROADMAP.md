@@ -1705,3 +1705,17 @@ packages and compatibility probes. Actual preview.9 package workers seed schema
 9 and reject the upgraded schema 10 without changing bytes. Fuwen preview.18
 retains its original preview.9 pin; bounded selection lowering is a separate
 integration activity. No package publication or merge is implied.
+
+### Activity groups: bounded Fuwen selection adoption -- 2026-10-20
+
+Fuwen preview.19 now adopts the exact original preview.10/schema 10 archives for
+one terminal grouped selection with explicit bounded epochs and replacement.
+[Its sealed qualification](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/232d2c3c22442a9242e7575669d6bffe1a05bb53/docs/qualification/activity-groups/selection.md)
+records runtime/package source `631fa64`, 1,740 regression tests and 28 package-only
+consumer executions per OS on Windows/Linux .NET 8/10. Partial replacement and
+hard process loss preserve completed history, occurrence parents, public mapping
+and current progress. Both OS consumers resolve the same Ubuntu producer archives.
+No native algorithm, schema or occurrence-identity change was needed for this
+adapter lowering. Earlier archive pins/evidence remain intact. Broader dynamic
+DSL composition, arbitrary condition-driven retirement and publication remain
+separate activities.

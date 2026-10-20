@@ -5,7 +5,8 @@ Updated 2026-10-20. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **Q33 explicit native branch replacement**; read its
+boundary is **Q33 explicit native branch replacement plus the separately
+qualified bounded Fuwen v5 selection profile**; read its
 [contract](activity-groups-branch-replacement.md) and
 [qualification](qualification/activity-groups/q33.md), followed by the earlier
 [current qualification](qualification/activity-groups/zg7.md),
@@ -35,7 +36,18 @@ DSL combinations and package publication are separate future work. Each prior
 profile retains separate evidence and limits.
 Previously admitted unfinished selection work remains an obligation unless an
 explicit replacement receipt retires it. This does not implement implicit
-retirement or a first-class Fuwen epoch API.
+retirement. Fuwen preview.19 now supplies a separate opt-in epoch contract over
+the existing native model. Its runtime/package source is
+`631fa642a78075278ed2f6a58609554a52e33788`; its
+[sealed qualification](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/232d2c3c22442a9242e7575669d6bffe1a05bb53/docs/qualification/activity-groups/selection.md)
+records 1,740 tests and 28 package-only consumer executions per OS on Windows/Linux
+.NET 8/10, partial replacement process loss, historical membership/parentage,
+mapper coverage and current progress. It adopts the original preview.10 archives
+without changing this native runtime, schema or occurrence-identity model. The
+prior Fuwen preview.18/preview.9 archive pin remains preserved separately.
+Only one terminal grouped selection with explicit controlling-boundary StepOnly
+restart is qualified; arbitrary conditional changes, nested/mixed composition,
+item waits/checkpoints, generalized group control and publication remain excluded.
 Preserve exact-source evidence and rerun checks when subsequent changes warrant
 them rather than restarting completed qualification.
 
@@ -284,9 +296,9 @@ and inside manifest/claim SQLite transactions; an in-process reopen is insuffici
 The schema's exact-revision foreign key needs the explicit composite unique
 index on old workflow_steps tables as well as fresh databases. Migration tests
 must claim grouped work after upgrade, not only check the version stamp. Preserve
-authority migration's intermediate literal schema 7/schema 8 and the full 5→6→7→8→9 chain.
+authority migration's intermediate literal schema 7/schema 8 and the full 5→6→7→8→9→10 chain.
 Older worker rejection and retained rows are qualified by the binary package probe.
-The probe's ExpectedCandidateSchemaVersion is now 9. Preserve the monotonic
+The probe's ExpectedCandidateSchemaVersion is now 10. Preserve the monotonic
 GroupFanOutUsed trigger on fresh databases as well as migrations. Closure reads
 must evaluate current revisions coherently, and a new item revision needs a new
 proof instead of trying to replace immutable historical closure.
@@ -312,10 +324,11 @@ remain unchanged. Native regression: 1,925; Fuwen companion: 1,690 plus 12
 package-only executions. See the new [ledger](qualification/activity-groups/zg6-fanout.json).
 
 One fan-out scope, no repeat composition, explicit item root, providers and
-control-only conditionals are the bounded Fuwen contract. Broader compositions,
-evolving selection, item waits/checkpoints and full progress/closure integration
-are deferred. `StepOnly` body/item-completion restart is explicitly rejected.
-Use the current Fuwen preview.16 native pin, not the preserved preview.7 repeat
+control-only conditionals were the bounded Fuwen contract at this earlier
+checkpoint. Broader compositions, evolving selection, item waits/checkpoints and
+full progress/closure integration were deferred. `StepOnly` body/item-completion
+restart was explicitly rejected. Reproduce this checkpoint with the Fuwen
+preview.16 native pin, not the preserved preview.7 repeat
 or preview.5 static pins. Packages are not published.
 
 Use `D:/temp/activity-groups/tmp` for TEMP/TMP. Generated artifacts and all
