@@ -111,6 +111,8 @@ public sealed record WorkflowGroupExpansionFact(string ExpansionId, string FanOu
     int BoundaryRevision, string PlanDigest, int ItemCount, bool IsCurrent, bool IsComplete,
     IReadOnlyList<WorkflowGroupFanOutItemFact> Items, IReadOnlyList<WorkflowGroupClosureFact> Closures)
 {
+    /// <summary>Explicit retirement receipt. Historical rows remain available; this expansion is no longer an obligation.</summary>
+    public string? ReplacedByExpansionId { get; init; }
     /// <summary>Static item-body contract for multi-step expansions; null for the original one-step format.</summary>
     public string? BodyContract { get; init; }
     /// <summary>Selection and declared dependencies included in each body item completion edge.</summary>

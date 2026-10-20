@@ -183,6 +183,11 @@ internal sealed partial class SqliteStepRepository
             transaction,
             workflowRunId,
             cancellationToken).ConfigureAwait(false);
+        var retiredKeys = await SqliteWorkflowGroupFanOutRepository.GetRetiredStepKeysAsync(
+            connection, transaction, workflowRunId, cancellationToken).ConfigureAwait(false);
+        if (retiredKeys.Contains(stepKey))
+            throw new WorkflowStateException("A retired branch member cannot be restarted; select a fresh scope instead.");
+        steps = steps.Where(step => !retiredKeys.Contains(step.StepKey)).ToArray();
         var invalidated = mode switch
         {
             StepRestartMode.StepOnly =>

@@ -7,8 +7,9 @@ namespace Penghou.Zhinu;
 
 /// <summary>
 /// Declares per-item grouping at an existing durable selection boundary.
-/// Changing selected membership or inputs requires a distinct stable native fan-out scope and
-/// selection step. Replaying an admitted scope retains its immutable plan;
+/// Changing selected membership or inputs requires a distinct stable native fan-out scope.
+/// Explicit replacement also requires a newer revision of the same selection step.
+/// Replaying an admitted scope retains its immutable plan;
 /// a new epoch never reinterprets historical item membership.
 /// </summary>
 public sealed class ActivityGroupFanOutBinding
@@ -24,6 +25,10 @@ public sealed class ActivityGroupFanOutBinding
     public ActivityGroupMembership Membership { get; }
     public string SelectionStepKey { get; }
     public ActivityGroupOccurrence? Parent { get; }
+
+    /// <summary>Explicitly retires the previous scope at a newer revision of the same selection step.
+    /// Requires a distinct scope key and a repository advertising replacement support.</summary>
+    public string? ReplacesFanOutKey { get; init; }
 }
 
 public enum ActivityGroupFanOutIdentityKind { Keyed = 0, Positional = 1 }
@@ -94,6 +99,12 @@ public sealed class ActivityGroupFanOutPlan
         string? bodyContract = null)
     {
         ActivityGroupText.Required(fanOutKey, 512, nameof(fanOutKey));
+        if (binding.ReplacesFanOutKey is { } previous)
+        {
+            ActivityGroupText.Required(previous, 512, nameof(binding.ReplacesFanOutKey));
+            if (previous == fanOutKey)
+                throw new WorkflowConfigurationException("A replacement requires a distinct stable fan-out scope key.");
+        }
         if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
         if (bodyContract is not null)
         {
@@ -155,6 +166,7 @@ public sealed class ActivityGroupFanOutPlan
             WriteString(writer, "manifest", GroupManifestDigest);
             WriteString(writer, "fanOut", FanOutKey);
             WriteString(writer, "selection", Binding.SelectionStepKey);
+            if (Binding.ReplacesFanOutKey is { } previous) WriteString(writer, "replacesFanOut", previous);
             WriteString(writer, "group", Binding.Membership.GroupKey);
             WriteString(writer, "parent", Binding.Parent?.GroupOccurrenceId);
             writer.WriteNumber("role", (int)Binding.Membership.Role);
@@ -253,5 +265,10 @@ public interface IWorkflowGroupFanOutRepository
 
 /// <summary>Marker capability for stores that atomically validate bounded multi-step fan-out body claims.</summary>
 public interface IWorkflowGroupFanOutBodyRepository : IWorkflowGroupFanOutRepository
+{
+}
+
+/// <summary>Capability for atomic selection replacement and explicit retirement of unfinished old work.</summary>
+public interface IWorkflowGroupFanOutReplacementRepository : IWorkflowGroupFanOutRepository
 {
 }

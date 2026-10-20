@@ -28,6 +28,8 @@ public static partial class Program
             return await GroupNestedProbeAsync(args[1], args[2], args[3]).ConfigureAwait(false);
         if (args.Length == 4 && args[0] == "--zhinu-group-selection-probe")
             return await GroupSelectionProbeAsync(args[1], args[2], args[3]).ConfigureAwait(false);
+        if (args.Length == 4 && args[0] == "--zhinu-group-branch-probe")
+            return await GroupBranchProbeAsync(args[1], args[2], args[3]).ConfigureAwait(false);
         if (args.Length == 5 && args[0] == "--zhinu-group-query-probe")
             return await GroupQueryProbe.RunAsync(args[1], Guid.Parse(args[2]), args[3], args[4]).ConfigureAwait(false);
         if (args.Length == 5 && args[0] == "--zhinu-group-child-probe")

@@ -342,11 +342,18 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
     {
         var steps = d.Steps.ToDictionary(step => step.StepId);
         var current = d.Steps.Where(step => step.IsCurrent).ToDictionary(step => step.StepKey, StringComparer.Ordinal);
-        var expansions = new HashSet<string>(StringComparer.Ordinal);
+        var expansionById = new Dictionary<string, WorkflowGroupExpansionFact>(StringComparer.Ordinal);
+        foreach (var expansion in d.Expansions)
+            if (string.IsNullOrWhiteSpace(expansion.ExpansionId) || !expansionById.TryAdd(expansion.ExpansionId, expansion)) return false;
         foreach (var expansion in d.Expansions)
         {
-            if (string.IsNullOrWhiteSpace(expansion.ExpansionId) || !expansions.Add(expansion.ExpansionId)
-                || string.IsNullOrWhiteSpace(expansion.FanOutKey) || string.IsNullOrWhiteSpace(expansion.PlanDigest)
+            if (expansion.ReplacedByExpansionId is { } replacementId &&
+                (expansion.IsCurrent || expansion.IsComplete || !expansionById.TryGetValue(replacementId, out var replacement)
+                 || expansion.FanOutKey == replacement.FanOutKey || expansion.BoundaryRevision >= replacement.BoundaryRevision
+                 || !steps.TryGetValue(expansion.BoundaryStepId, out var previousBoundary)
+                 || !steps.TryGetValue(replacement.BoundaryStepId, out var replacementBoundary)
+                 || previousBoundary.StepKey != replacementBoundary.StepKey)) return false;
+            if (string.IsNullOrWhiteSpace(expansion.FanOutKey) || string.IsNullOrWhiteSpace(expansion.PlanDigest)
                 || expansion.RequiredDependencies.Count > ActivityGroupFanOutPlan.MaximumAllowedItems
                 || expansion.RequiredDependencies.Any(string.IsNullOrWhiteSpace)
                 || expansion.ItemCount != expansion.Items.Count
@@ -477,7 +484,7 @@ public sealed partial class WorkflowGroupReader : IWorkflowGroupReader, IWorkflo
     private static long RowCount(WorkflowGroupSnapshotData d) => 1L + d.Definitions.Count + d.Occurrences.Count + d.Steps.Count
         + d.Dependencies.Count + d.Waits.Count + d.Approvals.Count + d.ChildRuns.Count + d.Dispositions.Count
         + (d.SourceRun is null ? 0 : 1) + (d.Generation is null ? 0 : 1) + (d.Operation is null ? 0 : 1)
-        + d.Expansions.Sum(e => 1L + e.Items.Count + e.RequiredDependencies.Count + e.Closures.Sum(c => 1L + c.Steps.Count));
+        + d.Expansions.Sum(e => 1L + (e.ReplacedByExpansionId is null ? 0 : 1) + e.Items.Count + e.RequiredDependencies.Count + e.Closures.Sum(c => 1L + c.Steps.Count));
 
     private static WorkflowGroupSnapshotData Freeze(WorkflowGroupSnapshotData d, WorkflowGroupReadLimits limits) => d with
     {

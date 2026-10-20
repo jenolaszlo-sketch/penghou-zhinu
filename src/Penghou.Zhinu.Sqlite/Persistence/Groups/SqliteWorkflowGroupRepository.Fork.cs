@@ -9,6 +9,13 @@ internal sealed partial class SqliteWorkflowGroupRepository
         WorkflowRun source, WorkflowRun destination, ActivityGroupManifest? targetManifest,
         CancellationToken cancellationToken)
     {
+        await using (var retirement = SqliteStoreSupport.CreateCommand(connection, transaction,
+            "SELECT 1 FROM workflow_group_fanout_retirements WHERE workflow_run_id=$run LIMIT 1;"))
+        {
+            retirement.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(source.Id));
+            if (await retirement.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null)
+                throw new WorkflowStateException("Forking a run with explicit branch retirement is not qualified by this profile.");
+        }
         if (destination.GroupManifestDigest != targetManifest?.ManifestDigest)
             throw new WorkflowStateException("The fork destination pin does not match its supplied group manifest.");
         if (source.AuthorizationProviderId != destination.AuthorizationProviderId ||

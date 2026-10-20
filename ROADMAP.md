@@ -192,7 +192,8 @@ boundaries are implemented. ZG-3b.6 consolidates the selected native durability
 profiles and their explicit composition limits. ZG-4 queries and ZG-5 aggregate
 state/progress are qualified separately; Fuwen integration is consolidated in
 [ZG-7](docs/qualification/activity-groups/zg7.md), qualified on Windows/Linux
-.NET 8/10; full Q33 remains open. Read the [design](docs/activity-groups-design.md),
+.NET 8/10. The subsequent [Q33 checkpoint](docs/qualification/activity-groups/q33.md)
+adds explicit native branch replacement and schema 10. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
 [next-agent handoff](docs/activity-groups-handoff.md).
@@ -320,9 +321,14 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
   archives match the same Ubuntu producer on both OS.
   [Second review](docs/qualification/activity-groups/second-pass-review.md)
   corrections are implemented.
-- [ ] **Full original matrix:** Q33's generic controlling-branch replacement and
-  retirement of old pending membership remain unqualified. Broader DSL dynamic
-  combinations and publication remain separate work.
+- [x] **Q33 explicit native selection:** replacement of a selected branch,
+  retirement of old pending membership, current progress and independent crash
+  recovery proofs. [Contract](docs/activity-groups-branch-replacement.md) and
+  [qualification](docs/qualification/activity-groups/q33.md). Schema 10; existing
+  occurrence identity retained.
+- [ ] **Broader authoring and delivery:** Fuwen evolving-selection lowering,
+  additional DSL dynamic combinations, downstream adoption and publication remain
+  separate work. Arbitrary conditionals do not imply native retirement.
 
 ZG-6.1 static Fuwen handoff and [ZG-6.2a single-level grouped repeats](docs/qualification/activity-groups/zg6-repeat.md)
 and [ZG-6.2b keyed fan-out bodies](docs/qualification/activity-groups/zg6-fanout.md)
@@ -330,8 +336,8 @@ retain their original qualification. The current ZG-7 record adds distinct
 methodology fixtures, nested macro/repeat process recovery, immutable changed-pin
 rejection and mechanical progress. Broader DSL dynamic composition, evolving
 selection, fan-out item waits/checkpoints/merges and grouped coordinated inference
-remain explicitly rejected future work. Both OS CI gates pass; the full Q33
-branch-selection case remains open. Active code-first/loop groups retain unknown
+remain explicitly rejected future work. Both earlier OS CI gates pass; Q33's
+explicit native branch-selection qualification is recorded separately. Active code-first/loop groups retain unknown
 totals until authoritative closure. The
 [pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
 snapshot integrity and stale approval projection, indexes manifest definitions,

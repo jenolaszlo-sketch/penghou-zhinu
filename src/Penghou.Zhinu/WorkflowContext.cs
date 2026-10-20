@@ -1129,6 +1129,8 @@ public sealed partial class WorkflowContext
 
     private void RejectGroupedFanOut(StepOptions? stepOptions)
     {
+        if (stepOptions?.FanOutGroup?.ReplacesFanOutKey is not null && store is not IWorkflowGroupFanOutReplacementRepository)
+            throw new WorkflowConfigurationException("Selection replacement requires a durable replacement repository capability.");
         if (IsInGroupedFanOutBody)
             throw new WorkflowConfigurationException("Nested dynamic fan-out is not supported inside a grouped fan-out body.");
         if (stepOptions?.Group is not null)

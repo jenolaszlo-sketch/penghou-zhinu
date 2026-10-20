@@ -50,7 +50,7 @@ public sealed partial class WorkflowGroupReader
             Operation = data.Operation,
             Extent = extent,
             Coverage = !selectionConsistent || index.Historical.Contains(occurrenceId) ? WorkflowGroupCoverage.Unknown :
-                subtree.Any(index.Historical.Contains) ? WorkflowGroupCoverage.Partial : WorkflowGroupCoverage.Complete
+                subtree.Any(index.UnresolvedHistorical.Contains) ? WorkflowGroupCoverage.Partial : WorkflowGroupCoverage.Complete
         };
         var state = WorkflowGroupStateReducer.Evaluate(input, entry.Header.CapturedAt, index.Facts);
         if (index.Historical.Contains(occurrenceId)) state = state with
@@ -134,6 +134,7 @@ public sealed partial class WorkflowGroupReader
         public required HashSet<string> Occurrences { get; init; }
         public required HashSet<string> SealedBodyOccurrenceIds { get; init; }
         public required HashSet<string> Historical { get; init; }
+        public required HashSet<string> UnresolvedHistorical { get; init; }
         public required ILookup<string, WorkflowGroupOccurrenceFact> Children { get; init; }
         public required ILookup<string, WorkflowGroupStepFact> Members { get; init; }
         public required ILookup<string, WorkflowGroupFanOutItemFact> Items { get; init; }
@@ -142,9 +143,9 @@ public sealed partial class WorkflowGroupReader
         // Charge bucket arrays, lookup group objects and retained references as well
         // as frozen DTOs. No query results or subtree copies are retained per group.
         public static long EstimateBytes(WorkflowGroupSnapshotData data) => 4096L
-            + data.Occurrences.Count * 352L + data.Steps.Count * 576L
+            + data.Occurrences.Count * 448L + data.Steps.Count * 576L
             + (data.Dependencies.Count + (long)data.Waits.Count + data.Approvals.Count) * 192L
-            + data.Expansions.Sum(expansion => 128L + expansion.Items.Count * 320L);
+            + data.Expansions.Sum(expansion => 256L + expansion.Items.Count * 320L);
 
         public static StateIndex? Create(WorkflowGroupSnapshotData data)
         {
@@ -164,6 +165,11 @@ public sealed partial class WorkflowGroupReader
             var historical = data.Expansions.Where(expansion => !expansion.IsCurrent).SelectMany(expansion => expansion.Items)
                 .Select(item => item.OccurrenceId).Where(id => !active.Contains(id)).ToHashSet(StringComparer.Ordinal);
             var children = data.Occurrences.ToLookup(occurrence => occurrence.ParentOccurrenceId ?? "", StringComparer.Ordinal);
+            var retired = data.Expansions.Where(expansion => expansion.ReplacedByExpansionId is not null)
+                .SelectMany(expansion => expansion.Items).Select(item => item.OccurrenceId).ToHashSet(StringComparer.Ordinal);
+            ExpandDescendants(historical, children);
+            ExpandDescendants(retired, children);
+            historical.UnionWith(retired);
             var members = facts.Current.Values.Where(step => step.GroupOccurrenceId is { } id && !historical.Contains(id))
                 .ToLookup(step => step.GroupOccurrenceId!, StringComparer.Ordinal);
             var currentExpansions = data.Expansions.Where(expansion => expansion.IsCurrent).ToArray();
@@ -174,6 +180,7 @@ public sealed partial class WorkflowGroupReader
                 SealedBodyOccurrenceIds = FindSealedBodyOccurrences(currentExpansions, occurrencesById, children,
                     members, facts, data.Dependencies),
                 Historical = historical,
+                UnresolvedHistorical = historical.Except(retired, StringComparer.Ordinal).ToHashSet(StringComparer.Ordinal),
                 Children = children,
                 Members = members,
                 Items = activeItems.ToLookup(item => item.OccurrenceId, StringComparer.Ordinal),
@@ -181,6 +188,13 @@ public sealed partial class WorkflowGroupReader
                     .SelectMany(expansion => expansion.Items.Select(item => item.OccurrenceId).Distinct(StringComparer.Ordinal)
                         .Select(id => (id, expansion))).ToLookup(pair => pair.id, pair => pair.expansion, StringComparer.Ordinal)
             };
+        }
+
+        private static void ExpandDescendants(HashSet<string> ids, ILookup<string, WorkflowGroupOccurrenceFact> children)
+        {
+            var pending = new Queue<string>(ids);
+            while (pending.TryDequeue(out var parent))
+                foreach (var child in children[parent]) if (ids.Add(child.OccurrenceId)) pending.Enqueue(child.OccurrenceId);
         }
     }
 }

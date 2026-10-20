@@ -1,4 +1,10 @@
 #nullable enable
+const Penghou.Zhinu.WorkflowEventTypes.GroupFanOutReplaced = "group-fanout-replaced" -> string!
+Penghou.Zhinu.IWorkflowGroupFanOutReplacementRepository
+Penghou.Zhinu.WorkflowGroupExpansionFact.ReplacedByExpansionId.get -> string?
+Penghou.Zhinu.WorkflowGroupExpansionFact.ReplacedByExpansionId.init -> void
+Penghou.Zhinu.ActivityGroupFanOutBinding.ReplacesFanOutKey.get -> string?
+Penghou.Zhinu.ActivityGroupFanOutBinding.ReplacesFanOutKey.init -> void
 abstract Penghou.Zhinu.CompensatingWorkflowStep<TInput, TOutput>.CompensateAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, TOutput output, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Penghou.Zhinu.WorkflowStep<TInput, TOutput>.ExecuteAsync(Penghou.Zhinu.WorkflowStepContext! context, TInput input, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TOutput>!
 const Penghou.Zhinu.ActivityGroupFanOutPlan.MaximumAllowedCanonicalBytes = 1048576 -> int

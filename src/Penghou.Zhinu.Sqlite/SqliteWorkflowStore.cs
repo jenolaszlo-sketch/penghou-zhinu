@@ -32,6 +32,7 @@ public sealed partial class SqliteWorkflowStore :
     , IWorkflowGroupRepository
     , IWorkflowGroupFanOutRepository
     , IWorkflowGroupFanOutBodyRepository
+    , IWorkflowGroupFanOutReplacementRepository
     , IWorkflowGroupForkRepository
     , IWorkflowGroupSnapshotRepository
 {

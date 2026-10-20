@@ -5,7 +5,9 @@ Updated 2026-10-20. No chat history is required.
 ## Checkout and checkpoint
 
 The user resumed implementation after the earlier usage pause. The current
-boundary is **ZG-7 selected-profile consolidation and second review**; read its
+boundary is **Q33 explicit native branch replacement**; read its
+[contract](activity-groups-branch-replacement.md) and
+[qualification](qualification/activity-groups/q33.md), followed by the earlier
 [current qualification](qualification/activity-groups/zg7.md),
 [second pass](qualification/activity-groups/second-pass-review.md), then the original
 [fan-out qualification](qualification/activity-groups/zg6-fanout.md), the
@@ -16,16 +18,19 @@ ZG-5
 [qualification record](qualification/activity-groups/zg5.md), followed by the
 [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
 [measured follow-up](qualification/activity-groups/pre-fuwen-followup.md).
-The selected profile is qualified on Windows/Linux .NET 8/10. Next full-matrix
-work is **Q33 generic controlling-branch replacement/current-selection retirement**;
-existing conservative history projection is not proof of that behavior. The local
+The earlier selected profile is qualified on Windows/Linux .NET 8/10. Q33 now
+adds explicit native replacement through fresh keyed selection scopes, durable
+retirement receipts and schema 10; its record separates current qualification
+from the earlier package closure. Arbitrary changed C# branches still do not
+imply retirement. The earlier local
 full suites, exact package consumers and both legacy probes
 pass for native preview.9 (`246d535`) and Fuwen preview.18 (`535f82e`). CI-only
 harness commits do not change those frozen runtime sources. Broader rejected
 DSL combinations and package publication are separate future work. Each prior
 profile retains separate evidence and limits.
-Previously admitted unfinished selection work remains an obligation; this does
-not implement in-place replanning, implicit retirement or a first-class epoch API.
+Previously admitted unfinished selection work remains an obligation unless an
+explicit replacement receipt retires it. This does not implement implicit
+retirement or a first-class Fuwen epoch API.
 Preserve exact-source evidence and rerun checks when subsequent changes warrant
 them rather than restarting completed qualification.
 
@@ -243,13 +248,13 @@ are complete. Use [ZG-7](qualification/activity-groups/zg7.md) and its
 [second review](qualification/activity-groups/second-pass-review.md) as the current
 checkpoint; the original preview.5/.7/.8 records retain their own source and limits.
 
-The full-matrix follow-up is **Q33 generic controlling-branch replacement and
-current-selection retirement**. Existing superseded fan-out history is excluded
-from current progress, and unresolved parents expose Partial/Unknown coverage.
-That is not evidence that an arbitrary changed branch can retire old pending
-membership. Establish the explicit supported selection/retirement contract and
-its durable evidence before claiming that broader behavior; unfinished admitted
-work must not disappear by inference from a later selector result.
+The new [Q33 checkpoint](qualification/activity-groups/q33.md) implements explicit
+native replacement/current-selection retirement with its own crash probes and
+schema-10 evidence. The next integration activity is designing and preflight
+qualifying Fuwen selection lowering over that contract, including immutable bundle
+and package pins. Keep unsupported DSL forms rejected. Unfinished admitted work
+must not disappear by inference from a later selector result, and the current
+Fuwen/native preview.18/.9 closure must not be silently replaced.
 
 Nested/mixed DSL dynamics, evolving-selection lowering, item waits/checkpoints/
 merges, grouped coordinated inference/fallback and group controls remain separate

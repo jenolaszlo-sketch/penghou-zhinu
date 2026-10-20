@@ -23,6 +23,7 @@
     <Compile Include="..\Penghou.Zhinu.Sqlite.ProcessProbe\GroupForkWorkflow.cs" Link="GroupForkWorkflow.cs" />
     <Compile Include="..\Penghou.Zhinu.Sqlite.ProcessProbe\GroupNestedWorkflow.cs" Link="GroupNestedWorkflow.cs" />
     <Compile Include="..\Penghou.Zhinu.Sqlite.ProcessProbe\GroupSelectionWorkflow.cs" Link="GroupSelectionWorkflow.cs" />
+    <Compile Include="..\Penghou.Zhinu.Sqlite.ProcessProbe\GroupBranchWorkflow.cs" Link="GroupBranchWorkflow.cs" />
     <Compile Include="..\Penghou.Zhinu.Sqlite.ProcessProbe\GroupChildWorkflow.cs" Link="GroupChildWorkflow.cs" />
   </ItemGroup>
   <ItemGroup>

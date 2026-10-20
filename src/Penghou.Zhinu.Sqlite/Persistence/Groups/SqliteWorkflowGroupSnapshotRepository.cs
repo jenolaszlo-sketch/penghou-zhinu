@@ -234,6 +234,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
              + (SELECT COUNT(*) FROM workflow_group_fanout_expansions WHERE workflow_run_id=$run)
              + (SELECT COUNT(*) FROM workflow_group_fanout_items WHERE workflow_run_id=$run)
              + (SELECT COUNT(*) FROM workflow_group_fanout_closures WHERE workflow_run_id=$run)
+             + (SELECT COUNT(*) FROM workflow_group_fanout_retirements WHERE workflow_run_id=$run)
              + (SELECT COUNT(*) FROM workflow_runs WHERE parent_run_id=$run)
              + (SELECT COUNT(*) FROM workflow_runs WHERE id=(SELECT source_run_id FROM workflow_runs WHERE id=$run))
              + (SELECT COUNT(*) FROM workflow_generations WHERE workflow_run_id=$run)
@@ -303,6 +304,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                    length(CAST(group_occurrence_id AS BLOB)))
                    FROM workflow_group_fanout_items WHERE workflow_run_id=$run),0)
              + COALESCE((SELECT SUM($fixed + length(CAST(current_steps_json AS BLOB))) FROM workflow_group_fanout_closures WHERE workflow_run_id=$run),0)
+             + COALESCE((SELECT SUM($fixed + 128) FROM workflow_group_fanout_retirements WHERE workflow_run_id=$run),0)
              + COALESCE((SELECT SUM($fixed + length(CAST(workflow_name AS BLOB))+length(CAST(workflow_version AS BLOB)))
                    FROM workflow_runs WHERE id=$run OR parent_run_id=$run OR id=(SELECT source_run_id FROM workflow_runs WHERE id=$run)),0)
              + COALESCE((SELECT SUM($fixed) FROM workflow_generations WHERE workflow_run_id=$run),0)
@@ -578,6 +580,28 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                     reader.GetString(3), reader.GetInt32(4), reader.GetString(5), reader.GetInt32(6), reader.GetString(7)));
         }
         var result = new List<WorkflowGroupExpansionFact>(headers.Count);
+        var retirements = new Dictionary<string, string>(StringComparer.Ordinal);
+        await using (var retired = SqliteStoreSupport.CreateCommand(connection, transaction,
+            "SELECT expansion_id,replacement_expansion_id FROM workflow_group_fanout_retirements WHERE workflow_run_id=$run;"))
+        {
+            retired.Parameters.AddWithValue("$run", SqliteStoreSupport.Format(runId));
+            await using var reader = await retired.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) retirements.Add(reader.GetString(0), reader.GetString(1));
+        }
+        var headersById = headers.ToDictionary(header => header.ExpansionId, StringComparer.Ordinal);
+        var replacementIds = retirements.Values.ToHashSet(StringComparer.Ordinal);
+        foreach (var receipt in retirements)
+        {
+            if (!headersById.TryGetValue(receipt.Key, out var old) || !headersById.TryGetValue(receipt.Value, out var replacement)
+                || old.BoundaryStepKey != replacement.BoundaryStepKey || old.BoundaryRevision >= replacement.BoundaryRevision)
+                throw new WorkflowStateException("A branch retirement receipt references inconsistent selections.");
+            using var oldPlan = JsonDocument.Parse(old.CanonicalJson);
+            using var newPlan = JsonDocument.Parse(replacement.CanonicalJson);
+            if (!newPlan.RootElement.TryGetProperty("replacesFanOut", out var replaces) || replaces.GetString() != old.FanOutKey
+                || oldPlan.RootElement.GetProperty("group").GetString() != newPlan.RootElement.GetProperty("group").GetString()
+                || oldPlan.RootElement.GetProperty("parent").GetString() != newPlan.RootElement.GetProperty("parent").GetString())
+                throw new WorkflowStateException("A branch retirement receipt does not match its immutable replacement plan.");
+        }
         foreach (var header in headers)
         {
             var expansion = header.ExpansionId;
@@ -598,6 +622,8 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
             using (var plan = JsonDocument.Parse(canonical, new JsonDocumentOptions { MaxDepth = 16 }))
             {
                 var root = plan.RootElement;
+                if (root.TryGetProperty("replacesFanOut", out _) && !replacementIds.Contains(expansion))
+                    throw new WorkflowStateException("A replacement plan has no durable retirement receipt.");
                 var planVersion = root.GetProperty("version").GetInt32();
                 var planDomain = planVersion switch
                 {
@@ -650,7 +676,7 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
             var expectedExpansionId = Digest("penghou.zhinu.activity-group-fanout-expansion.v1\n" +
                 runId.ToString("D") + "\n" + boundaryId.ToString("D") + "\n" + fanOutKey);
             if (expectedExpansionId != expansion) throw new WorkflowStateException("A fan-out expansion ID is not canonical.");
-            var isCurrent = currentSteps.TryGetValue(boundaryKey, out var boundary) &&
+            var isCurrent = !retirements.ContainsKey(expansion) && currentSteps.TryGetValue(boundaryKey, out var boundary) &&
                 boundary.Id == boundaryId && boundary.Revision == boundaryRevision;
             var items = await ReadFanOutItemsAsync(connection, transaction, runId, expansion, itemCount, cancellationToken)
                 .ConfigureAwait(false);
@@ -678,7 +704,11 @@ internal sealed class SqliteWorkflowGroupSnapshotRepository(IZhinuSqliteDatabase
                 occurrenceById, planDependencies, bodyContract);
             result.Add(new WorkflowGroupExpansionFact(expansion, fanOutKey, boundaryId, boundaryRevision,
                 digest, itemCount, isCurrent, isComplete, Array.AsReadOnly(items.Select(item => item.Fact).ToArray()), closures)
-            { BodyContract = bodyContract, RequiredDependencies = Array.AsReadOnly(planDependencies) });
+            {
+                BodyContract = bodyContract,
+                RequiredDependencies = Array.AsReadOnly(planDependencies),
+                ReplacedByExpansionId = retirements.GetValueOrDefault(expansion)
+            });
         }
         return result.AsReadOnly();
     }

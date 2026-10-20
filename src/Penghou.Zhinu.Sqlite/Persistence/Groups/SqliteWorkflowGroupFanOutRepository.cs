@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Groups;
 
-internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase factory)
+internal sealed partial class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase factory)
 {
     private const string ClosureDomain = "penghou.zhinu.activity-group-fanout-closure.v1\n";
     private const string BodyClosureDomain = "penghou.zhinu.activity-group-fanout-closure.v2\n";
@@ -21,6 +21,7 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         var boundary = await ValidateFenceAndReadBoundaryAsync(
             connection, transaction, request, requireCompleted: true, cancellationToken).ConfigureAwait(false);
         var expansionId = plan.GetExpansionId(boundary.Id);
+        await EnsureScopeNotRetiredAsync(connection, transaction, plan.WorkflowRunId, plan.FanOutKey, cancellationToken).ConfigureAwait(false);
         await ValidateRunPinAndParentAsync(connection, transaction, plan, cancellationToken).ConfigureAwait(false);
 
         await using (var existing = SqliteStoreSupport.CreateCommand(connection, transaction, """
@@ -120,6 +121,7 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
             insertItem.Parameters.AddWithValue("$role", (int)item.Group.Membership.Role);
             await insertItem.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
+        await RetirePreviousAsync(connection, transaction, request, boundary, expansionId, cancellationToken).ConfigureAwait(false);
         await EnsureMarkerAsync(connection, transaction, plan.WorkflowRunId, cancellationToken).ConfigureAwait(false);
         var admitted = await ReadStateAsync(connection, transaction, plan.WorkflowRunId, expansionId,
             plan.FanOutKey, boundary.Id, boundary.Revision, plan.PlanDigest, plan.Items.Count, cancellationToken)
@@ -141,6 +143,7 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
             connection, transaction, request, requireCompleted: true, cancellationToken).ConfigureAwait(false);
         var expansionId = plan.GetExpansionId(boundary.Id);
         await EnsureExpansionMatchesAsync(connection, transaction, plan, boundary, expansionId, cancellationToken).ConfigureAwait(false);
+        await EnsureExpansionNotRetiredAsync(connection, transaction, plan.WorkflowRunId, expansionId, cancellationToken).ConfigureAwait(false);
         await ValidateRunPinAndParentAsync(connection, transaction, plan, cancellationToken).ConfigureAwait(false);
         var currentSteps = await ReadCompletedItemsAsync(connection, transaction, plan.WorkflowRunId, expansionId,
             plan.Items.Count, cancellationToken).ConfigureAwait(false);
@@ -205,7 +208,10 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             SELECT expansion_id, fan_out_key, boundary_step_id, boundary_revision, plan_digest, item_count
             FROM workflow_group_fanout_expansions e
-            WHERE workflow_run_id=$run AND boundary_revision=(
+            WHERE workflow_run_id=$run
+              AND NOT EXISTS(SELECT 1 FROM workflow_group_fanout_retirements r
+                  WHERE r.workflow_run_id=e.workflow_run_id AND r.expansion_id=e.expansion_id)
+              AND boundary_revision=(
                 SELECT MAX(x.boundary_revision) FROM workflow_group_fanout_expansions x
                 WHERE x.workflow_run_id=e.workflow_run_id AND x.fan_out_key=e.fan_out_key)
             ORDER BY fan_out_key;
@@ -230,6 +236,10 @@ internal sealed class SqliteWorkflowGroupFanOutRepository(IZhinuSqliteDatabase f
         SqliteConnection connection, SqliteTransaction transaction, StepClaimRequest request,
         CancellationToken cancellationToken)
     {
+        if (request.FanOut is { } declared)
+            await EnsureExpansionNotRetiredAsync(connection, transaction, request.WorkflowRunId, declared.ExpansionId, cancellationToken).ConfigureAwait(false);
+        else if (request.Group is { } group)
+            await EnsureOccurrenceNotRetiredAsync(connection, transaction, request.WorkflowRunId, group.Occurrence, cancellationToken).ConfigureAwait(false);
         var expected = await FindReservedItemAsync(connection, transaction, request.WorkflowRunId,
             request.StepKey, cancellationToken).ConfigureAwait(false);
         var claim = request.FanOut;

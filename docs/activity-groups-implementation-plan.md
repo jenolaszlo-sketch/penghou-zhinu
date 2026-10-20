@@ -280,7 +280,8 @@ acceptance/quality judgments, group-specific cancellation or retry behavior.
 is implemented and qualified against real Fuwen macro/group source. It adds the
 native grouped signal-wait seam and exact candidate package handoff. The
 [2026-10-20 consolidation](qualification/activity-groups/zg7.md) closes the selected
-adapter profile on Windows/Linux .NET 8/10; full Q33 remains open. [ZG-6.2a](qualification/activity-groups/zg6-repeat.md) now qualifies
+adapter profile on Windows/Linux .NET 8/10. The later [Q33 checkpoint](qualification/activity-groups/q33.md)
+adds explicit native selection replacement separately. [ZG-6.2a](qualification/activity-groups/zg6-repeat.md) now qualifies
 single-level grouped repeat lowering, native loop Control bindings and iteration
 wait recovery. [ZG-6.2b](qualification/activity-groups/zg6-fanout.md) qualifies
 one fixed keyed fan-out with independently durable providers and explicit item
@@ -365,8 +366,11 @@ and native iteration waits while preserving historical macro-free keys and
 claim input identity. [ZG-6.2b](qualification/activity-groups/zg6-fanout.md) now
 adds bounded fan-out per-operation lowering with separate process-loss evidence
 and conservative closure limits. The [current consolidation](qualification/activity-groups/zg7.md)
-adds Q43–Q46 fixtures, mechanical progress and a second correctness pass. Windows/Linux Q47 evidence now closes the selected profile. Full Q33 generic
-branch retirement remains open and must not be inferred from history projection.
+adds Q43–Q46 fixtures, mechanical progress and a second correctness pass. Windows/Linux Q47 evidence closes that selected profile.
+[Q33](qualification/activity-groups/q33.md) subsequently adds explicit native
+branch replacement and schema 10 with separate recovery evidence. Arbitrary
+conditionals still do not imply retirement; Fuwen evolving-selection lowering
+requires a separate integration checkpoint.
 Broader nested/mixed dynamic authoring and package publication are separate work;
 the original full FM roadmap includes richer interfaces outside this subset.
 

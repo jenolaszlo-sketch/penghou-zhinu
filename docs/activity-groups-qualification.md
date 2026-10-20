@@ -4,7 +4,10 @@ Updated: 2026-10-20. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 fork
 ZG-3b.6 consolidates the selected native profiles; ZG-4 queries and ZG-5
 aggregate state/progress are qualified over that bounded model. The
 selected-profile matrix is consolidated in [ZG-7](qualification/activity-groups/zg7.md);
-qualification passes on Windows/Linux .NET 8/10; full Q33 remains open**.
+qualification passes on Windows/Linux .NET 8/10. The subsequent
+[Q33 native replacement checkpoint](qualification/activity-groups/q33.md)
+qualifies explicit selection/retirement separately; Fuwen evolving-selection
+lowering and arbitrary inferred branch retirement remain outside that profile**.
 The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
 contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
 records the narrow root/loop durability, admission and process-loss slice.
@@ -95,7 +98,7 @@ implemented suites and their exact coverage; unchecked broader cases remain work
 | Q30 | Process dies while waiting on signal/approval/child | Same wait correlation/deadline and group; fresh process observes it without executing recovery. | 3 |
 | Q31 | Process dies after partial loop/fan-out expansion and at loop commit/final boundary | Correct occurrence separation and open/closed state; no repeated committed effect receipt. | 3 |
 | Q32 | Process dies after failure, then selective restart | Prior evidence readable; new current revision attached correctly; stale closure invalidated. | 3 |
-| Q33 | Change controlling condition revision and take a different branch | Former branch remains historical, not current pending work; closure/effective counts refer to new selection only. | 3,5 |
+| Q33 | Change controlling condition revision and take a different branch | Former branch remains historical, not current pending work; closure/effective counts refer to new selection only. Explicit native replacement is qualified in [Q33](qualification/activity-groups/q33.md); arbitrary conditionals do not imply retirement. | 3,5 |
 | Q34 | Reopen schema-5/6 fixtures, upstream authority-schema-7 fixture, new empty DB | Additive upgrade preserves IDs/results/events/cursors/auth state including authority-subject binding; no roots/members added to old runs. | 3 |
 | Q35 | Failure at schema creation/version update; old schema-6/7 binary opens group-schema DB | Full rollback on failure; old worker rejects new schema; no silent downgrade or reuse of the authority schema number. | 3 |
 | Q36 | Fork copies completed work; restart/new execution generation | New run-bound occurrences/memberships; original producer/source provenance unchanged; one progression owner retained. | 3 |

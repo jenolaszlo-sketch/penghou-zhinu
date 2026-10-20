@@ -2,7 +2,7 @@ namespace Penghou.Zhinu.Sqlite;
 
 /// <summary>
 /// Thrown when an existing SQLite database was created by an incompatible or
-/// unversioned Zhinu schema. Preview releases do not migrate schemas.
+/// unversioned Zhinu schema. Only explicitly supported additive migrations are accepted.
 /// </summary>
 public sealed class ZhinuSchemaCompatibilityException : Exception
 {
@@ -25,5 +25,5 @@ public sealed class ZhinuSchemaCompatibilityException : Exception
 /// <summary>Exposes the schema expected by this SQLite package version.</summary>
 public static class ZhinuSqliteSchema
 {
-    public const int CurrentVersion = 9;
+    public const int CurrentVersion = 10;
 }

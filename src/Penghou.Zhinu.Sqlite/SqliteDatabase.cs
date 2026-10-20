@@ -86,6 +86,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 await EnsureGroupFanOutMarkerTriggerAsync(connection, schemaTransaction, cancellationToken)
                     .ConfigureAwait(false);
                 await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
+                    "UPDATE zhinu_schema SET version = 10 WHERE id = 1;", cancellationToken).ConfigureAwait(false);
+                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
                     "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
                     cancellationToken).ConfigureAwait(false);
                 await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
@@ -198,7 +200,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
             .ConfigureAwait(false);
         var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
-        if (version is not (5 or 6 or 7 or 8 or ZhinuSqliteSchema.CurrentVersion))
+        if (version is not (5 or 6 or 7 or 8 or 9 or ZhinuSqliteSchema.CurrentVersion))
         {
             throw new ZhinuSchemaCompatibilityException(
                 ZhinuSqliteSchema.CurrentVersion,
@@ -511,6 +513,25 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         CREATE TRIGGER IF NOT EXISTS trg_workflow_group_fanout_closure_immutable
         BEFORE UPDATE ON workflow_group_fanout_closures
         BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out closure proofs are immutable'); END;
+
+        CREATE TABLE IF NOT EXISTS workflow_group_fanout_retirements
+        (
+            workflow_run_id TEXT NOT NULL,
+            expansion_id TEXT NOT NULL,
+            replacement_expansion_id TEXT NOT NULL,
+            lease_generation INTEGER NOT NULL CHECK (lease_generation >= 1),
+            retired_at TEXT NOT NULL,
+            PRIMARY KEY(workflow_run_id, expansion_id),
+            UNIQUE(workflow_run_id, replacement_expansion_id),
+            CHECK (expansion_id <> replacement_expansion_id),
+            FOREIGN KEY(workflow_run_id, expansion_id)
+                REFERENCES workflow_group_fanout_expansions(workflow_run_id, expansion_id) ON DELETE CASCADE,
+            FOREIGN KEY(workflow_run_id, replacement_expansion_id)
+                REFERENCES workflow_group_fanout_expansions(workflow_run_id, expansion_id) ON DELETE CASCADE
+        );
+        CREATE TRIGGER IF NOT EXISTS trg_workflow_group_fanout_retirement_immutable
+        BEFORE UPDATE ON workflow_group_fanout_retirements
+        BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out retirements are immutable'); END;
 
         CREATE TABLE IF NOT EXISTS workflow_step_dependencies
         (
