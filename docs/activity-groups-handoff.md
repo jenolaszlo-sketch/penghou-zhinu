@@ -18,6 +18,11 @@ ZG-5
 [qualification record](qualification/activity-groups/zg5.md), followed by the
 [pre-Fuwen review](qualification/activity-groups/pre-fuwen-review.md) and
 [measured follow-up](qualification/activity-groups/pre-fuwen-followup.md).
+Native Q33 runtime/package source is `bf33c05cf2390af6924bbe3761e09f9e377c7a97`,
+preview.10/schema 10. All 1,963 combined framework tests pass per OS on Windows
+and Linux, with 28 Q33 executions, package/binary probes and actual preview.9
+migration plus unchanged-worker rejection. The final evidence/harness commit
+does not change that runtime source or repack its archives.
 The earlier selected profile is qualified on Windows/Linux .NET 8/10. Q33 now
 adds explicit native replacement through fresh keyed selection scopes, durable
 retirement receipts and schema 10; its record separates current qualification

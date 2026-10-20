@@ -1,0 +1,3121 @@
+{
+  "SchemaVersion": 1,
+  "Date": "2026-10-20",
+  "Stage": "Q33 explicit native branch replacement",
+  "Status": "passed for explicit native selection/retirement profile",
+  "ImplementationSource": "ca0c466ff704e88b800a42a94405f4e27db76df1",
+  "RuntimeSource": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+  "RuntimeTree": "40d15294c3600fbeadad9679ec52d41e81620aac",
+  "PackageVersion": "0.2.0-preview.10",
+  "PersistedSchemaVersion": 10,
+  "Identity": "Existing keyed coordinates and occurrence hashes unchanged; new durable retirement evidence requires schema 10.",
+  "Storage": "All generated artifacts, caches and TEMP/TMP are on D:/temp/activity-groups behind workspace junctions.",
+  "LocalSuite": {
+    "Total": 1963,
+    "Passed": 1963,
+    "Files": [
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_42_net10.0.trx",
+        "Sha256": "6655abb9b520b1af506553e2cae6400b9ceaf90b4d20a66e8732de457419e5e1",
+        "Framework": "net10.0",
+        "Total": 1
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net10.0.trx",
+        "Sha256": "28379f2659d0acb2aead2c25b03453a4c42efee0ecc098ff2877bb749999c2e3",
+        "Framework": "net10.0",
+        "Total": 5
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net10.0[1].trx",
+        "Sha256": "8de8507d6f7ef50c59deb806b988301f3bdcae3d2fbd291f42438b372d88e985",
+        "Framework": "net10.0",
+        "Total": 13
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net10.0[2].trx",
+        "Sha256": "a61f34f7715eed977e94b84874913b60fe0ee887a81e09572974f34e63f51443",
+        "Framework": "net10.0",
+        "Total": 221
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net10.0[3].trx",
+        "Sha256": "92e870e1c44fa5e141f9d7ae7df475a551c10326cba2f308d8d1875df2780f6a",
+        "Framework": "net10.0",
+        "Total": 29
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net8.0.trx",
+        "Sha256": "e62f8822990b25e6e2e961cedbfa27e060d19495cdc23d306d7445899319df78",
+        "Framework": "net8.0",
+        "Total": 1
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net8.0[1].trx",
+        "Sha256": "94d15cd3d056a214c764cd9a9f06bbf25faa737aac62e3b983a2ba7149edcde7",
+        "Framework": "net8.0",
+        "Total": 13
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net8.0[2].trx",
+        "Sha256": "2074b11877becf1444d486374c84895bb97c4eee2c13fc3fd962b636b04d9d08",
+        "Framework": "net8.0",
+        "Total": 221
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_44_net8.0[3].trx",
+        "Sha256": "4b6ef575a16ea86b6a621c19480568de65e9f8c02932a8294944d52bf51f0711",
+        "Framework": "net8.0",
+        "Total": 29
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_45_net8.0.trx",
+        "Sha256": "5343729d29c3b2e0677dd803ccd3a50b38f4fce5af0cfbe8a95e318a5e6cf468",
+        "Framework": "net8.0",
+        "Total": 715
+      },
+      {
+        "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_46_net10.0.trx",
+        "Sha256": "0b7fdb43bc14ffd7063f4b1750b85652f29c56e8502c6c43a102743ba5e0e5a9",
+        "Framework": "net10.0",
+        "Total": 715
+      }
+    ],
+    "Q33Executions": [
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"partial\")"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.CompletedBranchClosureSurvivesReplacementAndSameValueCanReappearInFreshScope"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: False)"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"transaction\")"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.StoreWithoutReplacementCapabilityRejectsBeforeBranchDispatch"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.MissingRetirementReceiptCannotSilentlyRemoveHistoricalObligations"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: True)"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"self\")"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.SchemaNineMigrationRetainsSelectionsAndMembershipWithoutInventingRetirement"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"admitted\")"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ReplacementRetiresUnfinishedBranchWithoutRewritingCompletedHistory"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.RetiredMembersCannotRestartAndDependentRestartDoesNotResurrectThem"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"missing\")"
+      },
+      {
+        "Framework": "net8.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"selection\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.StoreWithoutReplacementCapabilityRejectsBeforeBranchDispatch"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"partial\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"transaction\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.SchemaNineMigrationRetainsSelectionsAndMembershipWithoutInventingRetirement"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"missing\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.MissingRetirementReceiptCannotSilentlyRemoveHistoricalObligations"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"admitted\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"self\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ReplacementRetiresUnfinishedBranchWithoutRewritingCompletedHistory"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: False)"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.CompletedBranchClosureSurvivesReplacementAndSameValueCanReappearInFreshScope"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: True)"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"selection\")"
+      },
+      {
+        "Framework": "net10.0",
+        "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.RetiredMembersCannotRestartAndDependentRestartDoesNotResurrectThem"
+      }
+    ],
+    "RecoveryReceipts": [
+      {
+        "Framework": "net8.0",
+        "Barrier": "partial",
+        "RunId": "bfb5fedb-7816-4eb7-9ff4-372236a9166a",
+        "OriginalOccurrenceIds": [
+          "681ecb7cf6567321f901ed7ec8290e81308676507e06cfb13891db29cb89fc3d",
+          "8168cac8c1734d5aebb1542cb43c828009acbb7f218bf3374edb15428914cd70",
+          "ca5c42d0bf12f2cecc333dedb80124fd1272ddccf1c3978d73427ff6fb264032"
+        ],
+        "CurrentOccurrenceIds": [
+          "069e738a9d24423dc693607a71fe1a44dc49c544764eb228f27ef8ac15d6346a",
+          "681ecb7cf6567321f901ed7ec8290e81308676507e06cfb13891db29cb89fc3d",
+          "8168cac8c1734d5aebb1542cb43c828009acbb7f218bf3374edb15428914cd70",
+          "c5eb3b814d38da359b4a1534d4a377a2c3ae1d695d2816bb5298c3c48884ee67",
+          "ca5c42d0bf12f2cecc333dedb80124fd1272ddccf1c3978d73427ff6fb264032"
+        ],
+        "OriginalExpansion": "af507595f42b16bb5af032d46472d1f6dadbdaf7080b4ba121541b9f33e1c98d",
+        "ReplacementExpansion": "b5ae18b208a1b7608fc895694b58e7ccfe8c3d8cb721e1f1e9bb48d3e594f3f1",
+        "InterruptedExpansionCount": 2,
+        "AdmissionCommittedBeforeLoss": true,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_45_net8.0.trx",
+          "Sha256": "5343729d29c3b2e0677dd803ccd3a50b38f4fce5af0cfbe8a95e318a5e6cf468"
+        }
+      },
+      {
+        "Framework": "net8.0",
+        "Barrier": "transaction",
+        "RunId": "b5818901-967f-4696-bd95-b746a641e531",
+        "OriginalOccurrenceIds": [
+          "21920a9fd9344aeb9f9653ea625526755559ad167921971bc3367aa16d232515",
+          "42bdaa6b25aa93e603b1a945d7ce77fe25262b8cc9c0f383c63a4f909d25599b",
+          "4dd28fa25d259d152a225c259cdc161467dc2f9cf583ed95b98da7fdb3e49909"
+        ],
+        "CurrentOccurrenceIds": [
+          "21920a9fd9344aeb9f9653ea625526755559ad167921971bc3367aa16d232515",
+          "42bdaa6b25aa93e603b1a945d7ce77fe25262b8cc9c0f383c63a4f909d25599b",
+          "4dd28fa25d259d152a225c259cdc161467dc2f9cf583ed95b98da7fdb3e49909",
+          "53099dbf62eaedf18750a0a2eadb8faa0e92ef126070326acd3820ec99a3949c",
+          "e108cb0884e2cb1fa93196fb053ea02e45af6aef3c2e3a8fe57a2bed9e99756d"
+        ],
+        "OriginalExpansion": "fd3ebef3aaa51348a57cfc064e5a3ad67b2cbad628129ce5186dbaba9759b4dd",
+        "ReplacementExpansion": "5714a1560f8a7de33e1aa5b19078dff98e5f0f751a4e6d57f7edaf9253e5ba36",
+        "InterruptedExpansionCount": 1,
+        "AdmissionCommittedBeforeLoss": false,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_45_net8.0.trx",
+          "Sha256": "5343729d29c3b2e0677dd803ccd3a50b38f4fce5af0cfbe8a95e318a5e6cf468"
+        }
+      },
+      {
+        "Framework": "net8.0",
+        "Barrier": "admitted",
+        "RunId": "04ecf1f3-9c33-4dce-9f6c-f2d4797bf74a",
+        "OriginalOccurrenceIds": [
+          "2a34ccc70f948a00a36d933e75715a44ce01bb832c9d8854d89ef014281baa76",
+          "55060633c7672c4293bb13252d14a51103bb6d25cdb18d57fef49ce9d42a7a1d",
+          "aeabff82606bf73ec5742203b78b853ed13dbf38da7c8d8293f042815c17152c"
+        ],
+        "CurrentOccurrenceIds": [
+          "2a34ccc70f948a00a36d933e75715a44ce01bb832c9d8854d89ef014281baa76",
+          "55060633c7672c4293bb13252d14a51103bb6d25cdb18d57fef49ce9d42a7a1d",
+          "6e5f33b604a49be14b67039125a7f65ed19c1b84f535083291ce12e91d772541",
+          "aeabff82606bf73ec5742203b78b853ed13dbf38da7c8d8293f042815c17152c",
+          "d0af79f8b20830a498567da62eb010628603979dcecb6b57d4c8d82151faff6a"
+        ],
+        "OriginalExpansion": "844aad16e1bcab0bb9fcd00855ae219414d3bd478a0319bc5ffdf2f678e0986f",
+        "ReplacementExpansion": "3c62a1bdf158af134fd4b62f54343994957adaea836719993df34b61df1aa7ee",
+        "InterruptedExpansionCount": 2,
+        "AdmissionCommittedBeforeLoss": true,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_45_net8.0.trx",
+          "Sha256": "5343729d29c3b2e0677dd803ccd3a50b38f4fce5af0cfbe8a95e318a5e6cf468"
+        }
+      },
+      {
+        "Framework": "net8.0",
+        "Barrier": "selection",
+        "RunId": "495fd97d-d60a-43de-95f7-acf07cbbb597",
+        "OriginalOccurrenceIds": [
+          "7e38451bc5909647beb571bf1d275b24d0839af5f77c657015ccb75fa003803e",
+          "824d538efea9d99e2cbc1e6802340d6c59984726ca900756e626bb1990a1f0f8",
+          "cd71f8f71a8664a714ec581c6a814571edb812489b0f9797d6e229db1240f5df"
+        ],
+        "CurrentOccurrenceIds": [
+          "3e7bc1a70a93d41676564da3ef94fd0b1d529fc735d8409ab9a598559cd05ab6",
+          "7e38451bc5909647beb571bf1d275b24d0839af5f77c657015ccb75fa003803e",
+          "824d538efea9d99e2cbc1e6802340d6c59984726ca900756e626bb1990a1f0f8",
+          "cd71f8f71a8664a714ec581c6a814571edb812489b0f9797d6e229db1240f5df",
+          "d20b1e249566252b704b856d68ab1090c9101b5ac46450b61a0e746faf06d851"
+        ],
+        "OriginalExpansion": "5f429167eabc51e9c8c4bb21edc623b156d85ac4741d65a4aea27d025bb9f70b",
+        "ReplacementExpansion": "97ac0ab172e5964b0d30af9eb203c4694911543fc485416a184e559c28c57cd5",
+        "InterruptedExpansionCount": 1,
+        "AdmissionCommittedBeforeLoss": false,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_45_net8.0.trx",
+          "Sha256": "5343729d29c3b2e0677dd803ccd3a50b38f4fce5af0cfbe8a95e318a5e6cf468"
+        }
+      },
+      {
+        "Framework": "net10.0",
+        "Barrier": "partial",
+        "RunId": "886cabb4-ccca-474a-ab3b-e10928714140",
+        "OriginalOccurrenceIds": [
+          "1c18ae9b2ed56c8b04e5fc4ff83267212d401d83986a67b1bb88c563c5047379",
+          "59927cab272c84eb180feae555a2757bb68de2713a949bf87df0c73c0ba4e6c6",
+          "9eb9a728e37fcb0590a235142b065053844c207baa4e36513519eff6b9217be6"
+        ],
+        "CurrentOccurrenceIds": [
+          "1c18ae9b2ed56c8b04e5fc4ff83267212d401d83986a67b1bb88c563c5047379",
+          "59927cab272c84eb180feae555a2757bb68de2713a949bf87df0c73c0ba4e6c6",
+          "9eb9a728e37fcb0590a235142b065053844c207baa4e36513519eff6b9217be6",
+          "b00c1c7e94ed3e0c54e6b445f6f823f33692a357a58a816ae053795bdfc9b314",
+          "dfec3f32b120b77c66037b53f09b16523410105ef9e1195501541f45dd01d9ac"
+        ],
+        "OriginalExpansion": "4d1b511816ca603b07d4f7512567c7479fdb3d8251f56e60065e04c0a0a0795e",
+        "ReplacementExpansion": "b70b325794993b836ed0ac20c021208d808aa9f2367aafb7c6b88935774c5403",
+        "InterruptedExpansionCount": 2,
+        "AdmissionCommittedBeforeLoss": true,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_46_net10.0.trx",
+          "Sha256": "0b7fdb43bc14ffd7063f4b1750b85652f29c56e8502c6c43a102743ba5e0e5a9"
+        }
+      },
+      {
+        "Framework": "net10.0",
+        "Barrier": "transaction",
+        "RunId": "a3a1f33e-48c9-4636-bfe1-c9bd3971ffaa",
+        "OriginalOccurrenceIds": [
+          "65093ed8a33ede999c606e78853b150340de9acb1d43d080edde70d865390c9c",
+          "6cc45c4d40f47b70894bd5db3f9f633e2cc0f62e104f0953feb11077648c5bfd",
+          "80cc9a316ec89d066144325dd0679dfe13fadc4e7593fce61868054a1d5a1500"
+        ],
+        "CurrentOccurrenceIds": [
+          "65093ed8a33ede999c606e78853b150340de9acb1d43d080edde70d865390c9c",
+          "6cc45c4d40f47b70894bd5db3f9f633e2cc0f62e104f0953feb11077648c5bfd",
+          "6e4ce5aca50b879e9c598e0ed41aadc3e945560c88fedfaf16df0a19c2212242",
+          "80cc9a316ec89d066144325dd0679dfe13fadc4e7593fce61868054a1d5a1500",
+          "d4801dfc482a699ab2bbaab0082fe01bb3bc6c30450b794ba536f47eda78c328"
+        ],
+        "OriginalExpansion": "a2c9e924cc44e37d1e5413c408b86afe1d10b9119b09971d7c378847e8a5f90b",
+        "ReplacementExpansion": "8aa3045ce7644da7e0990558bcaed6067fa47fd26dbce9cb22c1d930eab2a8ea",
+        "InterruptedExpansionCount": 1,
+        "AdmissionCommittedBeforeLoss": false,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_46_net10.0.trx",
+          "Sha256": "0b7fdb43bc14ffd7063f4b1750b85652f29c56e8502c6c43a102743ba5e0e5a9"
+        }
+      },
+      {
+        "Framework": "net10.0",
+        "Barrier": "admitted",
+        "RunId": "1e438f1a-d301-4238-8a3d-7237a632807a",
+        "OriginalOccurrenceIds": [
+          "26e2601be1dd037e4f7b246a170c8bc19c5cb5378169936b0b844c27e89a90e5",
+          "2d6f26955cffa7f7384651d099c582ef04693408f0bcf57a83d612b20c608b0d",
+          "3c3a29315eae0bfd034693ef12039fad3c36b856bdc9bc868a084e436ea24c71"
+        ],
+        "CurrentOccurrenceIds": [
+          "26e2601be1dd037e4f7b246a170c8bc19c5cb5378169936b0b844c27e89a90e5",
+          "2d6f26955cffa7f7384651d099c582ef04693408f0bcf57a83d612b20c608b0d",
+          "3c3a29315eae0bfd034693ef12039fad3c36b856bdc9bc868a084e436ea24c71",
+          "74022c8da93177d2ea75b691eeb12dd1b178fd90568d24467d9eb226f1106717",
+          "de9190b5400702519396c0793c21c5f4d60a2cb7a12b4e27502599cd912ac4cb"
+        ],
+        "OriginalExpansion": "2bd66a613454ff56e395170dc305040925cff1931c88ad4701833c5ec8315b53",
+        "ReplacementExpansion": "5064ba923933eccbeffcc2c8622a61b5739794ae22f5a9525d19cdfd0075a89e",
+        "InterruptedExpansionCount": 2,
+        "AdmissionCommittedBeforeLoss": true,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_46_net10.0.trx",
+          "Sha256": "0b7fdb43bc14ffd7063f4b1750b85652f29c56e8502c6c43a102743ba5e0e5a9"
+        }
+      },
+      {
+        "Framework": "net10.0",
+        "Barrier": "selection",
+        "RunId": "b1f7944a-66c7-4bee-89bb-9017542a31f2",
+        "OriginalOccurrenceIds": [
+          "589a7e6e604e4e052f3a7b8ad50c343b2194565a6edd63813eabc402e73d0296",
+          "d7eaeaaa8416881330e178c1bc6e7af8173b91b3338f95c1164b1cce5bf5f722",
+          "f57d7c7ece1b9dfe077ed82b1f8b448532bda13ff126118b47da87c44f3e769c"
+        ],
+        "CurrentOccurrenceIds": [
+          "0095fb72c78f298ebc0cb9dd34ba1dbedeec2c6f414413aaebefaf2d1eaa1a9d",
+          "1fd0af57fc2b79381fd6ad25f2d140f911b00da4ab0024b3790d053b84fb8fd7",
+          "589a7e6e604e4e052f3a7b8ad50c343b2194565a6edd63813eabc402e73d0296",
+          "d7eaeaaa8416881330e178c1bc6e7af8173b91b3338f95c1164b1cce5bf5f722",
+          "f57d7c7ece1b9dfe077ed82b1f8b448532bda13ff126118b47da87c44f3e769c"
+        ],
+        "OriginalExpansion": "14f17a5b0df2c60070dd305c45a1e516276c151aa818bd740a858d614f2af9c4",
+        "ReplacementExpansion": "b9e426b20a1bf4b8a088308cc91b660b1b5a264879695b229cf168c98da5ea25",
+        "InterruptedExpansionCount": 1,
+        "AdmissionCommittedBeforeLoss": false,
+        "Calls": [
+          "branch.a:body:YQ:ZG9uZQ",
+          "branch.a:body:YQ:dW5maW5pc2hlZA",
+          "branch.b:body:Yg:ZG9uZQ",
+          "branch.b:body:Yg:dW5maW5pc2hlZA"
+        ],
+        "RawEvidence": {
+          "File": "artifacts/q33-runtime-full/Laszlos_LAPTOP-KBD8D8JG_2026-10-20_08_31_46_net10.0.trx",
+          "Sha256": "0b7fdb43bc14ffd7063f4b1750b85652f29c56e8502c6c43a102743ba5e0e5a9"
+        }
+      }
+    ]
+  },
+  "Packages": [
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "a6499e7ee5dfd858b413620b3200d73db7835b43591c8105b5d64fc3b6021a9c",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.dll",
+          "Sha256": "e08b6ca1ec36105cd82a949d18686c188eccd22feb36b70100c51e0073e7822d",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.dll",
+          "Sha256": "28ed72975d59bfccb8dd6e83fdc9a06048803575f7d98f67f46bc02f221ee826",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu.Agents",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "1a286bf73e8ab071769883a766f3f536fb8b60b95bd93a28ff41b95d04d0409e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Agents.dll",
+          "Sha256": "25e80b2fcf02d0e02c459aca0187bcdafd003221692009e122d352a20aac8bc3",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Agents.dll",
+          "Sha256": "74d8e519deb47684150694d124a7443722554e3437473096dc2e67f7d221dcef",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu.Hosting",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "930932a8645199b0b09052f209d8b1e3a6c8f7bb6ae7b042c1de7cef3a153784",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Hosting.dll",
+          "Sha256": "14b1223b14644318adbe13ce8171670d17ba19edf897c4f6a508ce7654ddc603",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Hosting.dll",
+          "Sha256": "a56a62890a49fa1a9fe2e5aeaa1f53d6c498173af35ac29e2bfd0a231316ff04",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "ba04e30b2acf77e07b26f009267f360864dfa01e05982ed4c7583addd245c2ed",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "Sha256": "6fae0522de746b7f99985382a12d00db03c6feee639f305cbf68693850b44e77",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "Sha256": "1c807fab549321b92c9c4273ee196b767600bc3197dd87ed22d2b1dcc66134a0",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu.OpenTelemetry",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "3522d0aa231d035b1603c82e0c6ab150b82c05042e625e305f5bb91585ee7e11",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "Sha256": "a9689d398afb9543144b753defc6fe76ea99e462bcc8156912ea1f7885dc4d0e",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "Sha256": "bbea6fd96914d5d2019877ad966628071e45019a2e04b96ba3343a42b5300d5b",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu.Sqlite",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "1ca6927c4b1bb993e1264457a40f1ed5bfb8bd4b067127b8abe2ab10d1fe3840",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Sqlite.dll",
+          "Sha256": "d9c338d2e5dbce4cfad4f08b82535286e3f25264ebdceafa4b9546dc676408e9",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Sqlite.dll",
+          "Sha256": "67604fb773860db147d66f711c63dcd3333062ece585168fdeba69d5e94b93a3",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/q33-native-packages/Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+      "Id": "Penghou.Zhinu.Testing",
+      "Version": "0.2.0-preview.10",
+      "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+      "Sha256": "52b8ee4b416c21af435da18a688e29934a912c2146b4a8da1027541a6836fd1e",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Testing.dll",
+          "Sha256": "3b9b8f2d99284b8fabcba1898f7a5d6753c00abb1e89fa6280f26d60dbb66219",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Testing.dll",
+          "Sha256": "b66f9a2cd000826ee2b2b40845b582f14291b087b74cc5ceadca5a7f0a6650e9",
+          "MatchesSourceBuild": true
+        }
+      ]
+    }
+  ],
+  "LocalCompatibility": [
+    {
+      "File": "artifacts/q33-native-probes/closure/closure-400bae5828b84f0e8a4918fb465a12a5/qualification.json",
+      "Sha256": "f34ca8411ab3c1a803fc0482466287d0d6a20f59ea43937d268e6c0123304197",
+      "Receipt": {
+        "SchemaVersion": 1,
+        "PackageVersion": "0.2.0-preview.10",
+        "NeutralPackage": {
+          "Id": "Penghou.Workflow.Abstractions",
+          "ExactVersion": "0.1.0-preview.2"
+        },
+        "ArtifactsDirectory": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\q33-native-packages",
+        "PackageArtifacts": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Microsoft.Extensions.Logging.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Penghou.Workflow.Abstractions",
+                "Version": "[0.1.0-preview.2]"
+              },
+              {
+                "Id": "Microsoft.Extensions.Logging.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Penghou.Workflow.Abstractions",
+                "Version": "[0.1.0-preview.2]"
+              }
+            ]
+          },
+          {
+            "Id": "Penghou.Zhinu.Agents",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Penghou.Zhinu.Sqlite",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Microsoft.Agents.AI.Workflows",
+                "Version": "1.17.0"
+              },
+              {
+                "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Penghou.Zhinu.Sqlite",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Microsoft.Agents.AI.Workflows",
+                "Version": "1.17.0"
+              },
+              {
+                "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                "Version": "10.0.9"
+              }
+            ]
+          },
+          {
+            "Id": "Penghou.Zhinu.Hosting",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Microsoft.Extensions.Hosting.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Microsoft.Extensions.Options",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Microsoft.Extensions.Hosting.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "Microsoft.Extensions.Options",
+                "Version": "10.0.9"
+              }
+            ]
+          },
+          {
+            "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              }
+            ]
+          },
+          {
+            "Id": "Penghou.Zhinu.OpenTelemetry",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Penghou.Zhinu.Sqlite",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "OpenTelemetry.Extensions.Hosting",
+                "Version": "1.17.0"
+              },
+              {
+                "Id": "Penghou.Zhinu.Sqlite",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "OpenTelemetry.Extensions.Hosting",
+                "Version": "1.17.0"
+              }
+            ]
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Microsoft.Data.Sqlite",
+                "Version": "10.0.10"
+              },
+              {
+                "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+                "Version": "2.1.12"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Microsoft.Data.Sqlite",
+                "Version": "10.0.10"
+              },
+              {
+                "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                "Version": "10.0.9"
+              },
+              {
+                "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+                "Version": "2.1.12"
+              }
+            ]
+          },
+          {
+            "Id": "Penghou.Zhinu.Testing",
+            "Version": "0.2.0-preview.10",
+            "File": "Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+            "DirectDependencies": [
+              {
+                "Id": "Penghou.Zhinu.Sqlite",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu.Sqlite",
+                "Version": "0.2.0-preview.10"
+              },
+              {
+                "Id": "Penghou.Zhinu",
+                "Version": "0.2.0-preview.10"
+              }
+            ]
+          }
+        ],
+        "Consumer": {
+          "Project": "NuGet package references only; no project references",
+          "PackageSourceMapping": {
+            "ZhinuPackages": "Local artifacts directory, exact package ID patterns",
+            "NeutralAndExternalPackages": "nuget.org"
+          },
+          "PackageCache": "D:\\temp\\activity-groups\\tmp\\pzc-400bae5828b84f0e8a4918fb465a12a5",
+          "AssetsFile": "consumer\\obj\\project.assets.json",
+          "ResolvedPackageIds": [
+            "Google.Protobuf/3.30.2",
+            "Microsoft.Agents.AI/1.17.0",
+            "Microsoft.Agents.AI.Abstractions/1.17.0",
+            "Microsoft.Agents.AI.Workflows/1.17.0",
+            "Microsoft.Data.Sqlite/10.0.10",
+            "Microsoft.Data.Sqlite.Core/10.0.10",
+            "Microsoft.Extensions.AI/10.7.0",
+            "Microsoft.Extensions.AI.Abstractions/10.7.0",
+            "Microsoft.Extensions.AI.Evaluation/10.7.0",
+            "Microsoft.Extensions.Caching.Abstractions/10.0.9",
+            "Microsoft.Extensions.Compliance.Abstractions/10.5.0",
+            "Microsoft.Extensions.Configuration/8.0.0",
+            "Microsoft.Extensions.Configuration/10.0.0",
+            "Microsoft.Extensions.Configuration.Abstractions/10.0.9",
+            "Microsoft.Extensions.Configuration.Binder/8.0.0",
+            "Microsoft.Extensions.Configuration.Binder/10.0.0",
+            "Microsoft.Extensions.Configuration.EnvironmentVariables/8.0.0",
+            "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+            "Microsoft.Extensions.DependencyInjection/8.0.0",
+            "Microsoft.Extensions.DependencyInjection/10.0.0",
+            "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+            "Microsoft.Extensions.Diagnostics.Abstractions/10.0.9",
+            "Microsoft.Extensions.FileProviders.Abstractions/10.0.9",
+            "Microsoft.Extensions.FileSystemGlobbing/10.0.6",
+            "Microsoft.Extensions.Hosting.Abstractions/10.0.9",
+            "Microsoft.Extensions.Logging/8.0.0",
+            "Microsoft.Extensions.Logging/10.0.0",
+            "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+            "Microsoft.Extensions.Logging.Configuration/8.0.0",
+            "Microsoft.Extensions.Logging.Configuration/10.0.0",
+            "Microsoft.Extensions.ObjectPool/8.0.26",
+            "Microsoft.Extensions.ObjectPool/10.0.6",
+            "Microsoft.Extensions.Options/10.0.9",
+            "Microsoft.Extensions.Options.ConfigurationExtensions/8.0.0",
+            "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+            "Microsoft.Extensions.Primitives/10.0.9",
+            "Microsoft.Extensions.VectorData.Abstractions/10.7.0",
+            "Microsoft.ML.Tokenizers/2.0.0",
+            "OpenTelemetry/1.17.0",
+            "OpenTelemetry.Api/1.17.0",
+            "OpenTelemetry.Api.ProviderBuilderExtensions/1.17.0",
+            "OpenTelemetry.Extensions.Hosting/1.17.0",
+            "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+            "Penghou.Zhinu/0.2.0-preview.10",
+            "Penghou.Zhinu.Agents/0.2.0-preview.10",
+            "Penghou.Zhinu.Hosting/0.2.0-preview.10",
+            "Penghou.Zhinu.Hosting.AspNetCore/0.2.0-preview.10",
+            "Penghou.Zhinu.OpenTelemetry/0.2.0-preview.10",
+            "Penghou.Zhinu.Sqlite/0.2.0-preview.10",
+            "Penghou.Zhinu.Testing/0.2.0-preview.10",
+            "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+            "SQLitePCLRaw.core/2.1.12",
+            "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+            "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+            "System.Diagnostics.DiagnosticSource/10.0.9",
+            "System.IO.Pipelines/10.0.9",
+            "System.Numerics.Tensors/10.0.9",
+            "System.Text.Encodings.Web/10.0.9",
+            "System.Text.Json/10.0.9",
+            "System.Threading.Channels/10.0.9"
+          ],
+          "ForbiddenHufuDependencyScan": "passed"
+        },
+        "TargetFrameworkResults": [
+          {
+            "TargetFramework": "net8.0",
+            "Result": "passed",
+            "AssetsTarget": "net8.0",
+            "Log": "run-net8.0.log"
+          },
+          {
+            "TargetFramework": "net10.0",
+            "Result": "passed",
+            "AssetsTarget": "net10.0",
+            "Log": "run-net10.0.log"
+          }
+        ],
+        "Status": "passed"
+      }
+    },
+    {
+      "File": "artifacts/q33-native-probes/legacy/legacy-consumer-bb154cabebb849a281cbceecec4edcad/qualification.json",
+      "Sha256": "1a5537c25e0bebd8e799bb468721f8186d63fee30f2ee7eb9dd3bdb76b614fb4",
+      "Receipt": {
+        "SchemaVersion": 1,
+        "ExpectedCandidateSchemaVersion": 10,
+        "PackageVersion": "0.2.0-preview.10",
+        "NeutralPackage": {
+          "Id": "Penghou.Workflow.Abstractions",
+          "ExactVersion": "0.1.0-preview.2"
+        },
+        "CandidateArtifacts": [
+          {
+            "Id": "Penghou.Zhinu",
+            "File": "Penghou.Zhinu.0.2.0-preview.10.nupkg"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg"
+          }
+        ],
+        "PublicRestore": {
+          "PackageSources": [
+            "https://api.nuget.org/v3/index.json"
+          ],
+          "FreshPackageCache": "D:\\temp\\activity-groups\\tmp\\pzl-bb154cabebb849a281cbceecec4edcad",
+          "AssetsFile": "consumer\\obj\\project.assets.json",
+          "ResolvedPackages": [
+            "Microsoft.Data.Sqlite/10.0.10",
+            "Microsoft.Data.Sqlite.Core/10.0.10",
+            "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+            "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+            "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+            "Penghou.Zhinu/0.1.0-preview.15",
+            "Penghou.Zhinu.Sqlite/0.1.0-preview.15",
+            "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+            "SQLitePCLRaw.core/2.1.12",
+            "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+            "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+            "System.Diagnostics.DiagnosticSource/10.0.9"
+          ],
+          "ForbiddenHufuDependencyScan": "passed",
+          "ProjectReferences": 0
+        },
+        "TargetFrameworkResults": [
+          {
+            "TargetFramework": "net8.0",
+            "PublishedRun": {
+              "ExitCode": 0,
+              "SchemaVersion": 5,
+              "RetainedStepRows": 2,
+              "CoreAssemblyHash": "475F9A6A70851701FB2FD91C441C577481664B8039AD0CB51FA1C7B92BCC6229",
+              "SqliteAssemblyHash": "22B1FF1015F5BE150B9E994CF36F8D341F382D293919D01E4001586667125467"
+            },
+            "CandidateRuntimeRun": {
+              "ExitCode": 0,
+              "SchemaVersion": 10,
+              "RetainedStepRows": 4
+            },
+            "CompiledConsumerSha256": "79F8814F6C1FE70480CDF231B6A7E18635A5FE5DFD93FAD205754C883F79B831",
+            "ContractAssemblySha256": "81F2DE8AEF7FA1B103036BD7839CCC13AA7486B89ED5B6783EE0FC2A433E112D",
+            "OldWorkerOnNewSchema": {
+              "ExitCode": -532462766,
+              "RejectedAsIncompatible": true,
+              "SchemaVersionAfterRejection": 10,
+              "RetainedStepRowsAfterRejection": 4
+            }
+          },
+          {
+            "TargetFramework": "net10.0",
+            "PublishedRun": {
+              "ExitCode": 0,
+              "SchemaVersion": 5,
+              "RetainedStepRows": 2,
+              "CoreAssemblyHash": "3AE5BD44F8122653C6E6D8BBC063015916405C159749E49FEBA743F11C394ED5",
+              "SqliteAssemblyHash": "6D32F574B8A3E2089CF1E4B214E763FA7EB8D35B977E12597ECAF6BAB3ACAB85"
+            },
+            "CandidateRuntimeRun": {
+              "ExitCode": 0,
+              "SchemaVersion": 10,
+              "RetainedStepRows": 4
+            },
+            "CompiledConsumerSha256": "3B843950B89B4F5864ADEAE4A0D5CE4A42CC1D5416A09E73993465F778DFAB48",
+            "ContractAssemblySha256": "D1B6168049CB05F49BE10849A190993603A21F4E086C93DC656FC100DFD73020",
+            "OldWorkerOnNewSchema": {
+              "ExitCode": -532462766,
+              "RejectedAsIncompatible": true,
+              "SchemaVersionAfterRejection": 10,
+              "RetainedStepRowsAfterRejection": 4
+            }
+          }
+        ],
+        "Status": "passed"
+      }
+    }
+  ],
+  "Preview9MigrationAndOldWorker": {
+    "File": "artifacts/q33-native-probes/branch-final/qualification.json",
+    "Sha256": "85891b2481ed3b829e5d11179426579ef867d0c3759244332c9b224ab7fd271d",
+    "Receipt": {
+      "Status": "passed",
+      "PackageSha256": [
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.10",
+          "File": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\q33-native-packages\\Penghou.Zhinu.0.2.0-preview.10.nupkg",
+          "Sha256": "a6499e7ee5dfd858b413620b3200d73db7835b43591c8105b5d64fc3b6021a9c"
+        },
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.10",
+          "File": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\q33-native-packages\\Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+          "Sha256": "1ca6927c4b1bb993e1264457a40f1ed5bfb8bd4b067127b8abe2ab10d1fe3840"
+        },
+        {
+          "Id": "Penghou.Zhinu",
+          "Version": "0.2.0-preview.9",
+          "File": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\zg7-native-packages\\Penghou.Zhinu.0.2.0-preview.9.nupkg",
+          "Sha256": "222fb33f92f88d3560dd5a616cc929eb8145b355d96c09f514b6917116e4eb98"
+        },
+        {
+          "Id": "Penghou.Zhinu.Sqlite",
+          "Version": "0.2.0-preview.9",
+          "File": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\zg7-native-packages\\Penghou.Zhinu.Sqlite.0.2.0-preview.9.nupkg",
+          "Sha256": "ee90123051e235506a817e58acd11f2a14865f96280e8a942dfa075c912ed66b"
+        }
+      ],
+      "Frameworks": [
+        {
+          "Framework": "net8.0",
+          "BaselineSeed": {
+            "Schema": 9,
+            "Run": "e4e96f4b-533e-404d-9b1e-a41d1082c30e",
+            "OldStepId": "a12812f0-63a2-4e6d-bf05-003bea3a53b7"
+          },
+          "Candidate": {
+            "Schema": 10,
+            "Run": "e4e96f4b-533e-404d-9b1e-a41d1082c30e",
+            "HistoryKnown": 0,
+            "CurrentTotal": 1,
+            "Expansions": 2,
+            "OldStepId": "a12812f0-63a2-4e6d-bf05-003bea3a53b7"
+          },
+          "OldWorkerRejected": true,
+          "DatabaseUnchanged": true,
+          "DatabaseSha256": "97286a9c278bf1169584b5512be2ca45b55df0cf4a2c5971f098f4c5dd217e26"
+        },
+        {
+          "Framework": "net10.0",
+          "BaselineSeed": {
+            "Schema": 9,
+            "Run": "31c07abb-86f5-4141-a468-3559fddd8c9e",
+            "OldStepId": "edfccb66-507a-4ea8-abd6-de611006666e"
+          },
+          "Candidate": {
+            "Schema": 10,
+            "Run": "31c07abb-86f5-4141-a468-3559fddd8c9e",
+            "HistoryKnown": 0,
+            "CurrentTotal": 1,
+            "Expansions": 2,
+            "OldStepId": "edfccb66-507a-4ea8-abd6-de611006666e"
+          },
+          "OldWorkerRejected": true,
+          "DatabaseUnchanged": true,
+          "DatabaseSha256": "dd9a7d412e6793fcb3ca396b45c9f60dd5af4582576374fe287c53edcb435d22"
+        }
+      ],
+      "NoProjectReferences": true
+    }
+  },
+  "IndexAnalysis": {
+    "File": "artifacts/q33-index-plan.json",
+    "Sha256": "5862add3e6ef72837ae87e29ff0b6057cd3572a2755d1fecaeb1839c33c010c2",
+    "Receipt": {
+      "SQLiteAnalysisVersion": "3.50.4",
+      "Source": "Read-only copies of actual migrated package-probe databases; index dropped only in memory for comparison",
+      "Receipts": [
+        {
+          "Framework": "net8.0",
+          "OriginalLookup": [
+            "SEARCH i USING INDEX sqlite_autoindex_workflow_group_fanout_items_2 (workflow_run_id=?)",
+            "LIST SUBQUERY 1",
+            "SCAN json_each VIRTUAL TABLE INDEX 1:",
+            "CREATE BLOOM FILTER",
+            "SEARCH r USING COVERING INDEX sqlite_autoindex_workflow_group_fanout_retirements_1 (workflow_run_id=? AND expansion_id=?)"
+          ],
+          "IndexedLookup": [
+            "SEARCH i USING COVERING INDEX ix_workflow_group_fanout_item_occurrence (workflow_run_id=? AND group_occurrence_id=?)",
+            "LIST SUBQUERY 1",
+            "SCAN json_each VIRTUAL TABLE INDEX 1:",
+            "CREATE BLOOM FILTER",
+            "SEARCH r USING COVERING INDEX sqlite_autoindex_workflow_group_fanout_retirements_1 (workflow_run_id=? AND expansion_id=?)"
+          ],
+          "DatabaseSha256": "97286a9c278bf1169584b5512be2ca45b55df0cf4a2c5971f098f4c5dd217e26",
+          "DatabaseUnchanged": true
+        },
+        {
+          "Framework": "net10.0",
+          "OriginalLookup": [
+            "SEARCH i USING INDEX sqlite_autoindex_workflow_group_fanout_items_2 (workflow_run_id=?)",
+            "LIST SUBQUERY 1",
+            "SCAN json_each VIRTUAL TABLE INDEX 1:",
+            "CREATE BLOOM FILTER",
+            "SEARCH r USING COVERING INDEX sqlite_autoindex_workflow_group_fanout_retirements_1 (workflow_run_id=? AND expansion_id=?)"
+          ],
+          "IndexedLookup": [
+            "SEARCH i USING COVERING INDEX ix_workflow_group_fanout_item_occurrence (workflow_run_id=? AND group_occurrence_id=?)",
+            "LIST SUBQUERY 1",
+            "SCAN json_each VIRTUAL TABLE INDEX 1:",
+            "CREATE BLOOM FILTER",
+            "SEARCH r USING COVERING INDEX sqlite_autoindex_workflow_group_fanout_retirements_1 (workflow_run_id=? AND expansion_id=?)"
+          ],
+          "DatabaseSha256": "dd9a7d412e6793fcb3ca396b45c9f60dd5af4582576374fe287c53edcb435d22",
+          "DatabaseUnchanged": true
+        }
+      ]
+    }
+  },
+  "PackageProbeHarness": {
+    "File": "eng/Verify-BranchReplacementPackages.ps1",
+    "Sha256": "9ca01486856af583a0d2d6104e2fa57866a30f228c7ac9de6c3f1e05a77eaadd"
+  },
+  "ExpectedRedRegressions": [
+    {
+      "File": "artifacts/q33-red/q33-red.trx",
+      "Sha256": "5986d29c01e8781a19e60a68655ccb285be84d6a4066dc5f8c75b73b27fb781f",
+      "ExpectedFailures": 1
+    },
+    {
+      "File": "artifacts/q33-retired-binding-red/q33-retired-binding-red.trx",
+      "Sha256": "50199822a002f57b60921c51f1df4092804f82a6762deb17539f33deadf4ee72",
+      "ExpectedFailures": 2
+    }
+  ],
+  "CI": {
+    "RunId": 39347789978,
+    "Url": "https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/runs/39347789978",
+    "Source": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+    "Status": "success",
+    "Receipt": {
+      "File": "artifacts/q33-ci-status.json",
+      "Sha256": "673debebf790a2eeb553038d9f8feabdcd201274d00b79ce9d58a9117d5104df"
+    },
+    "Platforms": [
+      {
+        "OS": "ubuntu-latest",
+        "Suite": {
+          "Total": 1963,
+          "Passed": 1963,
+          "Files": [
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_49_net10.0.trx",
+              "Sha256": "7c06a4d666faf75e6c9973d5ebca9f9b4f6fc769e400cc1a4b6f6decb60d53ee",
+              "Framework": "net10.0",
+              "Total": 5
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_49_net10.0[1].trx",
+              "Sha256": "38a9f474bc89a3f84edaeab24be4f17cb49c97dacf9b187122b05ddc6e2ea1d5",
+              "Framework": "net10.0",
+              "Total": 13
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_49_net8.0.trx",
+              "Sha256": "a0245397fa98aa5dca3c29c344281792c3a5bc145e97cefb1e3c09d14450f459",
+              "Framework": "net8.0",
+              "Total": 13
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_49_net8.0[1].trx",
+              "Sha256": "41d02598586d3f434d77ec1cc5ba4ab7e6a972535fc370c0969398eb306be2ce",
+              "Framework": "net8.0",
+              "Total": 29
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_54_net10.0.trx",
+              "Sha256": "8eab4f5a23f87bedaa5a281fe34840fa081df484f4975d531ab02f571cb3ce6c",
+              "Framework": "net10.0",
+              "Total": 29
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_55_net10.0.trx",
+              "Sha256": "734bc6732a9463d13e8a295600029a635ad60b4544551cc679e4e8e199fe65b0",
+              "Framework": "net10.0",
+              "Total": 1
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_55_net8.0.trx",
+              "Sha256": "de015905a7aaadc7e1988ab5d618585d818b1b903f6ec547da4f73e81857f884",
+              "Framework": "net8.0",
+              "Total": 1
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_59_net8.0.trx",
+              "Sha256": "9f7585495103b1682d97b0c2660bf145d5edf7d584cdb3d8b25d9e0801904c74",
+              "Framework": "net8.0",
+              "Total": 715
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_01_net8.0.trx",
+              "Sha256": "1e913c4e379b9ee3b0e6baf640f48de893a423d40efc1faba55a5ff03df479d5",
+              "Framework": "net8.0",
+              "Total": 221
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_02_net10.0.trx",
+              "Sha256": "9445378783663e936aa9ccb8e02bc5dbdd3192a34b8ffcc17ed686a509f7422a",
+              "Framework": "net10.0",
+              "Total": 221
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_02_net10.0[1].trx",
+              "Sha256": "6f154d1338db3d74e3388e111961155b1277e16ca8b85227da19bd446c81bda9",
+              "Framework": "net10.0",
+              "Total": 715
+            }
+          ],
+          "Q33Executions": [
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.StoreWithoutReplacementCapabilityRejectsBeforeBranchDispatch"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"missing\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: False)"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"partial\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"admitted\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"transaction\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.MissingRetirementReceiptCannotSilentlyRemoveHistoricalObligations"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"self\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.CompletedBranchClosureSurvivesReplacementAndSameValueCanReappearInFreshScope"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.SchemaNineMigrationRetainsSelectionsAndMembershipWithoutInventingRetirement"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: True)"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ReplacementRetiresUnfinishedBranchWithoutRewritingCompletedHistory"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.RetiredMembersCannotRestartAndDependentRestartDoesNotResurrectThem"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"selection\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"transaction\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: False)"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"admitted\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.StoreWithoutReplacementCapabilityRejectsBeforeBranchDispatch"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"self\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"missing\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: True)"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.CompletedBranchClosureSurvivesReplacementAndSameValueCanReappearInFreshScope"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ReplacementRetiresUnfinishedBranchWithoutRewritingCompletedHistory"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"selection\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"partial\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.RetiredMembersCannotRestartAndDependentRestartDoesNotResurrectThem"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.SchemaNineMigrationRetainsSelectionsAndMembershipWithoutInventingRetirement"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.MissingRetirementReceiptCannotSilentlyRemoveHistoricalObligations"
+            }
+          ],
+          "RecoveryReceipts": [
+            {
+              "Framework": "net8.0",
+              "Barrier": "partial",
+              "RunId": "b67c7d58-d78a-435c-885d-b7969b5de734",
+              "OriginalOccurrenceIds": [
+                "0bdf137ac9af79c5b19a12b0b2a35edae2b37c41ad2e3f3b35438a7d8e9ca91a",
+                "312af63cee667e983346e0d37f26b747145a3dbd379c998f932d783fce1f9d1d",
+                "48a251adb2e1a043f3aaed7114bce2c3b14418dee0a6a3a6dea544bf010a34d0"
+              ],
+              "CurrentOccurrenceIds": [
+                "0bdf137ac9af79c5b19a12b0b2a35edae2b37c41ad2e3f3b35438a7d8e9ca91a",
+                "312af63cee667e983346e0d37f26b747145a3dbd379c998f932d783fce1f9d1d",
+                "3a1d37849fdf7ce7c4e78555f70cd89318817aea52e79a40eca43beb47f8f5e9",
+                "48a251adb2e1a043f3aaed7114bce2c3b14418dee0a6a3a6dea544bf010a34d0",
+                "c3ff9a9fbf1fa0f9da7d18512d1f9faddc7b3638c94d3379940039017083299e"
+              ],
+              "OriginalExpansion": "4039a9cfec98b27c1f925a55d66288d6791d9938f6072be399a6a66979ae90c8",
+              "ReplacementExpansion": "d63b791ac9186f5b678f3c0bb147db2057e6707e75b453bc3aa499f077c439a4",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_59_net8.0.trx",
+                "Sha256": "9f7585495103b1682d97b0c2660bf145d5edf7d584cdb3d8b25d9e0801904c74"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "admitted",
+              "RunId": "fedb83e2-d93d-4369-8cbc-e246959d6930",
+              "OriginalOccurrenceIds": [
+                "bbfa3c1677e4febd3e17f65e0c876043d9a8ff7c3b1dc1cd075e0f11ebf48784",
+                "d9600d41453792054fc4d202eda9a9cf8854cad57c73074b6e430d36c6eb512a",
+                "f82c04812e4c76f3fff8aeaf8cb3657812aa4b206c527611f29579546e224831"
+              ],
+              "CurrentOccurrenceIds": [
+                "bbfa3c1677e4febd3e17f65e0c876043d9a8ff7c3b1dc1cd075e0f11ebf48784",
+                "d6b9d0975b0cd6eb27e043861c12f4ee2e379736617ed3d2fa7873967d684c69",
+                "d9600d41453792054fc4d202eda9a9cf8854cad57c73074b6e430d36c6eb512a",
+                "e7df2743ff46e9b6d6f8cce64156f52aaccf12f2f1db0f444a4037cd1c03b4fb",
+                "f82c04812e4c76f3fff8aeaf8cb3657812aa4b206c527611f29579546e224831"
+              ],
+              "OriginalExpansion": "10f5060f4d0baa29919cadc72d24fadc0bfc739e90b86ed1a1a9ae5594daf1cb",
+              "ReplacementExpansion": "42a1827966521ae609f188c5bfb9644ebf5945f6c68fcbcc9c08946ccb651cfd",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_59_net8.0.trx",
+                "Sha256": "9f7585495103b1682d97b0c2660bf145d5edf7d584cdb3d8b25d9e0801904c74"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "transaction",
+              "RunId": "d19e15ae-c259-4055-938a-10f12d8c78ab",
+              "OriginalOccurrenceIds": [
+                "0b883e4bf22cd55dd04428131a432f19fe073dbd1928132561cc264e4c665371",
+                "851b9ad5df14e40adfe2de0c2563e3021bb9c9707d255b50d51ea3b5436fc7d1",
+                "888d3c69b1cb0e7e22507d516d3018aed0383925bd0a4300877b29bf4af2623e"
+              ],
+              "CurrentOccurrenceIds": [
+                "0b883e4bf22cd55dd04428131a432f19fe073dbd1928132561cc264e4c665371",
+                "3a34e3117a01164440ef1b8942fb5e612a72852421b9df1927763fe353266dc3",
+                "851b9ad5df14e40adfe2de0c2563e3021bb9c9707d255b50d51ea3b5436fc7d1",
+                "888d3c69b1cb0e7e22507d516d3018aed0383925bd0a4300877b29bf4af2623e",
+                "a80e130192b225fb3e087cb4c0de669a7f105077cd6a4f06c54cb4aa76a2374b"
+              ],
+              "OriginalExpansion": "482e98478d678b4f6d1e7bfeab248910eb21b4ed67a5999342ceeba30ff1ec1e",
+              "ReplacementExpansion": "54dda1e2baf09caaa00f68fc32fbe3d55569f4b7e94827a23a93cde95c941413",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_59_net8.0.trx",
+                "Sha256": "9f7585495103b1682d97b0c2660bf145d5edf7d584cdb3d8b25d9e0801904c74"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "selection",
+              "RunId": "08b26d14-72a2-4147-a944-980a884d736a",
+              "OriginalOccurrenceIds": [
+                "a155df32ad95b3a84253e2b33094252019aa39ed761e3461765c0287eeb3ae93",
+                "a613b279368218676a67f203e1a5b825c70ec6e406def25cca28f8bec2237dac",
+                "bf2b3c119f424c394a672b8ff291d03d761b05dedab2470b0916287688791684"
+              ],
+              "CurrentOccurrenceIds": [
+                "5005dcc47b9c792c7510f99a158cad2b20f198f106b9ea0ea630877977baadcf",
+                "69ad4da6644aa07912b823970fde33e2abb9c1c7c779e7e2e585fd8f869bb35c",
+                "a155df32ad95b3a84253e2b33094252019aa39ed761e3461765c0287eeb3ae93",
+                "a613b279368218676a67f203e1a5b825c70ec6e406def25cca28f8bec2237dac",
+                "bf2b3c119f424c394a672b8ff291d03d761b05dedab2470b0916287688791684"
+              ],
+              "OriginalExpansion": "6bf7e7435615a84864f2439180f8dce434190f54d117ea69ed6fe2a6c1921185",
+              "ReplacementExpansion": "14a47387bf596779cc9e465e77b60945b4f530b84098abf8a082c861e33dae12",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_29_59_net8.0.trx",
+                "Sha256": "9f7585495103b1682d97b0c2660bf145d5edf7d584cdb3d8b25d9e0801904c74"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "transaction",
+              "RunId": "06468aec-e5e8-4c2f-854a-fe5ea0d7d718",
+              "OriginalOccurrenceIds": [
+                "169dfc109cc88c105ba917479b7a77bae39b612d940209357b28cdbf9b179da6",
+                "87b47f257167e0f00a5d7ca43fed8ac54ef004045de5262d1cf12680ecd68574",
+                "dd8c9976e47664fcce2202c26f5bbddc1368948efd5b2f99fe3f32fc5a954149"
+              ],
+              "CurrentOccurrenceIds": [
+                "07b366a90d03038c7db2c935d6373bba729c217a995c93eb57d4022767f5fedb",
+                "169dfc109cc88c105ba917479b7a77bae39b612d940209357b28cdbf9b179da6",
+                "87b47f257167e0f00a5d7ca43fed8ac54ef004045de5262d1cf12680ecd68574",
+                "9011c94e23a960b15e1526eb8981bb3507b6c1b33217124fb2954a50c5cdc4f8",
+                "dd8c9976e47664fcce2202c26f5bbddc1368948efd5b2f99fe3f32fc5a954149"
+              ],
+              "OriginalExpansion": "39aaecd3814b5a7d1b51640d6f510dd439c0a6fdecac2661c49afcec47817927",
+              "ReplacementExpansion": "c06bab7b08974f602383eab47644f7d73c3a921b18d7c93f38c9ee6329e51424",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_02_net10.0[1].trx",
+                "Sha256": "6f154d1338db3d74e3388e111961155b1277e16ca8b85227da19bd446c81bda9"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "admitted",
+              "RunId": "4c7082ce-6aac-42f0-9681-a7d20b202daf",
+              "OriginalOccurrenceIds": [
+                "b1acba72002b8b3903d0d2ff33a161786621062344d6962647d30632abf69d28",
+                "b97a2474e48bafb588fe8a4ccdbb6f93dffdbb9612a00258fc7cf86758a5b59d",
+                "ca7655a4047d05c58516bb3fae4e787db149c3ee354ec31659d1a97615a4edb8"
+              ],
+              "CurrentOccurrenceIds": [
+                "2cad01563427e20d3e5a3f12d5260cc326fb0d7defadce00617a1ccc6ae73230",
+                "b1acba72002b8b3903d0d2ff33a161786621062344d6962647d30632abf69d28",
+                "b97a2474e48bafb588fe8a4ccdbb6f93dffdbb9612a00258fc7cf86758a5b59d",
+                "ca7655a4047d05c58516bb3fae4e787db149c3ee354ec31659d1a97615a4edb8",
+                "d0e666f3484300f55ba692c6f14da5e67224f34db3c3ffe853a08fe4dfa4dcc8"
+              ],
+              "OriginalExpansion": "0bdce1799aeff6ab0a30b32953eb0c13c2af0900b0e9aa27a5f20281e59ff96d",
+              "ReplacementExpansion": "b681595e35173b134fa5af821698dfd5a7d404b64e83910f8b61f6272f855f08",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_02_net10.0[1].trx",
+                "Sha256": "6f154d1338db3d74e3388e111961155b1277e16ca8b85227da19bd446c81bda9"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "selection",
+              "RunId": "afa372e0-274b-4c53-b594-18c2e6a7a0e6",
+              "OriginalOccurrenceIds": [
+                "2725c57340c913fb490503d0f4ff879e544a3dc3233646c7b5964f5d980e44d2",
+                "333f6d51d976eb347784cb4069f331c5dd2b7b4e4a76c3cbe142cf134f12516e",
+                "5297fb869c3d886d670a498c54b31ec68dc6dbe0850a97695f93e713824c8b59"
+              ],
+              "CurrentOccurrenceIds": [
+                "130fbadcd9e511c8c676b8fc1c4a2f7f8ca6dcbc4a56f932970df84b5992d34c",
+                "2725c57340c913fb490503d0f4ff879e544a3dc3233646c7b5964f5d980e44d2",
+                "333f6d51d976eb347784cb4069f331c5dd2b7b4e4a76c3cbe142cf134f12516e",
+                "50ed92cbe76fa08f8859b1bec41063bd0adb20cd64902d735dcfbca4a701cc71",
+                "5297fb869c3d886d670a498c54b31ec68dc6dbe0850a97695f93e713824c8b59"
+              ],
+              "OriginalExpansion": "7cd87752ca90e924099b0905445d7d49eebf9958769f9bcbc95201ab4eb85c80",
+              "ReplacementExpansion": "44e3c478a0b9ba6d19367310b0e34ee7575f638b9caa5a372f9243ac94935f35",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_02_net10.0[1].trx",
+                "Sha256": "6f154d1338db3d74e3388e111961155b1277e16ca8b85227da19bd446c81bda9"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "partial",
+              "RunId": "a44675d4-b059-4a03-bb17-0b0e658f8ad5",
+              "OriginalOccurrenceIds": [
+                "3c9553ed498ff2682f7b6737f9292c568ce7df56ed2cfaa3e00a2b426c097935",
+                "4a2dca9daa6d518f6a0736e824aa633cc103fcdab442a857dda544c6e0d2a992",
+                "eddd875c99c044180f02e28074454733c06ccaf795f747719433c53181bd419d"
+              ],
+              "CurrentOccurrenceIds": [
+                "3c9553ed498ff2682f7b6737f9292c568ce7df56ed2cfaa3e00a2b426c097935",
+                "4a2dca9daa6d518f6a0736e824aa633cc103fcdab442a857dda544c6e0d2a992",
+                "6971abee9f522944d5e5c9e3ea83a02716880881a8d80f493d6c6566f527ffd5",
+                "ecd4c398b850942d407190e6539157c8ae48d33f96137ca9cf00841c687e2064",
+                "eddd875c99c044180f02e28074454733c06ccaf795f747719433c53181bd419d"
+              ],
+              "OriginalExpansion": "6e1e2d0bdbf5e0c7e7b2ed4fe6a107b1293c5e948b566b1a7097fca53b7d5222",
+              "ReplacementExpansion": "a4ad4bf285aa043fe1fcdb3a64ed9430c848920f8c4f41c9adadd065ecf498a9",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/test-results/_runnervm8k3b6_2026-10-20_00_30_02_net10.0[1].trx",
+                "Sha256": "6f154d1338db3d74e3388e111961155b1277e16ca8b85227da19bd446c81bda9"
+              }
+            }
+          ]
+        },
+        "Packages": [
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.0.2.0-preview.10.nupkg",
+            "Sha256": "a7b5f5de7b5d673e44de157fb57244088fed99bf528ac8a4d81397ddfd020450",
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+            "Sha256": "8238b0e4057aaa47b981806fd020cf66c9db9a65dc0ad6632bf2b49c8eead5b8",
+            "Id": "Penghou.Zhinu.Agents",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+            "Sha256": "0ce501e22289d35411057111bc1f35c5dac510aa8682677dcd30b55897fb1c9e",
+            "Id": "Penghou.Zhinu.Hosting",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+            "Sha256": "8a8da6915d6944d320304ea59e0b9a20a8a2da759dda6d642ac2f756174601d8",
+            "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+            "Sha256": "e6a9169ac73109c00aa5249109da6ed1b3ba52a298f0fc6c35e258f384549278",
+            "Id": "Penghou.Zhinu.OpenTelemetry",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+            "Sha256": "c5616bd992cd5ffb34ef7f7ba7e9a3429f62731d38c3f54044dc56ff568318a4",
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/artifacts/Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+            "Sha256": "e2c7ecf1ff7eb101a7fc20b55a519db331b7addfc311b2bcb8595bbf0267fb69",
+            "Id": "Penghou.Zhinu.Testing",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          }
+        ],
+        "Compatibility": [
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/qualification/closure-e99bfa62eefd469f805482702bcd7a64/qualification.json",
+            "Sha256": "3b31b16e42b9c1fd49cf210ecbd81ba6832dc8e1fb2abbdde944e3ed3b575260",
+            "Receipt": {
+              "SchemaVersion": 1,
+              "PackageVersion": "0.2.0-preview.10",
+              "NeutralPackage": {
+                "Id": "Penghou.Workflow.Abstractions",
+                "ExactVersion": "0.1.0-preview.2"
+              },
+              "ArtifactsDirectory": "/home/runner/work/penghou-zhinu/penghou-zhinu/artifacts",
+              "PackageArtifacts": [
+                {
+                  "Id": "Penghou.Zhinu",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Microsoft.Extensions.Logging.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Workflow.Abstractions",
+                      "Version": "[0.1.0-preview.2]"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Logging.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Workflow.Abstractions",
+                      "Version": "[0.1.0-preview.2]"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Agents",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Agents.AI.Workflows",
+                      "Version": "1.17.0"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Agents.AI.Workflows",
+                      "Version": "1.17.0"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Hosting",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Hosting.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Options",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Hosting.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Options",
+                      "Version": "10.0.9"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.OpenTelemetry",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "OpenTelemetry.Extensions.Hosting",
+                      "Version": "1.17.0"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "OpenTelemetry.Extensions.Hosting",
+                      "Version": "1.17.0"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Sqlite",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Data.Sqlite",
+                      "Version": "10.0.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+                      "Version": "2.1.12"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Data.Sqlite",
+                      "Version": "10.0.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+                      "Version": "2.1.12"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Testing",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    }
+                  ]
+                }
+              ],
+              "Consumer": {
+                "Project": "NuGet package references only; no project references",
+                "PackageSourceMapping": {
+                  "ZhinuPackages": "Local artifacts directory, exact package ID patterns",
+                  "NeutralAndExternalPackages": "nuget.org"
+                },
+                "PackageCache": "/home/runner/work/_temp/activity-groups/pzc-e99bfa62eefd469f805482702bcd7a64",
+                "AssetsFile": "consumer/obj/project.assets.json",
+                "ResolvedPackageIds": [
+                  "Google.Protobuf/3.30.2",
+                  "Microsoft.Agents.AI/1.17.0",
+                  "Microsoft.Agents.AI.Abstractions/1.17.0",
+                  "Microsoft.Agents.AI.Workflows/1.17.0",
+                  "Microsoft.Data.Sqlite/10.0.10",
+                  "Microsoft.Data.Sqlite.Core/10.0.10",
+                  "Microsoft.Extensions.AI/10.7.0",
+                  "Microsoft.Extensions.AI.Abstractions/10.7.0",
+                  "Microsoft.Extensions.AI.Evaluation/10.7.0",
+                  "Microsoft.Extensions.Caching.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Compliance.Abstractions/10.5.0",
+                  "Microsoft.Extensions.Configuration/8.0.0",
+                  "Microsoft.Extensions.Configuration/10.0.0",
+                  "Microsoft.Extensions.Configuration.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Configuration.Binder/8.0.0",
+                  "Microsoft.Extensions.Configuration.Binder/10.0.0",
+                  "Microsoft.Extensions.Configuration.EnvironmentVariables/8.0.0",
+                  "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+                  "Microsoft.Extensions.DependencyInjection/8.0.0",
+                  "Microsoft.Extensions.DependencyInjection/10.0.0",
+                  "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Diagnostics.Abstractions/10.0.9",
+                  "Microsoft.Extensions.FileProviders.Abstractions/10.0.9",
+                  "Microsoft.Extensions.FileSystemGlobbing/10.0.6",
+                  "Microsoft.Extensions.Hosting.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Logging/8.0.0",
+                  "Microsoft.Extensions.Logging/10.0.0",
+                  "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Logging.Configuration/8.0.0",
+                  "Microsoft.Extensions.Logging.Configuration/10.0.0",
+                  "Microsoft.Extensions.ObjectPool/8.0.26",
+                  "Microsoft.Extensions.ObjectPool/10.0.6",
+                  "Microsoft.Extensions.Options/10.0.9",
+                  "Microsoft.Extensions.Options.ConfigurationExtensions/8.0.0",
+                  "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+                  "Microsoft.Extensions.Primitives/10.0.9",
+                  "Microsoft.Extensions.VectorData.Abstractions/10.7.0",
+                  "Microsoft.ML.Tokenizers/2.0.0",
+                  "OpenTelemetry/1.17.0",
+                  "OpenTelemetry.Api/1.17.0",
+                  "OpenTelemetry.Api.ProviderBuilderExtensions/1.17.0",
+                  "OpenTelemetry.Extensions.Hosting/1.17.0",
+                  "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+                  "Penghou.Zhinu/0.2.0-preview.10",
+                  "Penghou.Zhinu.Agents/0.2.0-preview.10",
+                  "Penghou.Zhinu.Hosting/0.2.0-preview.10",
+                  "Penghou.Zhinu.Hosting.AspNetCore/0.2.0-preview.10",
+                  "Penghou.Zhinu.OpenTelemetry/0.2.0-preview.10",
+                  "Penghou.Zhinu.Sqlite/0.2.0-preview.10",
+                  "Penghou.Zhinu.Testing/0.2.0-preview.10",
+                  "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.core/2.1.12",
+                  "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+                  "System.Diagnostics.DiagnosticSource/10.0.9",
+                  "System.IO.Pipelines/10.0.9",
+                  "System.Numerics.Tensors/10.0.9",
+                  "System.Text.Encodings.Web/10.0.9",
+                  "System.Text.Json/10.0.9",
+                  "System.Threading.Channels/10.0.9"
+                ],
+                "ForbiddenHufuDependencyScan": "passed"
+              },
+              "TargetFrameworkResults": [
+                {
+                  "TargetFramework": "net8.0",
+                  "Result": "passed",
+                  "AssetsTarget": "net8.0",
+                  "Log": "run-net8.0.log"
+                },
+                {
+                  "TargetFramework": "net10.0",
+                  "Result": "passed",
+                  "AssetsTarget": "net10.0",
+                  "Log": "run-net10.0.log"
+                }
+              ],
+              "Status": "passed"
+            }
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-ubuntu-latest/qualification/legacy-consumer-207b953afad94745a198583a2930db3e/qualification.json",
+            "Sha256": "8f99dbaa89dd36d13d9f56bb6d92bb853122bb49c7381507c4257af40da3513d",
+            "Receipt": {
+              "SchemaVersion": 1,
+              "ExpectedCandidateSchemaVersion": 10,
+              "PackageVersion": "0.2.0-preview.10",
+              "NeutralPackage": {
+                "Id": "Penghou.Workflow.Abstractions",
+                "ExactVersion": "0.1.0-preview.2"
+              },
+              "CandidateArtifacts": [
+                {
+                  "Id": "Penghou.Zhinu",
+                  "File": "Penghou.Zhinu.0.2.0-preview.10.nupkg"
+                },
+                {
+                  "Id": "Penghou.Zhinu.Sqlite",
+                  "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg"
+                }
+              ],
+              "PublicRestore": {
+                "PackageSources": [
+                  "https://api.nuget.org/v3/index.json"
+                ],
+                "FreshPackageCache": "/home/runner/work/_temp/activity-groups/pzl-207b953afad94745a198583a2930db3e",
+                "AssetsFile": "consumer/obj/project.assets.json",
+                "ResolvedPackages": [
+                  "Microsoft.Data.Sqlite/10.0.10",
+                  "Microsoft.Data.Sqlite.Core/10.0.10",
+                  "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+                  "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+                  "Penghou.Zhinu/0.1.0-preview.15",
+                  "Penghou.Zhinu.Sqlite/0.1.0-preview.15",
+                  "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.core/2.1.12",
+                  "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+                  "System.Diagnostics.DiagnosticSource/10.0.9"
+                ],
+                "ForbiddenHufuDependencyScan": "passed",
+                "ProjectReferences": 0
+              },
+              "TargetFrameworkResults": [
+                {
+                  "TargetFramework": "net8.0",
+                  "PublishedRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 5,
+                    "RetainedStepRows": 2,
+                    "CoreAssemblyHash": "475F9A6A70851701FB2FD91C441C577481664B8039AD0CB51FA1C7B92BCC6229",
+                    "SqliteAssemblyHash": "22B1FF1015F5BE150B9E994CF36F8D341F382D293919D01E4001586667125467"
+                  },
+                  "CandidateRuntimeRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 10,
+                    "RetainedStepRows": 4
+                  },
+                  "CompiledConsumerSha256": "E211D8DE114C784894AC38B9429D86D7E94C39DDAF6A47FD71F5B6A94CC7EDEA",
+                  "ContractAssemblySha256": "81F2DE8AEF7FA1B103036BD7839CCC13AA7486B89ED5B6783EE0FC2A433E112D",
+                  "OldWorkerOnNewSchema": {
+                    "ExitCode": 134,
+                    "RejectedAsIncompatible": true,
+                    "SchemaVersionAfterRejection": 10,
+                    "RetainedStepRowsAfterRejection": 4
+                  }
+                },
+                {
+                  "TargetFramework": "net10.0",
+                  "PublishedRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 5,
+                    "RetainedStepRows": 2,
+                    "CoreAssemblyHash": "3AE5BD44F8122653C6E6D8BBC063015916405C159749E49FEBA743F11C394ED5",
+                    "SqliteAssemblyHash": "6D32F574B8A3E2089CF1E4B214E763FA7EB8D35B977E12597ECAF6BAB3ACAB85"
+                  },
+                  "CandidateRuntimeRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 10,
+                    "RetainedStepRows": 4
+                  },
+                  "CompiledConsumerSha256": "A581F818A70829CEF00A2D329F7F52E97896571821D41C443C76C0E2E49BEC17",
+                  "ContractAssemblySha256": "D1B6168049CB05F49BE10849A190993603A21F4E086C93DC656FC100DFD73020",
+                  "OldWorkerOnNewSchema": {
+                    "ExitCode": 134,
+                    "RejectedAsIncompatible": true,
+                    "SchemaVersionAfterRejection": 10,
+                    "RetainedStepRowsAfterRejection": 4
+                  }
+                }
+              ],
+              "Status": "passed"
+            }
+          }
+        ]
+      },
+      {
+        "OS": "windows-latest",
+        "Suite": {
+          "Total": 1963,
+          "Passed": 1963,
+          "Files": [
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_03_net10.0.trx",
+              "Sha256": "540d712ac129618b51b7a0aef974533d3f805570c9febcb4deb9ecd0ff6b2b93",
+              "Framework": "net10.0",
+              "Total": 5
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_03_net10.0[1].trx",
+              "Sha256": "29144eb53b1c7fa3270bd32d30a67a1381326eae67c4b6594cb200136346dc86",
+              "Framework": "net10.0",
+              "Total": 13
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_03_net8.0.trx",
+              "Sha256": "45b21e8da88bf2a2db07c08c1ca26b5583e3409a7ff65aac7f9eb496f7e75ead",
+              "Framework": "net8.0",
+              "Total": 13
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_07_net10.0.trx",
+              "Sha256": "02f237e693f9dd2d86c0c20adf29c6156fc1c77309640414a0efb39a1fae8051",
+              "Framework": "net10.0",
+              "Total": 29
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_08_net8.0.trx",
+              "Sha256": "798f17321c5d1b9fa7f894091d7adeedd66b00c9272680b1b541d932ec16c289",
+              "Framework": "net8.0",
+              "Total": 1
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_11_net10.0.trx",
+              "Sha256": "eeac50039e0c463a085eb6b5b6f14cfbc8992f84db43dbfc612140ab7b6f1c4d",
+              "Framework": "net10.0",
+              "Total": 1
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_14_net8.0.trx",
+              "Sha256": "1aa10df8a919f0ca7596401a204a1631ead0d9902f4048a2810648b93500acd5",
+              "Framework": "net8.0",
+              "Total": 221
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_17_net10.0.trx",
+              "Sha256": "33b030bb638c04bf5cd2cb949a86417104cf4f30633164f294e9f1642cd6a5b6",
+              "Framework": "net10.0",
+              "Total": 221
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net10.0.trx",
+              "Sha256": "ae7bdbfa1cc76b65ccba18ca3d759ab0022bab2b506c55b1db1c7983becd8fa4",
+              "Framework": "net10.0",
+              "Total": 715
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net8.0.trx",
+              "Sha256": "58201cd7490e403910b2786bdae25e44150dc626f9dd56416021ea3f65d597c6",
+              "Framework": "net8.0",
+              "Total": 715
+            },
+            {
+              "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_23_net8.0.trx",
+              "Sha256": "6b2dc6103101aa2d3c54eb7c24c9f365d91d35db11753dcef6c398e5f2633f14",
+              "Framework": "net8.0",
+              "Total": 29
+            }
+          ],
+          "Q33Executions": [
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"selection\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.CompletedBranchClosureSurvivesReplacementAndSameValueCanReappearInFreshScope"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"missing\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"admitted\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: True)"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"partial\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.MissingRetirementReceiptCannotSilentlyRemoveHistoricalObligations"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ReplacementRetiresUnfinishedBranchWithoutRewritingCompletedHistory"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.SchemaNineMigrationRetainsSelectionsAndMembershipWithoutInventingRetirement"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: False)"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.StoreWithoutReplacementCapabilityRejectsBeforeBranchDispatch"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.RetiredMembersCannotRestartAndDependentRestartDoesNotResurrectThem"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"self\")"
+            },
+            {
+              "Framework": "net10.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"transaction\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.CompletedBranchClosureSurvivesReplacementAndSameValueCanReappearInFreshScope"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"selection\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: True)"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.RetiredMembersCannotRestartAndDependentRestartDoesNotResurrectThem"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ReplacementRetiresUnfinishedBranchWithoutRewritingCompletedHistory"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.SchemaNineMigrationRetainsSelectionsAndMembershipWithoutInventingRetirement"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.StoreWithoutReplacementCapabilityRejectsBeforeBranchDispatch"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"partial\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"self\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.InvalidReplacementRollsBackAdmissionBeforeAnyNewCallback(invalid: \"missing\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"admitted\")"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementStoreTests.CompetingReplacementsHaveOneWinnerAndRetiredClaimsCannotDispatch(emptyReplacement: False)"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.MissingRetirementReceiptCannotSilentlyRemoveHistoricalObligations"
+            },
+            {
+              "Framework": "net8.0",
+              "Name": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupBranchReplacementTests.ProcessLossPreservesReplacementAndRetirementWithoutRecomputingSelection(barrier: \"transaction\")"
+            }
+          ],
+          "RecoveryReceipts": [
+            {
+              "Framework": "net10.0",
+              "Barrier": "selection",
+              "RunId": "f8a8ab7e-3aa9-46dc-8cd1-7e5eb78c3c8e",
+              "OriginalOccurrenceIds": [
+                "65cc17c44eecb032021d5c44c72d1fbd6152d9d1896bf41d2fbc24e1a587c8da",
+                "84747737ff206ce47269f7e987af59ed10b12a96ca3d62448099d61bfca42a36",
+                "9b5ac45792339dc34e5eb2fa23ae513291c4b662dfb15f578ac22e1d1678f880"
+              ],
+              "CurrentOccurrenceIds": [
+                "65cc17c44eecb032021d5c44c72d1fbd6152d9d1896bf41d2fbc24e1a587c8da",
+                "676010bde2d54afefea976d09ab6f19cf26b7b8894940b1af09e9d31d07d9065",
+                "84747737ff206ce47269f7e987af59ed10b12a96ca3d62448099d61bfca42a36",
+                "882c24c7ae010188dfa35c68f8e353037c4244330e321a6057ab40b24dcf4ff9",
+                "9b5ac45792339dc34e5eb2fa23ae513291c4b662dfb15f578ac22e1d1678f880"
+              ],
+              "OriginalExpansion": "5cce8a8cace4e7804e82c7f33a2a1069c2a8c2a729678ae809d0015b599298fe",
+              "ReplacementExpansion": "5338c9371369b12b2102dea6dcb5998ed48667acaa2ce6492a11b3bee867a7af",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net10.0.trx",
+                "Sha256": "ae7bdbfa1cc76b65ccba18ca3d759ab0022bab2b506c55b1db1c7983becd8fa4"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "admitted",
+              "RunId": "14ff3399-5018-4189-96ad-2a365310f53d",
+              "OriginalOccurrenceIds": [
+                "33a38ea719b219a73f99f9a1312e8f42143cda13a2adefb23a9da9bcfc836583",
+                "ba38ecf9939325ade1b4c76508e80724783601ebda24f34f018b58f20c13460f",
+                "f05b0e75ac4b59cdc17de7132435560f20291974a1daf97c1f7b2d40de759003"
+              ],
+              "CurrentOccurrenceIds": [
+                "33a38ea719b219a73f99f9a1312e8f42143cda13a2adefb23a9da9bcfc836583",
+                "80e16559d0820143905b5da0327a9670aae69ea78a62fa86b6c29a8a9ff71fc4",
+                "912e42d63828284962fb61d5810753e53fc63141788ba5d144a633d5b5689df2",
+                "ba38ecf9939325ade1b4c76508e80724783601ebda24f34f018b58f20c13460f",
+                "f05b0e75ac4b59cdc17de7132435560f20291974a1daf97c1f7b2d40de759003"
+              ],
+              "OriginalExpansion": "5becd49500ea7dcc39efac1400f18ad7cf3d5983e51ad01aabf9e9fb83655335",
+              "ReplacementExpansion": "b682f137dc39d5eeea68a6fd80471477e928ca69955c298ac18ea5c5bbd025a5",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net10.0.trx",
+                "Sha256": "ae7bdbfa1cc76b65ccba18ca3d759ab0022bab2b506c55b1db1c7983becd8fa4"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "partial",
+              "RunId": "bc008fed-8bca-4744-bb7c-9871b2dd0d65",
+              "OriginalOccurrenceIds": [
+                "73eaf7807fe554752c7f55b8b60b108e3f4f79f2d8084333665c85725c5001c9",
+                "bda1a3fb5fbb8b4f98011c86b43e77343ea4a14616692da52d9bc30369bb507e",
+                "ed5bed79a9231e9d3e8d037983ead6648d051f5aff7f8a18fbf6288f82760828"
+              ],
+              "CurrentOccurrenceIds": [
+                "1775dfed53430005895a0fecad9c4456a9d770cf2ff60c902fc0bc45750db331",
+                "73eaf7807fe554752c7f55b8b60b108e3f4f79f2d8084333665c85725c5001c9",
+                "79b7c70bcc88e8120d4b226d0da42cef719cfaad7dc23a49932aadd1b5235883",
+                "bda1a3fb5fbb8b4f98011c86b43e77343ea4a14616692da52d9bc30369bb507e",
+                "ed5bed79a9231e9d3e8d037983ead6648d051f5aff7f8a18fbf6288f82760828"
+              ],
+              "OriginalExpansion": "74192cc8d96dc4420be3a9bdb0912349b1dfb7579044d3ecff8a5adbde6cfe83",
+              "ReplacementExpansion": "b72f14cfac52739eef37f5ca59486ee889c86b8279769e659c9e31ad6aeb798d",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net10.0.trx",
+                "Sha256": "ae7bdbfa1cc76b65ccba18ca3d759ab0022bab2b506c55b1db1c7983becd8fa4"
+              }
+            },
+            {
+              "Framework": "net10.0",
+              "Barrier": "transaction",
+              "RunId": "e974ae05-5aa7-44b0-81af-bbd552c61f72",
+              "OriginalOccurrenceIds": [
+                "5ab9afdff0dcc2b79b1ef580befec9ab844c4ba8df06a5ed7c5ff3b178a33d27",
+                "cb5262d9394adc9c39db9d13bc53c42dbcdb6fc409a21599d58a8650bd054a84",
+                "e1cda2bf4bf838aa30c4aaeb8f7c253fba8b8168b7f89b6be8cb0846e4ff963e"
+              ],
+              "CurrentOccurrenceIds": [
+                "565956c96689ea9860b5f0d78e1bb481b6db57e2a02ee6ebab1c2a47f9a2f701",
+                "5ab9afdff0dcc2b79b1ef580befec9ab844c4ba8df06a5ed7c5ff3b178a33d27",
+                "cb5262d9394adc9c39db9d13bc53c42dbcdb6fc409a21599d58a8650bd054a84",
+                "d3ae2cd89161c7f4dd7adcaac9106e19437371d7991e40b4da4e79b102fef755",
+                "e1cda2bf4bf838aa30c4aaeb8f7c253fba8b8168b7f89b6be8cb0846e4ff963e"
+              ],
+              "OriginalExpansion": "d3e6fbdd1de6164dc58117183c312e1fd1aec7e59f0e0f4b4fedf82ebe521972",
+              "ReplacementExpansion": "b7cbcfdee24f923e9f74618a80ced86a412b1412ef527f753845aea7ed098729",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net10.0.trx",
+                "Sha256": "ae7bdbfa1cc76b65ccba18ca3d759ab0022bab2b506c55b1db1c7983becd8fa4"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "selection",
+              "RunId": "28c3a896-d44c-4550-8bbb-5b2cc0c084b6",
+              "OriginalOccurrenceIds": [
+                "26bfbf9a3bfa8cbdc42dd58bb72c3c6e4ec4c0b0ef3f374aa2ebaa0fc4808d6f",
+                "d92be37c8a2b9bd315b3334d9f60bc849beeb2db2cace7dfaf6ac700cfb2aa1f",
+                "dc252881d108b16b70aea0af0a25bc2fe9ca8fca54b5a113d4f2eae1ce3c223a"
+              ],
+              "CurrentOccurrenceIds": [
+                "26bfbf9a3bfa8cbdc42dd58bb72c3c6e4ec4c0b0ef3f374aa2ebaa0fc4808d6f",
+                "4e27940a3f06ffcfca5dde86abe8229c6ae42db8fe2343ead8257b9573aae16b",
+                "d36e63cc86b0e90b788f7585e9d91b81f6066e785bf242903850acf626220853",
+                "d92be37c8a2b9bd315b3334d9f60bc849beeb2db2cace7dfaf6ac700cfb2aa1f",
+                "dc252881d108b16b70aea0af0a25bc2fe9ca8fca54b5a113d4f2eae1ce3c223a"
+              ],
+              "OriginalExpansion": "04f362bd595b20ef8e52d2d71eab02482cca332638ee8cd29e21320f808dd1b6",
+              "ReplacementExpansion": "272f792be2809ff86f5c291a6ad07c54147237d7cb63cb8cea0ece7de3f3c1e8",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net8.0.trx",
+                "Sha256": "58201cd7490e403910b2786bdae25e44150dc626f9dd56416021ea3f65d597c6"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "partial",
+              "RunId": "54f68817-f17f-484e-8798-f533795c65bb",
+              "OriginalOccurrenceIds": [
+                "6f8e7d30dbadbcdb1f9216eda19b0675f2e5523fba108472591bbb88665dbb39",
+                "764578a944ea229252ba2482fbc79a5476df7a4ab70f89ad4fc3311361107810",
+                "a9e6b98eeb92e7de51cb911b96bf4702830142273fd348cbee2ad4fcc8ab8664"
+              ],
+              "CurrentOccurrenceIds": [
+                "565069ef4c0bd8b4cf2efcd61dadea84758802ddfe3b19828bd9494d885469d9",
+                "69c750b194aaa579783546ffc3e7eb56ae92e75cd2944db143a9ff5132e25a43",
+                "6f8e7d30dbadbcdb1f9216eda19b0675f2e5523fba108472591bbb88665dbb39",
+                "764578a944ea229252ba2482fbc79a5476df7a4ab70f89ad4fc3311361107810",
+                "a9e6b98eeb92e7de51cb911b96bf4702830142273fd348cbee2ad4fcc8ab8664"
+              ],
+              "OriginalExpansion": "7da53d68de6a30a0d89839f10225c506aa0343f938e92ab7dfa90c97f44892d9",
+              "ReplacementExpansion": "da0f01a47b6b293b11c5fd230f4b61309b48a2e162b79f2803d2d587dd58d665",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net8.0.trx",
+                "Sha256": "58201cd7490e403910b2786bdae25e44150dc626f9dd56416021ea3f65d597c6"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "admitted",
+              "RunId": "f44573b4-8838-4a19-9663-fd90b523e6a7",
+              "OriginalOccurrenceIds": [
+                "5e6052df5bdea4e2e41d0429089f556c46801dbc05e1f2204ffa72f80b32aaa7",
+                "8de515d2bd6fb4951e8af2eee3c2cb8ccda638f909241db585b425a35175a8c9",
+                "cb08865116a7f2754263224761d08ce27d13a1f30642163375dc150bdfb87981"
+              ],
+              "CurrentOccurrenceIds": [
+                "5e6052df5bdea4e2e41d0429089f556c46801dbc05e1f2204ffa72f80b32aaa7",
+                "8de515d2bd6fb4951e8af2eee3c2cb8ccda638f909241db585b425a35175a8c9",
+                "aece74fa04792ff90e7b872f06f7f089fcff47ddb2e10aa3b1e22a6e5e51393b",
+                "cb08865116a7f2754263224761d08ce27d13a1f30642163375dc150bdfb87981",
+                "fcfcd25bf58d0ec2440bcecf149588536ae833586679594707a7947f6ac877a5"
+              ],
+              "OriginalExpansion": "b5446dfded6e3db7bb946914dad4804c232cc81cfdb90cf90b2aafbaeab58205",
+              "ReplacementExpansion": "4cea5e306fe3f233058e735392ab77737eaf8ac6abccc2ec4d52c5866ef02c2c",
+              "InterruptedExpansionCount": 2,
+              "AdmissionCommittedBeforeLoss": true,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net8.0.trx",
+                "Sha256": "58201cd7490e403910b2786bdae25e44150dc626f9dd56416021ea3f65d597c6"
+              }
+            },
+            {
+              "Framework": "net8.0",
+              "Barrier": "transaction",
+              "RunId": "a86e2502-f211-4f7c-a4cf-fae3f1e310c7",
+              "OriginalOccurrenceIds": [
+                "99bcc0a97a0af36a835315406e2684dab586cb08e03f37f6e557285d09772519",
+                "e9cc409ab406701ef2a5df1bd1c32585ef584f522813e69c85ebc21d91198dc6",
+                "ea34f60d3f076354f6f4ff28471119999b003bf26a99b5d84d512dab017f4b6c"
+              ],
+              "CurrentOccurrenceIds": [
+                "8db5d6d8a50db25d727429a2f6290e0c9441f25ea636ef183fdac2a90f35e3fe",
+                "99bcc0a97a0af36a835315406e2684dab586cb08e03f37f6e557285d09772519",
+                "cf0580cbe7d35ef7eda9469f66d5b276879d5a68127ba48702cedd940c722477",
+                "e9cc409ab406701ef2a5df1bd1c32585ef584f522813e69c85ebc21d91198dc6",
+                "ea34f60d3f076354f6f4ff28471119999b003bf26a99b5d84d512dab017f4b6c"
+              ],
+              "OriginalExpansion": "3cba22d3fd555166ec212850ad3fb4e51b09d4c906bce59dcb9991429c023eb7",
+              "ReplacementExpansion": "f522dd711748362595c2961e4599f29329c78c95c4da8a465acb3a479a8b5e21",
+              "InterruptedExpansionCount": 1,
+              "AdmissionCommittedBeforeLoss": false,
+              "Calls": [
+                "branch.a:body:YQ:ZG9uZQ",
+                "branch.a:body:YQ:dW5maW5pc2hlZA",
+                "branch.b:body:Yg:ZG9uZQ",
+                "branch.b:body:Yg:dW5maW5pc2hlZA"
+              ],
+              "RawEvidence": {
+                "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/test-results/runneradmin_runnervm0xl3a_2026-10-20_00_32_22_net8.0.trx",
+                "Sha256": "58201cd7490e403910b2786bdae25e44150dc626f9dd56416021ea3f65d597c6"
+              }
+            }
+          ]
+        },
+        "Packages": [
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.0.2.0-preview.10.nupkg",
+            "Sha256": "f86f1c2c0af88930e22b881e017f4eefba9aba3cb4b566212dd131186e7840f5",
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+            "Sha256": "5c55359e31c2bd929896853bfaeb4713d5f2c123d84234fbfa414acfddb263d7",
+            "Id": "Penghou.Zhinu.Agents",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+            "Sha256": "91e81ff2d218fd353afb9681a9a13ce85ced95d661d6c0dd1717e82115882697",
+            "Id": "Penghou.Zhinu.Hosting",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+            "Sha256": "c57f37d2ac5a0111f1f850452b8c172890a292a74e56f3726389b45751b22375",
+            "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+            "Sha256": "d609c2023a1fe5af5e2b4bc2acb17e8e1767b76726dc87ed42ef4cca326a98c0",
+            "Id": "Penghou.Zhinu.OpenTelemetry",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+            "Sha256": "32c31dd65277d118a0c727e0ad7206e7b74cf6abb22bc31259a57ae5cae79b75",
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/artifacts/Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+            "Sha256": "22fc7d37550bb08af8a32c58a946031056e1b7187487bb973c7dc0b8c4e768ee",
+            "Id": "Penghou.Zhinu.Testing",
+            "Version": "0.2.0-preview.10",
+            "SourceCommit": "bf33c05cf2390af6924bbe3761e09f9e377c7a97"
+          }
+        ],
+        "Compatibility": [
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/qualification/closure-6bdd4f8dc4c34002b97691ac200a914e/qualification.json",
+            "Sha256": "36ec6a3606f3db3c4efeb946bbbab3491a574d0e02f8c6d480c553499de46366",
+            "Receipt": {
+              "SchemaVersion": 1,
+              "PackageVersion": "0.2.0-preview.10",
+              "NeutralPackage": {
+                "Id": "Penghou.Workflow.Abstractions",
+                "ExactVersion": "0.1.0-preview.2"
+              },
+              "ArtifactsDirectory": "D:\\a\\penghou-zhinu\\penghou-zhinu\\artifacts",
+              "PackageArtifacts": [
+                {
+                  "Id": "Penghou.Zhinu",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Microsoft.Extensions.Logging.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Workflow.Abstractions",
+                      "Version": "[0.1.0-preview.2]"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Logging.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Workflow.Abstractions",
+                      "Version": "[0.1.0-preview.2]"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Agents",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Agents.AI.Workflows",
+                      "Version": "1.17.0"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Agents.AI.Workflows",
+                      "Version": "1.17.0"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Hosting",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Hosting.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Options",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Hosting.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.Options",
+                      "Version": "10.0.9"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.OpenTelemetry",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "OpenTelemetry.Extensions.Hosting",
+                      "Version": "1.17.0"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "OpenTelemetry.Extensions.Hosting",
+                      "Version": "1.17.0"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Sqlite",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Data.Sqlite",
+                      "Version": "10.0.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+                      "Version": "2.1.12"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Microsoft.Data.Sqlite",
+                      "Version": "10.0.10"
+                    },
+                    {
+                      "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+                      "Version": "10.0.9"
+                    },
+                    {
+                      "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+                      "Version": "2.1.12"
+                    }
+                  ]
+                },
+                {
+                  "Id": "Penghou.Zhinu.Testing",
+                  "Version": "0.2.0-preview.10",
+                  "File": "Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+                  "DirectDependencies": [
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu.Sqlite",
+                      "Version": "0.2.0-preview.10"
+                    },
+                    {
+                      "Id": "Penghou.Zhinu",
+                      "Version": "0.2.0-preview.10"
+                    }
+                  ]
+                }
+              ],
+              "Consumer": {
+                "Project": "NuGet package references only; no project references",
+                "PackageSourceMapping": {
+                  "ZhinuPackages": "Local artifacts directory, exact package ID patterns",
+                  "NeutralAndExternalPackages": "nuget.org"
+                },
+                "PackageCache": "D:\\a\\_temp\\activity-groups\\pzc-6bdd4f8dc4c34002b97691ac200a914e",
+                "AssetsFile": "consumer\\obj\\project.assets.json",
+                "ResolvedPackageIds": [
+                  "Google.Protobuf/3.30.2",
+                  "Microsoft.Agents.AI/1.17.0",
+                  "Microsoft.Agents.AI.Abstractions/1.17.0",
+                  "Microsoft.Agents.AI.Workflows/1.17.0",
+                  "Microsoft.Data.Sqlite/10.0.10",
+                  "Microsoft.Data.Sqlite.Core/10.0.10",
+                  "Microsoft.Extensions.AI/10.7.0",
+                  "Microsoft.Extensions.AI.Abstractions/10.7.0",
+                  "Microsoft.Extensions.AI.Evaluation/10.7.0",
+                  "Microsoft.Extensions.Caching.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Compliance.Abstractions/10.5.0",
+                  "Microsoft.Extensions.Configuration/8.0.0",
+                  "Microsoft.Extensions.Configuration/10.0.0",
+                  "Microsoft.Extensions.Configuration.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Configuration.Binder/8.0.0",
+                  "Microsoft.Extensions.Configuration.Binder/10.0.0",
+                  "Microsoft.Extensions.Configuration.EnvironmentVariables/8.0.0",
+                  "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+                  "Microsoft.Extensions.DependencyInjection/8.0.0",
+                  "Microsoft.Extensions.DependencyInjection/10.0.0",
+                  "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Diagnostics.Abstractions/10.0.9",
+                  "Microsoft.Extensions.FileProviders.Abstractions/10.0.9",
+                  "Microsoft.Extensions.FileSystemGlobbing/10.0.6",
+                  "Microsoft.Extensions.Hosting.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Logging/8.0.0",
+                  "Microsoft.Extensions.Logging/10.0.0",
+                  "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Logging.Configuration/8.0.0",
+                  "Microsoft.Extensions.Logging.Configuration/10.0.0",
+                  "Microsoft.Extensions.ObjectPool/8.0.26",
+                  "Microsoft.Extensions.ObjectPool/10.0.6",
+                  "Microsoft.Extensions.Options/10.0.9",
+                  "Microsoft.Extensions.Options.ConfigurationExtensions/8.0.0",
+                  "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+                  "Microsoft.Extensions.Primitives/10.0.9",
+                  "Microsoft.Extensions.VectorData.Abstractions/10.7.0",
+                  "Microsoft.ML.Tokenizers/2.0.0",
+                  "OpenTelemetry/1.17.0",
+                  "OpenTelemetry.Api/1.17.0",
+                  "OpenTelemetry.Api.ProviderBuilderExtensions/1.17.0",
+                  "OpenTelemetry.Extensions.Hosting/1.17.0",
+                  "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+                  "Penghou.Zhinu/0.2.0-preview.10",
+                  "Penghou.Zhinu.Agents/0.2.0-preview.10",
+                  "Penghou.Zhinu.Hosting/0.2.0-preview.10",
+                  "Penghou.Zhinu.Hosting.AspNetCore/0.2.0-preview.10",
+                  "Penghou.Zhinu.OpenTelemetry/0.2.0-preview.10",
+                  "Penghou.Zhinu.Sqlite/0.2.0-preview.10",
+                  "Penghou.Zhinu.Testing/0.2.0-preview.10",
+                  "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.core/2.1.12",
+                  "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+                  "System.Diagnostics.DiagnosticSource/10.0.9",
+                  "System.IO.Pipelines/10.0.9",
+                  "System.Numerics.Tensors/10.0.9",
+                  "System.Text.Encodings.Web/10.0.9",
+                  "System.Text.Json/10.0.9",
+                  "System.Threading.Channels/10.0.9"
+                ],
+                "ForbiddenHufuDependencyScan": "passed"
+              },
+              "TargetFrameworkResults": [
+                {
+                  "TargetFramework": "net8.0",
+                  "Result": "passed",
+                  "AssetsTarget": "net8.0",
+                  "Log": "run-net8.0.log"
+                },
+                {
+                  "TargetFramework": "net10.0",
+                  "Result": "passed",
+                  "AssetsTarget": "net10.0",
+                  "Log": "run-net10.0.log"
+                }
+              ],
+              "Status": "passed"
+            }
+          },
+          {
+            "File": "artifacts/q33-ci/zhinu-qualification-windows-latest/qualification/legacy-consumer-2bc93479260448b098e330914c83e602/qualification.json",
+            "Sha256": "e7decf6e874e09b9d30595faefe0129818a1be590a1731264f5811f5503ac171",
+            "Receipt": {
+              "SchemaVersion": 1,
+              "ExpectedCandidateSchemaVersion": 10,
+              "PackageVersion": "0.2.0-preview.10",
+              "NeutralPackage": {
+                "Id": "Penghou.Workflow.Abstractions",
+                "ExactVersion": "0.1.0-preview.2"
+              },
+              "CandidateArtifacts": [
+                {
+                  "Id": "Penghou.Zhinu",
+                  "File": "Penghou.Zhinu.0.2.0-preview.10.nupkg"
+                },
+                {
+                  "Id": "Penghou.Zhinu.Sqlite",
+                  "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg"
+                }
+              ],
+              "PublicRestore": {
+                "PackageSources": [
+                  "https://api.nuget.org/v3/index.json"
+                ],
+                "FreshPackageCache": "D:\\a\\_temp\\activity-groups\\pzl-2bc93479260448b098e330914c83e602",
+                "AssetsFile": "consumer\\obj\\project.assets.json",
+                "ResolvedPackages": [
+                  "Microsoft.Data.Sqlite/10.0.10",
+                  "Microsoft.Data.Sqlite.Core/10.0.10",
+                  "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+                  "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+                  "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+                  "Penghou.Zhinu/0.1.0-preview.15",
+                  "Penghou.Zhinu.Sqlite/0.1.0-preview.15",
+                  "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.core/2.1.12",
+                  "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+                  "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+                  "System.Diagnostics.DiagnosticSource/10.0.9"
+                ],
+                "ForbiddenHufuDependencyScan": "passed",
+                "ProjectReferences": 0
+              },
+              "TargetFrameworkResults": [
+                {
+                  "TargetFramework": "net8.0",
+                  "PublishedRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 5,
+                    "RetainedStepRows": 2,
+                    "CoreAssemblyHash": "475F9A6A70851701FB2FD91C441C577481664B8039AD0CB51FA1C7B92BCC6229",
+                    "SqliteAssemblyHash": "22B1FF1015F5BE150B9E994CF36F8D341F382D293919D01E4001586667125467"
+                  },
+                  "CandidateRuntimeRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 10,
+                    "RetainedStepRows": 4
+                  },
+                  "CompiledConsumerSha256": "24FADFE1F2320978BA4888E5E1A984B32EAE2307702506C5A7E7A2137EE2F8A1",
+                  "ContractAssemblySha256": "81F2DE8AEF7FA1B103036BD7839CCC13AA7486B89ED5B6783EE0FC2A433E112D",
+                  "OldWorkerOnNewSchema": {
+                    "ExitCode": -532462766,
+                    "RejectedAsIncompatible": true,
+                    "SchemaVersionAfterRejection": 10,
+                    "RetainedStepRowsAfterRejection": 4
+                  }
+                },
+                {
+                  "TargetFramework": "net10.0",
+                  "PublishedRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 5,
+                    "RetainedStepRows": 2,
+                    "CoreAssemblyHash": "3AE5BD44F8122653C6E6D8BBC063015916405C159749E49FEBA743F11C394ED5",
+                    "SqliteAssemblyHash": "6D32F574B8A3E2089CF1E4B214E763FA7EB8D35B977E12597ECAF6BAB3ACAB85"
+                  },
+                  "CandidateRuntimeRun": {
+                    "ExitCode": 0,
+                    "SchemaVersion": 10,
+                    "RetainedStepRows": 4
+                  },
+                  "CompiledConsumerSha256": "68AD2050EBA8FBEC4A343CF35912C3DD20AC5FFF75CFF073AC482FF999BE4E4F",
+                  "ContractAssemblySha256": "D1B6168049CB05F49BE10849A190993603A21F4E086C93DC656FC100DFD73020",
+                  "OldWorkerOnNewSchema": {
+                    "ExitCode": -532462766,
+                    "RejectedAsIncompatible": true,
+                    "SchemaVersionAfterRejection": 10,
+                    "RetainedStepRowsAfterRejection": 4
+                  }
+                }
+              ],
+              "Status": "passed"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "FrozenPriorQualification": {
+    "File": "docs/qualification/activity-groups/zg7.json",
+    "Sha256": "bbddafca896b151b96163d4fdc51d88a5f8d12ba0511142c705cb8df1d1be52d"
+  },
+  "OriginalPreview9PackagesUnchanged": [
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.0.2.0-preview.9.nupkg",
+      "Sha256": "222fb33f92f88d3560dd5a616cc929eb8145b355d96c09f514b6917116e4eb98",
+      "Id": "Penghou.Zhinu",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.dll",
+          "Sha256": "28969bbaca5c0951857e1eb146c3883bd37766c3e337411f6d7aef661906f80b",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.dll",
+          "Sha256": "b0336e46556189b00ca3bed5b12cfbdd4529ae724d85b3dee42f6fb9819bc61f",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.Agents.0.2.0-preview.9.nupkg",
+      "Sha256": "cf8a7224924e042ba03818aac4117a33e1541590c7a65401d44b64b6a6760c98",
+      "Id": "Penghou.Zhinu.Agents",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Agents.dll",
+          "Sha256": "6f46a0d7cc25842c62bf58ce9863b122a094bdc5ca41a78187fab09b9e92dd23",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Agents.dll",
+          "Sha256": "f3601f6774fae1dc19acc2a7fcb3d14c346bcfe3e1b4c67d00e72c12cbe0c06e",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.Hosting.0.2.0-preview.9.nupkg",
+      "Sha256": "c43aa005d4ae50fb5a3b073f94250588aeedb0fe2c90f3f731ceabd37f7f87ea",
+      "Id": "Penghou.Zhinu.Hosting",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Hosting.dll",
+          "Sha256": "f22589b4427f6a21e8f0734fd956220b0d0abbed0bb242163688678a3b7f52f9",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Hosting.dll",
+          "Sha256": "bba15d122b8b3f0040f62925721c5d52459d29182493cd48508daaaf2fe94ac7",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.9.nupkg",
+      "Sha256": "5fa98d7bb66b81214c1dafa17fbbddd0ef56395a7a121e018c5716005e70e931",
+      "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "Sha256": "112f6349e4838a382a52e0af4a84c2d319ca1d4f2cb180e51907c01b23599bb8",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+          "Sha256": "127993e0dcbfd5f273bd397d0eb2791ef4e2652400755f78f265327af5211f6b",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.OpenTelemetry.0.2.0-preview.9.nupkg",
+      "Sha256": "d694e829a72f602c3601019084d955569edab95c274983754284ceb68dca1fa4",
+      "Id": "Penghou.Zhinu.OpenTelemetry",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "Sha256": "2f0cb90fdbd036f31741f07010d283f0edd621085ef0fce7955d03f8d34b2229",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.OpenTelemetry.dll",
+          "Sha256": "3af05262ca3fd7ec3123b4dfd3243fb2a000baedc45ef6287218523e2042a668",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.Sqlite.0.2.0-preview.9.nupkg",
+      "Sha256": "ee90123051e235506a817e58acd11f2a14865f96280e8a942dfa075c912ed66b",
+      "Id": "Penghou.Zhinu.Sqlite",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Sqlite.dll",
+          "Sha256": "4860bb9423b36d72589c875414a03a6414b30478de611511dbf718f3f6b34dea",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Sqlite.dll",
+          "Sha256": "dcfecd0e60199d6192bc61383ca2c5bf8bf4698d7bb96b458ac9d3248ee9ac90",
+          "MatchesSourceBuild": true
+        }
+      ]
+    },
+    {
+      "File": "artifacts/zg7-native-packages/Penghou.Zhinu.Testing.0.2.0-preview.9.nupkg",
+      "Sha256": "c9f6f89f9a881190cf3407d5551e6ab11da4270e633b1577d3c5e70c285f5c13",
+      "Id": "Penghou.Zhinu.Testing",
+      "Version": "0.2.0-preview.9",
+      "SourceCommit": "246d535679cca2ca5130ecfad62437dbb1fdd81d",
+      "Binaries": [
+        {
+          "Entry": "lib/net10.0/Penghou.Zhinu.Testing.dll",
+          "Sha256": "375ec467fd33df2aec4a45f0907f4177115b829d9015d572c296dae7e0754fed",
+          "MatchesSourceBuild": true
+        },
+        {
+          "Entry": "lib/net8.0/Penghou.Zhinu.Testing.dll",
+          "Sha256": "0858c6e19ede6002dd3a3d89a62c2c1614fd654d939ebcc321c502c5653c8936",
+          "MatchesSourceBuild": true
+        }
+      ]
+    }
+  ],
+  "Fuwen": {
+    "Version": "0.1.0-preview.18",
+    "RuntimeSource": "535f82e2bd70d9a163b27be8671d82c75084a0dd",
+    "NativePinUnchanged": true,
+    "NativePinFile": "docs/qualification/activity-groups/zhinu-candidate.json",
+    "NativePinSha256": "f261909323909976820732fbbc2abccba4e6e221c9017b41f38b7762d9585f9b",
+    "SelectionLowering": "Deferred; no new Fuwen package or native candidate pin adopted."
+  },
+  "ReviewCorrections": [
+    "Retired descendants excluded from current membership and ancestor counts.",
+    "Dependent restart cannot resurrect retired members.",
+    "Direct ordinary-store claims cannot attach new work to retired item occurrences or their descendants.",
+    "Indexed occurrence lookup avoids scanning selected-item history for that fence."
+  ],
+  "Excluded": [
+    "Implicit retirement inferred from arbitrary conditionals",
+    "Fuwen evolving-selection DSL lowering",
+    "Forks of retirement-bearing runs (rejected before destination creation)",
+    "Compensation or undo of external effects",
+    "Package publication and merge"
+  ],
+  "Superseded": {
+    "CI": {
+      "RunId": 39347627636,
+      "Source": "ca0c466ff704e88b800a42a94405f4e27db76df1",
+      "Reason": "Cancelled in favor of final indexed runtime CI; not counted as a passing gate."
+    },
+    "LocalStagingSuites": [
+      "artifacts/q33-full",
+      "artifacts/q33-final-full"
+    ],
+    "ProbePreparationFailure": {
+      "File": "artifacts/q33-native-probes/branch/candidate/build.log",
+      "Sha256": "61a4d89df5fae81d6064b09d03f77b14d8f0066afb2fd363ace6a293461484e3",
+      "Reason": "Initial external probe omitted required fan-out concurrency; corrected in harness only."
+    }
+  },
+  "MilestoneStatus": "Native Q33 is qualified through an explicit durable selection contract. Fuwen evolving-selection integration, broader authoring and release/adoption scope remain open."
+}

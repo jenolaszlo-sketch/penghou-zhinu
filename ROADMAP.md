@@ -200,7 +200,7 @@ adds explicit native branch replacement and schema 10. Read the [design](docs/ac
 This is a follow-on to the
 existing durable runtime and read-only graph surface, not a new current release
 or Hufu qualification gate. Pair it with
-[Fuwen reusable macro activities (FM)](../Penghou.Fuwen/docs/roadmap.md#planned-composition-milestone--user-defined-reusable-macro-activities-fm).
+[Fuwen reusable macro activities (FM)](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/codex/fuwen-activity-groups/docs/roadmap.md#planned-composition-milestone--user-defined-reusable-macro-activities-fm).
 
 An `ActivityGroup` contains activities and child groups. Initial kinds are
 `Logical` (explicit organization) and `Macro` (an author-level macro invocation).
@@ -1692,3 +1692,16 @@ fixes item progress, empty-path admission and qualification portability, and
 makes full Q33 branch-selection retirement explicitly partial. The original full
 matrix, broader DSL features and publication remain open; earlier checkpoints
 retain their original versions, counts and exclusions.
+
+### Activity groups: explicit native branch replacement -- 2026-10-20
+
+[Q33](docs/qualification/activity-groups/q33.md) qualifies fresh durable selection
+scopes with explicit retirement, completed-history retention, claim/restart
+fences, current-selection progress and four independent loss barriers. Existing
+occurrence identities and coordinates remain unchanged; additive schema 10
+stores retirement evidence. Runtime/package source is `bf33c05`, preview.10.
+The full 1,963 combined .NET 8/10 tests pass per OS on Windows/Linux, plus seven
+packages and compatibility probes. Actual preview.9 package workers seed schema
+9 and reject the upgraded schema 10 without changing bytes. Fuwen preview.18
+retains its original preview.9 pin; bounded selection lowering is a separate
+integration activity. No package publication or merge is implied.

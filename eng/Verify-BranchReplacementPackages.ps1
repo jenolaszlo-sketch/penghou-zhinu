@@ -3,8 +3,8 @@ param(
     [Parameter(Mandatory)][string] $CandidateArtifactsDirectory,
     [Parameter(Mandatory)][string] $BaselineArtifactsDirectory,
     [Parameter(Mandatory)][string] $OutputDirectory,
-    [string] $CandidateVersion = '0.2.0-preview.10',
-    [string] $BaselineVersion = '0.2.0-preview.9'
+    [ValidatePattern('^[0-9A-Za-z][0-9A-Za-z.+-]*$')][string] $CandidateVersion = '0.2.0-preview.10',
+    [ValidateSet('0.2.0-preview.9')][string] $BaselineVersion = '0.2.0-preview.9'
 )
 
 Set-StrictMode -Version Latest
@@ -46,10 +46,15 @@ Guid id;
 Guid oldStepId;
 await using (var engine = new WorkflowEngine(store, Registry("a")))
 {
-    id = await engine.StartAsync("branch-packages", "1", "input");
-    await engine.ExecuteAsync(id);
-    if (await engine.WaitForCompletionAsync<string>(id) != "a") throw new Exception("Initial branch failed.");
+    if (args.Length > 1) id = Guid.Parse(args[1]);
+    else
+    {
+        id = await engine.StartAsync("branch-packages", "1", "input");
+        await engine.ExecuteAsync(id);
+        if (await engine.WaitForCompletionAsync<string>(id) != "a") throw new Exception("Initial branch failed.");
+    }
     oldStepId = (await engine.GetStepsAsync(id)).Single(step => step.StepKey == "branch.a.a").Id;
+    if (args.Length > 2 && oldStepId != Guid.Parse(args[2])) throw new Exception("Schema migration changed the original step identity.");
     await engine.RestartStepAsync(id, "selection", new RestartStepOptions { Mode = StepRestartMode.StepOnly });
 }
 await using (var engine = new WorkflowEngine(store, Registry("b")))
@@ -77,7 +82,7 @@ sealed class Branch(string choice) : IWorkflow<string,string>
     {
         var selected = await context.StepAsync("selection", input, (_, _) => Task.FromResult(choice), cancellationToken: ct);
         return (await context.FanOutAsync("branch." + selected, new[] { selected }, item => item,
-            (item, _, _) => Task.FromResult(item), new FanOutOptions(), new StepOptions
+            (item, _, _) => Task.FromResult(item), new FanOutOptions { MaxDegreeOfParallelism = 1 }, new StepOptions
             {
                 DependsOn = ["selection"], FanOutGroup = new ActivityGroupFanOutBinding(new ActivityGroupMembership("branch"), "selection")
                 { ReplacesFanOutKey = selected == "b" ? "branch.a" : null }
@@ -86,19 +91,49 @@ sealed class Branch(string choice) : IWorkflow<string,string>
 }
 '@
 $baselineSource = @'
+using System.Text.Json;
+using Penghou.Zhinu;
 using Penghou.Zhinu.Sqlite;
 var store = new SqliteWorkflowStore(new ZhinuSqliteOptions { DatabasePath = args[0], Pooling = false, EnableWal = false });
+if (args.Length > 1 && args[1] == "seed")
+{
+    var manifest = ActivityGroupManifest.Create([new ActivityGroupDefinition("branch", ActivityGroupKind.Logical, "Branch")]);
+    var registry = new WorkflowRegistry().Register(new WorkflowRegistration<string,string>(
+        new WorkflowDefinition { Name = "branch-packages", Version = "1" }, () => new OriginalBranch(), manifest));
+    await using var engine = new WorkflowEngine(store, registry);
+    var id = await engine.StartAsync("branch-packages", "1", "input");
+    await engine.ExecuteAsync(id);
+    if (await engine.WaitForCompletionAsync<string>(id) != "a") throw new Exception("Baseline execution failed.");
+    var step = (await engine.GetStepsAsync(id)).Single(step => step.StepKey == "branch.a.a");
+    Console.WriteLine(JsonSerializer.Serialize(new { Schema = ZhinuSqliteSchema.CurrentVersion, Run = id, OldStepId = step.Id }));
+    return;
+}
 try { await store.InitializeAsync(); throw new Exception("Old worker accepted a replacement-bearing database."); }
 catch (ZhinuSchemaCompatibilityException error) when (error.ExpectedVersion == 9 && error.DatabaseVersion == 10)
 { Console.WriteLine("SCHEMA_9_WORKER_REJECTED_SCHEMA_10"); }
+
+sealed class OriginalBranch : IWorkflow<string,string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken ct)
+    {
+        var selected = await context.StepAsync("selection", input, (_, _) => Task.FromResult("a"), cancellationToken: ct);
+        return (await context.FanOutAsync("branch." + selected, new[] { selected }, item => item,
+            (item, _, _) => Task.FromResult(item), new FanOutOptions { MaxDegreeOfParallelism = 1 }, new StepOptions
+            {
+                DependsOn = ["selection"], FanOutGroup = new ActivityGroupFanOutBinding(new ActivityGroupMembership("branch"), "selection")
+            }, ct)).Single();
+    }
+}
 '@
 
 foreach ($kind in @('candidate', 'baseline')) {
     $projectRoot = Join-Path $outputRoot $kind
     New-Item -ItemType Directory -Path $projectRoot -Force | Out-Null
+    '<Project />' | Set-Content -LiteralPath (Join-Path $projectRoot 'Directory.Build.props') -Encoding utf8
+    '<Project />' | Set-Content -LiteralPath (Join-Path $projectRoot 'Directory.Build.targets') -Encoding utf8
     $version = if ($kind -eq 'candidate') { $CandidateVersion } else { $BaselineVersion }
     @"
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFrameworks>net8.0;net10.0</TargetFrameworks><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><LangVersion>latest</LangVersion></PropertyGroup><ItemGroup><PackageReference Include="Penghou.Zhinu" Version="[$version]"/><PackageReference Include="Penghou.Zhinu.Sqlite" Version="[$version]"/></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><IsPackable>false</IsPackable><TargetFrameworks>net8.0;net10.0</TargetFrameworks><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><LangVersion>latest</LangVersion></PropertyGroup><ItemGroup><PackageReference Include="Penghou.Zhinu" Version="[$version]"/><PackageReference Include="Penghou.Zhinu.Sqlite" Version="[$version]"/></ItemGroup></Project>
 "@ | Set-Content -LiteralPath (Join-Path $projectRoot 'Probe.csproj') -Encoding utf8
     $source = if ($kind -eq 'candidate') { $candidateSource } else { $baselineSource }
     $source | Set-Content -LiteralPath (Join-Path $projectRoot 'Program.cs') -Encoding utf8
@@ -117,15 +152,19 @@ $frameworks = @()
 foreach ($framework in @('net8.0', 'net10.0')) {
     $databasePath = Join-Path $outputRoot "$framework.db"
     if (Test-Path -LiteralPath $databasePath) { throw "Refusing to overwrite an existing probe database: $databasePath" }
+    $seedLog = Join-Path $outputRoot "baseline-seed-$framework.log"
+    Invoke-ProbeCommand @((Join-Path $outputRoot "baseline/bin/Release/$framework/Probe.dll"), $databasePath, 'seed') $seedLog
+    $seed = Get-Content -LiteralPath $seedLog -Raw | ConvertFrom-Json
+    if ($seed.Schema -ne 9) { throw 'Baseline worker did not create schema 9.' }
     $candidateLog = Join-Path $outputRoot "candidate-$framework.log"
-    Invoke-ProbeCommand @((Join-Path $outputRoot "candidate/bin/Release/$framework/Probe.dll"), $databasePath) $candidateLog
+    Invoke-ProbeCommand @((Join-Path $outputRoot "candidate/bin/Release/$framework/Probe.dll"), $databasePath, $seed.Run, $seed.OldStepId) $candidateLog
     $beforeHash = (Get-FileHash -LiteralPath $databasePath -Algorithm SHA256).Hash.ToLowerInvariant()
     $baselineLog = Join-Path $outputRoot "baseline-$framework.log"
     Invoke-ProbeCommand @((Join-Path $outputRoot "baseline/bin/Release/$framework/Probe.dll"), $databasePath) $baselineLog
     if ((Get-Content -LiteralPath $baselineLog -Raw) -notmatch 'SCHEMA_9_WORKER_REJECTED_SCHEMA_10') { throw 'Old worker did not reject schema 10.' }
     $afterHash = (Get-FileHash -LiteralPath $databasePath -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($beforeHash -cne $afterHash) { throw 'Old worker changed the database bytes.' }
-    $frameworks += [ordered]@{ Framework = $framework; Candidate = (Get-Content -LiteralPath $candidateLog -Raw | ConvertFrom-Json); OldWorkerRejected = $true; DatabaseUnchanged = $true; DatabaseSha256 = $beforeHash }
+    $frameworks += [ordered]@{ Framework = $framework; BaselineSeed = $seed; Candidate = (Get-Content -LiteralPath $candidateLog -Raw | ConvertFrom-Json); OldWorkerRejected = $true; DatabaseUnchanged = $true; DatabaseSha256 = $beforeHash }
 }
 [ordered]@{ Status = 'passed'; PackageSha256 = $packageHashes; Frameworks = $frameworks; NoProjectReferences = $true } |
     ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $outputRoot 'qualification.json') -Encoding utf8
