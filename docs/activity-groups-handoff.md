@@ -296,6 +296,16 @@ integration correctness fixes linked above. The native runtime remains `bf33c05`
 and schema 10. Earlier v5 selection and ZG-7 evidence retain their own source,
 versions and archive pins.
 
+Prioritize the [preview.20 release packet](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/8c7da4cfbc882804d801fe0e8b073733e4ee563c/docs/releases/preview20-readiness.md)
+before more activity-group features. At its recorded observation, all seven
+native preview.10 and four Fuwen preview.20 packages are absent from NuGet.org.
+Approve/qualify native publication first, then Fuwen, Guihua and applications.
+Resolve the Fuwen tag workflow's unprepared mapped native feed before tagging;
+retain original candidate hashes and record signed public archives separately.
+REL-SQLITE-01 stays open despite the passing rerun. The packet records its
+recurrence response and distinguishes this qualified preview from formal RC
+graduation. Publication remains a separate decision.
+
 Nested/mixed DSL dynamics, nonterminal or implicit reselection, item waits/checkpoints/
 merges, grouped coordinated inference/fallback and group controls remain separate
 work. Native forks, fixed nested loops, explicit selection epochs and native

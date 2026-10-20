@@ -1735,3 +1735,15 @@ unchanged-source rerun separately. Native `bf33c05`, preview.10/schema 10,
 occurrence identities and all original native archive pins remain unchanged.
 The earlier v5 and ZG-7 records remain immutable. Broader rejected DSL forms,
 publication and downstream application adoption remain separate activities.
+
+Release preparation now precedes additional activity-group features. The
+[preview.20 release packet](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/8c7da4cfbc882804d801fe0e8b073733e4ee563c/docs/releases/preview20-readiness.md)
+records all 22 candidate package/symbol archives and the public-feed observation:
+native preview.10 must be approved, published/indexed and its actual public
+archives qualified before Fuwen preview.20. The Fuwen tag workflow's unprepared
+local native feed is an open release gate. Repository-signed public archives
+need separate hashes and qualification; original candidate pins remain intact.
+Adoption proceeds through Guihua to applications after indexing. The unexplained
+Windows I/O incident remains open as REL-SQLITE-01, with focused diagnostics and
+stress work on recurrence. No tag or publication has been authorized by this
+preparation, and Fuwen's formal RC graduation gates remain separate.
