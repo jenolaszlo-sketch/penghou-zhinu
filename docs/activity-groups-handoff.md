@@ -6,7 +6,8 @@ Updated 2026-10-20. No chat history is required.
 
 The user resumed implementation after the earlier usage pause. The current
 boundary is **Q33 explicit native branch replacement plus the separately
-qualified bounded Fuwen v5 selection profile**; read its
+qualified bounded Fuwen v6 integration profile**; read the
+[complete integration review](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/1b6a9e9e26535bd01de52fdd43552c6714d7b826/docs/qualification/activity-groups/integration-second-pass.md), then the native
 [contract](activity-groups-branch-replacement.md) and
 [qualification](qualification/activity-groups/q33.md), followed by the earlier
 [current qualification](qualification/activity-groups/zg7.md),
@@ -45,6 +46,21 @@ records 1,740 tests and 28 package-only consumer executions per OS on Windows/Li
 mapper coverage and current progress. It adopts the original preview.10 archives
 without changing this native runtime, schema or occurrence-identity model. The
 prior Fuwen preview.18/preview.9 archive pin remains preserved separately.
+Fuwen preview.20 subsequently fixes four integration defects: cross-run dynamic
+provider operation-key collisions, ungrouped fan-out mapper round trips, missing
+full provider-path admission and duplicate ungrouped repeat-name aliasing.
+Its frozen runtime/package source is
+`eca1213796d9fa4ad08423e2691cb409c892f63b`; qualification source
+`3d8ee2b9573bce350f4c05584da26eaa167dbca4` changes only an overbroad package-test
+assertion over classification-only loop-control descriptors. Windows/Linux
+.NET 8/10 gates pass 1,770 regression executions and 32 package-only consumer
+executions per OS, using identical Ubuntu producer archives for both consumers.
+The sealed review retains an earlier Windows process-loss SQLite I/O failure,
+the unchanged-source successful rerun and a separate local diagnostic recheck.
+New dynamic definitions use `fuwen-ir/v6-run-scoped-dynamics`; existing v1-v5
+definitions retain their original provider-key contracts for replay. Compile and
+admit v6 for new independent runs sharing an idempotent provider. No native
+runtime, schema, occurrence identity or original preview.10 archive changed.
 Only one terminal grouped selection with explicit controlling-boundary StepOnly
 restart is qualified; arbitrary conditional changes, nested/mixed composition,
 item waits/checkpoints, generalized group control and publication remain excluded.
@@ -258,22 +274,29 @@ evolving sets across explicit immutable root epochs, without rewriting old scope
   the selected profile.
 - Local Windows .NET qualification is not Linux/remote CI or package publication.
 
-## Next checkpoint
+## Current checkpoint and remaining scope
 
 The selected static/repeat/fan-out Fuwen profile and Windows/Linux package gates
-are complete. Use [ZG-7](qualification/activity-groups/zg7.md) and its
-[second review](qualification/activity-groups/second-pass-review.md) as the current
-checkpoint; the original preview.5/.7/.8 records retain their own source and limits.
+are complete. [ZG-7](qualification/activity-groups/zg7.md) and its
+[second review](qualification/activity-groups/second-pass-review.md) retain the
+preview.18/.9 baseline; earlier preview.5/.7/.8 records retain their own limits.
 
-The new [Q33 checkpoint](qualification/activity-groups/q33.md) implements explicit
+The [Q33 checkpoint](qualification/activity-groups/q33.md) implements explicit
 native replacement/current-selection retirement with its own crash probes and
-schema-10 evidence. The next integration activity is designing and preflight
-qualifying Fuwen selection lowering over that contract, including immutable bundle
-and package pins. Keep unsupported DSL forms rejected. Unfinished admitted work
-must not disappear by inference from a later selector result, and the current
-Fuwen/native preview.18/.9 closure must not be silently replaced.
+schema-10 evidence. Fuwen preview.19 subsequently qualified one terminal grouped
+selection with bounded explicit epochs over the original native preview.10
+archives. [Its immutable record](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/232d2c3c22442a9242e7575669d6bffe1a05bb53/docs/qualification/activity-groups/selection.md)
+preserves the separate source, package pins and Windows/Linux evidence. Keep
+unsupported DSL forms rejected. Unfinished admitted work must not disappear by
+inference from a later selector result; historical preview.18/.9 evidence remains
+unchanged.
 
-Nested/mixed DSL dynamics, evolving-selection lowering, item waits/checkpoints/
+The current Fuwen preview.20/native preview.10 pair additionally qualifies the
+integration correctness fixes linked above. The native runtime remains `bf33c05`
+and schema 10. Earlier v5 selection and ZG-7 evidence retain their own source,
+versions and archive pins.
+
+Nested/mixed DSL dynamics, nonterminal or implicit reselection, item waits/checkpoints/
 merges, grouped coordinated inference/fallback and group controls remain separate
 work. Native forks, fixed nested loops, explicit selection epochs and native
 child boundaries retain their independent qualified profiles. No broader

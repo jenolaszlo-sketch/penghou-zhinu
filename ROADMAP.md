@@ -1719,3 +1719,19 @@ No native algorithm, schema or occurrence-identity change was needed for this
 adapter lowering. Earlier archive pins/evidence remain intact. Broader dynamic
 DSL composition, arbitrary condition-driven retirement and publication remain
 separate activities.
+
+### Activity groups: complete Fuwen integration review -- 2026-10-20
+
+Fuwen preview.20's [sealed integration review](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/1b6a9e9e26535bd01de52fdd43552c6714d7b826/docs/qualification/activity-groups/integration-second-pass.md)
+fixes cross-run dynamic provider-key collisions, ungrouped fan-out mapper round
+trips, full invocation-path admission and duplicate ungrouped loop-name aliasing.
+New dynamic definitions use the v6 run-scoped invocation contract; existing
+v1-v5 definitions retain their original replay identities. Runtime/package source
+is `eca1213`; corrected qualification harness is `3d8ee2b`. Each Windows/Linux
+gate passes 1,770 regression executions plus 32 package-only consumer executions
+across .NET 8/10; both OS consumers resolve the same Ubuntu producer archives.
+The record preserves the earlier failed Windows I/O attempt and successful
+unchanged-source rerun separately. Native `bf33c05`, preview.10/schema 10,
+occurrence identities and all original native archive pins remain unchanged.
+The earlier v5 and ZG-7 records remain immutable. Broader rejected DSL forms,
+publication and downstream application adoption remain separate activities.
