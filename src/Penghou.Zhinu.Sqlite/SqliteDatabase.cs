@@ -495,6 +495,8 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         CREATE TRIGGER IF NOT EXISTS trg_workflow_group_fanout_item_immutable
         BEFORE UPDATE ON workflow_group_fanout_items
         BEGIN SELECT RAISE(ABORT, 'workflow grouped fan-out items are immutable'); END;
+        CREATE INDEX IF NOT EXISTS ix_workflow_group_fanout_item_occurrence
+            ON workflow_group_fanout_items(workflow_run_id, group_occurrence_id, expansion_id);
 
         CREATE TABLE IF NOT EXISTS workflow_group_fanout_closures
         (
