@@ -1,9 +1,12 @@
 # Releasing and upgrading Zhinu
 
-The current source candidate is `0.2.0-preview.1`. It adds optional execution
-authorization against exact `Penghou.Workflow.Abstractions` `0.1.0-preview.2`
-and upgrades SQLite from schema 5 to 6. Read the [release notes](releases/0.2.0-preview.1.md)
-and [authorization boundary](workflow-authorization.md) before upgrading a host.
+Zhinu is published on NuGet through `0.2.0-preview.4` (source `0a523826`):
+optional execution authorization against the exact neutral contract,
+execution-evidence reads with the operator CLI (preview.3), and the durable
+authority-subject binding with SQLite schema 7 (preview.4). A published
+version cannot be reused: the next release must bump `Directory.Build.props`.
+Read the [release notes](releases/0.2.0-preview.4.md) and
+[authorization boundary](workflow-authorization.md) before upgrading a host.
 
 ## Release set and ownership
 
@@ -51,8 +54,9 @@ pushes and CI runs do not publish packages. Do not reuse a published version:
 Stop older workers and back up the database before opening it with the new
 SQLite package, including through the CLI or an inspection host. Initialization
 transactionally upgrades version 5 with additive nullable columns and new
-authorization tables. Existing rows remain unprotected. Older schemas are
-rejected as before.
+authorization tables; schema 7 (preview.4) adds the run authority-subject
+binding through the same additive pattern. Existing rows remain unprotected.
+Older schemas are rejected as before.
 
 Schema-5 binaries reject the schema-6 database. Do not run mixed worker versions
 or lower the schema marker. Downgrading requires restoring the backup. New

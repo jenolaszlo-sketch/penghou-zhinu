@@ -1,6 +1,6 @@
 # Penghou.Zhinu Roadmap
 
-## Current priority: Hufu adapter qualification - 2026-10-04
+## Hufu adapter qualification — closed 2026-10-25
 
 Updated 2026-10-04. WA-1/2/3 and Zhinu ZA-2/3A/3B/4/6 are complete.
 `Penghou.Workflow.Abstractions` 0.1.0-preview.2 and all seven Zhinu
@@ -10,6 +10,18 @@ Updated 2026-10-04. WA-1/2/3 and Zhinu ZA-2/3A/3B/4/6 are complete.
 and [publication 37138352675](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/runs/37138352675).
 All seven public packages were downloaded; hashes and exact repository commit
 metadata are recorded in [public-release evidence](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/zhinu-public-release.json).
+
+Updated 2026-10-25. The Hufu qualification milestone is closed. The neutral
+`Penghou.Workflow.Abstractions` contract has graduated to stable `1.0.0`;
+Zhinu's exact-pinned `0.1.0-preview.2` was explicitly qualified as
+compatibility evidence during graduation, and adopting a newer pin remains a
+deliberate future release decision. Zhinu `0.2.0-preview.1` through
+`0.2.0-preview.4` are published and indexed on NuGet — preview.2 from
+`4ff08e9`, preview.3 (execution-evidence reads, operator CLI) from `99d9d78`,
+and preview.4 (durable authority-subject binding, SQLite schema 7) from
+`0a523826`. The current runtime milestone is the
+[ZG activity-groups milestone](#planned-runtime-milestone--hierarchical-durable-activity-groups-zg);
+its next stage is ZG-1.
 
 Hufu HA-0A/B review and test isolation are complete; HA-1 is implemented.
 The optional adapter depends only on Hufu and the exact neutral contract.
@@ -33,8 +45,11 @@ dependency; see [the profile](https://github.com/jenolaszlo-sketch/penghou-hufu/
 and [earlier core qualification](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/core-hardening.json).
 The earlier 554-case workflow qualification remains historical evidence.
 HA-2 fresh candidate-package qualification passed on both frameworks; HA-3
-remote CI and user-run Hufu publication remain open. No Hufu package or production
-host is claimed published. See the [Hufu handoff](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/zhinu-authority-handoff.md) and
+closed with remote three-platform CI and user-run publication of the Hufu
+packages, including the neutral `Penghou.Hufu.Workflow` adapter (published
+through `0.1.0-preview.11`). No production workflow host is shipped with the
+Hufu packages; governed host integration remains Hufu's own open work. See the
+[Hufu handoff](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/zhinu-authority-handoff.md) and
 [qualification ledger](https://github.com/jenolaszlo-sketch/penghou-hufu/blob/main/docs/qualification/workflow-authorization.json).
 
 - [x] **WA-1/2/3:** neutral contracts published at 0.1.0-preview.2.
@@ -45,8 +60,10 @@ host is claimed published. See the [Hufu handoff](https://github.com/jenolaszlo-
   both OS CI jobs and user-run publication passed for the exact source commit.
 - [x] **Hufu HA-0A/B and HA-1:** review, test separation and neutral adapter.
 - [x] **Hufu HA-2, local:** fresh package-backed qualification on .NET 8/10.
-- [ ] **Hufu HA-3:** remote CI and user-run Hufu publication; consult its
-  current handoff for exact gate evidence.
+- [x] **Hufu HA-3:** complete. Initial six-package publication, Luban v2
+  preview.2 and single-patch-host preview.3 passed three-platform CI and
+  user-run publication; later Hufu releases continue independently in the
+  Hufu repository and do not gate Zhinu.
 - [ ] **ZA-5B, deferred:** any replacement/retirement needs independent
   evidence preserving actual-effect and atomic-start guarantees.
 - [ ] **Luban LW-1, optional:** neutral host integration only; no mandatory
@@ -1334,13 +1351,14 @@ rank models, or learn workflow policy.
   The authoritative dependency assessment lives in Marang's
   [M5 execution-evidence contract](https://github.com/jenolaszlo-sketch/marang/blob/main/docs/m5-execution-evidence-contract.md).
 
-  **Local-source update 2026-10-15:** the 0.2.0-preview.3 candidate now includes
-  `IWorkflowSnapshotReader`/`IWorkflowSnapshotRepository`, atomic snapshots with
-  `ThroughDurableSequence`, durable/advisory classification and bounded event
-  pages. Generation/operation transitions remain snapshot-only by design. See
-  [candidate release notes](docs/releases/0.2.0-preview.3.md). This resolves the
-  older source-contract gap for this checkout; publication and consumer adoption
-  still require their own evidence. ZG extends these existing seams.
+   **Local-source update 2026-10-15:** the 0.2.0-preview.3 candidate now includes
+   `IWorkflowSnapshotReader`/`IWorkflowSnapshotRepository`, atomic snapshots with
+   `ThroughDurableSequence`, durable/advisory classification and bounded event
+   pages. Generation/operation transitions remain snapshot-only by design. See
+   [release notes](docs/releases/0.2.0-preview.3.md). `0.2.0-preview.3` (source
+   `99d9d78`) and `0.2.0-preview.4` (source `0a523826`) are published and
+   indexed on NuGet; Marang M5 consumer adoption remains Marang's own gate.
+   ZG extends these existing seams.
 
 Non-goals are retrospective interpretation, model reputation, context
 selection, procedural learning, or automatic plan mutation. Those belong to

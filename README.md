@@ -45,11 +45,13 @@ execution until the first unfinished boundary.
 
 Zhinu consumes `Penghou.Workflow.Abstractions`, a product-neutral contract
 package owned by the [Penghou repository](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/workflow-abstractions-plan.md).
-Version `0.1.0-preview.2` is published on NuGet. Zhinu's `0.2.0-preview.1`
-source candidate implements per-attempt authorization and durable approval
-against that exact contract version. Hufu or another authority implementation
-can supply the policy; Zhinu has no Hufu dependency. The optional
-`Penghou.Hufu.Workflow` adapter is a subsequent integration phase.
+The contract has graduated to stable `1.0.0` on NuGet; Zhinu packages pin the
+explicitly qualified `0.1.0-preview.2` and adopt newer versions as a deliberate
+release decision. Zhinu implements per-attempt authorization and durable
+approval against that exact contract version. Hufu or another authority
+implementation can supply the policy; Zhinu has no Hufu dependency. The
+optional `Penghou.Hufu.Workflow` adapter is published and qualified by the
+Hufu repository.
 
 Six packages target .NET 8 and .NET 10. The ASP.NET Core integration targets
 .NET 10 only. Publish the seven packages together at the same Zhinu version.
@@ -725,22 +727,23 @@ The API is currently preview and may evolve between preview releases. Public
 surface changes are tracked through shipped/unshipped API baselines and package
 validation.
 
-The [0.2.0-preview.1 candidate](docs/releases/0.2.0-preview.1.md) is committed
-and pushed in `e91804a`. Local qualification passed 1,017 tests, isolated
-seven-package consumers, old-binary compatibility and schema 5→6 migration
-checks. SQLite upgrades require a backup and stopping older workers before
-opening the database. Remote CI and user-run NuGet publication are the remaining
-release gates; see the [qualification record](docs/qualification/workflow-authorization.md)
-and [release instructions](docs/releasing.md).
+Zhinu `0.2.0-preview.1` through `0.2.0-preview.4` are published and indexed on
+NuGet: preview.3 (execution-evidence reads and the operator CLI) from source
+`99d9d78` and preview.4 (durable authority-subject binding with SQLite schema
+7) from source `0a523826`, each after Windows/Ubuntu CI and user-run
+publication. SQLite upgrades require a backup and stopping older workers
+before opening the database. Ordinary `main` pushes and CI do not publish
+packages; see the [release instructions](docs/releasing.md). The next runtime
+milestone is [hierarchical durable activity groups](ROADMAP.md).
 
-## Pending Hufu integration
+## Hufu integration
 
-The separate experimental `Penghou.Hufu.Zhinu.Sqlite` composition retains its
-narrow legacy shared-database start profile. The new neutral
-`Penghou.Hufu.Workflow` adapter follows qualification and publication of the
-Zhinu candidate. Final resource authorization, external-effect recovery and a
-governed host integration remain open. Zhinu core has no Hufu dependency. See
-[integration phases and ownership boundaries](docs/hufu-integration.md).
+The optional neutral `Penghou.Hufu.Workflow` adapter is implemented, qualified
+and published by the Hufu repository; Zhinu core has no Hufu dependency. The
+separate experimental legacy shared-database composition retains its narrow
+frozen start profile pending ZA-5B. Final resource authorization,
+external-effect recovery and a governed host integration remain open there.
+See [integration phases and ownership boundaries](docs/hufu-integration.md).
 
 ## License
 
