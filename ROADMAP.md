@@ -19,9 +19,14 @@ deliberate future release decision. Zhinu `0.2.0-preview.1` through
 `0.2.0-preview.4` are published and indexed on NuGet — preview.2 from
 `4ff08e9`, preview.3 (execution-evidence reads, operator CLI) from `99d9d78`,
 and preview.4 (durable authority-subject binding, SQLite schema 7) from
-`0a523826`. The current runtime milestone is the
-[ZG activity-groups milestone](#planned-runtime-milestone--hierarchical-durable-activity-groups-zg);
-its next stage is ZG-1.
+`0a523826`. The
+[ZG activity-groups milestone](#planned-runtime-milestone--hierarchical-durable-activity-groups-zg)
+is complete for its selected profiles and merged to `main` on 2026-10-25
+(merge `83062a3`, native baseline `bf33c05`, candidate `0.2.0-preview.10` with
+SQLite schema 10, currently unpublished). Release preparation now precedes
+additional activity-group features: see the
+[release preparation note](#release-preparation-before-new-features--2026-10-20)
+below.
 
 Hufu HA-0A/B review and test isolation are complete; HA-1 is implemented.
 The optional adapter depends only on Hufu and the exact neutral contract.
@@ -1753,6 +1758,8 @@ unchanged-source rerun separately. Native `bf33c05`, preview.10/schema 10,
 occurrence identities and all original native archive pins remain unchanged.
 The earlier v5 and ZG-7 records remain immutable. Broader rejected DSL forms,
 publication and downstream application adoption remain separate activities.
+
+### Release preparation before new features -- 2026-10-20
 
 Release preparation now precedes additional activity-group features. The
 [preview.20 release packet](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/8c7da4cfbc882804d801fe0e8b073733e4ee563c/docs/releases/preview20-readiness.md)
