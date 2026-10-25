@@ -13,6 +13,8 @@ internal sealed class InsertRunCommand
         if ((run.AuthorizationProviderId is null) != (run.AuthorizationBindingId is null))
             throw new WorkflowAuthorizationException("Protected runs must persist provider and binding IDs together.");
         ValidateAuthoritySubjectBinding(run.AuthoritySubjectBinding);
+        if (run.GroupFanOutUsed)
+            throw new WorkflowStateException("The grouped fan-out marker is store-managed and cannot be set during run creation.");
         await using var command = SqliteStoreSupport.CreateCommand(connection, transaction, """
             INSERT INTO workflow_runs
             (id, workflow_name, workflow_version, status, input_json,
@@ -20,14 +22,14 @@ internal sealed class InsertRunCommand
              updated_at, completed_at, deadline, metadata_json, parent_run_id,
              source_run_id, trace_id, lease_owner, lease_expires_at,
              definition_fingerprint, authorization_provider_id,
-             authorization_binding_id, authority_subject_binding)
+             authorization_binding_id, authority_subject_binding, group_manifest_digest, group_fanout_used)
             VALUES
             ($id, $name, $version, $status, $inputJson,
              $inputType, $outputJson, $outputType, $errorJson, $createdAt,
              $updatedAt, $completedAt, $deadline, $metadataJson, $parentRunId,
              $sourceRunId, $traceId, $leaseOwner, $leaseExpiresAt,
              $definitionFingerprint, $authorizationProviderId,
-             $authorizationBindingId, $authoritySubjectBinding);
+             $authorizationBindingId, $authoritySubjectBinding, $groupManifestDigest, 0);
             """);
         AddRunParameters(command, run);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -72,6 +74,7 @@ internal sealed class InsertRunCommand
         command.Parameters.AddWithValue("$authorizationProviderId", SqliteStoreSupport.DbValue(run.AuthorizationProviderId));
         command.Parameters.AddWithValue("$authorizationBindingId", SqliteStoreSupport.DbValue(run.AuthorizationBindingId));
         command.Parameters.AddWithValue("$authoritySubjectBinding", SqliteStoreSupport.DbValue(run.AuthoritySubjectBinding));
+        command.Parameters.AddWithValue("$groupManifestDigest", SqliteStoreSupport.DbValue(run.GroupManifestDigest));
     }
 
     /// <summary>

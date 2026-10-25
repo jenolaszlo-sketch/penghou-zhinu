@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/zhinu-activity-groups]
+  workflow_dispatch:
   pull_request:
     branches: [main]
 
@@ -19,6 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Use runner work volume for temporary databases
+        shell: pwsh
+        run: |
+          $temporary = Join-Path $env:RUNNER_TEMP 'activity-groups'
+          New-Item -ItemType Directory -Path $temporary -Force | Out-Null
+          foreach ($name in @('TEMP', 'TMP', 'TMPDIR')) { "$name=$temporary" >> $env:GITHUB_ENV }
+
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
@@ -31,7 +39,7 @@ jobs:
 
       - run: dotnet format Penghou.Zhinu.slnx --verify-no-changes --no-restore
 
-      - run: dotnet test Penghou.Zhinu.slnx -c Release --no-build --no-restore --logger trx --results-directory test-results
+      - run: dotnet test Penghou.Zhinu.slnx -c Release --no-build --no-restore --logger trx --logger 'console;verbosity=normal' --blame-hang-timeout 5m --blame-hang-dump-type none --results-directory test-results
 
       - run: dotnet pack Penghou.Zhinu.slnx -c Release --no-build --no-restore -o artifacts
 
@@ -50,6 +58,7 @@ jobs:
           name: zhinu-qualification-${{ matrix.os }}
           path: |
             test-results/*.trx
+            test-results/**/Sequence*.xml
             artifacts/*.nupkg
             artifacts/*.snupkg
             qualification/**/qualification.json

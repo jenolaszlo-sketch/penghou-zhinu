@@ -49,6 +49,12 @@ public sealed partial class WorkflowContext
         ArgumentNullException.ThrowIfNull(continueWhile);
         ArgumentNullException.ThrowIfNull(body);
         ArgumentNullException.ThrowIfNull(loopOptions);
+        if (loopOptions.ControlGroup is { } controlGroup)
+        {
+            if (controlGroup.Membership.Role != ActivityGroupMemberRole.Control)
+                throw new WorkflowConfigurationException("Loop control membership must have the Control role.");
+            ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, controlGroup, scope.ParentIteration);
+        }
         if (scope.Depth > options.MaxLoopNestingDepth)
         {
             throw new LoopNestingLimitExceededException(
@@ -90,17 +96,10 @@ public sealed partial class WorkflowContext
                     scope,
                     resolvedLimits,
                     conditionDependency,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
             }
-            var conditionOptions = conditionDependency is null
-                ? loopOptions.ContinueWhileAuthorization is null
-                    ? null
-                    : new StepOptions { Authorization = loopOptions.ContinueWhileAuthorization }
-                : new StepOptions
-                {
-                    DependsOn = [conditionDependency],
-                    Authorization = loopOptions.ContinueWhileAuthorization
-                };
+            var conditionOptions = LoopControlOptions(scope, loopOptions.ControlGroup,
+                conditionDependency is null ? null : [conditionDependency], loopOptions.ContinueWhileAuthorization);
             var shouldContinue = await StepAsync(
                 conditionStepKey,
                 new LoopConditionInput<TState>(state, loopOptions.MaxIterations),
@@ -116,7 +115,7 @@ public sealed partial class WorkflowContext
                     iterationNumber - 1,
                     LoopCompletionReason.ConditionFalse,
                     conditionStepKey,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
             }
 
             if (iterationNumber > loopOptions.MaxIterations)
@@ -130,7 +129,7 @@ public sealed partial class WorkflowContext
                         null,
                         null),
                     [conditionStepKey],
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
             }
 
             var commitStepKey = DurableLoopStepKeys.Commit(iteration);
@@ -149,7 +148,7 @@ public sealed partial class WorkflowContext
                         iterationNumber,
                         LoopCompletionReason.Break,
                         commitStepKey,
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
                 }
                 continue;
             }
@@ -158,7 +157,7 @@ public sealed partial class WorkflowContext
                 scope,
                 resolvedLimits,
                 conditionStepKey,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
 
             var loopIteration = new WorkflowLoopIteration<TState>(
                 this,
@@ -181,7 +180,7 @@ public sealed partial class WorkflowContext
                 scope,
                 resolvedLimits,
                 commitDependencies,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
             var committedOutcome = await StepAsync(
                 commitStepKey,
                 pendingCommit,
@@ -196,7 +195,7 @@ public sealed partial class WorkflowContext
                         token).ConfigureAwait(false);
                     return value;
                 },
-                new StepOptions { DependsOn = commitDependencies },
+                LoopControlOptions(scope, loopOptions.ControlGroup, commitDependencies),
                 cancellationToken).ConfigureAwait(false);
             state = committedOutcome.State;
             previousCommitStepKey = commitStepKey;
@@ -208,7 +207,7 @@ public sealed partial class WorkflowContext
                     iterationNumber,
                     LoopCompletionReason.Break,
                     commitStepKey,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken, loopOptions.ControlGroup).ConfigureAwait(false);
             }
         }
     }
@@ -243,9 +242,8 @@ public sealed partial class WorkflowContext
             }
             resolution = storedResolution;
         }
-        var stepOptions = entryDependencyStepKey is null
-            ? null
-            : new StepOptions { DependsOn = [entryDependencyStepKey] };
+        var stepOptions = LoopControlOptions(scope, loopOptions.ControlGroup,
+            entryDependencyStepKey is null ? null : [entryDependencyStepKey]);
         return await StepAsync(
             DurableLoopStepKeys.Limits(scope),
             resolution,
@@ -292,18 +290,20 @@ public sealed partial class WorkflowContext
         DurableLoopScope scope,
         ResolvedLoopLimits limits,
         string? dependencyStepKey,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        ActivityGroupStepBinding? controlGroup = null) =>
         EnsureTimeLimitNotExceededAsync(
             scope,
             limits,
             dependencyStepKey is null ? [] : [dependencyStepKey],
-            cancellationToken);
+            cancellationToken, controlGroup);
 
     private async Task EnsureTimeLimitNotExceededAsync(
         DurableLoopScope scope,
         ResolvedLoopLimits limits,
         IReadOnlyCollection<string> dependencyStepKeys,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ActivityGroupStepBinding? controlGroup = null)
     {
         // Rollback replay reconstructs already committed forward work only so
         // compensation delegates can be rebound. A wall-clock limit that
@@ -326,14 +326,15 @@ public sealed partial class WorkflowContext
                 deadline,
                 limits.TimeBudget),
             dependencyStepKeys,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken, controlGroup).ConfigureAwait(false);
     }
 
     private async Task FailLoopLimitAsync(
         DurableLoopScope scope,
         LoopLimitExceededEvent evidence,
         IReadOnlyCollection<string> dependencyStepKeys,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ActivityGroupStepBinding? controlGroup = null)
     {
         await StepAsync(
             DurableLoopStepKeys.Limit(scope),
@@ -346,9 +347,7 @@ public sealed partial class WorkflowContext
                     token).ConfigureAwait(false);
                 return value;
             },
-            dependencyStepKeys.Count == 0
-                ? null
-                : new StepOptions { DependsOn = dependencyStepKeys },
+            LoopControlOptions(scope, controlGroup, dependencyStepKeys),
             cancellationToken).ConfigureAwait(false);
 
         throw evidence.LimitKind == LoopLimitKind.IterationCount
@@ -368,7 +367,8 @@ public sealed partial class WorkflowContext
         int iterations,
         LoopCompletionReason reason,
         string dependencyStepKey,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        ActivityGroupStepBinding? controlGroup = null) =>
         StepAsync(
             scope.FinalStepKey,
             state,
@@ -383,8 +383,18 @@ public sealed partial class WorkflowContext
                     token).ConfigureAwait(false);
                 return value;
             },
-            new StepOptions { DependsOn = [dependencyStepKey] },
+            LoopControlOptions(scope, controlGroup, [dependencyStepKey]),
             cancellationToken);
+
+    private static StepOptions? LoopControlOptions(DurableLoopScope scope, ActivityGroupStepBinding? group,
+        IReadOnlyCollection<string>? dependencies, WorkflowAuthorizationDeclaration? authorization = null) =>
+        group is null && dependencies is null && authorization is null ? null : new StepOptions
+        {
+            Group = group,
+            GroupExecutionScope = scope.ParentIteration,
+            DependsOn = dependencies,
+            Authorization = authorization
+        };
 
     private sealed record LoopCommittedOutcome<TState>(
         LoopBodyOutcomeKind Kind,

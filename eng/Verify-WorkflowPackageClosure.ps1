@@ -216,9 +216,28 @@ if (File.Exists(databasePath)) File.Delete(databasePath);
 var store = new SqliteWorkflowStore(new ZhinuSqliteOptions { DatabasePath = databasePath, Pooling = false });
 var ordinary = new OrdinaryWorkflow();
 var protectedWorkflow = new ProtectedWorkflow();
+var groupManifest = ActivityGroupManifest.Create([
+    new ActivityGroupDefinition("root", ActivityGroupKind.Logical, "Root"),
+    new ActivityGroupDefinition("work", ActivityGroupKind.Logical, "Work", "root")]);
+var nestedManifest = ActivityGroupManifest.Create([
+    new ActivityGroupDefinition("outer", ActivityGroupKind.Logical, "Outer"),
+    new ActivityGroupDefinition("inner", ActivityGroupKind.Logical, "Inner", "outer"),
+    new ActivityGroupDefinition("leaf", ActivityGroupKind.Logical, "Leaf", "inner")]);
 var registry = new WorkflowRegistry()
     .Register("ordinary", "1", ordinary)
-    .Register("protected", "1", protectedWorkflow);
+    .Register("protected", "1", protectedWorkflow)
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped", Version = "1" }, () => new GroupedWorkflow(), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-fanout", Version = "1" }, () => new GroupedFanOutWorkflow(), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-nested", Version = "1" }, () => new GroupedNestedWorkflow(), nestedManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-epochs", Version = "1" }, () => new GroupedEpochWorkflow(), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-parent", Version = "1" }, () => new GroupedChildWorkflow(true), groupManifest))
+    .Register(new WorkflowRegistration<string, string>(
+        new WorkflowDefinition { Name = "grouped-child", Version = "1" }, () => new GroupedChildWorkflow(false), groupManifest));
 
 await using (var directEngine = new WorkflowEngine(store, registry, new ZhinuOptions()))
 {
@@ -242,9 +261,309 @@ await using (var builderEngine = new WorkflowEngineBuilder()
     if (authorizer.Contexts.Count != 1 || authorizer.Contexts[0].Requirements.Count != 1 ||
         authorizer.Contexts[0].Requirements.Single().Capability != "execute")
         throw new InvalidOperationException("Protected execution did not pass its declared requirement to the authorizer.");
+    var groupedId = await builderEngine.StartAsync("grouped", "1", "package-closure");
+    await builderEngine.ExecuteAsync(groupedId);
+    var groupedResult = await builderEngine.WaitForCompletionAsync<string>(groupedId);
+    // The configured authority profile also evaluates loop controls with empty
+    // requirements. Only the two body callbacks declare the execute capability.
+    var declaredGroupContexts = authorizer.Contexts.Skip(1).Where(context => context.Requirements.Count > 0).ToArray();
+    if (groupedResult != "2" || declaredGroupContexts.Length != 2 ||
+        declaredGroupContexts.Any(context => context.Requirements.Count != 1 || context.Requirements.Single().Capability != "execute"))
+        throw new InvalidOperationException("Grouped loop execution lost its result or authorization declarations.");
+    var reopened = new SqliteWorkflowStore(new ZhinuSqliteOptions { DatabasePath = databasePath, Pooling = false });
+    if ((await reopened.GetGroupManifestAsync(groupedId))?.CanonicalJson != groupManifest.CanonicalJson)
+        throw new InvalidOperationException("Grouped manifest was not durably installed.");
+    var groupedSteps = (await reopened.GetStepsAsync(groupedId)).Where(s => s.StepKey.EndsWith("/body/work", StringComparison.Ordinal)).ToArray();
+    if (groupedSteps.Length != 2) throw new InvalidOperationException("Grouped loop did not repeat twice.");
+    var occurrenceIds = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var step in groupedSteps)
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Grouped revision membership was lost.");
+        var occurrence = await reopened.GetGroupOccurrenceAsync(groupedId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Grouped occurrence was lost.");
+        if (membership.StepRevision != step.Revision || occurrence.GroupKey != "work" || occurrence.ParentGroupOccurrenceId is null)
+            throw new InvalidOperationException("Grouped revision or parent association changed.");
+        occurrenceIds.Add(occurrence.GroupOccurrenceId);
+    }
+    if (occurrenceIds.Count != 2) throw new InvalidOperationException("Repeated group occurrences collided.");
+    var groupForkId = await builderEngine.ForkAsync(groupedId, "new-step");
+    await builderEngine.ExecuteAsync(groupForkId);
+    if (await builderEngine.WaitForCompletionAsync<string>(groupForkId) != "2" ||
+        (await reopened.GetRunAsync(groupForkId))?.SourceRunId != groupedId ||
+        (await reopened.GetGroupManifestAsync(groupForkId))?.CanonicalJson != groupManifest.CanonicalJson)
+        throw new InvalidOperationException("Grouped fork lost native reuse, source lineage or destination manifest.");
+    var copiedGroupSteps = (await reopened.GetStepsAsync(groupForkId)).Where(step => step.StepKey.EndsWith("/body/work", StringComparison.Ordinal)).ToArray();
+    if (copiedGroupSteps.Length != 2) throw new InvalidOperationException("Grouped fork lost copied loop members.");
+    foreach (var copied in copiedGroupSteps)
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(copied.Id)
+            ?? throw new InvalidOperationException("Grouped fork lost copied membership.");
+        var occurrence = await reopened.GetGroupOccurrenceAsync(groupForkId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Grouped fork lost destination occurrence.");
+        if (occurrenceIds.Contains(occurrence.GroupOccurrenceId) || occurrence.WorkflowRunId != groupForkId ||
+            occurrence.ParentGroupOccurrenceId is null || membership.StepRevision != copied.Revision)
+            throw new InvalidOperationException("Grouped fork retained source occurrence references.");
+        var parent = await reopened.GetGroupOccurrenceAsync(groupForkId, occurrence.ParentGroupOccurrenceId);
+        if (parent?.WorkflowRunId != groupForkId || parent.GroupKey != "root")
+            throw new InvalidOperationException("Grouped fork lost destination parent lineage.");
+    }
+    var contextsBeforeFanOut = authorizer.Contexts.Count;
+    var fanOutId = await builderEngine.StartAsync("grouped-fanout", "1", "package-closure");
+    await builderEngine.ExecuteAsync(fanOutId);
+    if (await builderEngine.WaitForCompletionAsync<string>(fanOutId) != "A:B")
+        throw new InvalidOperationException("Grouped fan-out changed native results.");
+    var fanOutState = await reopened.GetGroupFanOutAsync(fanOutId, "items");
+    if (fanOutState is not { IsComplete: true, ItemCount: 2 } ||
+        (await reopened.GetRunAsync(fanOutId))?.GroupFanOutUsed != true)
+        throw new InvalidOperationException("Grouped fan-out enumeration/closure/marker was not durable.");
+    var fanOutContexts = authorizer.Contexts.Skip(contextsBeforeFanOut).Where(context => context.Requirements.Count > 0).ToArray();
+    if (fanOutContexts.Length != 2 || fanOutContexts.Any(context => context.Requirements.Single().Capability != "execute"))
+        throw new InvalidOperationException("Grouped fan-out lost its authorization declarations.");
+    var fanOutIds = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var step in (await reopened.GetStepsAsync(fanOutId)).Where(step => step.StepKey.StartsWith("items.", StringComparison.Ordinal)))
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Fan-out item lost its revision membership.");
+        var occurrence = await reopened.GetGroupOccurrenceAsync(fanOutId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Fan-out item lost its occurrence.");
+        if (membership.StepRevision != step.Revision || occurrence.ParentGroupOccurrenceId is null ||
+            !occurrence.ExecutionCoordinate.Contains("\"version\":2", StringComparison.Ordinal))
+            throw new InvalidOperationException("Fan-out item lost its parent or v2 coordinate.");
+        fanOutIds.Add(occurrence.GroupOccurrenceId);
+    }
+    if (fanOutIds.Count != 2) throw new InvalidOperationException("Fan-out occurrences collided.");
+    var nestedId = await builderEngine.StartAsync("grouped-nested", "1", "identical-input");
+    await builderEngine.ExecuteAsync(nestedId);
+    if (await builderEngine.WaitForCompletionAsync<string>(nestedId) != "3" ||
+        (await reopened.GetGroupManifestAsync(nestedId))?.CanonicalJson != nestedManifest.CanonicalJson)
+        throw new InvalidOperationException("Nested repetition lost its result or manifest.");
+    var nestedLeaves = (await reopened.GetStepsAsync(nestedId)).Where(step => step.StepKey.EndsWith("/body/work", StringComparison.Ordinal)).ToArray();
+    var nestedIds = new HashSet<string>(StringComparer.Ordinal);
+    var outerIds = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var step in nestedLeaves)
+    {
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Nested leaf membership missing.");
+        var leaf = await reopened.GetGroupOccurrenceAsync(nestedId, membership.GroupOccurrenceId)
+            ?? throw new InvalidOperationException("Nested leaf occurrence missing.");
+        var inner = await reopened.GetGroupOccurrenceAsync(nestedId, leaf.ParentGroupOccurrenceId!);
+        var outer = await reopened.GetGroupOccurrenceAsync(nestedId, inner!.ParentGroupOccurrenceId!);
+        using var coordinate = System.Text.Json.JsonDocument.Parse(leaf.ExecutionCoordinate);
+        if (leaf.GroupKey != "leaf" || inner.GroupKey != "inner" || outer?.GroupKey != "outer" ||
+            coordinate.RootElement.GetArrayLength() != 2 || inner.ExecutionCoordinate != leaf.ExecutionCoordinate ||
+            membership.StepRevision != step.Revision || outer.ParentGroupOccurrenceId is not null)
+            throw new InvalidOperationException("Nested immediate-parent lineage changed.");
+        nestedIds.Add(leaf.GroupOccurrenceId);
+        outerIds.Add(outer.GroupOccurrenceId);
+    }
+    if (nestedLeaves.Length != 6 || nestedIds.Count != 6 || outerIds.Count != 3)
+        throw new InvalidOperationException("Nested repetition aliased local inner positions across outer iterations.");
+    var epochsId = await builderEngine.StartAsync("grouped-epochs", "1", "same-value");
+    await builderEngine.ExecuteAsync(epochsId);
+    if (await builderEngine.WaitForCompletionAsync<string>(epochsId) != "five-epochs" ||
+        await reopened.HasIncompleteGroupFanOutAsync(epochsId))
+        throw new InvalidOperationException("Evolving selection lost an epoch obligation.");
+    var epochOccurrences = new HashSet<string>(StringComparer.Ordinal);
+    for (var epoch = 1; epoch <= 5; epoch++)
+    {
+        var scope = "epochs." + epoch.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var state = await reopened.GetGroupFanOutAsync(epochsId, scope);
+        if (state is not { IsComplete: true }) throw new InvalidOperationException("An explicit epoch did not close.");
+        var members = (await reopened.GetStepsAsync(epochsId)).Where(step => step.StepKey.StartsWith(scope + ".", StringComparison.Ordinal));
+        foreach (var step in members)
+        {
+            var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+                ?? throw new InvalidOperationException("Epoch member lost its history.");
+            var occurrence = await reopened.GetGroupOccurrenceAsync(epochsId, membership.GroupOccurrenceId)
+                ?? throw new InvalidOperationException("Epoch occurrence missing.");
+            if (!epochOccurrences.Add(occurrence.GroupOccurrenceId) || occurrence.ParentGroupOccurrenceId is null)
+                throw new InvalidOperationException("Identical/reappearing item aliased a prior epoch.");
+        }
+    }
+    if (epochOccurrences.Count != 14) throw new InvalidOperationException("Evolving epoch cardinality changed.");
+
+    var parentId = await builderEngine.StartAsync("grouped-parent", "1", "package-closure");
+    await builderEngine.ExecuteAsync(parentId);
+    if (await builderEngine.WaitForCompletionAsync<string>(parentId) != "package-closure:child")
+        throw new InvalidOperationException("Grouped child invocation changed native output.");
+    var parentSteps = await reopened.GetStepsAsync(parentId);
+    string? parentOccurrence = null;
+    foreach (var (key, role) in new[] { ("child:start", ActivityGroupMemberRole.Control), ("child:wait", ActivityGroupMemberRole.Work) })
+    {
+        var step = parentSteps.Single(step => step.StepKey == key);
+        var membership = await reopened.GetStepGroupMembershipAsync(step.Id)
+            ?? throw new InvalidOperationException("Child parent boundary lost membership.");
+        if (membership.Role != role || (parentOccurrence is not null && parentOccurrence != membership.GroupOccurrenceId))
+            throw new InvalidOperationException("Child boundary role or shared parent occurrence changed.");
+        parentOccurrence = membership.GroupOccurrenceId;
+    }
+    var childId = System.Text.Json.JsonSerializer.Deserialize<Guid>(parentSteps.Single(step => step.StepKey == "child:start").OutputJson!);
+    if ((await reopened.GetRunAsync(childId))?.ParentRunId != parentId ||
+        (await reopened.GetGroupManifestAsync(childId))?.CanonicalJson != groupManifest.CanonicalJson)
+        throw new InvalidOperationException("Child admission lost native parent or independent manifest.");
+    var childStep = (await reopened.GetStepsAsync(childId)).Single();
+    var childMember = await reopened.GetStepGroupMembershipAsync(childStep.Id)
+        ?? throw new InvalidOperationException("Child work lost its own membership.");
+    var childGroup = await reopened.GetGroupOccurrenceAsync(childId, childMember.GroupOccurrenceId);
+    if (childGroup?.WorkflowRunId != childId || childGroup.GroupOccurrenceId == parentOccurrence ||
+        childGroup.ParentGroupOccurrenceId is null ||
+        (await reopened.GetGroupOccurrenceAsync(childId, childGroup.ParentGroupOccurrenceId))?.WorkflowRunId != childId ||
+        await reopened.GetGroupOccurrenceAsync(parentId, childGroup.GroupOccurrenceId) is not null)
+        throw new InvalidOperationException("Child group tree crossed its run boundary.");
+
+    using var hierarchyReader = new WorkflowGroupReader(reopened);
+    var hierarchy = await hierarchyReader.GetRunGroupSnapshotAsync(nestedId);
+    if (hierarchy.Status != WorkflowGroupReadStatus.Success || hierarchy.Value is not { OccurrenceCount: 15, ProvenanceIncluded: false })
+        throw new InvalidOperationException("Packaged hierarchy snapshot did not retain the nested tree.");
+    var token = hierarchy.Value.SnapshotToken;
+    var page = await hierarchyReader.QueryGroupChildrenAsync(nestedId, token, pageSize: 1);
+    var rootOccurrences = new List<string>();
+    while (true)
+    {
+        if (page.Status != WorkflowGroupReadStatus.Success) throw new InvalidOperationException("Packaged hierarchy paging failed.");
+        rootOccurrences.AddRange(page.Value!.Items.Where(node => node.Occurrence is not null).Select(node => node.Occurrence!.OccurrenceId));
+        if (!page.Value.HasMore) break;
+        page = await hierarchyReader.QueryGroupChildrenAsync(nestedId, token, pageSize: 1, cursor: page.Value.NextCursor);
+    }
+    if (rootOccurrences.Count != 3 || rootOccurrences.Distinct().Count() != 3)
+        throw new InvalidOperationException("Packaged hierarchy paging aliased occurrences.");
+    foreach (var rootOccurrence in rootOccurrences)
+    {
+        var state = await hierarchyReader.GetGroupStateAsync(nestedId, token, rootOccurrence);
+        if (state.Status != WorkflowGroupReadStatus.Success || state.Value!.State.Status != StepStatus.Completed ||
+            state.Value.State.Work.Known != 2 || state.Value.State.TotalCount != 2 || state.Value.ObservedAt != hierarchy.Value.CapturedAt)
+            throw new InvalidOperationException("Packaged aggregate double-counted containers or lost snapshot consistency.");
+    }
+    var parentSnapshot = await hierarchyReader.GetRunGroupSnapshotAsync(parentId);
+    var parentRoots = await hierarchyReader.QueryGroupChildrenAsync(parentId, parentSnapshot.Value!.SnapshotToken);
+    if (!parentRoots.Value!.Items.Any(node => node.ChildRun is { IsAvailable: true } link && link.RunId == childId && link.ParentRunId == parentId))
+        throw new InvalidOperationException("Packaged hierarchy omitted the independent native child link.");
+    var parentGroup = parentRoots.Value.Items.Single(node => node.Occurrence is not null).Occurrence!;
+    var parentState = (await hierarchyReader.GetGroupStateAsync(parentId, parentSnapshot.Value.SnapshotToken, parentGroup.OccurrenceId)).Value!;
+    if (parentState.State.Work.Known != 1 || parentState.State.Control.Known != 1 || parentState.State.Status != StepStatus.Completed)
+        throw new InvalidOperationException("Packaged aggregate folded child work into its parent or lost Control roles.");
+    var epochsSnapshot = (await hierarchyReader.GetRunGroupSnapshotAsync(epochsId)).Value!;
+    var epochsRoot = (await hierarchyReader.QueryGroupChildrenAsync(epochsId, epochsSnapshot.SnapshotToken)).Value!.Items.Single(node => node.Occurrence is not null).Occurrence!;
+    var epochState = (await hierarchyReader.GetGroupStateAsync(epochsId, epochsSnapshot.SnapshotToken, epochsRoot.OccurrenceId)).Value!;
+    if (epochState.State.Status != StepStatus.Completed || epochState.State.Work.Known != 14 || epochState.State.TotalCount != 14)
+        throw new InvalidOperationException("Packaged aggregate lost independently admitted epoch obligations.");
+    using var otherReader = builderEngine.CreateGroupReader();
+    if ((await otherReader.QueryGroupChildrenAsync(nestedId, token)).Status != WorkflowGroupReadStatus.ResyncRequired)
+        throw new InvalidOperationException("A reader accepted another cache's token.");
 }
 
-Console.WriteLine("Package closure consumer completed both direct SQLite and protected builder execution.");
+Console.WriteLine("Package closure consumer completed direct SQLite, protected builder, grouped loop/fork/fan-out, 3x2 nested repetition, five immutable evolving-selection epochs, independent grouped child boundaries, bounded hierarchy query paging and coherent aggregate state/progress.");
+
+sealed class GroupedChildWorkflow(bool parent) : IWorkflow<string, string>
+{
+    public Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var root = context.GetActivityGroup("root");
+        var work = context.GetActivityGroup("work", root);
+        var binding = new ActivityGroupStepBinding(new ActivityGroupMembership("work"), work);
+        return parent
+            ? context.StartChildAsync<string, string>("child", "grouped-child", "1", input, new ChildRunOptions
+            {
+                StartGroup = new ActivityGroupStepBinding(new ActivityGroupMembership("work", ActivityGroupMemberRole.Control), work),
+                WaitGroup = binding
+            }, cancellationToken)
+            : context.StepAsync("work", input, (value, _) => Task.FromResult(value + ":child"),
+                new StepOptions { Group = binding }, cancellationToken);
+    }
+}
+
+sealed class GroupedEpochWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var schedule = await context.StepAsync("epoch-schedule", input, (_, _, _) => Task.FromResult(new[] { 1, 2, 3, 4, 5 }), cancellationToken: cancellationToken);
+        foreach (var epoch in schedule)
+        {
+            var suffix = epoch.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var selection = "selection." + suffix;
+            var selected = await context.StepAsync(selection, epoch, (value, _, _) => Task.FromResult(value switch
+            {
+                1 => new[] { "A", "B", "C" },
+                2 => new[] { "A", "C", "D", "E" },
+                3 => new[] { "C", "A" },
+                4 => new[] { "A", "C" },
+                _ => new[] { "B", "A", "C" }
+            }), cancellationToken: cancellationToken);
+            var result = await context.FanOutAsync("epochs." + suffix, selected, key => key,
+                (key, _, _) => Task.FromResult(key + ":" + input), new FanOutOptions { MaxDegreeOfParallelism = 1 },
+                new StepOptions
+                {
+                    DependsOn = [selection],
+                    FanOutGroup = new ActivityGroupFanOutBinding(new ActivityGroupMembership("work"), selection, context.GetActivityGroup("root"))
+                }, cancellationToken);
+            if (!result.SequenceEqual(selected.Select(key => key + ":" + input), StringComparer.Ordinal))
+                throw new InvalidOperationException("Epoch ordering changed historical item ownership.");
+        }
+        return "five-epochs";
+    }
+}
+
+sealed class GroupedNestedWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var result = await context.LoopAsync("outer", 0, state => state < 3, async (outer, ct) =>
+        {
+            var outerGroup = outer.GetActivityGroup("outer");
+            await outer.LoopAsync("inner", 0, state => state < 2, async (inner, innerCt) =>
+            {
+                var innerGroup = inner.GetActivityGroup("inner", outerGroup);
+                var leaf = inner.GetActivityGroup("leaf", innerGroup);
+                await inner.StepAsync("work", input, (value, _, _) => Task.FromResult(value), new StepOptions
+                {
+                    Group = new ActivityGroupStepBinding(new ActivityGroupMembership("leaf"), leaf)
+                }, innerCt);
+                return inner.Continue(inner.State + 1);
+            }, new LoopOptions(2), ct);
+            return outer.Continue(outer.State + 1);
+        }, new LoopOptions(3), cancellationToken);
+        return result.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+}
+
+sealed class GroupedFanOutWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var selected = await context.StepAsync("select", input, (_, _) => Task.FromResult(new[] { "a", "b" }), cancellationToken: cancellationToken);
+        var values = await context.FanOutAsync("items", selected, value => value,
+            (value, _, _) => Task.FromResult(value.ToUpperInvariant()), new FanOutOptions { MaxDegreeOfParallelism = 1 },
+            new StepOptions
+            {
+                DependsOn = ["select"],
+                FanOutGroup = new ActivityGroupFanOutBinding(new ActivityGroupMembership("work"), "select", context.GetActivityGroup("root")),
+                Authorization = new WorkflowAuthorizationDeclaration([
+                    new ExecutionRequirement("workflow.capability", 1, "execute", "package-closure", null)])
+            }, cancellationToken);
+        return string.Join(':', values);
+    }
+}
+
+sealed class GroupedWorkflow : IWorkflow<string, string>
+{
+    public async Task<string> RunAsync(WorkflowContext context, string input, CancellationToken cancellationToken)
+    {
+        var root = context.GetActivityGroup("root");
+        var result = await context.LoopAsync("repeat", 0, state => state < 2, async (iteration, ct) =>
+        {
+            var group = iteration.GetActivityGroup("work", root);
+            await iteration.StepAsync("work", input, (value, _, _) => Task.FromResult(value), new StepOptions
+            {
+                Group = new ActivityGroupStepBinding(new ActivityGroupMembership("work"), group),
+                Authorization = new WorkflowAuthorizationDeclaration([
+                    new ExecutionRequirement("workflow.capability", 1, "execute", "package-closure", null)])
+            }, ct);
+            return iteration.Continue(iteration.State + 1);
+        }, new LoopOptions(2), cancellationToken);
+        return result.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+}
 
 sealed class OrdinaryWorkflow : IWorkflow<string, string>
 {

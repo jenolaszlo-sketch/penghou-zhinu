@@ -27,6 +27,7 @@ public sealed partial class WorkflowContext
     private readonly Action<Guid>? onEventAppended;
     private readonly IWorkflowStepResolver workflowStepResolver;
     private readonly bool allowStepSupersede;
+    private readonly ActivityGroupManifest? groupManifest;
     private readonly StepLockManager stepLocks = new();
     private readonly DependencyTracker dependencies = new();
     private readonly ChildRunCoordinator childRuns;
@@ -60,9 +61,11 @@ public sealed partial class WorkflowContext
         IReadOnlyDictionary<string, WorkflowStepCompensation>? rollbackCompensations = null,
         Action<Guid>? onEventAppended = null,
         IWorkflowStepResolver? workflowStepResolver = null,
-        bool allowStepSupersede = false)
+        bool allowStepSupersede = false,
+        ActivityGroupManifest? groupManifest = null)
     {
         WorkflowRunId = workflowRunId;
+        this.groupManifest = groupManifest;
         this.allowStepSupersede = allowStepSupersede;
         this.store = store;
         this.ownerId = ownerId;
@@ -92,6 +95,16 @@ public sealed partial class WorkflowContext
     }
 
     public Guid WorkflowRunId { get; }
+
+    /// <summary>Creates an explicit occurrence in the run's root execution scope.</summary>
+    public ActivityGroupOccurrence GetActivityGroup(string groupKey, ActivityGroupOccurrence? parent = null) =>
+        GetActivityGroup(groupKey, parent, null);
+
+    internal ActivityGroupOccurrence GetActivityGroup(string groupKey, ActivityGroupOccurrence? parent,
+        DurableLoopIterationIdentity? iteration) => ActivityGroupOccurrence.Create(
+            WorkflowRunId, groupManifest ?? throw new WorkflowConfigurationException(
+                "This workflow has no admitted group manifest."), groupKey, parent,
+            ActivityGroupOccurrence.Coordinate(iteration));
 
     /// <summary>
     /// Publishes a run-level artifact that is not owned by a particular step.
@@ -284,7 +297,11 @@ public sealed partial class WorkflowContext
         ValidateStepKey(stepKey);
         ArgumentNullException.ThrowIfNull(operation);
         var configured = stepOptions ?? new StepOptions();
+        if (configured.FanOutGroup is not null)
+            throw new WorkflowConfigurationException("A per-item fan-out group declaration can only be consumed by native FanOutAsync.");
         configured.Validate();
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, configured.Group, configured.GroupExecutionScope,
+            configured.GroupFanOutExecutionScope);
         var dependencies = ResolveDependencies(configured);
         if (dependencies is not null && dependencies.Contains(stepKey))
             throw new WorkflowStateException($"Step '{stepKey}' cannot depend on itself.");
@@ -351,7 +368,8 @@ public sealed partial class WorkflowContext
                         implementationKey,
                         cancellationToken,
                         options.ExecutionAuthorization is null ? null :
-                            WorkflowAuthorizationCodec.Declaration(configured.Authorization, configured.CompensationAuthorization)),
+                            WorkflowAuthorizationCodec.Declaration(configured.Authorization, configured.CompensationAuthorization),
+                        configured.Group, configured.FanOutClaim),
                     (waiting, waitCancellation) => WaitUntilAsync(
                         waiting.Step.AvailableAt,
                         waitCancellation),
@@ -595,12 +613,37 @@ public sealed partial class WorkflowContext
         return WaitForSignalAsync<T>(stepKey, signal.Name, timeout, cancellationToken);
     }
 
-    public async Task<T> WaitForSignalAsync<T>(
+    public Task<T> WaitForSignalAsync<T>(
         string stepKey,
         string signalName,
         TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default) =>
+        WaitForSignalCoreAsync<T>(stepKey, signalName, timeout, null, cancellationToken);
+
+    /// <summary>Durably waits for a signal and records the wait step's explicit group membership.</summary>
+    public Task<T> WaitForGroupedSignalAsync<T>(
+        string stepKey,
+        string signalName,
+        ActivityGroupStepBinding group,
+        TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(group);
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, group);
+        return WaitForSignalCoreAsync<T>(stepKey, signalName, timeout, group, cancellationToken);
+    }
+
+    private async Task<T> WaitForSignalCoreAsync<T>(
+        string stepKey,
+        string signalName,
+        TimeSpan? timeout,
+        ActivityGroupStepBinding? group,
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<string>? dependenciesOverride = null,
+        bool serializeSignalInput = false)
+    {
+        if (IsInGroupedFanOutBody)
+            throw new WorkflowConfigurationException("Signal waits are not supported inside a grouped fan-out body.");
         ValidateStepKey(stepKey);
         using var activity = ZhinuDiagnostics.StartActivity(ZhinuDiagnostics.Activities.SignalWait);
         activity?.SetTag(ZhinuDiagnostics.Attributes.WorkflowRunId, WorkflowRunId);
@@ -609,6 +652,10 @@ public sealed partial class WorkflowContext
         if (timeout is { } waitTimeout && waitTimeout < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(timeout));
         var outputType = SerializationIdentity.TypeId(typeof(T));
+        var inputJson = serializeSignalInput
+            ? JsonSerializer.Serialize(signalName, serializerOptions)
+            : signalName;
+        var inputHash = SerializationIdentity.Hash(inputJson);
         using var linkedCancellation = CancellationTokenSource
             .CreateLinkedTokenSource(
                 workflowCancellationToken,
@@ -630,14 +677,15 @@ public sealed partial class WorkflowContext
             {
                 var claim = await ClaimAsync(
                     stepKey,
-                    signalName,
+                    inputJson,
                     SerializationIdentity.TypeId(typeof(string)),
-                    SerializationIdentity.Hash(signalName),
+                    inputHash,
                     outputType,
-                    ResolveDependencies(null),
+                    dependenciesOverride ?? ResolveDependencies(null),
                     null,
                     null,
-                    linkedCancellation.Token).ConfigureAwait(false);
+                    linkedCancellation.Token,
+                    group: group).ConfigureAwait(false);
                 switch (claim.Disposition)
                 {
                     case StepClaimDisposition.Reused:
@@ -717,6 +765,37 @@ public sealed partial class WorkflowContext
         {
             stepLock.Dispose();
         }
+    }
+
+    internal Task<T> WaitForLoopSignalAsync<T>(
+        string stepKey,
+        string signalName,
+        ActivityGroupStepBinding? group,
+        DurableLoopIterationIdentity iteration,
+        string conditionStepKey,
+        TimeSpan? timeout,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(conditionStepKey);
+        if (group is not null)
+            ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, group, iteration);
+
+        var dependenciesForWait = new HashSet<string>(StringComparer.Ordinal)
+        {
+            conditionStepKey
+        };
+        var ambientDependencies = ResolveDependencies(null);
+        if (ambientDependencies is not null)
+            dependenciesForWait.UnionWith(ambientDependencies);
+
+        return WaitForSignalCoreAsync<T>(
+            stepKey,
+            signalName,
+            timeout,
+            group,
+            cancellationToken,
+            dependenciesForWait,
+            serializeSignalInput: true);
     }
 
     /// <summary>
@@ -891,9 +970,14 @@ public sealed partial class WorkflowContext
         StepOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        RejectGroupedFanOut(options);
         ValidateStepKey(stepKeyPrefix);
         ArgumentNullException.ThrowIfNull(inputs);
         ArgumentNullException.ThrowIfNull(operation);
+        if (options?.FanOutGroup is not null)
+            return RunGroupedFanOutAsync(stepKeyPrefix, inputs, null,
+                (key, input, itemOptions, ct) => StepAsync(key, input, operation, itemOptions, ct),
+                options, null, null, StepCompensationMode.None, cancellationToken);
         if (inputs.Count == 0)
             return Task.FromResult<IReadOnlyList<TOutput>>(
                 Array.Empty<TOutput>());
@@ -924,12 +1008,17 @@ public sealed partial class WorkflowContext
         StepOptions? stepOptions = null,
         CancellationToken cancellationToken = default)
     {
+        RejectGroupedFanOut(stepOptions);
         ValidateStepKey(stepKeyPrefix);
         ArgumentNullException.ThrowIfNull(inputs);
         ArgumentNullException.ThrowIfNull(keySelector);
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(options);
         options.Validate();
+        if (stepOptions?.FanOutGroup is not null)
+            return RunGroupedFanOutAsync(stepKeyPrefix, inputs, keySelector,
+                (key, input, itemOptions, ct) => StepAsync(key, input, operation, itemOptions, ct),
+                stepOptions, options.MaxDegreeOfParallelism, null, StepCompensationMode.None, cancellationToken);
         if (inputs.Count == 0)
             return Task.FromResult<IReadOnlyList<TOutput>>(Array.Empty<TOutput>());
         var keys = ValidateItemKeys(stepKeyPrefix, inputs, keySelector);
@@ -961,6 +1050,7 @@ public sealed partial class WorkflowContext
         CancellationToken cancellationToken = default,
         StepCompensationMode compensation = StepCompensationMode.None)
     {
+        RejectGroupedFanOut(stepOptions);
         ValidateStepKey(stepKeyPrefix);
         ArgumentNullException.ThrowIfNull(step);
         ArgumentNullException.ThrowIfNull(inputs);
@@ -969,6 +1059,13 @@ public sealed partial class WorkflowContext
         if (!Enum.IsDefined(compensation))
             throw new ArgumentOutOfRangeException(nameof(compensation));
         options.Validate();
+        if (stepOptions?.FanOutGroup is not null)
+        {
+            step.ImplementationKey.Validate(nameof(step));
+            return RunGroupedFanOutAsync(stepKeyPrefix, inputs, keySelector,
+                (key, input, itemOptions, ct) => StepAsync(key, step, input, itemOptions, ct, compensation),
+                stepOptions, options.MaxDegreeOfParallelism, step.ImplementationKey.Value, compensation, cancellationToken);
+        }
         if (inputs.Count == 0)
         {
             return Task.FromResult<IReadOnlyList<TOutput>>(
@@ -1002,11 +1099,19 @@ public sealed partial class WorkflowContext
         CancellationToken cancellationToken = default,
         StepCompensationMode compensation = StepCompensationMode.None)
     {
+        RejectGroupedFanOut(options);
         ValidateStepKey(stepKeyPrefix);
         ArgumentNullException.ThrowIfNull(step);
         ArgumentNullException.ThrowIfNull(inputs);
         if (!Enum.IsDefined(compensation))
             throw new ArgumentOutOfRangeException(nameof(compensation));
+        if (options?.FanOutGroup is not null)
+        {
+            step.ImplementationKey.Validate(nameof(step));
+            return RunGroupedFanOutAsync(stepKeyPrefix, inputs, null,
+                (key, input, itemOptions, ct) => StepAsync(key, step, input, itemOptions, ct, compensation),
+                options, null, step.ImplementationKey.Value, compensation, cancellationToken);
+        }
         if (inputs.Count == 0)
         {
             return Task.FromResult<IReadOnlyList<TOutput>>(
@@ -1020,6 +1125,24 @@ public sealed partial class WorkflowContext
             options,
             cancellationToken,
             compensation);
+    }
+
+    private void RejectGroupedFanOut(StepOptions? stepOptions)
+    {
+        if (stepOptions?.FanOutGroup?.ReplacesFanOutKey is not null && store is not IWorkflowGroupFanOutReplacementRepository)
+            throw new WorkflowConfigurationException("Selection replacement requires a durable replacement repository capability.");
+        if (IsInGroupedFanOutBody)
+            throw new WorkflowConfigurationException("Nested dynamic fan-out is not supported inside a grouped fan-out body.");
+        if (stepOptions?.Group is not null)
+            throw new WorkflowConfigurationException("Direct Group cannot select a native fan-out item scope; use FanOutGroup.");
+        if (stepOptions?.FanOutGroup is not null)
+        {
+            if (groupManifest is null || store is not IWorkflowGroupFanOutRepository)
+                throw new WorkflowConfigurationException("Grouped fan-out requires an admitted manifest and durable fan-out repository capability.");
+            if (stepOptions.GroupExecutionScope is not null)
+                throw new WorkflowConfigurationException("This grouped fan-out profile supports root execution scope only.");
+            stepOptions.Validate();
+        }
     }
 
     private static IReadOnlyList<string> ValidateItemKeys<TInput>(
@@ -1175,6 +1298,10 @@ public sealed partial class WorkflowContext
         activity?.SetTag(ZhinuDiagnostics.Attributes.StepKey, stepKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowName);
         ArgumentException.ThrowIfNullOrWhiteSpace(workflowVersion);
+        // Validate both parent boundaries before claiming either one. In
+        // particular, an invalid wait binding must not admit a child first.
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, options?.StartGroup);
+        ActivityGroupRuntime.ValidateBinding(WorkflowRunId, groupManifest, options?.WaitGroup);
         var request = new ChildRunCoordinator.ChildStartRequest(
             workflowName,
             workflowVersion,
@@ -1195,7 +1322,7 @@ public sealed partial class WorkflowContext
                 step.Revision,
                 value,
                 ct),
-            new StepOptions { Authorization = options?.StartAuthorization },
+            new StepOptions { Authorization = options?.StartAuthorization, Group = options?.StartGroup },
             cancellationToken: cancellationToken).ConfigureAwait(false);
         return await StepAsync(
             $"{stepKey}:wait",
@@ -1206,7 +1333,12 @@ public sealed partial class WorkflowContext
                 step.Revision,
                 step.StepExecutionId,
                 ct),
-            new StepOptions { DependsOn = [$"{stepKey}:start"], Authorization = options?.WaitAuthorization },
+            new StepOptions
+            {
+                DependsOn = [$"{stepKey}:start"],
+                Authorization = options?.WaitAuthorization,
+                Group = options?.WaitGroup
+            },
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -1243,7 +1375,7 @@ public sealed partial class WorkflowContext
                         waitCancellation => ClaimAsync(
                             step.StepKey, step.InputJson, step.InputType, step.InputHash,
                             outputType, dependencies, compensation,
-                            step.ImplementationKey, waitCancellation, step.AuthorizationDeclarationHash),
+                            step.ImplementationKey, waitCancellation, step.AuthorizationDeclarationHash, configured.Group, configured.FanOutClaim),
                         (waiting, waitCancellation) => WaitUntilAsync(
                             waiting.Step.AvailableAt,
                             waitCancellation),
@@ -1472,13 +1604,18 @@ public sealed partial class WorkflowContext
         CompensationMetadata? compensation,
         string? implementationKey,
         CancellationToken cancellationToken,
-        string? authorizationDeclarationHash = null)
+        string? authorizationDeclarationHash = null,
+        ActivityGroupStepBinding? group = null,
+        ActivityGroupFanOutItemClaim? fanOut = null)
     {
         var now = timeProvider.GetUtcNow();
         return store.ClaimStepAsync(
             new StepClaimRequest
             {
                 WorkflowRunId = WorkflowRunId,
+                GroupManifestDigest = groupManifest?.ManifestDigest,
+                Group = group,
+                FanOut = fanOut,
                 StepKey = stepKey,
                 ImplementationKey = implementationKey,
                 InputJson = inputJson,

@@ -6,6 +6,7 @@ using Penghou.Zhinu.Sqlite.Persistence.Timers;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 using Penghou.Zhinu.Sqlite.Persistence.Artifacts;
 using Penghou.Zhinu.Sqlite.Persistence.Waits;
+using Penghou.Zhinu.Sqlite.Persistence.Groups;
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 using System.Globalization;
@@ -17,7 +18,7 @@ namespace Penghou.Zhinu.Sqlite;
 /// delegates every operation to a domain repository that coordinates the
 /// persistence commands and queries.
 /// </summary>
-public sealed class SqliteWorkflowStore :
+public sealed partial class SqliteWorkflowStore :
     IWorkflowStore,
     IIdempotentWorkflowRestartRepository,
     IIdempotentWorkflowSignalRepository,
@@ -28,6 +29,12 @@ public sealed class SqliteWorkflowStore :
     , IWorkflowAuthorizationRepository
     , IWorkflowEventPageRepository
     , IWorkflowSnapshotRepository
+    , IWorkflowGroupRepository
+    , IWorkflowGroupFanOutRepository
+    , IWorkflowGroupFanOutBodyRepository
+    , IWorkflowGroupFanOutReplacementRepository
+    , IWorkflowGroupForkRepository
+    , IWorkflowGroupSnapshotRepository
 {
     private readonly IZhinuSqliteDatabase factory;
     private readonly SqliteWorkflowRepository workflows;
@@ -40,6 +47,8 @@ public sealed class SqliteWorkflowStore :
     private readonly SqliteWorkflowInstanceRepository instances;
     private readonly SqliteWaitRepository waits;
     private readonly SqliteWorkflowAuthorizationRepository authorizations;
+    private readonly SqliteWorkflowGroupRepository groups;
+    private readonly SqliteWorkflowGroupFanOutRepository groupFanOut;
     private readonly bool detailedDiagnostics;
 
     public SqliteWorkflowStore(ZhinuSqliteOptions options)
@@ -67,6 +76,8 @@ public sealed class SqliteWorkflowStore :
         instances = new SqliteWorkflowInstanceRepository(factory);
         waits = new SqliteWaitRepository(factory);
         authorizations = new SqliteWorkflowAuthorizationRepository(factory);
+        groups = new SqliteWorkflowGroupRepository(factory);
+        groupFanOut = new SqliteWorkflowGroupFanOutRepository(factory);
     }
 
     public ValueTask InitializeAsync(CancellationToken cancellationToken = default) =>
@@ -103,6 +114,49 @@ public sealed class SqliteWorkflowStore :
         WorkflowRun run,
         CancellationToken cancellationToken = default) =>
         ObserveAsync("run.create", () => workflows.CreateRunAsync(run, cancellationToken));
+
+    public ValueTask CreateGroupedRunAsync(
+        WorkflowRun run,
+        ActivityGroupManifest manifest,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("run.create.grouped", () => workflows.CreateGroupedRunAsync(run, manifest, cancellationToken));
+
+    public ValueTask<ActivityGroupManifest?> GetGroupManifestAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.manifest.get", () => groups.GetGroupManifestAsync(workflowRunId, cancellationToken));
+
+    public ValueTask<ActivityGroupOccurrence?> GetGroupOccurrenceAsync(
+        Guid workflowRunId,
+        string groupOccurrenceId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.occurrence.get", () => groups.GetGroupOccurrenceAsync(workflowRunId, groupOccurrenceId, cancellationToken));
+
+    public ValueTask<ActivityGroupStepMembership?> GetStepGroupMembershipAsync(
+        Guid stepId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.step.membership.get", () => groups.GetStepGroupMembershipAsync(stepId, cancellationToken));
+
+    public ValueTask<ActivityGroupFanOutState> AdmitGroupFanOutAsync(
+        ActivityGroupFanOutRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.admit", () => groupFanOut.AdmitAsync(request, cancellationToken));
+
+    public ValueTask<ActivityGroupFanOutState> CompleteGroupFanOutAsync(
+        ActivityGroupFanOutRequest request,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.complete", () => groupFanOut.CompleteAsync(request, cancellationToken));
+
+    public ValueTask<ActivityGroupFanOutState?> GetGroupFanOutAsync(
+        Guid workflowRunId,
+        string fanOutKey,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.get", () => groupFanOut.GetAsync(workflowRunId, fanOutKey, cancellationToken));
+
+    public ValueTask<bool> HasIncompleteGroupFanOutAsync(
+        Guid workflowRunId,
+        CancellationToken cancellationToken = default) =>
+        ObserveAsync("group.fanout.incomplete", () => groupFanOut.HasIncompleteAsync(workflowRunId, cancellationToken));
 
     public ValueTask<WorkflowRun?> GetRunAsync(
         Guid id,
@@ -864,6 +918,18 @@ public sealed class SqliteWorkflowStore :
             actor,
             reason,
             cancellationToken);
+
+    public ValueTask<ForkPlan> ForkGroupedRunAsync(
+        Guid sourceWorkflowRunId,
+        WorkflowRun newRun,
+        ActivityGroupManifest? targetManifest,
+        string targetStepKey,
+        StepRestartMode mode,
+        string? actor,
+        string? reason,
+        CancellationToken cancellationToken = default) =>
+        steps.ForkGroupedRunAsync(sourceWorkflowRunId, newRun, targetManifest,
+            targetStepKey, mode, actor, reason, cancellationToken);
 
     public ValueTask<RollbackPlan> PlanRollbackAsync(
         Guid workflowRunId,

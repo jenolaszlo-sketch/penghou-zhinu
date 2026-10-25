@@ -67,6 +67,12 @@ internal sealed class RunExecutionPipeline
             .ConfigureAwait(false) ??
             throw new WorkflowNotFoundException(
                 $"Workflow '{workflowRunId:D}' does not exist.");
+        registry.TryGet(run.WorkflowName, run.WorkflowVersion, out var admittedRegistration);
+        var groupManifest = admittedRegistration is null ? null : ActivityGroupRuntime.Capture(admittedRegistration, store);
+        if (run.GroupManifestDigest is not null && admittedRegistration is null)
+            throw new WorkflowDefinitionUnavailableException(run.WorkflowName, run.WorkflowVersion);
+        await ActivityGroupRuntime.ValidateRunAsync(store, run, groupManifest, cancellationToken)
+            .ConfigureAwait(false);
         if (IsTerminal(run.Status))
             return;
         if (run.Status == WorkflowStatus.RollingBack)
@@ -132,10 +138,8 @@ internal sealed class RunExecutionPipeline
         try
         {
             WorkflowAuthorizationGate.ValidateBinding(run, options);
-            if (!registry.TryGet(
-                    run.WorkflowName,
-                    run.WorkflowVersion,
-                    out var registration))
+            var registration = admittedRegistration;
+            if (registration is null)
             {
                 throw new WorkflowDefinitionUnavailableException(
                     run.WorkflowName,
@@ -160,7 +164,8 @@ internal sealed class RunExecutionPipeline
                 onEventAppended: notifyEventAppended,
                 workflowStepResolver: workflowStepResolver,
                 allowStepSupersede: run.SourceRunId is not null,
-                registry: registry);
+                registry: registry,
+                groupManifest: groupManifest);
             logger.LogInformation(
                 ZhinuLogEvents.RunExecuting,
                 "Executing workflow {WorkflowRunId} ({WorkflowName} {WorkflowVersion}).",
@@ -173,6 +178,10 @@ internal sealed class RunExecutionPipeline
                 serializerOptions,
                 runCancellation.Token).ConfigureAwait(false);
             context.ThrowIfAuthorizationBlocked();
+            if ((run.GroupFanOutUsed || context.HasUsedGroupFanOut) &&
+                store is IWorkflowGroupFanOutRepository fanOuts &&
+                await fanOuts.HasIncompleteGroupFanOutAsync(workflowRunId, CancellationToken.None).ConfigureAwait(false))
+                throw new WorkflowConfigurationException("Workflow completed with an incomplete grouped fan-out enumeration.");
             if (store is IWorkflowWaitRepository waits &&
                 await waits.HasParkedWaitsAsync(
                     workflowRunId, leaseGeneration.Value, CancellationToken.None)

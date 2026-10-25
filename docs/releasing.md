@@ -1,11 +1,17 @@
 # Releasing and upgrading Zhinu
 
-Zhinu is published on NuGet through `0.2.0-preview.4` (source `0a523826`):
-optional execution authorization against the exact neutral contract,
-execution-evidence reads with the operator CLI (preview.3), and the durable
-authority-subject binding with SQLite schema 7 (preview.4). A published
-version cannot be reused: the next release must bump `Directory.Build.props`.
-Read the [release notes](releases/0.2.0-preview.4.md) and
+Zhinu is published on NuGet through `0.2.0-preview.4` (preview.3 —
+execution-evidence reads and the operator CLI — from source `99d9d78`;
+preview.4 — the durable authority-subject binding with SQLite schema 7 —
+from source `0a523826`). The current source candidate is
+**`0.2.0-preview.10`**: the merged activity-groups milestone (ZG-1 through
+ZG-7 selected profiles) with SQLite schema 10, accepting additive upgrades
+from 5, 6, 7, 8 and 9. Its exact local package/binary and process-loss
+evidence is recorded in the [activity-group qualification
+records](qualification/activity-groups/) and the release-preparation
+packet referenced by the [roadmap](../ROADMAP.md); that evidence is not
+publication evidence. A published version cannot be reused: the next
+release must bump `Directory.Build.props`. Read the
 [authorization boundary](workflow-authorization.md) before upgrading a host.
 
 ## Release set and ownership

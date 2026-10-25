@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using Penghou.Zhinu.Sqlite.Persistence.Leases;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
+using Penghou.Zhinu.Sqlite.Persistence.Groups;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Steps;
 
@@ -29,14 +30,28 @@ internal sealed partial class SqliteStepRepository
         return plan;
     }
 
-    public async ValueTask<ForkPlan> ForkRunAsync(
+    public ValueTask<ForkPlan> ForkRunAsync(
         Guid sourceWorkflowRunId,
         WorkflowRun newRun,
         string targetStepKey,
         StepRestartMode mode,
         string? actor,
         string? reason,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        ForkRunCoreAsync(sourceWorkflowRunId, newRun, null, false,
+            targetStepKey, mode, actor, reason, cancellationToken);
+
+    public ValueTask<ForkPlan> ForkGroupedRunAsync(
+        Guid sourceWorkflowRunId, WorkflowRun newRun, ActivityGroupManifest? targetManifest,
+        string targetStepKey, StepRestartMode mode, string? actor, string? reason,
+        CancellationToken cancellationToken = default) =>
+        ForkRunCoreAsync(sourceWorkflowRunId, newRun, targetManifest, true,
+            targetStepKey, mode, actor, reason, cancellationToken);
+
+    private async ValueTask<ForkPlan> ForkRunCoreAsync(
+        Guid sourceWorkflowRunId, WorkflowRun newRun, ActivityGroupManifest? targetManifest, bool allowGroups,
+        string targetStepKey, StepRestartMode mode, string? actor, string? reason,
+        CancellationToken cancellationToken)
     {
         ValidateForkArguments(sourceWorkflowRunId, targetStepKey);
         ArgumentNullException.ThrowIfNull(newRun);
@@ -58,6 +73,10 @@ internal sealed partial class SqliteStepRepository
             cancellationToken).ConfigureAwait(false) ??
             throw new WorkflowNotFoundException(
                 $"Workflow '{sourceWorkflowRunId:D}' does not exist.");
+        if (!allowGroups && (source.GroupManifestDigest is not null || newRun.GroupManifestDigest is not null))
+            throw new WorkflowStateException("Forking activity-group metadata requires the optional grouped fork capability.");
+        if (source.GroupFanOutUsed)
+            throw new WorkflowStateException("Forking grouped fan-out evidence is not qualified by this fork profile.");
         if (await getRun.ExecuteAsync(
                 connection,
                 transaction,
@@ -68,6 +87,10 @@ internal sealed partial class SqliteStepRepository
                 $"Workflow run ID '{newRun.Id:D}' already exists.");
         }
         ValidateForkContract(source, newRun);
+        var groups = allowGroups
+            ? await SqliteWorkflowGroupRepository.PrepareForkAsync(
+                connection, transaction, source, newRun, targetManifest, cancellationToken).ConfigureAwait(false)
+            : null;
         var plan = await ResolveForkPlanAsync(
             connection,
             transaction,
@@ -77,6 +100,8 @@ internal sealed partial class SqliteStepRepository
             cancellationToken).ConfigureAwait(false);
         await insertRun.ExecuteAsync(connection, transaction, newRun, cancellationToken)
             .ConfigureAwait(false);
+        if (groups is not null)
+            await groups.InstallManifestAsync(connection, transaction, cancellationToken).ConfigureAwait(false);
 
         var reusable = plan.StepsToReuse.ToHashSet(StringComparer.Ordinal);
         var sourceSteps = await getCurrentSteps.ExecuteAsync(
@@ -86,11 +111,15 @@ internal sealed partial class SqliteStepRepository
             cancellationToken).ConfigureAwait(false);
         foreach (var sourceStep in sourceSteps.Where(step => reusable.Contains(step.StepKey)))
         {
+            var destinationStep = CopyCompletedStep(sourceStep, newRun);
             await insertStep.ExecuteAsync(
                 connection,
                 transaction,
-                CopyCompletedStep(sourceStep, newRun),
+                destinationStep,
                 cancellationToken).ConfigureAwait(false);
+            if (groups is not null)
+                await groups.CopyMembershipAsync(connection, transaction, sourceStep, destinationStep,
+                    cancellationToken).ConfigureAwait(false);
         }
         var dependencies = await getStepDependencies.ExecuteAsync(
             connection,

@@ -1,6 +1,14 @@
 # Durable activity groups: implementation design
 
-Date: 2026-10-15. Status: design checkpoint; no group implementation is claimed.
+Updated 2026-10-18. Status: selected native durability profiles are consolidated
+in [ZG-3b.6](activity-groups-zg3b6.md). [ZG-4 coherent queries](activity-groups-zg4.md)
+and [ZG-5 aggregate state/progress](activity-groups-zg5.md) are qualified over
+those bounded profiles. ZG-6 Fuwen handoff and integration is next; active
+code-first/loop closure and wider composition retain explicit limits.
+ZG-1 contracts are qualified; the
+[ZG-2/3a foundation](activity-groups-zg2-3a.md) is implemented with explicit
+[qualification boundaries](qualification/activity-groups/zg2-3a.md). ZG-1 freezes
+manifest encoding/limits; ZG-2/3a freezes occurrence encoding and durable admission.
 Read with the [implementation plan](activity-groups-implementation-plan.md),
 [qualification matrix](activity-groups-qualification.md) and
 [next-agent handoff](activity-groups-handoff.md). Decisions below are the proposed
@@ -33,7 +41,7 @@ Fuwen determines expansion; Zhinu preserves structural intent and durable facts.
 9. Group controls, UI implementation, new orchestration semantics and arbitrary
    dynamic code/graph generation are outside this implementation.
 
-## 2. Current architecture, with source anchors
+## 2. Inspected architecture at the design baseline
 
 Paths below are relative to the Zhinu repository unless explicitly marked Fuwen.
 The table describes the inspected committed baseline; concurrent working-tree
@@ -163,10 +171,19 @@ name/fingerprint never substitutes for invocation identity.
 The semantic occurrence identity is the tuple:
 
 ```text
-(group-contract-v1, RunId, ManifestDigest, GroupKey, enclosing Coordinates[])
+(occurrence-v1, RunId, GroupKey, ParentOccurrenceId?, enclosing Coordinates[])
 ```
 
-Coordinates are ordered **outermost first** and have discriminated kinds:
+The manifest digest pins immutable annotation bytes separately and is excluded
+from occurrence identity: changing display/provenance must not change the
+identity of the same run/key/parent/coordinate tuple. Such a manifest change is
+still rejected for an already admitted run. This supersedes the initial tuple
+that included ManifestDigest.
+
+Coordinates are ordered **outermost first**. The foundation implements existing
+typed loop frames. [ZG-3b.1](activity-groups-zg3b1.md) adds one explicitly versioned
+root native fan-out frame. ZG-3b.3 qualifies fixed nested native loops using the
+unchanged outer-first typed frames; mixed fan-out nesting and Fuwen tokens remain targets:
 
 - Loop: stable loop control identity plus one-based iteration number, using
   `WorkflowLoopReference`/`WorkflowLoopIterationReference` where applicable.
@@ -210,9 +227,12 @@ delivery.qualification   [fanout(repositories,string:repo-B)]
 Retry changes Attempt only: same occurrence and membership row. Selective
 restart changes StepId/Revision: append a membership for the new revision, keep
 old history, and calculate current state from current revisions. Lease rollover
-never creates an occurrence. A new run, fork or execution generation has its
-own run-bound occurrences; copied steps get new destination memberships, never
-foreign references to source groups. Preserve normal source/producer provenance.
+never creates an occurrence. A new run has its own run-bound occurrences;
+execution-generation changes within the same run do not change occurrence IDs.
+ZG-3b.2 now implements this for native separate-run forks; grouped fan-out/fork
+combinations remain rejected. Fork support must create
+destination memberships and never foreign references to source groups. Preserve
+normal source/producer provenance.
 
 When restart changes a controlling condition/input revision, old expansion
 evidence is historical. Effective occurrences/members are those reachable from
@@ -220,11 +240,20 @@ the current expansion evidence; previously visited but now unselected branches
 remain inspectable as historical, not counted as current pending work. A normal
 step retry must not invalidate an unrelated branch or every group in the run.
 
+ZG-3b.4's bounded evolving-selection profile uses separate stable native root
+fan-out scopes and completed selection steps per explicit durable epoch. It
+preserves old occurrences and unfinished obligations; it does not enable changed
+plans under an existing prefix, automatic retirement or the broader active-only
+reducer semantics above. Ordered history remains in exact selector output JSON;
+canonical keyed expansion evidence is sorted. Public epoch/history projections
+remain later work. No new coordinate encoding or schema was required.
+
 ## 5. Expansion and unknown totals
 
 Group nesting alone cannot prove total work. Native loops have committed
-iteration/final boundaries; native fan-out has no durable enumeration-complete
-record; ordinary code-first control flow is arbitrary C#. Therefore the runtime
+iteration/final boundaries; ungrouped native fan-out has no durable enumeration-complete
+record. ZG-3b.1 opts into bounded immutable selection and current-revision closure
+at an explicit existing selection step. Ordinary code-first control flow is arbitrary C#. Therefore the runtime
 cannot infer completeness merely by scanning keys or observing a disposed scope.
 
 For grouped execution, the existing orchestrator/adapter supplies bounded
@@ -327,10 +356,15 @@ separate. Scalar status is deliberately lossy; counts/reasons preserve mixed wor
 
 ## 7. Child workflows
 
-Attach both existing `invocation:start` and `invocation:wait` boundary steps to
-the caller's innermost group. They retain their normal dependency and respective
-authorization. The start is Control, the wait is Work for initial count purposes;
-either can fail the group. Link the child using the existing child ID/wait facts.
+The native root invocation profile uses nullable `ChildRunOptions.StartGroup`
+and `WaitGroup` bindings for the existing `invocation:start` and
+`invocation:wait` parent steps. Bind both to the caller's innermost group, with
+Control for start and Work for wait, for the standard macro count profile.
+Roles and null absence remain explicit author choices; the runtime does not
+infer either binding. Both are validated before claiming start. The boundaries
+retain their normal dependency and respective authorization; either can fail the
+group. Link the child using the existing child ID/wait facts. See the bounded
+[ZG-3b.5 contract](activity-groups-zg3b5.md).
 
 The child has a different RunId, its own manifest and group occurrence namespace.
 No parent occurrence pointer crosses the run boundary. A drill-through query
@@ -377,19 +411,20 @@ Same-run conflicting re-registration fails. Inserting a step revision and its
 membership is atomic, including restarted/copied revisions. Existing completed
 step reuse validates membership rather than attaching new claims after the fact.
 
-Group mutation transactions append bounded durable events for manifest binding,
-occurrence/member materialization and expansion changes (batch where practical).
-Duplicate writes return existing records without duplicate events. These events
+Foundation manifest/claim writes share the existing WorkflowStarted/StepStarted
+transactions and event log; no separate group event stream was introduced.
+Later expansion changes will need bounded invalidation events (batch where practical).
+Idempotent annotation insertion does not invent duplicate group events. These events
 are invalidation/correlation hints; a client refreshes the group snapshot. No
 per-group derived-status events or second event log are needed. Preserve existing
 per-run cursor/export semantics and the snapshot-only generation/operation policy.
 
-The initial baseline was schema 6; AE-6.2 has now committed authority schema 7.
-Reserve the **next free version (provisionally 8)** for groups;
-do not reuse 7 or overwrite its authority
-migration. Implement additive transactional 7-to-8 migration on that baseline,
-preserving 5-to-6 and 6-to-7 so supported older databases can upgrade through the
-chain. Reconfirm the version before implementation if the concurrent work changes.
+The initial baseline was schema 6; AE-6.2 added authority schema 7.
+The foundation uses **schema 8** with additive transactional 7-to-8 migration;
+ZG-3b.1 adds **schema 9** with immutable native fan-out evidence and a monotonic
+run capability marker,
+preserving 5-to-6 and 6-to-7 so supported older databases upgrade through the
+chain. Do not reuse or overwrite the authority migration.
 Empty group tables represent old runs; do not
 backfill artificial roots or memberships. Preserve IDs, step revisions/results,
 events/cursors, authorizations, waits, artifacts and definition fingerprints.
@@ -449,9 +484,16 @@ Resolved here: optional forest, direct membership, definition/occurrence split,
 identity inputs, retry/restart behavior, child isolation, status precedence,
 unknown totals, sidecar evidence requirement, schema direction and reader model.
 
-Still to freeze with tests before public APIs: exact manifest encoding/digest
-golden vectors, overload/capability names, resource defaults, migration version
-availability and snapshot-cache limits. These are bounded engineering decisions,
+Manifest v1 encoding/digest vectors and resource defaults are frozen in ZG-1.
+The ZG-2/3a foundation freezes explicit runtime factories, occurrence v1 bytes,
+optional provider/store capabilities and schema 8. ZG-3b.1 freezes root native
+fan-out coordinates, fixed-selection admission/closure and schema 9. ZG-3b.3
+qualifies fixed nested loops without changing those contracts. ZG-3b.4 qualifies
+explicit immutable root selection epochs using existing scope identity. ZG-3b.5
+adds optional explicit parent child-start/wait membership while retaining separate
+child run trees and native identity/recovery semantics. Snapshot-cache
+limits, mixed dynamic scopes, in-place selection mutation and retirement remain later decisions.
+These are bounded engineering decisions,
 not permission to redesign execution semantics.
 
 Fuwen separately owns grammar, parameter/result contracts and its versioned

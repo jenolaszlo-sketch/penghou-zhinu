@@ -69,6 +69,12 @@ public sealed record WorkflowRun
     /// </summary>
     public string? DefinitionFingerprint { get; init; }
 
+    /// <summary>Optional immutable annotation pin, independent of executable identity and mutable metadata.</summary>
+    public string? GroupManifestDigest { get; init; }
+
+    /// <summary>Durable marker set by first grouped fan-out admission; requires its optional store capability on resume.</summary>
+    public bool GroupFanOutUsed { get; init; }
+
     /// <summary>Configured authorization provider bound when this run was admitted.</summary>
     public string? AuthorizationProviderId { get; init; }
 

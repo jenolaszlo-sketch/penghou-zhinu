@@ -5,6 +5,71 @@ implementation must preserve fencing generations, use UTC timestamps, and make
 every method described as atomic a single durable transaction. A false or null
 claim result must leave no partial rows or events.
 
+## Optional activity groups (schema 8 SQLite foundation)
+
+An existing provider remains valid for ungrouped workflows. A registration with
+`IWorkflowGroupManifestProvider.GroupManifest` requires `IWorkflowGroupRepository`;
+the engine rejects it before admission/callbacks if that capability is missing.
+Implementing the interface is a durability promise, including the ordinary claim
+and restart paths, not just the four companion methods.
+
+`CreateGroupedRunAsync` atomically installs the run's immutable
+`GroupManifestDigest`, canonical manifest, and ordinary run-start event. Ordinary
+`CreateRunAsync` must reject a non-null group pin. Never install or replace a
+manifest later, clear its pin, or repurpose executable definition fingerprints.
+
+Every claim in a grouped run carries the exact manifest digest. Membership is
+optional even in a grouped run. A new step revision atomically materializes its
+occurrence ancestors and direct membership with the existing claim, dependency,
+compensation and event writes. Existing revisions compare exact membership,
+including absence, before returning reuse/busy/wait/retry. They cannot acquire,
+remove, or change membership afterward. Existing lease/generation checks still
+precede materialization. Retry keeps the same membership; selective restart
+copies it to the new revision and preserves history.
+
+Enforce same-run parent and exact step-revision ownership, bounded canonical
+manifest restoration and occurrence ancestry, immutable pins/tuples, and the
+65,536-occurrence per-run ceiling. Cascade annotations on run retention. Point
+reads are persistence diagnostics; they do not establish a coherent hierarchy,
+expansion completeness, aggregate status or progress.
+
+The current implementation rejects direct Group on native fan-out. Grouped forks
+require the separate `IWorkflowGroupForkRepository` described below.
+The additive `FanOutGroup` profile additionally requires
+`IWorkflowGroupFanOutRepository`; see [ZG-3b.1](activity-groups-zg3b1.md).
+Child runs admit their own manifests with separate run-local trees. Parent
+start/wait group binding and broader dynamic recovery are not yet qualified.
+See [the foundation contract](activity-groups-zg2-3a.md) and its evidence before
+claiming optional group support for another provider.
+
+Schema 9 adds immutable bounded fan-out enumeration/item rows before dispatch,
+anchored to an existing current completed selection revision. Claims validate the
+exact admitted item contract. Append-only closure proofs bind all current item
+step IDs/revisions; a historical proof cannot close a restarted item or boundary.
+`GroupFanOutUsed` is set atomically at admission and never cleared; caller-supplied
+true markers are rejected at run creation. Marked resumes require the additional
+capability. Fence both admission and closure with live owner/lease/generation;
+cascade all evidence on retention and evaluate closure from a coherent read
+transaction. Preserve native input-reference, retry, compensation and authority
+semantics. This profile rejects changed selection across boundary revisions and
+does not promise nested dynamic scopes or aggregate/query projections.
+
+`IWorkflowGroupForkRepository.ForkGroupedRunAsync` atomically creates the pending
+destination with its supplied optional manifest, native reusable steps/dependencies,
+rebound destination-owned occurrence ancestors and exact copied memberships, and
+the existing fork event. The base `ForkRunAsync` signature remains ungrouped.
+Do not change native reuse selection, source state, copied step evidence or
+authority identity. Preserve each existing coordinate and role, deriving new
+occurrence IDs through the destination RunId and existing hash domain. Reused
+groups must retain key/kind/parent/macro provenance; copied null membership stays
+null. A missing/incompatible target for any copied member aborts the whole fork.
+Changed-input superseding revisions retain the inherited occurrence and membership
+history. Source authorization decisions are not destination grants. No new schema
+or durable fork marker is needed: ordinary grouped claims/restart continue after
+atomic admission. Source grouped fan-out evidence is explicitly rejected by this
+profile until complete enumeration/closure rebinding is qualified. See
+[ZG-3b.2](activity-groups-zg3b2.md) and its independent evidence.
+
 Run `WorkflowStoreConformance.VerifyRunRoundTripAsync` and
 `VerifyArtifactRoundTripAsync` from `Penghou.Zhinu.Testing` as the minimum
 provider checks. Artifact insertion and its `artifact-published` event must be

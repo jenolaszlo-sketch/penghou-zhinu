@@ -4,7 +4,7 @@ namespace Penghou.Zhinu;
 
 /// <summary>Registers one typed workflow using a caller-provided factory.</summary>
 public sealed class WorkflowRegistration<TInput, TOutput>
-    : IWorkflowRegistration
+    : IWorkflowRegistration, IWorkflowGroupManifestProvider
 {
     private readonly Func<IWorkflow<TInput, TOutput>> workflowFactory;
     private readonly Lazy<string?> definitionFingerprint;
@@ -19,6 +19,16 @@ public sealed class WorkflowRegistration<TInput, TOutput>
         definitionFingerprint = new Lazy<string?>(
             () => (workflowFactory() as IWorkflowFingerprint)?.Fingerprint);
     }
+
+    public WorkflowRegistration(
+        WorkflowDefinition definition,
+        Func<IWorkflow<TInput, TOutput>> workflowFactory,
+        ActivityGroupManifest groupManifest) : this(definition, workflowFactory)
+    {
+        GroupManifest = groupManifest ?? throw new ArgumentNullException(nameof(groupManifest));
+    }
+
+    public ActivityGroupManifest? GroupManifest { get; }
 
     public WorkflowDefinition Definition { get; }
 

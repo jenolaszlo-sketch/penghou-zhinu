@@ -3,6 +3,15 @@ namespace Penghou.Zhinu;
 /// <summary>Configures retry and execution behavior for one durable step.</summary>
 public sealed record StepOptions
 {
+    internal DurableLoopIterationIdentity? GroupExecutionScope { get; init; }
+    internal string? GroupFanOutExecutionScope { get; init; }
+    internal ActivityGroupFanOutItemClaim? FanOutClaim { get; init; }
+
+    /// <summary>Optional per-item group declaration, consumed only by native fan-out at an explicit selection boundary.</summary>
+    public ActivityGroupFanOutBinding? FanOutGroup { get; init; }
+
+    /// <summary>Optional direct occurrence membership; never a control-flow or authorization declaration.</summary>
+    public ActivityGroupStepBinding? Group { get; init; }
     /// <summary>Immutable declared authority and approved plan identity for the forward callback.</summary>
     public WorkflowAuthorizationDeclaration? Authorization { get; init; }
 

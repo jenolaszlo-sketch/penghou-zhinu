@@ -202,15 +202,22 @@ Product harness such as Solo
 ## Planned runtime milestone — hierarchical durable activity groups (ZG)
 
 Added **2026-10-15** from the macro activities/activity groups proposal. The
-repository-reconciled design/handoff checkpoint is prepared; runtime implementation
-remains **planned**. Read the [design](docs/activity-groups-design.md),
+repository-reconciled design/handoff checkpoint, ZG-1, ZG-2/3a foundation and
+ZG-3b.1 root native fan-out, ZG-3b.2 grouped forks, ZG-3b.3 fixed nested repetition
+ZG-3b.4 explicit immutable evolving-selection epochs and ZG-3b.5 native child
+boundaries are implemented. ZG-3b.6 consolidates the selected native durability
+profiles and their explicit composition limits. ZG-4 queries and ZG-5 aggregate
+state/progress are qualified separately; Fuwen integration is consolidated in
+[ZG-7](docs/qualification/activity-groups/zg7.md), qualified on Windows/Linux
+.NET 8/10. The subsequent [Q33 checkpoint](docs/qualification/activity-groups/q33.md)
+adds explicit native branch replacement and schema 10. Read the [design](docs/activity-groups-design.md),
 [implementation stages](docs/activity-groups-implementation-plan.md),
 [qualification matrix](docs/activity-groups-qualification.md), and
 [next-agent handoff](docs/activity-groups-handoff.md).
 This is a follow-on to the
 existing durable runtime and read-only graph surface, not a new current release
 or Hufu qualification gate. Pair it with
-[Fuwen reusable macro activities (FM)](../Penghou.Fuwen/docs/roadmap.md#planned-composition-milestone--user-defined-reusable-macro-activities-fm).
+[Fuwen reusable macro activities (FM)](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/codex/fuwen-activity-groups/docs/roadmap.md#planned-composition-milestone--user-defined-reusable-macro-activities-fm).
 
 An `ActivityGroup` contains activities and child groups. Initial kinds are
 `Logical` (explicit organization) and `Macro` (an author-level macro invocation).
@@ -232,9 +239,9 @@ Current source already has atomic run snapshots, durable watermarks and event
 pages. Reuse those read patterns. The inspected committed baseline uses SQLite
 schema 6 and additive 5-to-6 migration. Authority-subject work subsequently landed
 as `0a523826c2d7281164ee0b1826fcb1bbee2d6689` (AE-6.2), using schema 7.
-Preserve that baseline and reserve the next
-free group schema (provisionally 8), preserving the migration chain rather than
-requiring destructive recreation. Fuwen still references Zhinu 0.1.0-preview.14, and its fan-out body
+The foundation added schema 8; ZG-3b.1 adds schema 9, preserving
+5→6→7→8→9 rather than requiring destructive recreation.
+The inspected Fuwen baseline references Zhinu 0.1.0-preview.14, and its fan-out body
 currently shares one durable item step. Package adoption and a versioned adapter
 extension (or explicit interim rejection) are prerequisites to claiming
 independently durable macro children inside fan-out.
@@ -244,17 +251,127 @@ Implementation stages now refine the original broad ZG-0/1/2 buckets:
 - [x] **ZG-0 design/handoff:** architecture map, identity/occurrence design,
   child boundary, status/progress rules, compatibility and qualification plan.
   This checks document preparation only, not runtime test evidence.
-- [ ] **ZG-1:** definitions, optional membership contract and validation.
-- [ ] **ZG-2:** runtime occurrence coordinates and claim mapping.
-- [ ] **ZG-3:** additive persistence, expansion evidence and restart.
-- [ ] **ZG-4:** coherent query model and progressive drill-down.
-- [ ] **ZG-5:** deterministic aggregate state and unknown-total progress.
-- [ ] **ZG-6:** Fuwen metadata handoff and exact package qualification.
-- [ ] **ZG-7:** cross-repository, legacy and process-loss qualification.
+- [x] **ZG-1:** immutable bounded definitions, optional membership values,
+  forest validation and manifest v1 canonical/digest vectors. See the
+  [contract](docs/activity-groups-zg1.md) and
+  [qualification](docs/qualification/activity-groups/zg1.md). That contract slice
+  contains no group execution or schema change; qualification also restores pre-authority-binding binary
+  overloads discovered missing by the legacy consumer probe.
+- [x] **ZG-2 foundation:** deterministic root/typed-loop occurrences, explicit
+  parent identity, scoped claim mapping and optional Work/Control membership.
+  See the [foundation](docs/activity-groups-zg2-3a.md) and
+    [evidence](docs/qualification/activity-groups/zg2-3a.md). ZG-3b.1 extends this
+    with native root item scopes; mixed fan-out nesting remains deferred.
+- [x] **ZG-3a foundation:** schema 8 atomic manifest/admission and revision
+  membership, restart inheritance, fail-closed capabilities and real process-loss
+  reconstruction. No hierarchy query or expansion-completeness claim is included.
+- [x] **ZG-3b — bounded native profiles qualified:** dynamic occurrence durability: grouped
+  fan-out/forks, nested repeated groups, restart during partial execution,
+  resume/recovery identity preservation and child-workflow boundaries. See the
+  [scope and independent proof gates](docs/activity-groups-zg3b.md). Static/restart
+  correctness does not imply fan-out/fork correctness. The
+  [consolidated capability boundary](docs/activity-groups-zg3b6.md) preserves
+  explicit rejection and unqualified combinations; this is not arbitrary mixed
+  composition or full Fuwen durability support.
+- [x] **ZG-3b.1:** bounded root native fan-out at an explicit completed selection
+  step, immutable keyed/positional enumeration, current-revision closure and
+  process-loss recovery. See [contract](docs/activity-groups-zg3b1.md) and
+  [evidence](docs/qualification/activity-groups/zg3b1.md).
+- [x] **ZG-3b.2:** grouped native workflow forks with destination-owned parent
+  lineage, exact copied membership, retry/restart/supersede, mixed membership,
+  authority continuity and independent process-loss evidence. See
+  [contract](docs/activity-groups-zg3b2.md) and
+  [evidence](docs/qualification/activity-groups/zg3b2.md). Combined grouped
+  fan-out/fork copying remains rejected until expansion evidence is qualified.
+- [x] **ZG-3b.3:** fixed native nested repetition (3×2), full durable typed lineage,
+  six distinct leaf occurrences, immediate-parent reconstruction, inner/outer
+  activity retry, selective restart and fourteen fresh-process crash/recovery
+  cases. Identity and schema 9 remain unchanged. See
+  [contract](docs/activity-groups-zg3b3.md) and
+  [evidence](docs/qualification/activity-groups/zg3b3.md). Evolving selection was
+  excluded from that checkpoint and has its own bounded profile below.
+- [x] **ZG-3b.4:** evolving selection across explicit immutable root epochs with
+  stable native scope/selection keys: expand/contract/reorder/disappear/reappear,
+  identical values across epochs, historical selector replay, retries/restart,
+  atomic/partial-work recovery and preserved unfinished obligations. No identity,
+  runtime algorithm or schema change. See [contract](docs/activity-groups-zg3b4.md)
+  and [evidence](docs/qualification/activity-groups/zg3b4.md). This does not permit
+  changed plans under an old prefix or automatic retirement of unfinished work.
+  Grouped fan-out/fork copying and explicit loop-parent fan-out bindings remain
+  rejected; arbitrary mixed composition remains unqualified.
+- [x] **ZG-3b.5:** optional explicit parent `StartGroup`/`WaitGroup` bindings,
+  independently owned child manifests/trees, native retry/restart/fork provenance,
+  separate boundary authorization, cancellation and fresh-process recovery through
+  admission, generation binding, execution and parked/ready/completed waits. Schema
+  9 and existing identity encoders remain unchanged. See
+  [contract](docs/activity-groups-zg3b5.md) and
+  [evidence](docs/qualification/activity-groups/zg3b5.md).
+- [x] **ZG-3b.6:** consolidated capability/rejection matrix and machine-checked
+  exact-source evidence audit. Retains the 1,639-test full-suite qualification;
+  eight new focused rejection executions close ordinary-step FanOutGroup and
+  engine fan-out/fork guard coverage gaps. Runtime/package source remains
+  `3ca1105`; schema and identity encoders are unchanged. See
+  [contract](docs/activity-groups-zg3b6.md) and
+  [evidence](docs/qualification/activity-groups/zg3b6.md).
+- [x] **ZG-4:** coherent query model and progressive drill-down. Optional safe
+  SQLite snapshot capability and bounded reader-local pagination separate
+  definitions, occurrences, current/history membership and independent child
+  links. Full suite **1,749 tests**, formatting, seven unpublished packages and
+  isolated package/binary/schema probes pass on .NET 8/10. Schema and identity
+  encoders remain unchanged. See [contract](docs/activity-groups-zg4.md) and
+  [evidence](docs/qualification/activity-groups/zg4.md).
+- [x] **ZG-5:** deterministic aggregate state and unknown-total progress over
+  qualified native profiles. Pure reducer and optional state reader share the
+  frozen query snapshot and timestamp; Work/Control counters, wait/block reasons,
+  historical coverage and conservative closure remain explicit. Full suite
+  **1,845 tests** (96 new), formatting, seven unpublished packages and both
+  package/binary/schema probes pass on .NET 8/10. Schema 9, identity and native
+  execution semantics are unchanged; no aggregate state is persisted. See
+  [contract](docs/activity-groups-zg5.md) and
+  [evidence](docs/qualification/activity-groups/zg5.md).
+- [x] **ZG-6 selected profile:** immutable Fuwen macro/group handoff, single-level
+  repeat and independently durable keyed fan-out, public inspection/progress,
+  byte-only recovery and exact candidate package qualification. Native preview.9
+  and Fuwen preview.18; [consolidation](docs/qualification/activity-groups/zg7.md).
+- [x] **ZG-7 selected profile:** Windows/Linux .NET 8/10 regression, exact
+  package-only consumers and both legacy probes pass. All eleven consumer
+  archives match the same Ubuntu producer on both OS.
+  [Second review](docs/qualification/activity-groups/second-pass-review.md)
+  corrections are implemented.
+- [x] **Q33 explicit native selection:** replacement of a selected branch,
+  retirement of old pending membership, current progress and independent crash
+  recovery proofs. [Contract](docs/activity-groups-branch-replacement.md) and
+  [qualification](docs/qualification/activity-groups/q33.md). Schema 10; existing
+  occurrence identity retained.
+- [ ] **Broader authoring and delivery:** Fuwen evolving-selection lowering,
+  additional DSL dynamic combinations, downstream adoption and publication remain
+  separate work. Arbitrary conditionals do not imply native retirement.
 
-Implement ZG-2/3 as a durable vertical, and the ZG-5 reducer before freezing ZG-4
-read DTOs. The detailed scope checklist below remains useful, but its headings
+ZG-6.1 static Fuwen handoff and [ZG-6.2a single-level grouped repeats](docs/qualification/activity-groups/zg6-repeat.md)
+and [ZG-6.2b keyed fan-out bodies](docs/qualification/activity-groups/zg6-fanout.md)
+retain their original qualification. The current ZG-7 record adds distinct
+methodology fixtures, nested macro/repeat process recovery, immutable changed-pin
+rejection and mechanical progress. Broader DSL dynamic composition, evolving
+selection, fan-out item waits/checkpoints/merges and grouped coordinated inference
+remain explicitly rejected future work. Both earlier OS CI gates pass; Q33's
+explicit native branch-selection qualification is recorded separately. Active code-first/loop groups retain unknown
+totals until authoritative closure. The
+[pre-Fuwen review](docs/qualification/activity-groups/pre-fuwen-review.md) fixes
+snapshot integrity and stale approval projection, indexes manifest definitions,
+and passes **1,877 tests**; it preserves the bounded ZG-5 contract.
+The [measured follow-up](docs/qualification/activity-groups/pre-fuwen-followup.md)
+adds snapshot-owned state indexes with cache-budget accounting, closure-digest
+verification and a Unicode fan-out query fix; **1,897 tests**, formatting and both
+package/binary/schema probes passed. Projection-only local measurements
+and exact-source qualification remain separate from Fuwen integration evidence.
+This supersedes the earlier
+reducer-before-query stage ordering. Preserve the foundation architecture and
+avoid coupling Fuwen to temporary native-runtime limits. The checklist below
+remains useful, but its headings
 are broad requirement areas rather than the new stage identifiers.
+
+The consolidated qualification preserves this established result:
+**Nested repetition required no runtime algorithm, schema, or identity redesign.**
 
 #### Shared identity, state and compatibility requirements
 
@@ -1546,3 +1663,105 @@ release gates. Lower-priority proposals are recorded in [ideas for later](docs/i
   `Activity` context and reads the child's exact trace ID. The parent/link
   relation is documented in [observability](docs/observability.md); trace
   correlation is durable and distinct from execution identity.
+
+
+### Activity groups: bounded Fuwen checkpoint — 2026-10-19
+
+[ZG-6.1 static integration](docs/qualification/activity-groups/zg6-static.md)
+qualifies real Fuwen macro/logical-group expansion, pinned companion admission,
+native static memberships and signal-wait process-loss recovery against exact
+unpublished Zhinu 0.2.0-preview.5 packages. Native qualification passes 1,901
+Windows .NET 8/10 tests plus package and legacy binary/schema probes. Full ZG-6
+and ZG-7 remain open for per-child dynamic Fuwen lowering, closure evidence and
+cross-platform/public-package qualification. No publication is implied.
+
+### Activity groups: single-level Fuwen repeat checkpoint -- 2026-10-19
+
+[ZG-6.2a qualification](docs/qualification/activity-groups/zg6-repeat.md) adds native
+loop Control bindings and iteration signal waits for independently durable Fuwen
+repeat operations. Legacy in-flight wait claim identity is preserved. Production/
+package source is `45e831a82593048dc1ea7266cbc1e9b306d8c92c`, unpublished
+`0.2.0-preview.7`; schema remains 9. The qualification commit stabilizes only an
+existing authorization test timing barrier. The later ZG-6.2b checkpoint adds
+bounded fan-out lowering; broader composition and ZG-7 remain open.
+
+
+### Activity groups: keyed Fuwen fan-out checkpoint -- 2026-10-19
+
+[ZG-6.2b qualification](docs/qualification/activity-groups/zg6-fanout.md) adds
+independently durable grouped item-body operations with exact typed claims,
+child revision/membership closure, dependent restart and source-byte-only
+process-loss recovery. Native preview.8 source is
+`fa0297b9dc21b235f27ac92b979dcf9faeb6b7b6`; schema remains 9 and the existing
+v2 fan-out coordinate is reused. Native regression: 1,925; Fuwen preview.16:
+1,690 plus 12 package-only consumer executions. Packages remain unpublished.
+One fixed scope with an explicit item root is qualified; mixed/nested dynamic
+composition, evolving-selection adapter support, item waits/checkpoints and
+broader closure/progress integration remain open before full ZG-6/Q45/ZG-7.
+
+
+### Activity groups: selected-profile consolidation -- 2026-10-20
+
+[ZG-7](docs/qualification/activity-groups/zg7.md) qualifies native preview.9 and
+Fuwen preview.18 on Windows/Linux .NET 8/10: 1,935 native regression tests,
+1,712 Fuwen tests and 26 package-only consumer executions per OS. Both consumers
+resolve identical Ubuntu producer archives. [The second pass](docs/qualification/activity-groups/second-pass-review.md)
+fixes item progress, empty-path admission and qualification portability, and
+makes full Q33 branch-selection retirement explicitly partial. The original full
+matrix, broader DSL features and publication remain open; earlier checkpoints
+retain their original versions, counts and exclusions.
+
+### Activity groups: explicit native branch replacement -- 2026-10-20
+
+[Q33](docs/qualification/activity-groups/q33.md) qualifies fresh durable selection
+scopes with explicit retirement, completed-history retention, claim/restart
+fences, current-selection progress and four independent loss barriers. Existing
+occurrence identities and coordinates remain unchanged; additive schema 10
+stores retirement evidence. Runtime/package source is `bf33c05`, preview.10.
+The full 1,963 combined .NET 8/10 tests pass per OS on Windows/Linux, plus seven
+packages and compatibility probes. Actual preview.9 package workers seed schema
+9 and reject the upgraded schema 10 without changing bytes. Fuwen preview.18
+retains its original preview.9 pin; bounded selection lowering is a separate
+integration activity. No package publication or merge is implied.
+
+### Activity groups: bounded Fuwen selection adoption -- 2026-10-20
+
+Fuwen preview.19 now adopts the exact original preview.10/schema 10 archives for
+one terminal grouped selection with explicit bounded epochs and replacement.
+[Its sealed qualification](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/232d2c3c22442a9242e7575669d6bffe1a05bb53/docs/qualification/activity-groups/selection.md)
+records runtime/package source `631fa64`, 1,740 regression tests and 28 package-only
+consumer executions per OS on Windows/Linux .NET 8/10. Partial replacement and
+hard process loss preserve completed history, occurrence parents, public mapping
+and current progress. Both OS consumers resolve the same Ubuntu producer archives.
+No native algorithm, schema or occurrence-identity change was needed for this
+adapter lowering. Earlier archive pins/evidence remain intact. Broader dynamic
+DSL composition, arbitrary condition-driven retirement and publication remain
+separate activities.
+
+### Activity groups: complete Fuwen integration review -- 2026-10-20
+
+Fuwen preview.20's [sealed integration review](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/1b6a9e9e26535bd01de52fdd43552c6714d7b826/docs/qualification/activity-groups/integration-second-pass.md)
+fixes cross-run dynamic provider-key collisions, ungrouped fan-out mapper round
+trips, full invocation-path admission and duplicate ungrouped loop-name aliasing.
+New dynamic definitions use the v6 run-scoped invocation contract; existing
+v1-v5 definitions retain their original replay identities. Runtime/package source
+is `eca1213`; corrected qualification harness is `3d8ee2b`. Each Windows/Linux
+gate passes 1,770 regression executions plus 32 package-only consumer executions
+across .NET 8/10; both OS consumers resolve the same Ubuntu producer archives.
+The record preserves the earlier failed Windows I/O attempt and successful
+unchanged-source rerun separately. Native `bf33c05`, preview.10/schema 10,
+occurrence identities and all original native archive pins remain unchanged.
+The earlier v5 and ZG-7 records remain immutable. Broader rejected DSL forms,
+publication and downstream application adoption remain separate activities.
+
+Release preparation now precedes additional activity-group features. The
+[preview.20 release packet](https://github.com/jenolaszlo-sketch/penghou-fuwen/blob/8c7da4cfbc882804d801fe0e8b073733e4ee563c/docs/releases/preview20-readiness.md)
+records all 22 candidate package/symbol archives and the public-feed observation:
+native preview.10 must be approved, published/indexed and its actual public
+archives qualified before Fuwen preview.20. The Fuwen tag workflow's unprepared
+local native feed is an open release gate. Repository-signed public archives
+need separate hashes and qualification; original candidate pins remain intact.
+Adoption proceeds through Guihua to applications after indexing. The unexplained
+Windows I/O incident remains open as REL-SQLITE-01, with focused diagnostics and
+stress work on recurrence. No tag or publication has been authorized by this
+preparation, and Fuwen's formal RC graduation gates remain separate.

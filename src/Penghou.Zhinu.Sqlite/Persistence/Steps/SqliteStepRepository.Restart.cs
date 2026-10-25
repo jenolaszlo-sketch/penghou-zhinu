@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using Penghou.Zhinu.Sqlite.Persistence.Leases;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
+using Penghou.Zhinu.Sqlite.Persistence.Groups;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Steps;
 
@@ -20,6 +21,9 @@ internal sealed partial class SqliteStepRepository
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
         using var transaction = connection.BeginTransaction(deferred: false);
+        if (mode == StepRestartMode.StepOnly && await SqliteWorkflowGroupFanOutRepository.IsBodyModeStepAsync(
+                connection, transaction, workflowRunId, stepKey, cancellationToken).ConfigureAwait(false))
+            throw new WorkflowStateException("StepOnly restart is not supported for a grouped fan-out body operation; use Dependents.");
         var plan = await ResolveRestartPlanAsync(
             connection,
             transaction,
@@ -179,6 +183,11 @@ internal sealed partial class SqliteStepRepository
             transaction,
             workflowRunId,
             cancellationToken).ConfigureAwait(false);
+        var retiredKeys = await SqliteWorkflowGroupFanOutRepository.GetRetiredStepKeysAsync(
+            connection, transaction, workflowRunId, cancellationToken).ConfigureAwait(false);
+        if (retiredKeys.Contains(stepKey))
+            throw new WorkflowStateException("A retired branch member cannot be restarted; select a fresh scope instead.");
+        steps = steps.Where(step => !retiredKeys.Contains(step.StepKey)).ToArray();
         var invalidated = mode switch
         {
             StepRestartMode.StepOnly =>
@@ -263,6 +272,9 @@ internal sealed partial class SqliteStepRepository
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
+        if (mode == StepRestartMode.StepOnly && await SqliteWorkflowGroupFanOutRepository.IsBodyModeStepAsync(
+                connection, transaction, workflowRunId, stepKey, cancellationToken).ConfigureAwait(false))
+            throw new WorkflowStateException("StepOnly restart is not supported for a grouped fan-out body operation; use Dependents.");
         var plan = await ResolveRestartPlanAsync(
             connection,
             transaction,
@@ -316,6 +328,8 @@ internal sealed partial class SqliteStepRepository
             };
             await insertStep.ExecuteAsync(connection, transaction, next, cancellationToken)
                 .ConfigureAwait(false);
+            await SqliteWorkflowGroupRepository.CloneMembershipAsync(
+                connection, transaction, latest, next, cancellationToken).ConfigureAwait(false);
         }
 
         var invalidatedSteps = plan.StepsToInvalidate

@@ -1,6 +1,57 @@
 # Activity groups: qualification matrix
 
-Date: 2026-10-15. Status: **planned tests, not executed feature evidence**.
+Updated: 2026-10-20. Status: **ZG-1, ZG-2/3a, root ZG-3b.1 fan-out, ZG-3b.2 forks, ZG-3b.3 fixed nested repetition, ZG-3b.4 explicit immutable selection epochs and ZG-3b.5 native child boundaries qualified separately;
+ZG-3b.6 consolidates the selected native profiles; ZG-4 queries and ZG-5
+aggregate state/progress are qualified over that bounded model. The
+selected-profile matrix is consolidated in [ZG-7](qualification/activity-groups/zg7.md);
+qualification passes on Windows/Linux .NET 8/10. The subsequent
+[Q33 native replacement checkpoint](qualification/activity-groups/q33.md)
+qualifies explicit selection/retirement separately; Fuwen evolving-selection
+lowering and arbitrary inferred branch retirement remain outside that profile**.
+The [ZG-1 evidence](qualification/activity-groups/zg1.md) now records passing
+contract-level cases. The [ZG-2/3a evidence](qualification/activity-groups/zg2-3a.md)
+records the narrow root/loop durability, admission and process-loss slice.
+The [ZG-3b.1 evidence](qualification/activity-groups/zg3b1.md) adds root native
+keyed/positional fan-out admission, exact-revision closure and process recovery.
+Native portions of Q12/Q13/Q23/Q27/Q31/Q32/Q34/Q35 are covered only within that
+fixed-selection profile. The [ZG-3b.2 evidence](qualification/activity-groups/zg3b2.md)
+covers Q36's native separate-run fork ownership and relevant Q18/Q27/Q31/Q32/Q34/Q35
+restart, fencing, recovery and migration cases. The
+[ZG-3b.3 evidence](qualification/activity-groups/zg3b3.md) covers native Q11 and
+relevant Q10/Q18/Q27/Q31/Q32 durability within fixed 3×2 nested loops: six leaf
+occurrences, complete typed lineage, explicit parents, retries, selective restart
+and seven process-loss boundaries on each framework. This does not close arbitrary
+mixed composition, grouped fan-out/fork evidence, implicit selection retirement,
+aggregate summaries or group queries.
+The [ZG-3b.4 evidence](qualification/activity-groups/zg3b4.md) separately qualifies
+changing sets across distinct stable root scopes, replayed historical selection,
+unmodified old occurrences/memberships and unfinished obligations. This covers
+the explicit-epoch native portions of Q12/Q13/Q23/Q31 only; prior retry, fencing
+and restart cases remain regression gates. In-place
+old-plan replacement, active/history reducers and public projections remain open.
+The [ZG-3b.5 evidence](qualification/activity-groups/zg3b5.md) covers native Q42
+boundary membership and run-local child ownership, plus relevant Q18/Q27/Q29/Q30/Q31/Q32
+retry/restart, admission, execution and parked/ready child-wait recovery. Separate
+start/wait/child authorization, successful parent cancellation and native fork
+provenance remain ordinary runtime semantics. Typed child lowering, coherent
+cross-run queries and aggregate progress are not closed by those proofs.
+The [ZG-3b.6 consolidated audit](qualification/activity-groups/zg3b6.md) verifies
+exact sources, retained TRX/package hashes and composition guard evidence, adding
+eight focused negative test executions. The [capability matrix](activity-groups-zg3b6.md)
+distinguishes actual rejection from unqualified combinations. This closes the
+bounded native durability checkpoint, not coherent reads, aggregate state,
+progress or Fuwen/cross-repository requirements in the wider Q01–Q47 matrix.
+Consolidation prominently retains: **Nested repetition required no runtime
+algorithm, schema, or identity redesign.**
+The [ZG-4 record](qualification/activity-groups/zg4.md) separately qualifies
+coherent snapshots, pagination, safe authorization facts and reopened inspection.
+The [ZG-5 record](qualification/activity-groups/zg5.md) adds pure aggregate
+reduction and a compatible optional reader over the same captured timestamp:
+1,845 passing executions, explicit unknown totals, current-revision counts,
+historical coverage and independent child-run ownership. These later records
+close bounded query/progress requirements, not Fuwen lowering, arbitrary dynamic
+composition, group controls or remote qualification. Earlier tranche exclusions
+above describe those tranches, not the latest aggregate capability.
 Use the [design](activity-groups-design.md) and
 [stage plan](activity-groups-implementation-plan.md). Native Zhinu and Fuwen
 adapter profiles are separate: native support does not prove DSL support.
@@ -8,7 +59,8 @@ adapter profiles are separate: native support does not prove DSL support.
 Each case records before/after IDs, current and historical revisions, hierarchy,
 provenance, statuses/reasons/counts, expansion coverage, event cursor and fake
 effect receipts. Verify both returned API models and durable records. All
-methods/test names proposed for groups below are new work, not existing tests.
+rows describe required behaviors. The profile evidence above identifies the
+implemented suites and their exact coverage; unchecked broader cases remain work.
 
 ## Concrete cases
 
@@ -46,7 +98,7 @@ methods/test names proposed for groups below are new work, not existing tests.
 | Q30 | Process dies while waiting on signal/approval/child | Same wait correlation/deadline and group; fresh process observes it without executing recovery. | 3 |
 | Q31 | Process dies after partial loop/fan-out expansion and at loop commit/final boundary | Correct occurrence separation and open/closed state; no repeated committed effect receipt. | 3 |
 | Q32 | Process dies after failure, then selective restart | Prior evidence readable; new current revision attached correctly; stale closure invalidated. | 3 |
-| Q33 | Change controlling condition revision and take a different branch | Former branch remains historical, not current pending work; closure/effective counts refer to new selection only. | 3,5 |
+| Q33 | Change controlling condition revision and take a different branch | Former branch remains historical, not current pending work; closure/effective counts refer to new selection only. Explicit native replacement is qualified in [Q33](qualification/activity-groups/q33.md); arbitrary conditionals do not imply retirement. | 3,5 |
 | Q34 | Reopen schema-5/6 fixtures, upstream authority-schema-7 fixture, new empty DB | Additive upgrade preserves IDs/results/events/cursors/auth state including authority-subject binding; no roots/members added to old runs. | 3 |
 | Q35 | Failure at schema creation/version update; old schema-6/7 binary opens group-schema DB | Full rollback on failure; old worker rejects new schema; no silent downgrade or reuse of the authority schema number. | 3 |
 | Q36 | Fork copies completed work; restart/new execution generation | New run-bound occurrences/memberships; original producer/source provenance unchanged; one progression owner retained. | 3 |
@@ -62,9 +114,11 @@ methods/test names proposed for groups below are new work, not existing tests.
 | Q46 | Different macro/library content or group manifest under old run/admission | Reject altered binding; preserve old run/bytes; no live re-expansion or retrospective metadata restamping. | 6,7 |
 | Q47 | Fresh external consumer resolves exact candidate packages on .NET 8/10 and both OS jobs | Correct closure, API/binary compatibility and schema profile; no reliance on a source-tree project reference. | 6,7 |
 
-For Q07, occurrence IDs include ManifestDigest by design. Test sibling-order
-independence of GroupKey/coordinates separately from an intentionally changed
-manifest digest; do not claim IDs across two different manifests must be equal.
+For Q07, occurrence v1 excludes ManifestDigest. Given the same run, GroupKey,
+explicit parent occurrence and coordinates, display/provenance or unrelated
+sibling changes do not change its ID. The immutable manifest pin is separate:
+re-registration with changed canonical bytes still conflicts for an admitted run.
+The initial design included the digest in identity; ZG-2/3a supersedes that rule.
 
 For Fuwen Q43-Q45, arbitrary nested control-flow combinations not supported by
 the selected adapter must be negative preflight cases until implemented. Native

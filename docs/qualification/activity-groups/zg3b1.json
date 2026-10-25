@@ -1,0 +1,2502 @@
+{
+  "SchemaVersion": 1,
+  "Date": "2026-10-16",
+  "Stage": "ZG-3b.1",
+  "Status": "passed",
+  "Branch": "codex/zhinu-activity-groups",
+  "BaseCommit": "91cc72331c80af67ea463fc83b0f9a3d8edb11b5",
+  "FoundationQualifiedCommit": "33c051ed4907178e13d273e930d1f63342321f3f",
+  "RuntimeImplementationCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3",
+  "PackageSourceCommit": "e4b7f139b93c3934860ed5a3f7aae9225d3f5ba3",
+  "QualificationCommit": "The commit containing this record; runtime/package/test source is RuntimeImplementationCommit.",
+  "Platform": "Windows",
+  "TargetFrameworks": [
+    "net8.0",
+    "net10.0"
+  ],
+  "PackageVersion": "0.2.0-preview.4",
+  "PersistedSchemaVersion": 9,
+  "TestTotal": 1441,
+  "TestAssembliesAndFrameworks": 11,
+  "TestExecution": "Final solution receipts for nine non-SQLite assembly/framework pairs, plus final rerun of both SQLite pairs after a test-output fixture correction. Runtime sources were unchanged.",
+  "Tests": [
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_41_net8.0.trx",
+      "Total": 133,
+      "Passed": 133,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "48a75e148eb6cfa62378cb5756812b650bee070cde3f5855297949f885ca3b7d"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_44_net10.0.trx",
+      "Total": 1,
+      "Passed": 1,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "2653ad57f312362f3864275e89f619890dae9748b2e5db5f97248bef2c2dec72"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_44_net8.0.trx",
+      "Total": 13,
+      "Passed": 13,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "ae58d8ee7340db9849ceb1300565d6e4998f4f0d216ff46bf3bbf7f0669dcd42"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_45_net10.0.trx",
+      "Total": 13,
+      "Passed": 13,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "986747901728f4b7a6e189a1cd06d55588b1d6b5b04cbbe3f631992831020dd0"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_45_net10.0[1].trx",
+      "Total": 133,
+      "Passed": 133,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "9902fed2efd4587c5660c75a31dfc3d574a8007a02bbc8a247e00c312004a64b"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_45_net10.0[2].trx",
+      "Total": 29,
+      "Passed": 29,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "34ef3bd4573516333375ab52daca7b1c13db24eed38ba346e70865a26c5897ba"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_46_net8.0.trx",
+      "Total": 29,
+      "Passed": 29,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "5823c9595d7658cddbf1dcac9e24d96b4e30677c76a86a712ea6dc58f489a8cd"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_47_net10.0.trx",
+      "Total": 5,
+      "Passed": 5,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "f7347d8657c93def1c9b057d1c407ad2d2bd2d760c3eb60b15a47e594af24254"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_47_48_net8.0.trx",
+      "Total": 1,
+      "Passed": 1,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "e603aa0283937eeb33507bc8df41f206e59b94fe4c01485e5795f0fa89756ab8"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_49_17_net10.0.trx",
+      "Total": 542,
+      "Passed": 542,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "a71e15265baa4a357096184a3a81d5e3292672da751b2c605f975cff1a1df289"
+    },
+    {
+      "File": "artifacts/zg3b1-qualified-final-tests/Laszlos_LAPTOP-KBD8D8JG_2026-10-16_21_49_17_net8.0.trx",
+      "Total": 542,
+      "Passed": 542,
+      "Failed": 0,
+      "NotExecuted": 0,
+      "Sha256": "e9bb14257cf83bd27f295b6a629be738f4b4f40eee87e5cf03b0a6844e5585ea"
+    }
+  ],
+  "FormatVerification": "passed; full solution verify-no-changes on committed runtime/package source",
+  "ProcessRecoveryReceipts": [
+    {
+      "TargetFramework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"admit\", expectedRecoveryCalls: 2)",
+      "Receipt": {
+        "Mode": "admit",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 2,
+        "Before": {
+          "Run": {
+            "Id": "42c95e50-1c96-477f-9a20-204a1aa85649",
+            "WorkflowName": "process-group-fanout-admit",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:51:04.8223196+08:00",
+            "UpdatedAt": "2026-10-16T21:51:04.9179651+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "3434eed81893edd30df151b5262d0214",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": false,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-28692-aec7536f433d465189f22cee82eb7cf0",
+            "LeaseExpiresAt": "2026-10-16T21:51:06.9179651+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "40753a4a-55ea-45bf-91d5-58570dcee49a",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [],
+          "Occurrences": [
+            null,
+            null,
+            null
+          ],
+          "Expansion": null
+        },
+        "SelectedBefore": [],
+        "After": {
+          "Run": {
+            "Id": "42c95e50-1c96-477f-9a20-204a1aa85649",
+            "WorkflowName": "process-group-fanout-admit",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:51:04.8223196+08:00",
+            "UpdatedAt": "2026-10-16T21:51:05.2453941+08:00",
+            "CompletedAt": "2026-10-16T21:51:05.2453941+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "3434eed81893edd30df151b5262d0214",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "d292c93b-9cb6-4f01-b38f-c84683a4e3a7",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "b8251f1e-c7ad-43fe-806e-7524b063059a",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "40753a4a-55ea-45bf-91d5-58570dcee49a",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "d292c93b-9cb6-4f01-b38f-c84683a4e3a7",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "384ec18a18cea794a9295a12205afe42ba7c0c392d095fdd9eb6dcdcf2872a54",
+              "Role": 0
+            },
+            {
+              "StepId": "b8251f1e-c7ad-43fe-806e-7524b063059a",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "a9983b5cce81aac892367da8835cb5df862b60ade05b6ce873169db3a893e213",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "bd83b0ce507536aba5cc0a8f175eb2ca1b155206195b78f52b3bdd745fc74d61",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "384ec18a18cea794a9295a12205afe42ba7c0c392d095fdd9eb6dcdcf2872a54",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "bd83b0ce507536aba5cc0a8f175eb2ca1b155206195b78f52b3bdd745fc74d61",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "a9983b5cce81aac892367da8835cb5df862b60ade05b6ce873169db3a893e213",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "bd83b0ce507536aba5cc0a8f175eb2ca1b155206195b78f52b3bdd745fc74d61",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "42c95e50-1c96-477f-9a20-204a1aa85649",
+            "ExpansionId": "a195468f9b76bc53aa0605306fb5a65fb065652c66a4682a2e9e7d7b06e0d3d2",
+            "FanOutKey": "items",
+            "BoundaryStepId": "40753a4a-55ea-45bf-91d5-58570dcee49a",
+            "BoundaryRevision": 1,
+            "PlanDigest": "2e5bb4576e27e3d28149fbea6f7c7cc038137bfdcf506e9bcba4d5fa0edf1183",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "384ec18a18cea794a9295a12205afe42ba7c0c392d095fdd9eb6dcdcf2872a54",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "a9983b5cce81aac892367da8835cb5df862b60ade05b6ce873169db3a893e213",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"close\", expectedRecoveryCalls: 0)",
+      "Receipt": {
+        "Mode": "close",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 0,
+        "Before": {
+          "Run": {
+            "Id": "0df8818a-547e-4ea7-8593-10c3f6af8364",
+            "WorkflowName": "process-group-fanout-close",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:51:05.5393396+08:00",
+            "UpdatedAt": "2026-10-16T21:51:05.6302185+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "7e230987a6a826598c0c56232ef179eb",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-1444-b0f6fc484da54af38597969bfa662f77",
+            "LeaseExpiresAt": "2026-10-16T21:51:07.6302185+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "164b0a4b-e802-4300-9cb0-f5c9071b1bb2",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "07e5bd50-2fd9-42cc-83a0-d6b4945e4d97",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "898e2eb3-14a9-4c65-98f2-9e0d3f727b2b",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "164b0a4b-e802-4300-9cb0-f5c9071b1bb2",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "d5f886b04bbe38d663cad24056c631c92dc8511d8ea1170d2f861dbdb9cd8095",
+              "Role": 0
+            },
+            {
+              "StepId": "07e5bd50-2fd9-42cc-83a0-d6b4945e4d97",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "258e618def6c68f6c4c5db219ba01fb9a4dbbdc9c7707fc2021a6169cb67925f",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "4519fbabdfe5dafb6c3e76ae293c2c7e11b236bf2f3d473380602f6b2901d288",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "d5f886b04bbe38d663cad24056c631c92dc8511d8ea1170d2f861dbdb9cd8095",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "4519fbabdfe5dafb6c3e76ae293c2c7e11b236bf2f3d473380602f6b2901d288",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "258e618def6c68f6c4c5db219ba01fb9a4dbbdc9c7707fc2021a6169cb67925f",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "4519fbabdfe5dafb6c3e76ae293c2c7e11b236bf2f3d473380602f6b2901d288",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "0df8818a-547e-4ea7-8593-10c3f6af8364",
+            "ExpansionId": "1c4cb12f5444a30fb3485c685661bf58b695392aec09d545509a42472287d178",
+            "FanOutKey": "items",
+            "BoundaryStepId": "898e2eb3-14a9-4c65-98f2-9e0d3f727b2b",
+            "BoundaryRevision": 1,
+            "PlanDigest": "b4147dc3dac966522adb75320254c2f4db12c4e3c74ad0cfd6c3c47dc7ecbab0",
+            "ItemCount": 2,
+            "IsComplete": false
+          }
+        },
+        "SelectedBefore": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "d5f886b04bbe38d663cad24056c631c92dc8511d8ea1170d2f861dbdb9cd8095",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "258e618def6c68f6c4c5db219ba01fb9a4dbbdc9c7707fc2021a6169cb67925f",
+            "Role": 0
+          }
+        ],
+        "After": {
+          "Run": {
+            "Id": "0df8818a-547e-4ea7-8593-10c3f6af8364",
+            "WorkflowName": "process-group-fanout-close",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:51:05.5393396+08:00",
+            "UpdatedAt": "2026-10-16T21:51:06.0124129+08:00",
+            "CompletedAt": "2026-10-16T21:51:06.0124129+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "7e230987a6a826598c0c56232ef179eb",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "164b0a4b-e802-4300-9cb0-f5c9071b1bb2",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "07e5bd50-2fd9-42cc-83a0-d6b4945e4d97",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "898e2eb3-14a9-4c65-98f2-9e0d3f727b2b",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "164b0a4b-e802-4300-9cb0-f5c9071b1bb2",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "d5f886b04bbe38d663cad24056c631c92dc8511d8ea1170d2f861dbdb9cd8095",
+              "Role": 0
+            },
+            {
+              "StepId": "07e5bd50-2fd9-42cc-83a0-d6b4945e4d97",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "258e618def6c68f6c4c5db219ba01fb9a4dbbdc9c7707fc2021a6169cb67925f",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "4519fbabdfe5dafb6c3e76ae293c2c7e11b236bf2f3d473380602f6b2901d288",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "d5f886b04bbe38d663cad24056c631c92dc8511d8ea1170d2f861dbdb9cd8095",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "4519fbabdfe5dafb6c3e76ae293c2c7e11b236bf2f3d473380602f6b2901d288",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "258e618def6c68f6c4c5db219ba01fb9a4dbbdc9c7707fc2021a6169cb67925f",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "4519fbabdfe5dafb6c3e76ae293c2c7e11b236bf2f3d473380602f6b2901d288",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "0df8818a-547e-4ea7-8593-10c3f6af8364",
+            "ExpansionId": "1c4cb12f5444a30fb3485c685661bf58b695392aec09d545509a42472287d178",
+            "FanOutKey": "items",
+            "BoundaryStepId": "898e2eb3-14a9-4c65-98f2-9e0d3f727b2b",
+            "BoundaryRevision": 1,
+            "PlanDigest": "b4147dc3dac966522adb75320254c2f4db12c4e3c74ad0cfd6c3c47dc7ecbab0",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "d5f886b04bbe38d663cad24056c631c92dc8511d8ea1170d2f861dbdb9cd8095",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "258e618def6c68f6c4c5db219ba01fb9a4dbbdc9c7707fc2021a6169cb67925f",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"closed\", expectedRecoveryCalls: 0)",
+      "Receipt": {
+        "Mode": "closed",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 0,
+        "Before": {
+          "Run": {
+            "Id": "52f9b9a9-ecf2-4c53-948e-b226a288eaf6",
+            "WorkflowName": "process-group-fanout-closed",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:51:03.0833867+08:00",
+            "UpdatedAt": "2026-10-16T21:51:03.176549+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "dea96110e42978f8d7d33f5dcaab82b6",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-43832-580ff211419d44ec8e352310bd20a23b",
+            "LeaseExpiresAt": "2026-10-16T21:51:05.176549+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "b8bc9aa6-3f9c-4c9f-91d6-a4f0cd440d66",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "006eb75a-fb0a-4d47-9efd-bd5fe0aed71a",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "0b8b4fcf-bdc8-42cb-bdbf-0ccbcac5d334",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "b8bc9aa6-3f9c-4c9f-91d6-a4f0cd440d66",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "672233d423b1013068926fec33df28fe9d5e3b849d3282bc9e0c8d040eda7238",
+              "Role": 0
+            },
+            {
+              "StepId": "006eb75a-fb0a-4d47-9efd-bd5fe0aed71a",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "11b0d3b88a0dd5db047dc67acc4a995e6727eb28d26c26949413ea5048c8d225",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "24f0ec9acd73a9e6f43b00aa4506995f612bddb5596e76031a789d57e37679ec",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "672233d423b1013068926fec33df28fe9d5e3b849d3282bc9e0c8d040eda7238",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "24f0ec9acd73a9e6f43b00aa4506995f612bddb5596e76031a789d57e37679ec",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "11b0d3b88a0dd5db047dc67acc4a995e6727eb28d26c26949413ea5048c8d225",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "24f0ec9acd73a9e6f43b00aa4506995f612bddb5596e76031a789d57e37679ec",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "52f9b9a9-ecf2-4c53-948e-b226a288eaf6",
+            "ExpansionId": "013aa8d6989814e54a4b683656ca5601d674540e59b3a49373c5835ef26ac85e",
+            "FanOutKey": "items",
+            "BoundaryStepId": "0b8b4fcf-bdc8-42cb-bdbf-0ccbcac5d334",
+            "BoundaryRevision": 1,
+            "PlanDigest": "d83de4a4346519086974ccee384528b83bb893b4092d2f11a75e37741c24525d",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedBefore": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "672233d423b1013068926fec33df28fe9d5e3b849d3282bc9e0c8d040eda7238",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "11b0d3b88a0dd5db047dc67acc4a995e6727eb28d26c26949413ea5048c8d225",
+            "Role": 0
+          }
+        ],
+        "After": {
+          "Run": {
+            "Id": "52f9b9a9-ecf2-4c53-948e-b226a288eaf6",
+            "WorkflowName": "process-group-fanout-closed",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:51:03.0833867+08:00",
+            "UpdatedAt": "2026-10-16T21:51:03.545533+08:00",
+            "CompletedAt": "2026-10-16T21:51:03.545533+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "dea96110e42978f8d7d33f5dcaab82b6",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "b8bc9aa6-3f9c-4c9f-91d6-a4f0cd440d66",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "006eb75a-fb0a-4d47-9efd-bd5fe0aed71a",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "0b8b4fcf-bdc8-42cb-bdbf-0ccbcac5d334",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "b8bc9aa6-3f9c-4c9f-91d6-a4f0cd440d66",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "672233d423b1013068926fec33df28fe9d5e3b849d3282bc9e0c8d040eda7238",
+              "Role": 0
+            },
+            {
+              "StepId": "006eb75a-fb0a-4d47-9efd-bd5fe0aed71a",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "11b0d3b88a0dd5db047dc67acc4a995e6727eb28d26c26949413ea5048c8d225",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "24f0ec9acd73a9e6f43b00aa4506995f612bddb5596e76031a789d57e37679ec",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "672233d423b1013068926fec33df28fe9d5e3b849d3282bc9e0c8d040eda7238",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "24f0ec9acd73a9e6f43b00aa4506995f612bddb5596e76031a789d57e37679ec",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "11b0d3b88a0dd5db047dc67acc4a995e6727eb28d26c26949413ea5048c8d225",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "24f0ec9acd73a9e6f43b00aa4506995f612bddb5596e76031a789d57e37679ec",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "52f9b9a9-ecf2-4c53-948e-b226a288eaf6",
+            "ExpansionId": "013aa8d6989814e54a4b683656ca5601d674540e59b3a49373c5835ef26ac85e",
+            "FanOutKey": "items",
+            "BoundaryStepId": "0b8b4fcf-bdc8-42cb-bdbf-0ccbcac5d334",
+            "BoundaryRevision": 1,
+            "PlanDigest": "d83de4a4346519086974ccee384528b83bb893b4092d2f11a75e37741c24525d",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "672233d423b1013068926fec33df28fe9d5e3b849d3282bc9e0c8d040eda7238",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "11b0d3b88a0dd5db047dc67acc4a995e6727eb28d26c26949413ea5048c8d225",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net10.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"partial\", expectedRecoveryCalls: 1)",
+      "Receipt": {
+        "Mode": "partial",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 1,
+        "Before": {
+          "Run": {
+            "Id": "6ed1e031-b95c-4edc-a5db-9669bdaef2d9",
+            "WorkflowName": "process-group-fanout-partial",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:51:03.9469717+08:00",
+            "UpdatedAt": "2026-10-16T21:51:04.0508037+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "c9142816e52b81a45f575049a44d2102",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-36376-0be46ca5bb56455493dfa5e7a3ee3743",
+            "LeaseExpiresAt": "2026-10-16T21:51:06.0508037+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "4cc920d6-55ab-4fe3-9b41-56139543a812",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "610c6f52-244d-4bfd-a782-a1153ef4ae1f",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "4cc920d6-55ab-4fe3-9b41-56139543a812",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "4f19daa13dd4075a5037852be097716681decdec29d1a8de9904e109028d879d",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "74320d0c3276bc158ed0f1d3b9792d29e185dc53ee5288e8f0dd0af299f278cb",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "4f19daa13dd4075a5037852be097716681decdec29d1a8de9904e109028d879d",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "74320d0c3276bc158ed0f1d3b9792d29e185dc53ee5288e8f0dd0af299f278cb",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "c49486d94d99111e8a088811fbe8982526474d677ab1b8ea26e8890bc13cb91e",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "74320d0c3276bc158ed0f1d3b9792d29e185dc53ee5288e8f0dd0af299f278cb",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "6ed1e031-b95c-4edc-a5db-9669bdaef2d9",
+            "ExpansionId": "afcb9c5068d8c2d77a46f98a7c9723de05c3a7defe6098066496962a48f04a4c",
+            "FanOutKey": "items",
+            "BoundaryStepId": "610c6f52-244d-4bfd-a782-a1153ef4ae1f",
+            "BoundaryRevision": 1,
+            "PlanDigest": "41216181d7c87dc4ae492b995d1164223f07a014ee514d6c95810e797c59ffcc",
+            "ItemCount": 2,
+            "IsComplete": false
+          }
+        },
+        "SelectedBefore": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "4f19daa13dd4075a5037852be097716681decdec29d1a8de9904e109028d879d",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "c49486d94d99111e8a088811fbe8982526474d677ab1b8ea26e8890bc13cb91e",
+            "Role": 0
+          }
+        ],
+        "After": {
+          "Run": {
+            "Id": "6ed1e031-b95c-4edc-a5db-9669bdaef2d9",
+            "WorkflowName": "process-group-fanout-partial",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:51:03.9469717+08:00",
+            "UpdatedAt": "2026-10-16T21:51:04.4903634+08:00",
+            "CompletedAt": "2026-10-16T21:51:04.4903634+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "c9142816e52b81a45f575049a44d2102",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "4cc920d6-55ab-4fe3-9b41-56139543a812",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "839a560e-398e-46ec-bf7d-adbf3d069de2",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "610c6f52-244d-4bfd-a782-a1153ef4ae1f",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "4cc920d6-55ab-4fe3-9b41-56139543a812",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "4f19daa13dd4075a5037852be097716681decdec29d1a8de9904e109028d879d",
+              "Role": 0
+            },
+            {
+              "StepId": "839a560e-398e-46ec-bf7d-adbf3d069de2",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "c49486d94d99111e8a088811fbe8982526474d677ab1b8ea26e8890bc13cb91e",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "74320d0c3276bc158ed0f1d3b9792d29e185dc53ee5288e8f0dd0af299f278cb",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "4f19daa13dd4075a5037852be097716681decdec29d1a8de9904e109028d879d",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "74320d0c3276bc158ed0f1d3b9792d29e185dc53ee5288e8f0dd0af299f278cb",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "c49486d94d99111e8a088811fbe8982526474d677ab1b8ea26e8890bc13cb91e",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "74320d0c3276bc158ed0f1d3b9792d29e185dc53ee5288e8f0dd0af299f278cb",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "6ed1e031-b95c-4edc-a5db-9669bdaef2d9",
+            "ExpansionId": "afcb9c5068d8c2d77a46f98a7c9723de05c3a7defe6098066496962a48f04a4c",
+            "FanOutKey": "items",
+            "BoundaryStepId": "610c6f52-244d-4bfd-a782-a1153ef4ae1f",
+            "BoundaryRevision": 1,
+            "PlanDigest": "41216181d7c87dc4ae492b995d1164223f07a014ee514d6c95810e797c59ffcc",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "4f19daa13dd4075a5037852be097716681decdec29d1a8de9904e109028d879d",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "c49486d94d99111e8a088811fbe8982526474d677ab1b8ea26e8890bc13cb91e",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"admit\", expectedRecoveryCalls: 2)",
+      "Receipt": {
+        "Mode": "admit",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 2,
+        "Before": {
+          "Run": {
+            "Id": "7b3537b0-8608-4f24-bb27-aa40bca7cf22",
+            "WorkflowName": "process-group-fanout-admit",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:49:17.2728667+08:00",
+            "UpdatedAt": "2026-10-16T21:49:17.3430155+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "225ac39e0ab9711a33cb32e559476dcd",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": false,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-34464-4684eaf701994547888ef691989cd8f7",
+            "LeaseExpiresAt": "2026-10-16T21:49:19.3430155+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "b5484958-ff61-4729-b585-b221de387ecc",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [],
+          "Occurrences": [
+            null,
+            null,
+            null
+          ],
+          "Expansion": null
+        },
+        "SelectedBefore": [],
+        "After": {
+          "Run": {
+            "Id": "7b3537b0-8608-4f24-bb27-aa40bca7cf22",
+            "WorkflowName": "process-group-fanout-admit",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:49:17.2728667+08:00",
+            "UpdatedAt": "2026-10-16T21:49:17.5800512+08:00",
+            "CompletedAt": "2026-10-16T21:49:17.5800512+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "225ac39e0ab9711a33cb32e559476dcd",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "2d7d708f-f010-435c-81cc-0932d4b42658",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "c03120a5-2276-4947-803a-64a0e1590adb",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "b5484958-ff61-4729-b585-b221de387ecc",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "2d7d708f-f010-435c-81cc-0932d4b42658",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "41ce3590820559bc744a535efa3ae5de5c5f4cd783afdf6e799afd8be7e3671b",
+              "Role": 0
+            },
+            {
+              "StepId": "c03120a5-2276-4947-803a-64a0e1590adb",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "0fced27e322c2a88499802dc24f74eb49c4135d1d15cf65217b12a0f4a84e08d",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "33c737d3ce37808936fda2f31b270630b266eba2dcbe99fb7cda2aa0baf279a4",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "41ce3590820559bc744a535efa3ae5de5c5f4cd783afdf6e799afd8be7e3671b",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "33c737d3ce37808936fda2f31b270630b266eba2dcbe99fb7cda2aa0baf279a4",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "0fced27e322c2a88499802dc24f74eb49c4135d1d15cf65217b12a0f4a84e08d",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "33c737d3ce37808936fda2f31b270630b266eba2dcbe99fb7cda2aa0baf279a4",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "7b3537b0-8608-4f24-bb27-aa40bca7cf22",
+            "ExpansionId": "2ac64a7daa0481ce8df49e15db08ebca3108044f392c0d630c27b09a7349f676",
+            "FanOutKey": "items",
+            "BoundaryStepId": "b5484958-ff61-4729-b585-b221de387ecc",
+            "BoundaryRevision": 1,
+            "PlanDigest": "bc3b227e8b0585999f37dc075dded0922182b73899187f92f8860394cc2e7fe7",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "41ce3590820559bc744a535efa3ae5de5c5f4cd783afdf6e799afd8be7e3671b",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "0fced27e322c2a88499802dc24f74eb49c4135d1d15cf65217b12a0f4a84e08d",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"close\", expectedRecoveryCalls: 0)",
+      "Receipt": {
+        "Mode": "close",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 0,
+        "Before": {
+          "Run": {
+            "Id": "b764d535-af93-4e1d-8a15-4f08a33e8537",
+            "WorkflowName": "process-group-fanout-close",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:49:18.3625427+08:00",
+            "UpdatedAt": "2026-10-16T21:49:18.4389373+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "2863d02a2d58aba8c22014f9963498e2",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-9264-add47c8f2c2e4a0ba7508519cdadd7de",
+            "LeaseExpiresAt": "2026-10-16T21:49:20.4389373+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "12bb7b10-a212-4706-9dd6-c5c77f89ce48",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "eef0eef1-dadb-4b50-9767-3211e4f28e14",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "9621d552-e12e-4fc4-b06e-7541fc396aba",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "12bb7b10-a212-4706-9dd6-c5c77f89ce48",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "68e547bec435b43567991f93cce42d45d2212727f8cda446a43f841948a4fac6",
+              "Role": 0
+            },
+            {
+              "StepId": "eef0eef1-dadb-4b50-9767-3211e4f28e14",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "40227470d32374099c21eba8ca08d942b8ebb93b04573b40f1afaff6320cc593",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "e5255e1c0c1455bf0cc2a99d9c6ac28be0b0e5baeb039803e024b829a4100b83",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "68e547bec435b43567991f93cce42d45d2212727f8cda446a43f841948a4fac6",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "e5255e1c0c1455bf0cc2a99d9c6ac28be0b0e5baeb039803e024b829a4100b83",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "40227470d32374099c21eba8ca08d942b8ebb93b04573b40f1afaff6320cc593",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "e5255e1c0c1455bf0cc2a99d9c6ac28be0b0e5baeb039803e024b829a4100b83",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "b764d535-af93-4e1d-8a15-4f08a33e8537",
+            "ExpansionId": "4d9b59b7b980137e57991bc261c49304a12e309640986d04e28dd0a0097318cd",
+            "FanOutKey": "items",
+            "BoundaryStepId": "9621d552-e12e-4fc4-b06e-7541fc396aba",
+            "BoundaryRevision": 1,
+            "PlanDigest": "16af83564ee919430d0b618dfa07455cc59648c5fc0071fb9ee468fedee6a0d0",
+            "ItemCount": 2,
+            "IsComplete": false
+          }
+        },
+        "SelectedBefore": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "68e547bec435b43567991f93cce42d45d2212727f8cda446a43f841948a4fac6",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "40227470d32374099c21eba8ca08d942b8ebb93b04573b40f1afaff6320cc593",
+            "Role": 0
+          }
+        ],
+        "After": {
+          "Run": {
+            "Id": "b764d535-af93-4e1d-8a15-4f08a33e8537",
+            "WorkflowName": "process-group-fanout-close",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:49:18.3625427+08:00",
+            "UpdatedAt": "2026-10-16T21:49:18.7195864+08:00",
+            "CompletedAt": "2026-10-16T21:49:18.7195864+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "2863d02a2d58aba8c22014f9963498e2",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "12bb7b10-a212-4706-9dd6-c5c77f89ce48",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "eef0eef1-dadb-4b50-9767-3211e4f28e14",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "9621d552-e12e-4fc4-b06e-7541fc396aba",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "12bb7b10-a212-4706-9dd6-c5c77f89ce48",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "68e547bec435b43567991f93cce42d45d2212727f8cda446a43f841948a4fac6",
+              "Role": 0
+            },
+            {
+              "StepId": "eef0eef1-dadb-4b50-9767-3211e4f28e14",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "40227470d32374099c21eba8ca08d942b8ebb93b04573b40f1afaff6320cc593",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "e5255e1c0c1455bf0cc2a99d9c6ac28be0b0e5baeb039803e024b829a4100b83",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "68e547bec435b43567991f93cce42d45d2212727f8cda446a43f841948a4fac6",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "e5255e1c0c1455bf0cc2a99d9c6ac28be0b0e5baeb039803e024b829a4100b83",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "40227470d32374099c21eba8ca08d942b8ebb93b04573b40f1afaff6320cc593",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "e5255e1c0c1455bf0cc2a99d9c6ac28be0b0e5baeb039803e024b829a4100b83",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "b764d535-af93-4e1d-8a15-4f08a33e8537",
+            "ExpansionId": "4d9b59b7b980137e57991bc261c49304a12e309640986d04e28dd0a0097318cd",
+            "FanOutKey": "items",
+            "BoundaryStepId": "9621d552-e12e-4fc4-b06e-7541fc396aba",
+            "BoundaryRevision": 1,
+            "PlanDigest": "16af83564ee919430d0b618dfa07455cc59648c5fc0071fb9ee468fedee6a0d0",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "68e547bec435b43567991f93cce42d45d2212727f8cda446a43f841948a4fac6",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "40227470d32374099c21eba8ca08d942b8ebb93b04573b40f1afaff6320cc593",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"closed\", expectedRecoveryCalls: 0)",
+      "Receipt": {
+        "Mode": "closed",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 0,
+        "Before": {
+          "Run": {
+            "Id": "c88b08c6-aadd-4180-802c-88ca2c87b38c",
+            "WorkflowName": "process-group-fanout-closed",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:49:17.8044836+08:00",
+            "UpdatedAt": "2026-10-16T21:49:17.8911665+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "958a3927ffd5ea16bfaf91f8884b5bd8",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-41824-c14d46cef419486da0b56c026929439e",
+            "LeaseExpiresAt": "2026-10-16T21:49:19.8911665+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "07e26bd7-73c5-4540-987e-d3c5bb0b4888",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "9348d433-2049-4c56-be5b-b530f9128cbd",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "14594202-83c0-44f5-837e-e42c8b7ef005",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "07e26bd7-73c5-4540-987e-d3c5bb0b4888",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "e692ceb2dec75059de5df87c4c876762abfd3ef641237a01bdb94ec14995c3ce",
+              "Role": 0
+            },
+            {
+              "StepId": "9348d433-2049-4c56-be5b-b530f9128cbd",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "599973d0516cbc53d2bf0d4496f5ccd1960d43c4c38b8929199fc99d46e4daf5",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "0518311acd0ca94241e47fd96383e6911598e3ae285b751e8ab4b0ba860d0092",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "e692ceb2dec75059de5df87c4c876762abfd3ef641237a01bdb94ec14995c3ce",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "0518311acd0ca94241e47fd96383e6911598e3ae285b751e8ab4b0ba860d0092",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "599973d0516cbc53d2bf0d4496f5ccd1960d43c4c38b8929199fc99d46e4daf5",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "0518311acd0ca94241e47fd96383e6911598e3ae285b751e8ab4b0ba860d0092",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "c88b08c6-aadd-4180-802c-88ca2c87b38c",
+            "ExpansionId": "7d94135cf324d2716da1c2af206deb70f7b37a10894bd4f48c51af57273b9416",
+            "FanOutKey": "items",
+            "BoundaryStepId": "14594202-83c0-44f5-837e-e42c8b7ef005",
+            "BoundaryRevision": 1,
+            "PlanDigest": "a91e899670f94c09916548f5960c7e72cade586dee94decf51b7d0c23d45ea2a",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedBefore": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "e692ceb2dec75059de5df87c4c876762abfd3ef641237a01bdb94ec14995c3ce",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "599973d0516cbc53d2bf0d4496f5ccd1960d43c4c38b8929199fc99d46e4daf5",
+            "Role": 0
+          }
+        ],
+        "After": {
+          "Run": {
+            "Id": "c88b08c6-aadd-4180-802c-88ca2c87b38c",
+            "WorkflowName": "process-group-fanout-closed",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:49:17.8044836+08:00",
+            "UpdatedAt": "2026-10-16T21:49:18.1473111+08:00",
+            "CompletedAt": "2026-10-16T21:49:18.1473111+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "958a3927ffd5ea16bfaf91f8884b5bd8",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "07e26bd7-73c5-4540-987e-d3c5bb0b4888",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "9348d433-2049-4c56-be5b-b530f9128cbd",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "14594202-83c0-44f5-837e-e42c8b7ef005",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "07e26bd7-73c5-4540-987e-d3c5bb0b4888",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "e692ceb2dec75059de5df87c4c876762abfd3ef641237a01bdb94ec14995c3ce",
+              "Role": 0
+            },
+            {
+              "StepId": "9348d433-2049-4c56-be5b-b530f9128cbd",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "599973d0516cbc53d2bf0d4496f5ccd1960d43c4c38b8929199fc99d46e4daf5",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "0518311acd0ca94241e47fd96383e6911598e3ae285b751e8ab4b0ba860d0092",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "e692ceb2dec75059de5df87c4c876762abfd3ef641237a01bdb94ec14995c3ce",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "0518311acd0ca94241e47fd96383e6911598e3ae285b751e8ab4b0ba860d0092",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "599973d0516cbc53d2bf0d4496f5ccd1960d43c4c38b8929199fc99d46e4daf5",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "0518311acd0ca94241e47fd96383e6911598e3ae285b751e8ab4b0ba860d0092",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "c88b08c6-aadd-4180-802c-88ca2c87b38c",
+            "ExpansionId": "7d94135cf324d2716da1c2af206deb70f7b37a10894bd4f48c51af57273b9416",
+            "FanOutKey": "items",
+            "BoundaryStepId": "14594202-83c0-44f5-837e-e42c8b7ef005",
+            "BoundaryRevision": 1,
+            "PlanDigest": "a91e899670f94c09916548f5960c7e72cade586dee94decf51b7d0c23d45ea2a",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "e692ceb2dec75059de5df87c4c876762abfd3ef641237a01bdb94ec14995c3ce",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "599973d0516cbc53d2bf0d4496f5ccd1960d43c4c38b8929199fc99d46e4daf5",
+            "Role": 0
+          }
+        ]
+      }
+    },
+    {
+      "TargetFramework": "net8.0",
+      "Test": "Penghou.Zhinu.Sqlite.Tests.ActivityGroupFanOutRecoveryTests.ProcessLoss_RecoversImmutableGroupedFanOut(mode: \"partial\", expectedRecoveryCalls: 1)",
+      "Receipt": {
+        "Mode": "partial",
+        "ProcessExitCode": 93,
+        "RecoveryCallbacks": 1,
+        "Before": {
+          "Run": {
+            "Id": "d7f993a8-3e4e-4555-8ace-3df62d9008e4",
+            "WorkflowName": "process-group-fanout-partial",
+            "WorkflowVersion": "1",
+            "Status": 1,
+            "CreatedAt": "2026-10-16T21:49:16.4131346+08:00",
+            "UpdatedAt": "2026-10-16T21:49:16.4961337+08:00",
+            "CompletedAt": null,
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": null,
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "57ff57de46ff1d4beb0ffff4dba2f953",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": "process-47384-525fbfc19dba411cbb5239a7782838a5",
+            "LeaseExpiresAt": "2026-10-16T21:49:18.4961337+08:00",
+            "LeaseGeneration": 2
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "6d796632-2032-4e85-b276-591632e40a0a",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "9e0de686-fca1-4d0e-8566-5303b04704b9",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "6d796632-2032-4e85-b276-591632e40a0a",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "35ef57c5929eaa1b49ca8ad3a5eb6c8dc937d6ce3e793c14e16e61c5b81bcb3a",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "8c5d08e5eab283e527ac71e2b8cf943b19cd7a18c70dcf176a3303591092137f",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "35ef57c5929eaa1b49ca8ad3a5eb6c8dc937d6ce3e793c14e16e61c5b81bcb3a",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "8c5d08e5eab283e527ac71e2b8cf943b19cd7a18c70dcf176a3303591092137f",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "b16d1027ad9f3b13becd72291d1176703e27bbe40afe64b8c21db7bd08344cfc",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "8c5d08e5eab283e527ac71e2b8cf943b19cd7a18c70dcf176a3303591092137f",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "d7f993a8-3e4e-4555-8ace-3df62d9008e4",
+            "ExpansionId": "3d83168fa8d66e7b1d323dce067cceca8308246ea6cb1d94df65115ac9a2bf02",
+            "FanOutKey": "items",
+            "BoundaryStepId": "9e0de686-fca1-4d0e-8566-5303b04704b9",
+            "BoundaryRevision": 1,
+            "PlanDigest": "edf58c7ac392635acc22d389d6fb25fcbf1d12a79a87647c1bea5392ee1d2566",
+            "ItemCount": 2,
+            "IsComplete": false
+          }
+        },
+        "SelectedBefore": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "35ef57c5929eaa1b49ca8ad3a5eb6c8dc937d6ce3e793c14e16e61c5b81bcb3a",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "b16d1027ad9f3b13becd72291d1176703e27bbe40afe64b8c21db7bd08344cfc",
+            "Role": 0
+          }
+        ],
+        "After": {
+          "Run": {
+            "Id": "d7f993a8-3e4e-4555-8ace-3df62d9008e4",
+            "WorkflowName": "process-group-fanout-partial",
+            "WorkflowVersion": "1",
+            "Status": 2,
+            "CreatedAt": "2026-10-16T21:49:16.4131346+08:00",
+            "UpdatedAt": "2026-10-16T21:49:17.0081251+08:00",
+            "CompletedAt": "2026-10-16T21:49:17.0081251+08:00",
+            "Deadline": null,
+            "InputJson": "\"a,b\"",
+            "InputType": "System.String, System.Private.CoreLib",
+            "OutputJson": "\"A|B\"",
+            "OutputType": "System.String, System.Private.CoreLib",
+            "Error": null,
+            "ParentRunId": null,
+            "SourceRunId": null,
+            "MetadataJson": null,
+            "TraceId": "57ff57de46ff1d4beb0ffff4dba2f953",
+            "DefinitionFingerprint": null,
+            "GroupManifestDigest": "3f7f460fff67726532184a1d0733e479db5b947b23e375783a875c1b58b1a7cc",
+            "GroupFanOutUsed": true,
+            "AuthorizationProviderId": null,
+            "AuthorizationBindingId": null,
+            "AuthoritySubjectBinding": null,
+            "LeaseOwner": null,
+            "LeaseExpiresAt": null,
+            "LeaseGeneration": 3
+          },
+          "Manifest": "{\"contractVersion\":1,\"definitions\":[{\"groupKey\":\"root\",\"parentGroupKey\":null,\"kind\":\"Logical\",\"displayName\":\"Root\",\"childOrdinal\":0,\"provenance\":null},{\"groupKey\":\"work\",\"parentGroupKey\":\"root\",\"kind\":\"Logical\",\"displayName\":\"Work\",\"childOrdinal\":0,\"provenance\":null}]}",
+          "Steps": [
+            {
+              "Id": "6d796632-2032-4e85-b276-591632e40a0a",
+              "StepKey": "items.a",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"A\""
+            },
+            {
+              "Id": "5a520533-2a97-4902-b7fb-2000d98b77ec",
+              "StepKey": "items.b",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "\"B\""
+            },
+            {
+              "Id": "9e0de686-fca1-4d0e-8566-5303b04704b9",
+              "StepKey": "select",
+              "Revision": 1,
+              "Status": 2,
+              "Attempt": 1,
+              "OutputJson": "[\"a\",\"b\"]"
+            }
+          ],
+          "Memberships": [
+            {
+              "StepId": "6d796632-2032-4e85-b276-591632e40a0a",
+              "StepKey": "items.a",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "35ef57c5929eaa1b49ca8ad3a5eb6c8dc937d6ce3e793c14e16e61c5b81bcb3a",
+              "Role": 0
+            },
+            {
+              "StepId": "5a520533-2a97-4902-b7fb-2000d98b77ec",
+              "StepKey": "items.b",
+              "StepRevision": 1,
+              "GroupOccurrenceId": "b16d1027ad9f3b13becd72291d1176703e27bbe40afe64b8c21db7bd08344cfc",
+              "Role": 0
+            }
+          ],
+          "Occurrences": [
+            {
+              "GroupOccurrenceId": "8c5d08e5eab283e527ac71e2b8cf943b19cd7a18c70dcf176a3303591092137f",
+              "GroupKey": "root",
+              "ParentGroupOccurrenceId": null,
+              "ExecutionCoordinate": "[]"
+            },
+            {
+              "GroupOccurrenceId": "35ef57c5929eaa1b49ca8ad3a5eb6c8dc937d6ce3e793c14e16e61c5b81bcb3a",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "8c5d08e5eab283e527ac71e2b8cf943b19cd7a18c70dcf176a3303591092137f",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"a\"}]}"
+            },
+            {
+              "GroupOccurrenceId": "b16d1027ad9f3b13becd72291d1176703e27bbe40afe64b8c21db7bd08344cfc",
+              "GroupKey": "work",
+              "ParentGroupOccurrenceId": "8c5d08e5eab283e527ac71e2b8cf943b19cd7a18c70dcf176a3303591092137f",
+              "ExecutionCoordinate": "{\"version\":2,\"frames\":[{\"fanOut\":\"items\",\"kind\":\"key\",\"item\":\"b\"}]}"
+            }
+          ],
+          "Expansion": {
+            "WorkflowRunId": "d7f993a8-3e4e-4555-8ace-3df62d9008e4",
+            "ExpansionId": "3d83168fa8d66e7b1d323dce067cceca8308246ea6cb1d94df65115ac9a2bf02",
+            "FanOutKey": "items",
+            "BoundaryStepId": "9e0de686-fca1-4d0e-8566-5303b04704b9",
+            "BoundaryRevision": 1,
+            "PlanDigest": "edf58c7ac392635acc22d389d6fb25fcbf1d12a79a87647c1bea5392ee1d2566",
+            "ItemCount": 2,
+            "IsComplete": true
+          }
+        },
+        "SelectedAfter": [
+          {
+            "ItemKey": "a",
+            "StepKey": "items.a",
+            "InputHash": "ac8d8342bbb2362d13f0a559a3621bb407011368895164b628a54f7fc33fc43c",
+            "OccurrenceId": "35ef57c5929eaa1b49ca8ad3a5eb6c8dc937d6ce3e793c14e16e61c5b81bcb3a",
+            "Role": 0
+          },
+          {
+            "ItemKey": "b",
+            "StepKey": "items.b",
+            "InputHash": "c100f95c1913f9c72fc1f4ef0847e1e723ffe0bde0b36e5f36c13f81fe8c26ed",
+            "OccurrenceId": "b16d1027ad9f3b13becd72291d1176703e27bbe40afe64b8c21db7bd08344cfc",
+            "Role": 0
+          }
+        ]
+      }
+    }
+  ],
+  "Supported": [
+    "all four native functional/class keyed/positional overloads at root execution scope with an explicit current completed selection step and declared dependency",
+    "bounded atomic whole-selection admission before any item claim; exact input hashes and deterministic item/parent identities",
+    "keyed reorder/result-order parity, positional tagging, real simultaneous sibling membership isolation",
+    "live lease/owner/generation fencing, admitted claim contracts, reserved-key collisions and missing-capability rejection",
+    "append-only exact-current-revision closure, item restart, identical selection restart, failed/swallowed chunks and retry",
+    "fixed-selection process loss inside admission, partial item claim, closure transaction and after closure commit",
+    "class compensation replay without re-admission, native mutable-input semantics with pre-claim hash rejection",
+    "schema 8 to 9 retained grouped rows and authority binding, supported 5/6/7 migration regressions, immutable fresh/migrated marker and retention cascade",
+    "unchanged v1 golden vectors, independently computed v2 keyed/positional vectors",
+    "isolated package-only authorized grouped fan-out and unchanged published compiled consumer with schema 9 old-worker rejection"
+  ],
+  "NotYetQualified": [
+    "ZG-3b.2 grouped forks",
+    "ZG-3b.3 nested repeated dynamic coordinates and parent occurrence qualification",
+    "ZG-3b.4 evolving selection and broader partial fan-out/fork expansion/restart",
+    "ZG-3b.5 parent child-start/wait memberships and child-boundary recovery",
+    "ZG-3b.6 consolidated dynamic qualification",
+    "ZG-4 hierarchy/query projection and ZG-5 aggregate state/progress",
+    "typed Fuwen tokens, Fuwen multi-activity fan-out lowering, integration and cross-repository completion",
+    "Linux or remote CI and package publication"
+  ],
+  "IndependentReview": "Luna read-only review: no remaining concrete source issue after the fresh marker-trigger fix; native input/reference and forward policy parity documented.",
+  "SourceSha256": [
+    {
+      "Path": "eng/Verify-LegacyWorkflowConsumer.ps1",
+      "Sha256": "570e361bba4ad6ef00797c34c50cbb8734425ffe3d84a186297555e577b3bff1"
+    },
+    {
+      "Path": "eng/Verify-WorkflowPackageClosure.ps1",
+      "Sha256": "068cf78a5d5e6dee39e8afb3519dffa0541b2bbc8a31752dcc8a45abc044b033"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupFanOutRepository.cs",
+      "Sha256": "0a6619870c01204cc2e5b49c2eebf732d6e094e6832ebc6891affb10084a922f"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Groups/SqliteWorkflowGroupRepository.cs",
+      "Sha256": "8f8fefe04c97b79215ce2af5eae008c8e3867d817f55725667549f963690807c"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/Persistence/SqliteStoreSupport.cs",
+      "Sha256": "544d99e58c5ee0cb178cea61db265002054ec6844f947845d9c63b768f60787f"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Steps/SqliteStepRepository.Claims.cs",
+      "Sha256": "708000ee7214d3b529cd0de926ebf76bd2f73b81de168ed644c90c16369f9d31"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Workflows/Commands/InsertRunCommand.cs",
+      "Sha256": "44c6574d7975ddb00a75b2a913749c889dc31987c74395bc6f0e8b8649274cdb"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/Persistence/Workflows/SqliteWorkflowRepository.cs",
+      "Sha256": "c0e810fa07ef6bf1c853be03e0c0bbaf8c09e79d4fbb104320d007ba5a224978"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/PublicAPI.Unshipped.txt",
+      "Sha256": "f5f717812ce2df5864f17826309b0f2773f8f3b54ea633027d7281d22fea0aa7"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/SqliteDatabase.cs",
+      "Sha256": "e5708899a7b3d197cbd5d5c7afcbed6e5307af64f36ba6da0f0e504749bd4cad"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/SqliteWorkflowStore.cs",
+      "Sha256": "7836a910b6f7d1430ab827582ea3cbe4b6ab7e05dd64a9536c8579da71558091"
+    },
+    {
+      "Path": "src/Penghou.Zhinu.Sqlite/ZhinuSchemaCompatibilityException.cs",
+      "Sha256": "87bee173e90d451d1df3854a63053331b1426c2d9552eaaee8da2c67851e6277"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupFanOut.cs",
+      "Sha256": "3f34ab68c6b10612c650fbe3bffb859733b3c8195fed54c4b5a8cb83cf71c612"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupManifest.cs",
+      "Sha256": "1997fb07460984c96bf0cd146c5171ff6b3a75e753b0015e9550456949dabee2"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupOccurrence.cs",
+      "Sha256": "137f334f3d5dc7eae7e5a89aca414c42eeb6f55b3e741e5d3ddc8df675c0fc15"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/ActivityGroups/ActivityGroupRuntime.cs",
+      "Sha256": "22f502b18106f1b50d7657137f4487970969f37d9550a9b90456bad5a71f2762"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/Execution/Steps/RunExecutionPipeline.cs",
+      "Sha256": "906f8b9845b2ed86e784ac036e19f9611115b2b3b487fc56f119676f0dc3ca7b"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/PublicAPI.Unshipped.txt",
+      "Sha256": "6a9255d5ed92cd22ab4cd499691064a1ce81892a679849c37efce3a3c017f5c0"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/StepClaimRequest.cs",
+      "Sha256": "37ba450ba505a2f0c0965419e1401d558d296971ca24f8780acea06afc3c6acb"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/StepOptions.cs",
+      "Sha256": "68fbb96666f302e43aa89c0e299a8a47c877913dc5355040758e27e753f18470"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/WorkflowContext.GroupedFanOut.cs",
+      "Sha256": "69354f1e097dda558088416e9f5b2ebc6420e7afd683dc98362f47ed913cc369"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/WorkflowContext.cs",
+      "Sha256": "8f685071d25cce91bf15aad0a85014617e747a2db70ff3552644b2d983d8a24e"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/WorkflowLoopIteration.cs",
+      "Sha256": "3896fec223b013a956a0426d3650be1b5ca3574677b3382cb6049b2889f366e6"
+    },
+    {
+      "Path": "src/Penghou.Zhinu/WorkflowRun.cs",
+      "Sha256": "91b9dd0915deb6f54bcdda5ccfdb8f0beabc1bbd4e1637d7b2ecfa927fc19139"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/GroupFanOutProbe.cs",
+      "Sha256": "e3587f40fd2556802479d3033fe900f7377c6f9124bf19c7d65d40afbdab8aa2"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.ProcessProbe/Program.cs",
+      "Sha256": "5491d28c9a7e2e91b43ab6ad9815dbcb2d34c53a0aae48440efda973f5191bfe"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutAdmissionTests.cs",
+      "Sha256": "8e0bbe2d459f6a834fc6a5cf1a0b3ea4591760003d5f76320c07eaf142933c4a"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutEngineTests.cs",
+      "Sha256": "41c835351593e07c8900b3648fae877c6fd634f899b2a0070feb4332db68d2b9"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutRecoveryTests.cs",
+      "Sha256": "364fc7ca36fb631aaeb6221b311c17ddeb56bb5f8d667d8eb4afb3dd52d9e4b1"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupFanOutStoreTests.cs",
+      "Sha256": "5aafb631ea247fd89e04e441f1559d8da74fa1035d857a291eda2db50857b703"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Sqlite.Tests/ActivityGroupSqliteTests.cs",
+      "Sha256": "2d2b28d7df1b264fb29e389a30b892e440088800799694d1818dedd4c970424a"
+    },
+    {
+      "Path": "tests/Penghou.Zhinu.Tests/ActivityGroupFanOutContractTests.cs",
+      "Sha256": "a18d690801450bb0c6dd5912531233e87804dc47eb2248e82e2b0b6b38a4b9b9"
+    }
+  ],
+  "PackageSha256": [
+    {
+      "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+      "Sha256": "7e35fe4fde695bcf97a1aaf6b27a1bffb5107557a6a0ce0f9891a3edacb6ec0f"
+    },
+    {
+      "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+      "Sha256": "4703475d16a0d49df11d126b88a983270888f02eb2f3c0348243957433fe49c9"
+    },
+    {
+      "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+      "Sha256": "906612683d84fed37bc53925f20d7cf073719aa4e9bd9068bbe78047d0055598"
+    },
+    {
+      "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+      "Sha256": "36b5b572cae15be85a723579f9d083a785dae63b516c971b637a62f1a23ce541"
+    },
+    {
+      "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+      "Sha256": "7708bf30d4327b1064a83980a558006691e93f3b02a12cfa7396afb0b1ac72fb"
+    },
+    {
+      "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+      "Sha256": "27ebcfe47db05c32f326144377df3f032ae88e3bc92b20e02996afd5e0874d11"
+    },
+    {
+      "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+      "Sha256": "73e4aae185d3323ee389ee77891b2d4f2583afea819032749a5051f08831d2a6"
+    }
+  ],
+  "PackageClosure": {
+    "SchemaVersion": 1,
+    "PackageVersion": "0.2.0-preview.4",
+    "NeutralPackage": {
+      "Id": "Penghou.Workflow.Abstractions",
+      "ExactVersion": "0.1.0-preview.2"
+    },
+    "ArtifactsDirectory": "C:\\Users\\Laszlos\\source\\repos\\Solo\\workstreams\\zhinu-activity-groups\\artifacts\\zg3b1-packages",
+    "PackageArtifacts": [
+      {
+        "Id": "Penghou.Zhinu",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Microsoft.Extensions.Logging.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Workflow.Abstractions",
+            "Version": "[0.1.0-preview.2]"
+          },
+          {
+            "Id": "Microsoft.Extensions.Logging.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Workflow.Abstractions",
+            "Version": "[0.1.0-preview.2]"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Agents",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Agents.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Agents.AI.Workflows",
+            "Version": "1.17.0"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Agents.AI.Workflows",
+            "Version": "1.17.0"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Hosting",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Hosting.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Hosting.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Options",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Hosting.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "Microsoft.Extensions.Options",
+            "Version": "10.0.9"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Hosting.AspNetCore",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.OpenTelemetry",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "OpenTelemetry.Extensions.Hosting",
+            "Version": "1.17.0"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "OpenTelemetry.Extensions.Hosting",
+            "Version": "1.17.0"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Sqlite",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Data.Sqlite",
+            "Version": "10.0.10"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "Version": "2.1.12"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Microsoft.Data.Sqlite",
+            "Version": "10.0.10"
+          },
+          {
+            "Id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "Version": "10.0.9"
+          },
+          {
+            "Id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "Version": "2.1.12"
+          }
+        ]
+      },
+      {
+        "Id": "Penghou.Zhinu.Testing",
+        "Version": "0.2.0-preview.4",
+        "File": "Penghou.Zhinu.Testing.0.2.0-preview.4.nupkg",
+        "DirectDependencies": [
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu.Sqlite",
+            "Version": "0.2.0-preview.4"
+          },
+          {
+            "Id": "Penghou.Zhinu",
+            "Version": "0.2.0-preview.4"
+          }
+        ]
+      }
+    ],
+    "Consumer": {
+      "Project": "NuGet package references only; no project references",
+      "PackageSourceMapping": {
+        "ZhinuPackages": "Local artifacts directory, exact package ID patterns",
+        "NeutralAndExternalPackages": "nuget.org"
+      },
+      "PackageCache": "C:\\Users\\Laszlos\\AppData\\Local\\Temp\\pzc-6a7ad3e799604901b8b634573bf8a287",
+      "AssetsFile": "consumer\\obj\\project.assets.json",
+      "ResolvedPackageIds": [
+        "Google.Protobuf/3.30.2",
+        "Microsoft.Agents.AI/1.17.0",
+        "Microsoft.Agents.AI.Abstractions/1.17.0",
+        "Microsoft.Agents.AI.Workflows/1.17.0",
+        "Microsoft.Data.Sqlite/10.0.10",
+        "Microsoft.Data.Sqlite.Core/10.0.10",
+        "Microsoft.Extensions.AI/10.7.0",
+        "Microsoft.Extensions.AI.Abstractions/10.7.0",
+        "Microsoft.Extensions.AI.Evaluation/10.7.0",
+        "Microsoft.Extensions.Caching.Abstractions/10.0.9",
+        "Microsoft.Extensions.Compliance.Abstractions/10.5.0",
+        "Microsoft.Extensions.Configuration/8.0.0",
+        "Microsoft.Extensions.Configuration/10.0.0",
+        "Microsoft.Extensions.Configuration.Abstractions/10.0.9",
+        "Microsoft.Extensions.Configuration.Binder/8.0.0",
+        "Microsoft.Extensions.Configuration.Binder/10.0.0",
+        "Microsoft.Extensions.Configuration.EnvironmentVariables/8.0.0",
+        "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.0",
+        "Microsoft.Extensions.DependencyInjection/8.0.0",
+        "Microsoft.Extensions.DependencyInjection/10.0.0",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+        "Microsoft.Extensions.Diagnostics.Abstractions/10.0.9",
+        "Microsoft.Extensions.FileProviders.Abstractions/10.0.9",
+        "Microsoft.Extensions.FileSystemGlobbing/10.0.6",
+        "Microsoft.Extensions.Hosting.Abstractions/10.0.9",
+        "Microsoft.Extensions.Logging/8.0.0",
+        "Microsoft.Extensions.Logging/10.0.0",
+        "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+        "Microsoft.Extensions.Logging.Configuration/8.0.0",
+        "Microsoft.Extensions.Logging.Configuration/10.0.0",
+        "Microsoft.Extensions.ObjectPool/8.0.26",
+        "Microsoft.Extensions.ObjectPool/10.0.6",
+        "Microsoft.Extensions.Options/10.0.9",
+        "Microsoft.Extensions.Options.ConfigurationExtensions/8.0.0",
+        "Microsoft.Extensions.Options.ConfigurationExtensions/10.0.0",
+        "Microsoft.Extensions.Primitives/10.0.9",
+        "Microsoft.Extensions.VectorData.Abstractions/10.7.0",
+        "Microsoft.ML.Tokenizers/2.0.0",
+        "OpenTelemetry/1.17.0",
+        "OpenTelemetry.Api/1.17.0",
+        "OpenTelemetry.Api.ProviderBuilderExtensions/1.17.0",
+        "OpenTelemetry.Extensions.Hosting/1.17.0",
+        "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+        "Penghou.Zhinu/0.2.0-preview.4",
+        "Penghou.Zhinu.Agents/0.2.0-preview.4",
+        "Penghou.Zhinu.Hosting/0.2.0-preview.4",
+        "Penghou.Zhinu.Hosting.AspNetCore/0.2.0-preview.4",
+        "Penghou.Zhinu.OpenTelemetry/0.2.0-preview.4",
+        "Penghou.Zhinu.Sqlite/0.2.0-preview.4",
+        "Penghou.Zhinu.Testing/0.2.0-preview.4",
+        "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+        "SQLitePCLRaw.core/2.1.12",
+        "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+        "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+        "System.Diagnostics.DiagnosticSource/10.0.9",
+        "System.IO.Pipelines/10.0.9",
+        "System.Numerics.Tensors/10.0.9",
+        "System.Text.Encodings.Web/10.0.9",
+        "System.Text.Json/10.0.9",
+        "System.Threading.Channels/10.0.9"
+      ],
+      "ForbiddenHufuDependencyScan": "passed"
+    },
+    "TargetFrameworkResults": [
+      {
+        "TargetFramework": "net8.0",
+        "Result": "passed",
+        "AssetsTarget": "net8.0",
+        "Log": "run-net8.0.log"
+      },
+      {
+        "TargetFramework": "net10.0",
+        "Result": "passed",
+        "AssetsTarget": "net10.0",
+        "Log": "run-net10.0.log"
+      }
+    ],
+    "Status": "passed"
+  },
+  "LegacyBinary": {
+    "SchemaVersion": 1,
+    "ExpectedCandidateSchemaVersion": 9,
+    "PackageVersion": "0.2.0-preview.4",
+    "NeutralPackage": {
+      "Id": "Penghou.Workflow.Abstractions",
+      "ExactVersion": "0.1.0-preview.2"
+    },
+    "CandidateArtifacts": [
+      {
+        "Id": "Penghou.Zhinu",
+        "File": "Penghou.Zhinu.0.2.0-preview.4.nupkg"
+      },
+      {
+        "Id": "Penghou.Zhinu.Sqlite",
+        "File": "Penghou.Zhinu.Sqlite.0.2.0-preview.4.nupkg"
+      }
+    ],
+    "PublicRestore": {
+      "PackageSources": [
+        "https://api.nuget.org/v3/index.json"
+      ],
+      "FreshPackageCache": "C:\\Users\\Laszlos\\AppData\\Local\\Temp\\pzl-9680a872954547e390ca01cc6e4fc880",
+      "AssetsFile": "consumer\\obj\\project.assets.json",
+      "ResolvedPackages": [
+        "Microsoft.Data.Sqlite/10.0.10",
+        "Microsoft.Data.Sqlite.Core/10.0.10",
+        "Microsoft.Extensions.DependencyInjection.Abstractions/10.0.9",
+        "Microsoft.Extensions.Logging.Abstractions/10.0.9",
+        "Penghou.Workflow.Abstractions/0.1.0-preview.2",
+        "Penghou.Zhinu/0.1.0-preview.15",
+        "Penghou.Zhinu.Sqlite/0.1.0-preview.15",
+        "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
+        "SQLitePCLRaw.core/2.1.12",
+        "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
+        "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
+        "System.Diagnostics.DiagnosticSource/10.0.9"
+      ],
+      "ForbiddenHufuDependencyScan": "passed",
+      "ProjectReferences": 0
+    },
+    "TargetFrameworkResults": [
+      {
+        "TargetFramework": "net8.0",
+        "PublishedRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 5,
+          "RetainedStepRows": 2,
+          "CoreAssemblyHash": "475F9A6A70851701FB2FD91C441C577481664B8039AD0CB51FA1C7B92BCC6229",
+          "SqliteAssemblyHash": "22B1FF1015F5BE150B9E994CF36F8D341F382D293919D01E4001586667125467"
+        },
+        "CandidateRuntimeRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 9,
+          "RetainedStepRows": 4
+        },
+        "CompiledConsumerSha256": "7B379ECFFC14C33312EB6790F1F0DE2899CFE86D783E7E180FB43625014B0BBD",
+        "ContractAssemblySha256": "81F2DE8AEF7FA1B103036BD7839CCC13AA7486B89ED5B6783EE0FC2A433E112D",
+        "OldWorkerOnNewSchema": {
+          "ExitCode": -532462766,
+          "RejectedAsIncompatible": true,
+          "SchemaVersionAfterRejection": 9,
+          "RetainedStepRowsAfterRejection": 4
+        }
+      },
+      {
+        "TargetFramework": "net10.0",
+        "PublishedRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 5,
+          "RetainedStepRows": 2,
+          "CoreAssemblyHash": "3AE5BD44F8122653C6E6D8BBC063015916405C159749E49FEBA743F11C394ED5",
+          "SqliteAssemblyHash": "6D32F574B8A3E2089CF1E4B214E763FA7EB8D35B977E12597ECAF6BAB3ACAB85"
+        },
+        "CandidateRuntimeRun": {
+          "ExitCode": 0,
+          "SchemaVersion": 9,
+          "RetainedStepRows": 4
+        },
+        "CompiledConsumerSha256": "436C760FD17B80C58EF3FD17BF6293C4054431D3F749334B005AF256FEF3FEC7",
+        "ContractAssemblySha256": "D1B6168049CB05F49BE10849A190993603A21F4E086C93DC656FC100DFD73020",
+        "OldWorkerOnNewSchema": {
+          "ExitCode": -532462766,
+          "RejectedAsIncompatible": true,
+          "SchemaVersionAfterRejection": 9,
+          "RetainedStepRowsAfterRejection": 4
+        }
+      }
+    ],
+    "Status": "passed"
+  }
+}

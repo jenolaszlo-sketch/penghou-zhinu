@@ -152,7 +152,7 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
             outputJson.Contains(marker, StringComparison.OrdinalIgnoreCase))
         {
             armedProcessTerminationMarkers.Remove(faultPoint);
-            Environment.FailFast($"Process terminated at injected boundary '{faultPoint}'.");
+            TerminateProcess();
         }
         FaultBefore(faultPoint);
         return result;
@@ -165,8 +165,19 @@ public sealed class FaultInjectingWorkflowStore : IWorkflowStore
             outputJson.Contains(marker, StringComparison.OrdinalIgnoreCase))
         {
             armedProcessTerminationMarkers.Remove(faultPoint);
-            Environment.FailFast($"Process terminated at injected boundary '{faultPoint}'.");
+            TerminateProcess();
         }
+    }
+
+    [System.Diagnostics.CodeAnalysis.DoesNotReturn]
+    private static void TerminateProcess()
+    {
+        // Preserve hard process loss at the exact fault boundary, without
+        // managed cleanup or platform crash-reporting latency. If termination
+        // returns asynchronously, never allow execution to cross the boundary.
+        System.Diagnostics.Process.GetCurrentProcess().Kill();
+        Thread.Sleep(Timeout.Infinite);
+        throw new InvalidOperationException("Injected process termination unexpectedly returned.");
     }
 
     private async ValueTask FaultAfter(string faultPoint, ValueTask action)

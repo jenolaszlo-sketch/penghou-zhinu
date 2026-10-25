@@ -10,7 +10,11 @@ param(
 
     [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [string] $OutputDirectory
+    [string] $OutputDirectory,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateRange(6, 2147483647)]
+    [int] $ExpectedCandidateSchemaVersion = 10
 )
 
 Set-StrictMode -Version Latest
@@ -367,8 +371,8 @@ foreach ($framework in @('net8.0', 'net10.0')) {
     $candidateStateLine = @($candidateRun.Output | Where-Object { $_.StartsWith('LEGACY_QUALIFICATION_STATE=', [System.StringComparison]::Ordinal) }) | Select-Object -Last 1
     if (-not $candidateStateLine) { throw "Candidate $framework execution emitted no database state." }
     $candidateState = ($candidateStateLine.Substring('LEGACY_QUALIFICATION_STATE='.Length)) | ConvertFrom-Json
-    if ($candidateState.SchemaVersion -ne 6 -or $candidateState.RetainedStepRows -lt ($oldState.RetainedStepRows + 2)) {
-        throw "Candidate runtime did not migrate schema 5 to 6 and retain the prior step rows on ${framework}: $($candidateStateLine)"
+    if ($candidateState.SchemaVersion -ne $ExpectedCandidateSchemaVersion -or $candidateState.RetainedStepRows -lt ($oldState.RetainedStepRows + 2)) {
+        throw "Candidate runtime did not migrate schema 5 to $ExpectedCandidateSchemaVersion and retain the prior step rows on ${framework}: $($candidateStateLine)"
     }
     $migratedRowsById = @{}
     foreach ($row in @($candidateState.StepRows)) { $migratedRowsById[$row.Id] = $row }
@@ -406,18 +410,18 @@ foreach ($framework in @('net8.0', 'net10.0')) {
         throw "Compiled consumer changed while restoring published assemblies on $framework."
     }
     $oldWorker = Invoke-NativeChecked -FilePath 'dotnet' -Arguments @($applicationPath, $databasePath) `
-        -LogPath (Join-Path $logsDirectory "old-worker-on-schema6-$framework.log") -ExpectFailure
+        -LogPath (Join-Path $logsDirectory "old-worker-on-schema$ExpectedCandidateSchemaVersion-$framework.log") -ExpectFailure
     $oldWorkerText = $oldWorker.Output -join [Environment]::NewLine
     if ($oldWorker.ExitCode -eq 0 -or
-        $oldWorkerText -notmatch '(?i)(ZhinuSchemaCompatibilityException|schema.*(6|newer|incompatible)|incompatible.*schema)') {
-        throw "Published $framework worker did not fail clearly on the schema-6 database. See '$($oldWorker.Log)'."
+        $oldWorkerText -notmatch "(?i)(ZhinuSchemaCompatibilityException|schema.*($ExpectedCandidateSchemaVersion|newer|incompatible)|incompatible.*schema)") {
+        throw "Published $framework worker did not fail clearly on the schema-$ExpectedCandidateSchemaVersion database. See '$($oldWorker.Log)'."
     }
     $inspect = Invoke-NativeChecked -FilePath 'dotnet' -Arguments @($applicationPath, $databasePath, '--inspect') `
         -LogPath (Join-Path $logsDirectory "inspect-after-old-worker-$framework.log")
     $inspectLine = @($inspect.Output | Where-Object { $_.StartsWith('LEGACY_QUALIFICATION_STATE=', [System.StringComparison]::Ordinal) }) | Select-Object -Last 1
     $finalState = ($inspectLine.Substring('LEGACY_QUALIFICATION_STATE='.Length)) | ConvertFrom-Json
-    if ($finalState.SchemaVersion -ne 6 -or $finalState.RetainedStepRows -ne $candidateState.RetainedStepRows) {
-        throw "Rejected published worker changed the schema-6 database on $framework."
+    if ($finalState.SchemaVersion -ne $ExpectedCandidateSchemaVersion -or $finalState.RetainedStepRows -ne $candidateState.RetainedStepRows) {
+        throw "Rejected published worker changed the schema-$ExpectedCandidateSchemaVersion database on $framework."
     }
 
     $targetResults.Add([ordered]@{
@@ -447,6 +451,7 @@ foreach ($framework in @('net8.0', 'net10.0')) {
 
 $qualification = [ordered]@{
     SchemaVersion = 1
+    ExpectedCandidateSchemaVersion = $ExpectedCandidateSchemaVersion
     PackageVersion = $PackageVersion
     NeutralPackage = [ordered]@{ Id = $neutralPackageId; ExactVersion = $neutralPackageVersion }
     CandidateArtifacts = @(

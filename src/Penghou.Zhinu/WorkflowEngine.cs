@@ -39,6 +39,10 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     private readonly EventSubscriptionHub eventSubscriptions = new();
     private int disposed;
 
+    /// <summary>Creates an independently bounded reader; the caller owns its lifetime.</summary>
+    public WorkflowGroupReader CreateGroupReader(WorkflowGroupQueryOptions? options = null,
+        IWorkflowGroupReadAuthorizer? authorizer = null) => new(store, options, timeProvider, authorizer);
+
     public WorkflowEngine(
         IWorkflowStore store,
         IWorkflowRegistry registry,
@@ -151,6 +155,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             this.logger);
     }
 
+    /// <summary>Preserves the pre-authority-binding binary start contract.</summary>
+    public Task<Guid> StartAsync<TInput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline, object? metadata,
+        CancellationToken cancellationToken) =>
+        StartAsync(workflowName, workflowVersion, input, workflowRunId,
+            deadline, metadata, authoritySubjectBinding: null, cancellationToken);
+
     /// <summary>Creates a pending durable run without waiting for its execution.</summary>
     public async Task<Guid> StartAsync<TInput>(
         string workflowName,
@@ -165,6 +177,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         ThrowIfDisposed();
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         var registration = registry.Get(workflowName, workflowVersion);
+        var groupManifest = ActivityGroupRuntime.Capture(registration, store);
         if (registration.InputType != typeof(TInput))
         {
             throw new ArgumentException(
@@ -195,6 +208,8 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         StringComparison.Ordinal))
                 {
                     WorkflowAuthorizationGate.ValidateBinding(existing, this.options);
+                    await ActivityGroupRuntime.ValidateRunAsync(store, existing, groupManifest, cancellationToken)
+                        .ConfigureAwait(false);
                     await EnsureGenerationBindingAsync(
                         id,
                         registration.DefinitionFingerprint,
@@ -211,7 +226,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         var fingerprint = registration.DefinitionFingerprint;
         try
         {
-            await store.CreateRunAsync(
+            await ActivityGroupRuntime.CreateRunAsync(store,
                 new WorkflowRun
                 {
                     Id = id,
@@ -228,6 +243,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                         ? null
                         : JsonSerializer.Serialize(metadata, serializerOptions),
                     DefinitionFingerprint = fingerprint,
+                    GroupManifestDigest = groupManifest?.ManifestDigest,
                     AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
                     AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
                         ? WorkflowAuthorizationCodec.Binding(authority) : null,
@@ -235,7 +251,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
                     TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                         .ToHexString()
                 },
-                cancellationToken).ConfigureAwait(false);
+                groupManifest, cancellationToken).ConfigureAwait(false);
         }
         catch (WorkflowConcurrencyException) when (workflowRunId is not null)
         {
@@ -296,6 +312,26 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             store, workflowRunId, planRevision, workflowName, workflowVersion,
             cancellationToken).AsTask();
 
+    private async ValueTask ValidateGroupOperationAsync(Guid workflowRunId, CancellationToken cancellationToken)
+    {
+        var run = await store.GetRunAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
+        if (run?.GroupManifestDigest is null)
+            return; // Preserve the operation's existing not-found result.
+        registry.TryGet(run.WorkflowName, run.WorkflowVersion, out var registration);
+        if (registration is null)
+            throw new WorkflowDefinitionUnavailableException(run.WorkflowName, run.WorkflowVersion);
+        var manifest = registration is null ? null : ActivityGroupRuntime.Capture(registration, store);
+        await ActivityGroupRuntime.ValidateRunAsync(store, run, manifest, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Preserves the pre-authority-binding binary handle-start contract.</summary>
+    public Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline, object? metadata,
+        CancellationToken cancellationToken) =>
+        StartHandleAsync<TInput, TOutput>(workflowName, workflowVersion, input,
+            workflowRunId, deadline, metadata, authoritySubjectBinding: null, cancellationToken);
+
     /// <summary>Starts a run and returns a typed durable handle.</summary>
     public async Task<WorkflowHandle<TOutput>> StartHandleAsync<TInput, TOutput>(
         string workflowName, string workflowVersion, TInput input,
@@ -321,6 +357,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         ThrowIfDisposed();
         return new WorkflowHandle<TOutput>(this, workflowRunId);
     }
+
+    /// <summary>Preserves the pre-authority-binding binary run contract.</summary>
+    public Task<TOutput> RunAsync<TInput, TOutput>(
+        string workflowName, string workflowVersion, TInput input,
+        Guid? workflowRunId, DateTimeOffset? deadline, object? metadata,
+        CancellationToken cancellationToken) =>
+        RunAsync<TInput, TOutput>(workflowName, workflowVersion, input,
+            workflowRunId, deadline, metadata, authoritySubjectBinding: null, cancellationToken);
 
     /// <summary>Starts, executes, and waits for one workflow result.</summary>
     public async Task<TOutput> RunAsync<TInput, TOutput>(
@@ -733,6 +777,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
 
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         if (runningCancellations.TryGetValue(
                 workflowRunId,
                 out var runningCancellation))
@@ -787,6 +832,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         }
 
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         var receipt = await repository.RestartStepIdempotentlyAsync(
             workflowRunId,
             stepKey,
@@ -935,6 +981,14 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             ReferenceEquals(targetVersion, source.WorkflowVersion)
             ? registration
             : registry.Get(targetName, targetVersion);
+        var sourceManifest = ActivityGroupRuntime.Capture(registration, store);
+        await ActivityGroupRuntime.ValidateRunAsync(store, source, sourceManifest, cancellationToken).ConfigureAwait(false);
+        var targetManifest = ActivityGroupRuntime.Capture(targetRegistration, store);
+        var groupedFork = source.GroupManifestDigest is not null || targetManifest is not null;
+        if (groupedFork && store is not IWorkflowGroupForkRepository)
+            throw new WorkflowConfigurationException("Grouped workflow forks require a durable IWorkflowGroupForkRepository.");
+        if (source.GroupFanOutUsed)
+            throw new WorkflowConfigurationException("Forking a run with grouped fan-out evidence is not qualified by this fork profile.");
         if (source.InputType != SerializationIdentity.TypeId(targetRegistration.InputType) ||
             source.OutputType != SerializationIdentity.TypeId(targetRegistration.OutputType))
         {
@@ -958,6 +1012,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             Deadline = options.Deadline,
             MetadataJson = source.MetadataJson,
             DefinitionFingerprint = targetRegistration.DefinitionFingerprint,
+            GroupManifestDigest = targetManifest?.ManifestDigest,
             SourceRunId = sourceWorkflowRunId,
             AuthorizationProviderId = this.options.ExecutionAuthorization?.ProviderId,
             AuthorizationBindingId = this.options.ExecutionAuthorization is { } authority
@@ -969,14 +1024,13 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
             TraceId = (Activity.Current?.TraceId ?? ActivityTraceId.CreateRandom())
                 .ToHexString()
         };
-        var plan = await store.ForkRunAsync(
-            sourceWorkflowRunId,
-            newRun,
-            targetStepKey,
-            options.Mode,
-            options.Actor,
-            options.Reason,
-            cancellationToken).ConfigureAwait(false);
+        var plan = groupedFork
+            ? await ((IWorkflowGroupForkRepository)store).ForkGroupedRunAsync(
+                sourceWorkflowRunId, newRun, targetManifest, targetStepKey, options.Mode,
+                options.Actor, options.Reason, cancellationToken).ConfigureAwait(false)
+            : await store.ForkRunAsync(
+                sourceWorkflowRunId, newRun, targetStepKey, options.Mode,
+                options.Actor, options.Reason, cancellationToken).ConfigureAwait(false);
         await BindFirstGenerationAsync(
             id,
             targetRegistration.DefinitionFingerprint,
@@ -1098,6 +1152,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         CancellationToken cancellationToken = default)
     {
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         await rollbackCoordinator.RollbackAsync(
             workflowRunId,
             null,
@@ -1123,6 +1178,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(stepKey);
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         await rollbackCoordinator.RollbackAsync(
             workflowRunId,
             stepKey,
@@ -1146,6 +1202,7 @@ public sealed class WorkflowEngine : IWorkflowRuntime, IWorkflowClient,
         CancellationToken cancellationToken = default)
     {
         await leaseRecovery.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
+        await ValidateGroupOperationAsync(workflowRunId, cancellationToken).ConfigureAwait(false);
         await rollbackAndRestart.RollbackAndRestartAsync(
             workflowRunId,
             actor,

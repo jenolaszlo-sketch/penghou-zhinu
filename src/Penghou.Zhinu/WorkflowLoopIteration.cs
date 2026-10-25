@@ -37,6 +37,15 @@ public sealed class WorkflowLoopIteration<TState>
     public TState State { get; }
 
     /// <summary>
+    /// Creates an occurrence using the full durable loop lineage, outermost
+    /// first. Equal inner iteration numbers beneath different outer iterations
+    /// have distinct coordinates. Supply the corresponding explicit group parent;
+    /// retry and replay preserve this logical occurrence identity.
+    /// </summary>
+    public ActivityGroupOccurrence GetActivityGroup(string groupKey, ActivityGroupOccurrence? parent = null) =>
+        workflow.GetActivityGroup(groupKey, parent, identity);
+
+    /// <summary>
     /// Commits <paramref name="nextState"/> and requests evaluation of the
     /// next iteration's continuation condition.
     /// </summary>
@@ -109,6 +118,44 @@ public sealed class WorkflowLoopIteration<TState>
             WithConditionDependency(options),
             cancellationToken,
             compensation);
+    }
+
+    /// <summary>Durably waits for a signal owned by this loop iteration.</summary>
+    public Task<T> WaitForSignalAsync<T>(
+        string stepName,
+        string signalName,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        var stepKey = RegisterStep(stepName);
+        return workflow.WaitForLoopSignalAsync<T>(
+            stepKey,
+            signalName,
+            null,
+            identity,
+            conditionStepKey,
+            timeout,
+            cancellationToken);
+    }
+
+    /// <summary>Durably waits for a signal and records this iteration's group membership.</summary>
+    public Task<T> WaitForGroupedSignalAsync<T>(
+        string stepName,
+        string signalName,
+        ActivityGroupStepBinding group,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+        var stepKey = RegisterStep(stepName);
+        return workflow.WaitForLoopSignalAsync<T>(
+            stepKey,
+            signalName,
+            group,
+            identity,
+            conditionStepKey,
+            timeout,
+            cancellationToken);
     }
 
     /// <summary>
@@ -193,6 +240,11 @@ public sealed class WorkflowLoopIteration<TState>
         {
             Retry = options?.Retry ?? new RetryPolicy(),
             ExecutionTimeout = options?.ExecutionTimeout,
+            Authorization = options?.Authorization,
+            CompensationAuthorization = options?.CompensationAuthorization,
+            Group = options?.Group,
+            FanOutGroup = options?.FanOutGroup,
+            GroupExecutionScope = identity,
             DependsOn = dependencies
         };
     }

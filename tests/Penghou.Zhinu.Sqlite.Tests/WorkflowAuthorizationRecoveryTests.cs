@@ -128,11 +128,31 @@ public sealed class WorkflowAuthorizationRecoveryTests : WorkflowEngineTestBase
         await using var engine = new WorkflowEngine(store, registry, options);
         var runId = await engine.StartAsync("authorized", "1", "input",
             cancellationToken: TestContext.Current.CancellationToken);
+        using var lockWaitTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var releaseWriter = Task.Factory.StartNew(() =>
+        {
+            try
+            {
+                authorizer.LockAcquired.Task.Wait(lockWaitTimeout.Token);
+                Thread.Sleep(400);
+            }
+            finally
+            {
+                authorizer.ReleaseWriterLock();
+            }
+        }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         var execute = engine.ExecuteAsync(runId, TestContext.Current.CancellationToken);
-        await authorizer.LockAcquired.Task.WaitAsync(TestContext.Current.CancellationToken);
-        await Task.Delay(400, TestContext.Current.CancellationToken);
-        authorizer.ReleaseWriterLock();
-        await execute;
+        try
+        {
+            await execute;
+        }
+        finally
+        {
+            if (!releaseWriter.IsCompleted)
+                lockWaitTimeout.Cancel();
+            authorizer.ReleaseWriterLock();
+            await releaseWriter;
+        }
 
         workflow.Calls.Should().Be(0);
     }
