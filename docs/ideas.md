@@ -18,3 +18,16 @@ event regression. SQLite delays are waiting step rows, not a separate timers
 table; canceled runs are excluded from runnable polling. The cancellation fix
 now also marks their active wait records canceled so inspection and late
 notifications see a terminal state.
+
+## Cross-store knowledge projection — idea, unscheduled
+
+Recorded 2026-10-13. **Status: Idea. Priority: Unscheduled. Implementation commitment: none.**
+See the [full cross-store knowledge projection idea](../../Penghou/docs/ideas/cross-store-knowledge-projection.md)
+(sibling checkout; [GitHub](https://github.com/jenolaszlo-sketch/penghou/blob/main/docs/ideas/cross-store-knowledge-projection.md)).
+
+Runtime evidence could become a source for a future derived projection, retaining exact source references and current versus historical status. Zhinu keeps ownership of workflow execution and durable runtime state; projection ownership, ingestion and freshness remain undecided.
+
+This is context for future design discussions, not an accepted decision or a new
+delivery/release gate. Revisit when cross-repository knowledge retrieval becomes
+a measurable problem or existing stores require duplicated indexing logic.
+Do not implement a projection merely because this idea has been recorded.
