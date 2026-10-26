@@ -1,0 +1,20 @@
+worktree C:/Users/Laszlos/source/repos/Penghou.Zhinu
+HEAD f0edf1714013106bdbce090179342ccb029eaf83
+branch refs/heads/main
+
+worktree C:/Users/Laszlos/source/repos/Solo/aaaw-m1/zhinu
+HEAD 07e1807cc4b867dd4f527445aa108f56135d37db
+branch refs/heads/codex/aaaw-m1-zhinu
+
+worktree C:/Users/Laszlos/source/repos/Solo/workstreams/zhinu-activity-groups
+HEAD 58959265cb5da71a6352f76cd31d7f288c1fdcec
+branch refs/heads/codex/zhinu-activity-groups
+
+worktree C:/Users/Laszlos/source/repos/zg-rq-02-native
+HEAD bf33c05cf2390af6924bbe3761e09f9e377c7a97
+detached
+
+worktree C:/Users/Laszlos/source/repos/zg-rq-02-zhinu
+HEAD d272b264db931b6cfaacfc4a9a68e2db09b04a49
+branch refs/heads/codex/zg-rq-02-zhinu
+

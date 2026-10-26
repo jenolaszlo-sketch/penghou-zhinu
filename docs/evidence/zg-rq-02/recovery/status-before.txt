@@ -1,0 +1,7 @@
+ M .github/workflows/ci.yml
+ M .github/workflows/publish.yml
+?? .github/workflows/release-rehearsal.yml
+?? eng/Invoke-ReleaseRehearsal.ps1
+?? eng/New-ReleaseQualificationManifest.ps1
+?? eng/Verify-QualificationRun.ps1
+?? eng/Verify-ReleaseArtifacts.ps1

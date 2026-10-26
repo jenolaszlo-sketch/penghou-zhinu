@@ -1,0 +1,83 @@
+commit d272b264db931b6cfaacfc4a9a68e2db09b04a49
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Mon Oct 26 13:52:21 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Mon Oct 26 13:52:21 2026 +0800
+
+    ZG-RQ-01: paired release readiness qualification evidence and verdict
+
+commit f0edf1714013106bdbce090179342ccb029eaf83
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Sun Oct 25 19:53:28 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Sun Oct 25 19:53:28 2026 +0800
+
+    docs: record the merged ZG milestone and point current priority at release preparation
+
+commit 83062a3ff310e07edd308add3772f1c97399af86
+Merge: 18c0624 5895926
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Sun Oct 25 18:06:49 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Sun Oct 25 18:06:49 2026 +0800
+
+    Merge activity-groups milestone (ZG-1..7 selected profiles, native preview.10 baseline)
+    
+    # Conflicts:
+    #       docs/releasing.md
+
+commit 18c0624a823e6a8c38aae85b98cab1bc7e67a362
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Sun Oct 25 11:54:00 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Sun Oct 25 11:54:00 2026 +0800
+
+    docs: record published releases and close the Hufu qualification milestone
+
+commit fc7184c0d30cc660e93d22355264105cbcc2d5a7
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Sun Oct 25 11:54:00 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Sun Oct 25 11:54:00 2026 +0800
+
+    docs: record unscheduled cross-store knowledge projection idea
+
+commit 58959265cb5da71a6352f76cd31d7f288c1fdcec
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Tue Oct 20 22:14:48 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Tue Oct 20 22:14:48 2026 +0800
+
+    docs: prioritize paired release readiness before new features [skip ci]
+
+commit 241997c1e4d02213217574856abab3ffa1b1da4b
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Tue Oct 20 18:47:59 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Tue Oct 20 18:47:59 2026 +0800
+
+    docs: track qualified Fuwen v6 integration review [skip ci]
+
+commit 2d3071ec7568c8e94ac143c9187e51e6959d8078
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Tue Oct 20 17:42:21 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Tue Oct 20 17:42:21 2026 +0800
+
+    docs: track qualified Fuwen selection adoption [skip ci]
+
+commit 4b927d23d2b3aef0e3de4057b06d4e7372561f7f
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Tue Oct 20 08:41:39 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Tue Oct 20 08:41:39 2026 +0800
+
+    test: seal Q33 branch replacement qualification [skip ci]
+
+commit bf33c05cf2390af6924bbe3761e09f9e377c7a97
+Author:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+AuthorDate: Tue Oct 20 08:27:49 2026 +0800
+Commit:     jenol <jenolaszlo-sketch@users.noreply.github.com>
+CommitDate: Tue Oct 20 08:27:49 2026 +0800
+
+    perf: index retired occurrence claim checks

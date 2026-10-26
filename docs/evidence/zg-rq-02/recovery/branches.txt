@@ -1,0 +1,9 @@
++ codex/aaaw-m1-zhinu                        07e1807 (C:/Users/Laszlos/source/repos/Solo/aaaw-m1/zhinu) [origin/codex/aaaw-m1-zhinu] Add atomic adaptive branch revision admission
+  codex/zg-rq-01                             d272b26 [origin/codex/zg-rq-01] ZG-RQ-01: paired release readiness qualification evidence and verdict
+* codex/zg-rq-02-zhinu                       d272b26 ZG-RQ-01: paired release readiness qualification evidence and verdict
++ codex/zhinu-activity-groups                5895926 (C:/Users/Laszlos/source/repos/Solo/workstreams/zhinu-activity-groups) [origin/codex/zhinu-activity-groups] docs: prioritize paired release readiness before new features [skip ci]
++ main                                       f0edf17 (C:/Users/Laszlos/source/repos/Penghou.Zhinu) [origin/main] docs: record the merged ZG milestone and point current priority at release preparation
+  remotes/origin/codex/aaaw-m1-zhinu         07e1807 Add atomic adaptive branch revision admission
+  remotes/origin/codex/zg-rq-01              d272b26 ZG-RQ-01: paired release readiness qualification evidence and verdict
+  remotes/origin/codex/zhinu-activity-groups 5895926 docs: prioritize paired release readiness before new features [skip ci]
+  remotes/origin/main                        f0edf17 docs: record the merged ZG milestone and point current priority at release preparation

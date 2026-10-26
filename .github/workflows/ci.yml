@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, codex/zhinu-activity-groups]
+    branches: [main, codex/zhinu-activity-groups, codex/zg-rq-02-zhinu]
   workflow_dispatch:
   pull_request:
     branches: [main]
@@ -50,6 +50,33 @@ jobs:
           $version = [string]$properties.Project.PropertyGroup.Version
           ./eng/Verify-WorkflowPackageClosure.ps1 -ArtifactsDirectory artifacts -PackageVersion $version -OutputDirectory qualification
           ./eng/Verify-LegacyWorkflowConsumer.ps1 -ArtifactsDirectory artifacts -PackageVersion $version -OutputDirectory qualification
+
+      # ZG-RQ-02 RG-01 Stage A: after every qualification check has passed on
+      # this exact commit, freeze the release-qualification manifest and upload
+      # the qualified package set. The publisher consumes only these artifacts.
+      - name: Emit release qualification manifest (ubuntu producer)
+        if: matrix.os == 'ubuntu-latest'
+        shell: pwsh
+        run: |
+          ./eng/New-ReleaseQualificationManifest.ps1 `
+            -ArtifactsDirectory artifacts `
+            -OutputPath artifacts/release-qualification-manifest.json `
+            -Repository "$env:GITHUB_REPOSITORY" `
+            -CommitSha "$env:GITHUB_SHA" `
+            -WorkflowPath '.github/workflows/ci.yml' `
+            -RunId "$env:GITHUB_RUN_ID" `
+            -RunUrl "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+
+      - name: Upload release qualification artifact set (ubuntu producer)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-qualification-ubuntu-latest
+          path: |
+            artifacts/release-qualification-manifest.json
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+          if-no-files-found: error
 
       - name: Retain qualification evidence
         if: always()

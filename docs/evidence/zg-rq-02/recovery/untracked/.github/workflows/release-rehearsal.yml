@@ -1,0 +1,147 @@
+name: Release rehearsal
+
+# ZG-RQ-02 RG-01: nonpublishing hosted rehearsal of the two-stage release
+# path. This workflow never contains a NuGet login or push step (structural
+# guard below proves it), and it grants no publication credentials. It:
+#   1. resolves the exact dispatched commit and its expected version;
+#   2. verifies the real qualification run of that commit through the
+#      authenticated GitHub API and downloads its artifact set;
+#   3. verifies the artifacts against the manifest with the production
+#      verifier scripts;
+#   4. runs the offline fault-injection matrix (R01, R06-R12, R14, R18)
+#      over the real qualified artifacts;
+#   5. exercises live-API negative cases against real historical runs
+#      (R02, R04, R05, R13);
+#   6. proves structurally that push steps exist only behind verification
+#      and the protected environment.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rehearse:
+    name: Verify qualified release path (no push)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout rehearsal commit
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve expected package version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(grep -oPm1 '(?<=<Version>)[^<]+' Directory.Build.props)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify qualification run of the exact commit
+        id: qualification
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $result = ./eng/Verify-QualificationRun.ps1 `
+            -Repository "$env:GITHUB_REPOSITORY" `
+            -CommitSha "$env:GITHUB_SHA" `
+            -GitHubToken "$env:GH_TOKEN" `
+            -WorkflowFile 'ci.yml' `
+            -ExpectedWorkflowPath '.github/workflows/ci.yml' `
+            -ArtifactName 'release-qualification-ubuntu-latest' `
+            -ManifestName 'release-qualification-manifest.json' `
+            -OutputDirectory 'qualified-artifacts' | ConvertFrom-Json
+          if ($result.verifiedCommitSha -ne "$env:GITHUB_SHA") {
+            throw "Verified run commit does not match the rehearsal commit."
+          }
+          "run-id=$($result.verifiedRunId)" >> $env:GITHUB_OUTPUT
+          "RELEASE-ELIGIBLE: exact commit $env:GITHUB_SHA qualified by run $($result.verifiedRunId); NO PUSH will occur."
+
+      - name: Run offline release rehearsal matrix
+        shell: pwsh
+        run: |
+          $runId = '${{ steps.qualification.outputs.run-id }}'
+          if ($runId -notmatch '^\d+$') { throw "Untrusted run id: $runId" }
+          ./eng/Invoke-ReleaseRehearsal.ps1 `
+            -QualifiedArtifactsDirectory 'qualified-artifacts' `
+            -ManifestPath 'qualified-artifacts/release-qualification-manifest.json' `
+            -Repository "$env:GITHUB_REPOSITORY" `
+            -CommitSha "$env:GITHUB_SHA" `
+            -RunId ([long]$runId) `
+            -Version '${{ steps.version.outputs.version }}' `
+            -OutputDirectory 'artifacts/rehearsal-matrix'
+
+      - name: Live-API negative cases (real historical runs)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $cases = @(
+            @{ id = 'R02'; sha = 'f0edf1714013106bdbce090179342ccb029eaf83';
+               because = 'old-format successful CI run lacks the Stage-A artifact set' },
+            @{ id = 'R04'; sha = '18c0624a823e6a8c38aae85b98cab1bc7e67a362';
+               because = 'real failed CI run at that commit' },
+            @{ id = 'R05'; sha = '246d535679cca2ca5130ecfad62437dbb1fdd81d';
+               because = 'real cancelled CI run at that commit' },
+            @{ id = 'R13'; sha = "$env:GITHUB_SHA";
+               because = 'no runs of the publish workflow qualify as the qualification workflow' }
+          )
+          foreach ($case in $cases) {
+            $refused = $false
+            try {
+              ./eng/Verify-QualificationRun.ps1 `
+                -Repository "$env:GITHUB_REPOSITORY" `
+                -CommitSha $case.sha `
+                -GitHubToken "$env:GH_TOKEN" `
+                -WorkflowFile $(if ($case.id -eq 'R13') { 'publish.yml' } else { 'ci.yml' }) `
+                -ExpectedWorkflowPath $(if ($case.id -eq 'R13') { '.github/workflows/publish.yml' } else { '.github/workflows/ci.yml' }) `
+                -ArtifactName 'release-qualification-ubuntu-latest' `
+                -ManifestName 'release-qualification-manifest.json' `
+                -OutputDirectory "artifacts/negative-$($case.id)" | Out-Null
+            }
+            catch { $refused = $true }
+            if (-not $refused) {
+              throw "Negative case $($case.id) was NOT refused ($($case.because))."
+            }
+            Write-Output "$($case.id): REFUSED as expected ($($case.because))."
+          }
+
+      - name: Structural no-push guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Rehearsal workflow must contain no NuGet push or login:"
+          if grep -nE 'nuget push|NuGet/login|NUGET_API_KEY' .github/workflows/release-rehearsal.yml; then
+            echo "FAIL: rehearsal workflow reaches publication." >&2; exit 1
+          fi
+          echo "Publish workflow: push steps must exist only in the publish job:"
+          push_lines=$(grep -n 'name: Push packages to NuGet\|name: Push symbols to NuGet\|NuGet login' .github/workflows/publish.yml | cut -d: -f1)
+          publish_job_line=$(grep -n '^  publish:' .github/workflows/publish.yml | cut -d: -f1)
+          verify_job_line=$(grep -n '^  verify:' .github/workflows/publish.yml | cut -d: -f1)
+          for line in $push_lines; do
+            if [ "$line" -lt "$publish_job_line" ]; then
+              echo "FAIL: publication step before the publish job." >&2; exit 1
+            fi
+          done
+          grep -q 'needs: verify' .github/workflows/publish.yml
+          grep -q 'environment: nuget' .github/workflows/publish.yml
+          echo "PASS: publication requires verify + protected environment."
+
+      - name: Retain rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-rehearsal-evidence
+          path: |
+            artifacts/rehearsal-matrix/rehearsal-matrix.json
+            qualified-artifacts/release-qualification-manifest.json
+          if-no-files-found: warn

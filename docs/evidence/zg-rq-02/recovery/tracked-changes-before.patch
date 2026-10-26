@@ -1,0 +1,209 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index d56b2a9..3c5cfe6 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -2,7 +2,7 @@ name: CI
+ 
+ on:
+   push:
+-    branches: [main, codex/zhinu-activity-groups]
++    branches: [main, codex/zhinu-activity-groups, codex/zg-rq-02-zhinu]
+   workflow_dispatch:
+   pull_request:
+     branches: [main]
+@@ -51,6 +51,33 @@ jobs:
+           ./eng/Verify-WorkflowPackageClosure.ps1 -ArtifactsDirectory artifacts -PackageVersion $version -OutputDirectory qualification
+           ./eng/Verify-LegacyWorkflowConsumer.ps1 -ArtifactsDirectory artifacts -PackageVersion $version -OutputDirectory qualification
+ 
++      # ZG-RQ-02 RG-01 Stage A: after every qualification check has passed on
++      # this exact commit, freeze the release-qualification manifest and upload
++      # the qualified package set. The publisher consumes only these artifacts.
++      - name: Emit release qualification manifest (ubuntu producer)
++        if: matrix.os == 'ubuntu-latest'
++        shell: pwsh
++        run: |
++          ./eng/New-ReleaseQualificationManifest.ps1 `
++            -ArtifactsDirectory artifacts `
++            -OutputPath artifacts/release-qualification-manifest.json `
++            -Repository "$env:GITHUB_REPOSITORY" `
++            -CommitSha "$env:GITHUB_SHA" `
++            -WorkflowPath '.github/workflows/ci.yml' `
++            -RunId "$env:GITHUB_RUN_ID" `
++            -RunUrl "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
++
++      - name: Upload release qualification artifact set (ubuntu producer)
++        if: matrix.os == 'ubuntu-latest'
++        uses: actions/upload-artifact@v4
++        with:
++          name: release-qualification-ubuntu-latest
++          path: |
++            artifacts/release-qualification-manifest.json
++            artifacts/*.nupkg
++            artifacts/*.snupkg
++          if-no-files-found: error
++
+       - name: Retain qualification evidence
+         if: always()
+         uses: actions/upload-artifact@v4
+diff --git a/.github/workflows/publish.yml b/.github/workflows/publish.yml
+index 74767f2..c8f4544 100644
+--- a/.github/workflows/publish.yml
++++ b/.github/workflows/publish.yml
+@@ -1,5 +1,15 @@
+ name: Publish to NuGet
+ 
++# ZG-RQ-02 RG-01: two-stage release. Stage 1 (verify) resolves the exact
++# publication commit (tag ref or dispatch ref), locates the successful
++# qualification run of THIS commit of the CI workflow through the
++# authenticated GitHub API, downloads its uploaded qualification artifact
++# set, and verifies the manifest, package identities, hashes and dependency
++# pins. Stage 2 (publish) consumes only the verified artifacts and runs only
++# after Stage 1 succeeds and the protected `nuget` environment approval is
++# granted. The workflow never packs; it publishes exactly the artifacts
++# produced by the qualifying CI run.
++
+ on:
+   push:
+     tags:
+@@ -10,40 +20,100 @@ permissions:
+   contents: read
+ 
+ jobs:
+-  publish:
++  verify:
++    name: Verify exact-commit qualification and artifacts
+     runs-on: ubuntu-latest
+     permissions:
+-      id-token: write
+       contents: read
++      actions: read
++    outputs:
++      package-version: ${{ steps.version.outputs.version }}
+     steps:
+-      - name: Checkout
++      - name: Checkout exact release ref
+         uses: actions/checkout@v6
+ 
+-      - name: Setup .NET
+-        uses: actions/setup-dotnet@v5
+-        with:
+-          dotnet-version: '10.0.x'
+-
+-      - name: Pack
++      - name: Resolve expected package version
++        id: version
+         shell: bash
+         run: |
+-          args=()
++          set -euo pipefail
+           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+-            args+=(--property:PackageVersion="${GITHUB_REF_NAME#v}")
++            version="${GITHUB_REF_NAME#v}"
++            case "$version" in
++              *[!0-9.a-z-]*) echo "Tag does not carry a package version: $version" >&2; exit 1;;
++            esac
++          else
++            version=$(grep -oPm1 '(?<=<Version>)[^<]+' Directory.Build.props)
+           fi
+-          for csproj in \
+-            src/Penghou.Zhinu/Penghou.Zhinu.csproj \
+-            src/Penghou.Zhinu.Sqlite/Penghou.Zhinu.Sqlite.csproj \
+-            src/Penghou.Zhinu.Hosting/Penghou.Zhinu.Hosting.csproj \
+-            src/Penghou.Zhinu.Hosting.AspNetCore/Penghou.Zhinu.Hosting.AspNetCore.csproj \
+-            src/Penghou.Zhinu.Agents/Penghou.Zhinu.Agents.csproj \
+-            src/Penghou.Zhinu.Testing/Penghou.Zhinu.Testing.csproj \
+-            src/Penghou.Zhinu.OpenTelemetry/Penghou.Zhinu.OpenTelemetry.csproj; do
+-            dotnet pack "$csproj" \
+-              --configuration Release \
+-              --output ./artifacts \
+-              "${args[@]}"
+-          done
++          echo "version=$version" >> "$GITHUB_OUTPUT"
++
++      - name: Verify qualification run of the exact commit and download artifacts
++        id: qualification
++        shell: pwsh
++        env:
++          GH_TOKEN: ${{ github.token }}
++        run: |
++          $result = ./eng/Verify-QualificationRun.ps1 `
++            -Repository "$env:GITHUB_REPOSITORY" `
++            -CommitSha "$env:GITHUB_SHA" `
++            -GitHubToken "$env:GH_TOKEN" `
++            -WorkflowFile 'ci.yml' `
++            -ExpectedWorkflowPath '.github/workflows/ci.yml' `
++            -ArtifactName 'release-qualification-ubuntu-latest' `
++            -ManifestName 'release-qualification-manifest.json' `
++            -OutputDirectory 'qualified-artifacts' | ConvertFrom-Json
++          if ($LASTEXITCODE -ne 0) { exit 1 }
++          "run-id=$($result.verifiedRunId)" >> $env:GITHUB_OUTPUT
++          "verified-sha=$($result.verifiedCommitSha)" >> $env:GITHUB_OUTPUT
++          if ($result.verifiedCommitSha -ne "$env:GITHUB_SHA") {
++            throw "Verified run commit does not match the publication commit."
++          }
++
++      - name: Verify release artifacts against the qualified manifest
++        shell: pwsh
++        run: |
++          $runId = '${{ steps.qualification.outputs.run-id }}'
++          if ($runId -notmatch '^\d+$') { throw "Untrusted run id: $runId" }
++          ./eng/Verify-ReleaseArtifacts.ps1 `
++            -ManifestPath 'qualified-artifacts/release-qualification-manifest.json' `
++            -ArtifactsDirectory 'qualified-artifacts' `
++            -ExpectedRepository "$env:GITHUB_REPOSITORY" `
++            -ExpectedCommitSha "$env:GITHUB_SHA" `
++            -ExpectedWorkflowPath '.github/workflows/ci.yml' `
++            -ExpectedRunId ([long]$runId) `
++            -ExpectedVersion '${{ steps.version.outputs.version }}'
++
++      - name: Upload verified release set
++        uses: actions/upload-artifact@v4
++        with:
++          name: verified-release-packages
++          path: |
++            qualified-artifacts/*.nupkg
++            qualified-artifacts/*.snupkg
++          if-no-files-found: error
++          retention-days: 7
++
++  publish:
++    name: Push verified artifacts (protected environment)
++    needs: verify
++    runs-on: ubuntu-latest
++    environment: nuget
++    permissions:
++      id-token: write
++      contents: read
++    steps:
++      - name: Download verified release set
++        uses: actions/download-artifact@v4
++        with:
++          name: verified-release-packages
++          path: verified-artifacts
++
++      - name: Verify downloaded set integrity
++        shell: bash
++        run: |
++          set -euo pipefail
++          test "$(find verified-artifacts -maxdepth 1 -name '*.nupkg' | wc -l)" -eq 7
++          test "$(find verified-artifacts -maxdepth 1 -name '*.snupkg' | wc -l)" -eq 7
+ 
+       - name: NuGet login (OIDC -> temp API key)
+         id: login
+@@ -53,14 +123,14 @@ jobs:
+ 
+       - name: Push packages to NuGet
+         run: >
+-          dotnet nuget push ./artifacts/*.nupkg
++          dotnet nuget push ./verified-artifacts/*.nupkg
+           --source https://api.nuget.org/v3/index.json
+           --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+           --skip-duplicate
+ 
+       - name: Push symbols to NuGet
+         run: >
+-          dotnet nuget push ./artifacts/*.snupkg
++          dotnet nuget push ./verified-artifacts/*.snupkg
+           --source https://api.nuget.org/v3/index.json
+           --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+           --skip-duplicate
