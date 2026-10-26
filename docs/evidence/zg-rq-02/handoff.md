@@ -17,7 +17,7 @@ it off. Publication remains unauthorized; no tag, no package, no merge.
 | Fuwen history (newest first) | `6565822` then `5ec2479` then `f7245b0` then `bf993ee` then `101643a` then `0fd7e72` then `8c7da4c` |
 | Rehearsal dispatch refs | Zhinu `codex/zg-rq-02-rehearsal` @ `009c7f5`; Fuwen `codex/zg-rq-02-rehearsal` @ `6565822` |
 | Pinned native source worktree | `zg-rq-02-native` @ `bf33c05cf2390af6924bbe3761e09f9e377c7a97` (detached, read-only staging input) |
-| Evidence commits | Packet commit on each branch, recorded in `git-binding.md` after the commit; final details of commits/trees/parents/worktrees are in `git-binding.md` |
+| Evidence commits | Zhinu packet `18af51bab1ad9a0ad9a588b155463479ef32dd33` (docs-only); Fuwen packet `8a18a3f9b18da368dc973c0a6a733c1e34fa30d3` (docs-only); the follow-up binding commits are visible in `git log` and `git-binding.md` |
 | Unchanged | `main` not merged or force-updated; no tags; no publication; production source/APIs/package versions unchanged (`scope-check.json`) |
 
 ## B. What was implemented

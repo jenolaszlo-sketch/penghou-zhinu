@@ -86,8 +86,10 @@ was not modified, merged or force-updated. No tags were created.
 
 ## Evidence commits
 
-- Zhinu evidence packet commit: `{{EVIDENCE_COMMIT_ZHINU}}`
-- Fuwen evidence packet commit: `{{EVIDENCE_COMMIT_FUWEN}}`
+- Zhinu evidence packet commit: `18af51bab1ad9a0ad9a588b155463479ef32dd33`
+  (docs-only; parent `009c7f5876a2dd6133f2ebc80e0806790e6e9aba`)
+- Fuwen evidence packet commit: `8a18a3f9b18da368dc973c0a6a733c1e34fa30d3`
+  (docs-only; parent `65658227151cfbcc69fde752832e4b6b0691d861`)
 
 These documentation-only commits follow the implementation commits above; the
 follow-up binding commit that fills these values is the branch tip and is
