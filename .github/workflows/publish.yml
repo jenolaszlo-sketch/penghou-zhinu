@@ -28,24 +28,19 @@ jobs:
       actions: read
     outputs:
       package-version: ${{ steps.version.outputs.version }}
+      run-id: ${{ steps.qualification.outputs.run-id }}
     steps:
       - name: Checkout exact release ref
         uses: actions/checkout@v6
 
       - name: Resolve expected package version
         id: version
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            version="${GITHUB_REF_NAME#v}"
-            case "$version" in
-              *[!0-9.a-z-]*) echo "Tag does not carry a package version: $version" >&2; exit 1;;
-            esac
-          else
-            version=$(grep -oPm1 '(?<=<Version>)[^<]+' Directory.Build.props)
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          [xml]$props = Get-Content Directory.Build.props
+          $version = [string]$props.Project.PropertyGroup.Version
+          ./eng/Verify-ReleaseRef.ps1 -Version $version
+          "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Verify qualification run of the exact commit and download artifacts
         id: qualification
@@ -88,6 +83,7 @@ jobs:
         with:
           name: verified-release-packages
           path: |
+            qualified-artifacts/release-qualification-manifest.json
             qualified-artifacts/*.nupkg
             qualified-artifacts/*.snupkg
           if-no-files-found: error
@@ -108,12 +104,25 @@ jobs:
           name: verified-release-packages
           path: verified-artifacts
 
-      - name: Verify downloaded set integrity
-        shell: bash
+      - uses: actions/checkout@v6
+        with:
+          path: verifier-source
+          persist-credentials: false
+
+      - name: Verify downloaded manifest and every archive before credentials
+        shell: pwsh
+        env:
+          QUALIFICATION_RUN: ${{ needs.verify.outputs.run-id }}
+          PACKAGE_VERSION: ${{ needs.verify.outputs.package-version }}
         run: |
-          set -euo pipefail
-          test "$(find verified-artifacts -maxdepth 1 -name '*.nupkg' | wc -l)" -eq 7
-          test "$(find verified-artifacts -maxdepth 1 -name '*.snupkg' | wc -l)" -eq 7
+          ./verifier-source/eng/Verify-ReleaseArtifacts.ps1 `
+            -ManifestPath verified-artifacts/release-qualification-manifest.json `
+            -ArtifactsDirectory verified-artifacts `
+            -ExpectedRepository "$env:GITHUB_REPOSITORY" `
+            -ExpectedCommitSha "$env:GITHUB_SHA" `
+            -ExpectedWorkflowPath '.github/workflows/ci.yml' `
+            -ExpectedRunId ([long]$env:QUALIFICATION_RUN) `
+            -ExpectedVersion "$env:PACKAGE_VERSION"
 
       - name: NuGet login (OIDC -> temp API key)
         id: login

@@ -82,16 +82,25 @@ if (@($qualified | Where-Object { $_.event -eq 'pull_request' }).Count -gt 0) {
     throw 'Internal error: pull_request runs must never be accepted.'
 }
 
-$run = @($qualified | Sort-Object -Property run_number -Descending)[0]
-if ($run.head_repository -and $run.head_repository.full_name -and
-    $run.head_repository.full_name -ne $Repository) {
+# Never fall back to an older green run after a newer failed/pending run.
+$run = @($workflowRuns | Where-Object { $_.event -in $AllowedEvents } | Sort-Object -Property run_number -Descending)[0]
+if ($run.status -ne 'completed' -or $run.conclusion -ne 'success') { throw 'Latest qualification is not successful.' }
+if ($run.path -ne $ExpectedWorkflowPath) { throw 'Run workflow path mismatch.' }
+$jobs = Invoke-GitHubApi "$base/actions/runs/$($run.id)/attempts/$($run.run_attempt)/jobs?per_page=100"
+foreach ($name in @('build (ubuntu-latest)', 'build (windows-latest)')) {
+    $job = @($jobs.jobs | Where-Object { $_.name -eq $name })
+    if ($job.Count -ne 1 -or $job[0].conclusion -ne 'success') { throw "Required qualification job absent or failed: $name" }
+}
+if ($run.head_repository.full_name -cne $Repository) {
     throw "Qualification run $($run.id) belongs to repository '$($run.head_repository.full_name)' (R13 REFUSE)."
 }
 
 # Download the qualification artifact set of that exact run.
 $artifacts = Invoke-GitHubApi "$base/actions/runs/$($run.id)/artifacts?per_page=100"
-$artifact = @($artifacts.artifacts | Where-Object { $_.name -eq $ArtifactName }) |
-    Sort-Object -Property id -Descending | Select-Object -First 1
+$matches = @($artifacts.artifacts | Where-Object { $_.name -eq $ArtifactName })
+if ($matches.Count -ne 1) { throw 'Expected exactly one qualification artifact.' }
+$artifact = $matches[0]
+if ($artifact.workflow_run.id -ne $run.id -or $artifact.workflow_run.head_sha -ne $CommitSha) { throw 'Artifact run/source mismatch.' }
 if (-not $artifact) {
     throw "Qualification run $($run.id) has no '$ArtifactName' artifact (R02 REFUSE: no qualified artifact set)."
 }
@@ -99,7 +108,8 @@ if ($artifact.expired) {
     throw "Qualification artifact '$ArtifactName' of run $($run.id) has expired (R02 REFUSE)."
 }
 
-New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
+if (Test-Path -LiteralPath $OutputDirectory) { throw 'Download destination must not already exist.' }
+New-Item -ItemType Directory -Path $OutputDirectory | Out-Null
 $zipPath = Join-Path $OutputDirectory "$ArtifactName.zip"
 Invoke-WebRequest -Uri $artifact.archive_download_url -OutFile $zipPath -Headers @{
     Authorization = "Bearer $GitHubToken"
@@ -113,7 +123,13 @@ if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
     throw "Qualification artifact set of run $($run.id) is missing '$ManifestName' (R12 REFUSE)."
 }
 
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+if ($manifest.runAttempt -ne $run.run_attempt -or $manifest.runId -ne $run.id -or $manifest.commitSha -ne $CommitSha) {
+    throw 'Manifest is from a different run, attempt, or source.'
+}
 $result = [ordered]@{
+    verifiedArtifactId = [long]$artifact.id
+    verifiedRunAttempt = [int]$run.run_attempt
     verifiedRunId     = [long]$run.id
     verifiedCommitSha = ([string]$run.head_sha).ToLowerInvariant()
     verifiedWorkflow  = $run.path

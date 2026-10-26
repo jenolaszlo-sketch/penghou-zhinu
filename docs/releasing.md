@@ -1,8 +1,8 @@
 # Releasing and upgrading Zhinu
 
-Zhinu is published on NuGet through `0.2.0-preview.4` (preview.3 —
-execution-evidence reads and the operator CLI — from source `99d9d78`;
-preview.4 — the durable authority-subject binding with SQLite schema 7 —
+Zhinu is published on NuGet through `0.2.0-preview.4` (preview.3 â€”
+execution-evidence reads and the operator CLI â€” from source `99d9d78`;
+preview.4 â€” the durable authority-subject binding with SQLite schema 7 â€”
 from source `0a523826`). The current source candidate is
 **`0.2.0-preview.10`**: the merged activity-groups milestone (ZG-1 through
 ZG-7 selected profiles) with SQLite schema 10, accepting additive upgrades
@@ -33,27 +33,34 @@ the IO packages, Luban nor Hufu needs republishing for this Zhinu release.
 `Penghou.Hufu.Workflow` implementation and qualification follow the published
 Zhinu runtime phase.
 
-## Publish from main
+## Exact-source release handoff
 
-1. Commit and push the release source and documentation to `main`.
-2. Confirm [CI](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/workflows/ci.yml)
-   passes for that exact commit on Windows and Ubuntu. It builds, verifies
-   formatting, tests declared frameworks, packs all seven packages, and runs
-   isolated package and legacy-binary probes. Qualification artifacts retain
-   TRX results, packages and consumer logs.
-3. In [Publish to NuGet](https://github.com/jenolaszlo-sketch/penghou-zhinu/actions/workflows/publish.yml),
-   choose **Run workflow** on **main**. There are no version inputs. The existing
-   NuGet OIDC identity publishes the package and symbol set using the checked-in
-   version. The publish workflow packs independently; it does not wait for or
-   rerun ordinary CI, so check that CI has passed before dispatching it.
-4. Check all seven package pages and restore a fresh package-only consumer from
-   nuget.org. Record the publication run, exact versions and public artifact
-   evidence before closing ZA-6 or starting Hufu integration.
+Publication remains unauthorized during ZG-RQ-02. RG-02 is OWNER DECISION REQUIRED;
+the owner explicitly requested no live protection-policy changes. Current owner
+self-review is a manual checkpoint, not independent approval.
 
-The workflow also supports `v*` tags, where the tag overrides the package version.
-The normal release path here is the input-free `main` run. Ordinary branch
-pushes and CI runs do not publish packages. Do not reuse a published version:
-`--skip-duplicate` cannot update existing NuGet contents.
+CI builds, tests, packs and probes the exact commit on Windows and Ubuntu. Its
+Ubuntu producer uploads seven package/symbol pairs plus a hash/source/run manifest.
+The publisher requires the latest qualifying CI run of the exact requested SHA
+to succeed, including both platform jobs, and verifies the artifact's run, attempt,
+source, repository, manifest, ZIP identities and hashes. It never rebuilds.
+
+The accepted manual `main` dispatch path remains available only for a qualified
+exact SHA and its checked-in version. A tag path must identify that source and
+equal `v<checked-in-version>`; tags cannot override the qualified package version.
+Ordinary branch pushes cannot invoke the publisher. After verification, the `nuget`
+environment gates the final job, which rechecks every archive before requesting
+OIDC credentials. Environment/API configuration alone does not prove independent
+authorization or NuGet's external trusted-publisher restrictions.
+
+For a future separately authorized release, retain CI run/attempt/artifact IDs,
+source SHA and manifest; obtain the required owner-policy decision and approval;
+then verify public package indexing and fresh consumer restores. Do not reuse a
+published version: `--skip-duplicate` cannot replace NuGet contents.
+
+The credential-free release rehearsal reuses the production verifier and ends at
+a real protected environment checkpoint. Offline fault fixtures are explicitly
+separate from hosted enforcement evidence.
 
 ## SQLite migration
 

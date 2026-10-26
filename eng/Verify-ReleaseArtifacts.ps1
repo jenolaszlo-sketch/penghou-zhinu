@@ -23,6 +23,29 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function Assert-PackageArchive {
+    param([string]$Path, [string]$Id, [string]$Version, [string]$Commit)
+    $zip = [IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $specs = @($zip.Entries | Where-Object FullName -Like '*.nuspec')
+        if ($specs.Count -ne 1) { throw "Expected one nuspec: $Path" }
+        $reader = [IO.StreamReader]::new($specs[0].Open())
+        try { [xml]$doc = $reader.ReadToEnd() } finally { $reader.Dispose() }
+        $meta = $doc.package.metadata
+        if ($meta.id -cne $Id -or $meta.version -cne $Version -or $meta.repository.commit -cne $Commit) {
+            throw "Archive identity/version/source mismatch: $Path"
+        }
+        $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($entry in $zip.Entries) {
+            if (-not $seen.Add($entry.FullName) -or $entry.FullName -match '(^/|\\|(^|/)\.\.(/|$))') {
+                throw "Unsafe or duplicate archive member: $Path"
+            }
+        }
+    } finally { $zip.Dispose() }
+}
+
 $releasePackageIds = @(
     'Penghou.Zhinu',
     'Penghou.Zhinu.Agents',
@@ -57,6 +80,7 @@ foreach ($field in @('profileId', 'repository', 'commitSha', 'workflowPath',
                      'targetFrameworks', 'dependencyConstraints')) {
     Assert-ManifestField $manifest $field
 }
+if ($manifest.profileId -cne 'zhinu-release-qualification-v1') { throw 'Unexpected qualification profile.' }
 if ($manifest.conclusion -ne 'success') {
     throw "Manifest records conclusion '$($manifest.conclusion)' (R04 REFUSE)." }
 if ($manifest.repository -ne $ExpectedRepository) {
@@ -96,10 +120,14 @@ foreach ($package in $packages) {
     foreach ($fileField in @('nupkg', 'snupkg')) {
         Assert-ManifestField $package $fileField
         Assert-ManifestField $package "$fileField`Sha256"
+        if ($package.$fileField -cne "$($package.id).$ExpectedVersion.$fileField") {
+            throw "Noncanonical package filename: $($package.$fileField)"
+        }
         $path = Join-Path $artifacts $package.$fileField
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
             throw "Qualified file '$($package.$fileField)' is missing from the artifact set (R08 REFUSE)."
         }
+        Assert-PackageArchive $path $package.id $ExpectedVersion $ExpectedCommitSha
         $actual = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
         $listed = ([string]$package."$fileField`Sha256").ToLowerInvariant()
         if ($listed -notmatch '^[0-9a-f]{64}$') {

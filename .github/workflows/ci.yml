@@ -41,7 +41,7 @@ jobs:
 
       - run: dotnet test Penghou.Zhinu.slnx -c Release --no-build --no-restore --logger trx --logger 'console;verbosity=normal' --blame-hang-timeout 5m --blame-hang-dump-type none --results-directory test-results
 
-      - run: dotnet pack Penghou.Zhinu.slnx -c Release --no-build --no-restore -o artifacts
+      - run: dotnet pack Penghou.Zhinu.slnx -c Release --no-build --no-restore -o artifacts -p:RepositoryCommit=${{ github.sha }}
 
       - name: Verify isolated package closure and legacy binary compatibility
         shell: pwsh

@@ -149,6 +149,14 @@ Invoke-Scenario 'R14' 'REFUSE' {
     Edit-Manifest $d { param($m) $m.runId = $RunId + 1 }
 }
 
+Invoke-Scenario 'R12-missing-manifest' 'REFUSE' { param($d) Remove-Item -LiteralPath (Join-Path $d 'manifest.json') }
+Invoke-Scenario 'R07-incorrect-hash' 'REFUSE' { param($d) Edit-Manifest $d { param($m) $m.packages[2].nupkgSha256 = '0' * 64 } }
+Invoke-Scenario 'R04-failed-qualification' 'REFUSE' { param($d) Edit-Manifest $d { param($m) $m.conclusion = 'failure' } }
+Invoke-Scenario 'R13-wrong-repository' 'REFUSE' { param($d) Edit-Manifest $d { param($m) $m.repository = 'unrelated/repository' } }
+Invoke-Scenario 'R12-wrong-profile' 'REFUSE' { param($d) Edit-Manifest $d { param($m) $m.profileId = 'unrelated' } }
+Invoke-Scenario 'R10-package-identity' 'REFUSE' { param($d) Edit-Manifest $d { param($m) $m.packages[2].id = 'Wrong.Package' } }
+Invoke-Scenario 'R12-path-traversal' 'REFUSE' { param($d) Edit-Manifest $d { param($m) $m.packages[2].nupkg = '../escape.nupkg' } }
+
 # R18: fresh valid fixture verifies; the harness structurally has no push.
 $finalDirectory = New-Fixture 'R18'
 $r18Refused = $false

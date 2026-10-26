@@ -17,6 +17,8 @@ name: Release rehearsal
 
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/zg-rq-02-rehearsal]
 
 permissions:
   contents: read
@@ -80,61 +82,9 @@ jobs:
             -Version '${{ steps.version.outputs.version }}' `
             -OutputDirectory 'artifacts/rehearsal-matrix'
 
-      - name: Live-API negative cases (real historical runs)
+      - name: Offline API and tag boundary fault fixtures
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $cases = @(
-            @{ id = 'R02'; sha = 'f0edf1714013106bdbce090179342ccb029eaf83';
-               because = 'old-format successful CI run lacks the Stage-A artifact set' },
-            @{ id = 'R04'; sha = '18c0624a823e6a8c38aae85b98cab1bc7e67a362';
-               because = 'real failed CI run at that commit' },
-            @{ id = 'R05'; sha = '246d535679cca2ca5130ecfad62437dbb1fdd81d';
-               because = 'real cancelled CI run at that commit' },
-            @{ id = 'R13'; sha = "$env:GITHUB_SHA";
-               because = 'no runs of the publish workflow qualify as the qualification workflow' }
-          )
-          foreach ($case in $cases) {
-            $refused = $false
-            try {
-              ./eng/Verify-QualificationRun.ps1 `
-                -Repository "$env:GITHUB_REPOSITORY" `
-                -CommitSha $case.sha `
-                -GitHubToken "$env:GH_TOKEN" `
-                -WorkflowFile $(if ($case.id -eq 'R13') { 'publish.yml' } else { 'ci.yml' }) `
-                -ExpectedWorkflowPath $(if ($case.id -eq 'R13') { '.github/workflows/publish.yml' } else { '.github/workflows/ci.yml' }) `
-                -ArtifactName 'release-qualification-ubuntu-latest' `
-                -ManifestName 'release-qualification-manifest.json' `
-                -OutputDirectory "artifacts/negative-$($case.id)" | Out-Null
-            }
-            catch { $refused = $true }
-            if (-not $refused) {
-              throw "Negative case $($case.id) was NOT refused ($($case.because))."
-            }
-            Write-Output "$($case.id): REFUSED as expected ($($case.because))."
-          }
-
-      - name: Structural no-push guard
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Rehearsal workflow must contain no NuGet push or login:"
-          if grep -nE 'nuget push|NuGet/login|NUGET_API_KEY' .github/workflows/release-rehearsal.yml; then
-            echo "FAIL: rehearsal workflow reaches publication." >&2; exit 1
-          fi
-          echo "Publish workflow: push steps must exist only in the publish job:"
-          push_lines=$(grep -n 'name: Push packages to NuGet\|name: Push symbols to NuGet\|NuGet login' .github/workflows/publish.yml | cut -d: -f1)
-          publish_job_line=$(grep -n '^  publish:' .github/workflows/publish.yml | cut -d: -f1)
-          verify_job_line=$(grep -n '^  verify:' .github/workflows/publish.yml | cut -d: -f1)
-          for line in $push_lines; do
-            if [ "$line" -lt "$publish_job_line" ]; then
-              echo "FAIL: publication step before the publish job." >&2; exit 1
-            fi
-          done
-          grep -q 'needs: verify' .github/workflows/publish.yml
-          grep -q 'environment: nuget' .github/workflows/publish.yml
-          echo "PASS: publication requires verify + protected environment."
+        run: ./eng/Test-QualificationBoundary.ps1 -QualifiedArtifactsDirectory qualified-artifacts -OutputDirectory artifacts/api-boundaries
 
       - name: Retain rehearsal evidence
         if: always()
@@ -143,5 +93,16 @@ jobs:
           name: release-rehearsal-evidence
           path: |
             artifacts/rehearsal-matrix/rehearsal-matrix.json
+            artifacts/api-boundaries/qualification-boundary.json
             qualified-artifacts/release-qualification-manifest.json
           if-no-files-found: warn
+
+  authorization-probe:
+    name: Nonpublishing environment checkpoint
+    needs: rehearse
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      contents: read
+    steps:
+      - run: echo 'Manual checkpoint reached. No credentials requested; publication remains unauthorized.'
