@@ -1,7 +1,8 @@
 # ZG-RQ-02: release automation remediation and Q6 delta qualification
 
-Status: **implementation complete; independent delta review recorded in
-[handoff.md](handoff.md); publication remains unauthorized.**
+Status: **implementation complete; independent adversarial review recorded in
+[independent-review.md](independent-review.md) — verdict QUALIFIED WITH
+QUALIFICATIONS; publication remains unauthorized.**
 
 Predecessor: ZG-RQ-01 (`codex/zg-rq-01`, `d272b26`), verdict REMEDIATION
 REQUIRED for gate Q6 only. This milestone remediates findings RG-01 (Zhinu
