@@ -1,0 +1,53 @@
+{
+  "executedAtUtc": "2026-10-26T10:47:22.8960872+00:00",
+  "repository": "jenolaszlo-sketch/penghou-zhinu",
+  "kind": "LIVE API (read-only) against real GitHub-hosted historical runs",
+  "note": "Each case invokes the production eng/Verify-QualificationRun.ps1 against the authenticated GitHub API. No artifact is published; refusals occur before any download/publish side effect.",
+  "scenarios": [
+    {
+      "scenario": "R02-no-runs",
+      "commit": "d4968ea6214b520147b2bb1c9161a5ba7954c497",
+      "workflow": "ci.yml",
+      "expected": "REFUSED: no workflow runs at commit",
+      "observed": "REFUSED",
+      "exitCode": 1,
+      "detail": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-QualificationRun.ps1:64\r\nLine |\r\n  64 |      throw \"No workflow runs found for commit $CommitSha (R02 REFUSE:  .\r\n     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | No workflow runs found for commit d4968ea6214b520147b2bb1c9161a5ba7954c497 (R02 REFUSE: qualification absent)."
+    },
+    {
+      "scenario": "R02-old-format-no-stage-a-artifact",
+      "commit": "f0edf1714013106bdbce090179342ccb029eaf83",
+      "workflow": "ci.yml",
+      "expected": "REFUSED: qualification artifact absent",
+      "observed": "REFUSED",
+      "exitCode": 1,
+      "detail": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-QualificationRun.ps1:101\r\nLine |\r\n 101 |  . Count -ne 1) { throw 'Expected exactly one qualification artifact.' }\r\n     |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | Expected exactly one qualification artifact."
+    },
+    {
+      "scenario": "R04-failed-qualification",
+      "commit": "18c0624a823e6a8c38aae85b98cab1bc7e67a362",
+      "workflow": "ci.yml",
+      "expected": "REFUSED: latest qualification failed",
+      "observed": "REFUSED",
+      "exitCode": 1,
+      "detail": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-QualificationRun.ps1:79\r\nLine |\r\n  79 |      throw \"No successful qualification run for commit $CommitSha (REF .\r\n     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | No successful qualification run for commit 18c0624a823e6a8c38aae85b98cab1bc7e67a362 (REFUSE). Observed:\r\n     | completed/failure/push"
+    },
+    {
+      "scenario": "R05-cancelled-qualification",
+      "commit": "ca0c466ff704e88b800a42a94405f4e27db76df1",
+      "workflow": "ci.yml",
+      "expected": "REFUSED: latest qualification cancelled",
+      "observed": "REFUSED",
+      "exitCode": 1,
+      "detail": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-QualificationRun.ps1:79\r\nLine |\r\n  79 |      throw \"No successful qualification run for commit $CommitSha (REF .\r\n     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | No successful qualification run for commit ca0c466ff704e88b800a42a94405f4e27db76df1 (REFUSE). Observed:\r\n     | completed/cancelled/push"
+    },
+    {
+      "scenario": "R13-wrong-workflow-substitution",
+      "commit": "18c0624a823e6a8c38aae85b98cab1bc7e67a362",
+      "workflow": "publish.yml",
+      "expected": "REFUSED: no runs of expected qualification workflow",
+      "observed": "REFUSED",
+      "exitCode": 1,
+      "detail": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-QualificationRun.ps1:69\r\nLine |\r\n  69 |      throw \"No runs of the expected qualification workflow at commit $ .\r\n     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n     | No runs of the expected qualification workflow at commit 18c0624a823e6a8c38aae85b98cab1bc7e67a362 (R13 REFUSE).\r\n     | Found runs: CI."
+    }
+  ]
+}

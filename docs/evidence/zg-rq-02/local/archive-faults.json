@@ -1,0 +1,37 @@
+[
+  {
+    "scenario": "nuspec-id",
+    "result": "PASS",
+    "exitCode": 1,
+    "expectedReason": "Archive identity/version/source mismatch",
+    "output": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-ReleaseArtifacts.ps1:38\nLine |\n  38 |              throw \"Archive identity/version/source mismatch: $Path\"\n     |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n     | Archive identity/version/source mismatch:\n     | D:\\temp\\activity-groups\\zg-rq-02\\archive-faults-01\\nuspec-id\\Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg\n"
+  },
+  {
+    "scenario": "nuspec-version",
+    "result": "PASS",
+    "exitCode": 1,
+    "expectedReason": "Archive identity/version/source mismatch",
+    "output": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-ReleaseArtifacts.ps1:38\nLine |\n  38 |              throw \"Archive identity/version/source mismatch: $Path\"\n     |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n     | Archive identity/version/source mismatch:\n     | D:\\temp\\activity-groups\\zg-rq-02\\archive-faults-01\\nuspec-version\\Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg\n"
+  },
+  {
+    "scenario": "nuspec-source",
+    "result": "PASS",
+    "exitCode": 1,
+    "expectedReason": "Archive identity/version/source mismatch",
+    "output": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-ReleaseArtifacts.ps1:38\nLine |\n  38 |              throw \"Archive identity/version/source mismatch: $Path\"\n     |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n     | Archive identity/version/source mismatch:\n     | D:\\temp\\activity-groups\\zg-rq-02\\archive-faults-01\\nuspec-source\\Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg\n"
+  },
+  {
+    "scenario": "duplicate-member",
+    "result": "PASS",
+    "exitCode": 1,
+    "expectedReason": "Unsafe or duplicate archive member",
+    "output": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-ReleaseArtifacts.ps1:43\nLine |\n  43 |                  throw \"Unsafe or duplicate archive member: $Path\"\n     |                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n     | Unsafe or duplicate archive member:\n     | D:\\temp\\activity-groups\\zg-rq-02\\archive-faults-01\\duplicate-member\\Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg\n"
+  },
+  {
+    "scenario": "symbol-source",
+    "result": "PASS",
+    "exitCode": 1,
+    "expectedReason": "Archive identity/version/source mismatch",
+    "output": "Exception: C:\\Users\\Laszlos\\source\\repos\\zg-rq-02-zhinu\\eng\\Verify-ReleaseArtifacts.ps1:38\nLine |\n  38 |              throw \"Archive identity/version/source mismatch: $Path\"\n     |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n     | Archive identity/version/source mismatch:\n     | D:\\temp\\activity-groups\\zg-rq-02\\archive-faults-01\\symbol-source\\Penghou.Zhinu.Hosting.0.2.0-preview.10.snupkg\n"
+  }
+]

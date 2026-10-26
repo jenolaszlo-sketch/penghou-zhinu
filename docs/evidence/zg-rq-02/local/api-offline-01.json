@@ -1,0 +1,131 @@
+[
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "valid",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "absent",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "pending",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "failed",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "cancelled",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "unrelated-workflow",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "wrong-source",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "pull-request",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "wrong-repository",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "stale-attempt",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "missing-matrix",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "expired",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "unrelated-artifact-run",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "artifact-absent",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "FAIL",
+    "downloads": 0,
+    "detail": "The expected qualification workflow 'ci.yml' was not found in jenolaszlo-sketch/penghou-zhinu (R13 REFUSE): The variable '$script:scenario' cannot be retrieved because it has not been set.",
+    "scenario": "newer-failure",
+    "kind": "OFFLINE API FIXTURE"
+  },
+  {
+    "result": "PASS",
+    "detail": "",
+    "scenario": "tag-positive",
+    "kind": "OFFLINE REF FIXTURE"
+  },
+  {
+    "result": "PASS",
+    "detail": "Publication requires the exact checked-in version tag.",
+    "scenario": "branch-denied",
+    "kind": "OFFLINE REF FIXTURE"
+  },
+  {
+    "result": "PASS",
+    "detail": "Publication requires the exact checked-in version tag.",
+    "scenario": "wrong-tag",
+    "kind": "OFFLINE REF FIXTURE"
+  },
+  {
+    "result": "PASS",
+    "detail": "Release tag does not identify the qualified source commit.",
+    "scenario": "wrong-tag-source",
+    "kind": "OFFLINE REF FIXTURE"
+  }
+]

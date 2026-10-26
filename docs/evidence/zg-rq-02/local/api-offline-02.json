@@ -1,0 +1,131 @@
+[
+  {
+    "detail": "",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "valid",
+    "downloads": 1,
+    "result": "PASS"
+  },
+  {
+    "detail": "No workflow runs found for commit bf33c05cf2390af6924bbe3761e09f9e377c7a97 (R02 REFUSE: qualification absent).",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "absent",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "No successful qualification run for commit bf33c05cf2390af6924bbe3761e09f9e377c7a97 (REFUSE). Observed: in_progress//push",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "pending",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "No successful qualification run for commit bf33c05cf2390af6924bbe3761e09f9e377c7a97 (REFUSE). Observed: completed/failure/push",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "failed",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "No successful qualification run for commit bf33c05cf2390af6924bbe3761e09f9e377c7a97 (REFUSE). Observed: completed/cancelled/push",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "cancelled",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "The property 'name' cannot be found on this object. Verify that the property exists.",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "unrelated-workflow",
+    "downloads": 0,
+    "result": "FAIL"
+  },
+  {
+    "detail": "No successful qualification run for commit bf33c05cf2390af6924bbe3761e09f9e377c7a97 (REFUSE). Observed: completed/success/push",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "wrong-source",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "No successful qualification run for commit bf33c05cf2390af6924bbe3761e09f9e377c7a97 (REFUSE). Observed: completed/success/pull_request",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "pull-request",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "Qualification run 1 belongs to repository 'other/repository' (R13 REFUSE).",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "wrong-repository",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "Manifest is from a different run, attempt, or source.",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "stale-attempt",
+    "downloads": 1,
+    "result": "PASS"
+  },
+  {
+    "detail": "Required qualification job absent or failed: build (windows-latest)",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "missing-matrix",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "Qualification artifact 'release-qualification-ubuntu-latest' of run 1 has expired (R02 REFUSE).",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "expired",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "Artifact run/source mismatch.",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "unrelated-artifact-run",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "Expected exactly one qualification artifact.",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "artifact-absent",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "Latest qualification is not successful.",
+    "kind": "OFFLINE API FIXTURE",
+    "scenario": "newer-failure",
+    "downloads": 0,
+    "result": "PASS"
+  },
+  {
+    "detail": "",
+    "scenario": "tag-positive",
+    "kind": "OFFLINE REF FIXTURE",
+    "result": "PASS"
+  },
+  {
+    "detail": "Publication requires the exact checked-in version tag.",
+    "scenario": "branch-denied",
+    "kind": "OFFLINE REF FIXTURE",
+    "result": "PASS"
+  },
+  {
+    "detail": "Publication requires the exact checked-in version tag.",
+    "scenario": "wrong-tag",
+    "kind": "OFFLINE REF FIXTURE",
+    "result": "PASS"
+  },
+  {
+    "detail": "Release tag does not identify the qualified source commit.",
+    "scenario": "wrong-tag-source",
+    "kind": "OFFLINE REF FIXTURE",
+    "result": "PASS"
+  }
+]

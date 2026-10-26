@@ -1,0 +1,28 @@
+{
+  "sourceAndContracts": {
+    "command": [
+      "diff",
+      "--name-status",
+      "f0edf1714013106bdbce090179342ccb029eaf83",
+      "HEAD",
+      "--",
+      "src",
+      "Directory.Build.props",
+      "NuGet.config"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "ancestry": {
+    "command": [
+      "merge-base",
+      "--is-ancestor",
+      "f0edf1714013106bdbce090179342ccb029eaf83",
+      "HEAD"
+    ],
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

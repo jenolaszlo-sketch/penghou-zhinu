@@ -1,0 +1,125 @@
+{
+  "executedAtUtc": "2026-10-26T09:43:39.1918531+00:00",
+  "scenarios": [
+    {
+      "scenario": "R01",
+      "expected": "PASS",
+      "observed": "PASS",
+      "status": "RELEASE-ELIGIBLE (NO PUSH)",
+      "detail": "VERIFIED: 7 package/symbol pairs, commit bf33c05cf2390af6924bbe3761e09f9e377c7a97, run 1, version 0.2.0-preview.10, Penghou.Workflow.Abstractions [0.1.0-preview.2]."
+    },
+    {
+      "scenario": "R06",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest commit '0123456789abcdef0123456789abcdef01234567' is not the publication commit 'bf33c05cf2390af6924bbe3761e09f9e377c7a97' (R06 REFUSE)."
+    },
+    {
+      "scenario": "R07",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Hash mismatch for 'Penghou.Zhinu.0.2.0-preview.10.nupkg': expected dd46e50664e1f803523e7de8b6025c8a6077008634ca2c96c9155456e45f1baf, found 61535927e3c18cc261ca5faaaa55eea4543b053476ad6a0c7d9e9089033ca963 (R07 REFUSE)."
+    },
+    {
+      "scenario": "R08",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Qualified file 'Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg' is missing from the artifact set (R08 REFUSE)."
+    },
+    {
+      "scenario": "R09",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Unexpected unqualified files in the artifact set: Penghou.Zhinu.Unauthorized.0.2.0-preview.10.nupkg (R09 REFUSE)."
+    },
+    {
+      "scenario": "R10",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest version '0.2.0-preview.99' does not match expected version '0.2.0-preview.10' (R10 REFUSE)."
+    },
+    {
+      "scenario": "R11",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest dependency constraint for 'Penghou.Workflow.Abstractions' is '[1.0.0]'; the accepted pin is '[0.1.0-preview.2]' (R11 REFUSE)."
+    },
+    {
+      "scenario": "R12",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Malformed manifest: not valid JSON (R12 REFUSE): Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: v. Path '', line 1, position 6."
+    },
+    {
+      "scenario": "R14",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest run id '2' is not the API-verified qualification run '1' (R14 REFUSE)."
+    },
+    {
+      "scenario": "R12-missing-manifest",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Malformed manifest: not valid JSON (R12 REFUSE): Cannot find path 'D:\\temp\\activity-groups\\zg-rq-02\\zhinu-offline-01\\R12-missing-manifest\\manifest.json' because it does not exist."
+    },
+    {
+      "scenario": "R07-incorrect-hash",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Hash mismatch for 'Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg': expected 0000000000000000000000000000000000000000000000000000000000000000, found 6b316e2b3082b2e9aed958c693203614843ddabd23bdb9525bc7972d1fe0f5cd (R07 REFUSE)."
+    },
+    {
+      "scenario": "R04-failed-qualification",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest records conclusion 'failure' (R04 REFUSE)."
+    },
+    {
+      "scenario": "R13-wrong-repository",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest repository 'unrelated/repository' does not match 'jenolaszlo-sketch/penghou-zhinu' (R13 REFUSE)."
+    },
+    {
+      "scenario": "R12-wrong-profile",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Unexpected qualification profile."
+    },
+    {
+      "scenario": "R10-package-identity",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Manifest package set is missing 'Penghou.Zhinu.Hosting' (R08 REFUSE)."
+    },
+    {
+      "scenario": "R12-path-traversal",
+      "expected": "REFUSED",
+      "observed": "REFUSED",
+      "status": "PASS",
+      "detail": "Noncanonical package filename: ../escape.nupkg"
+    },
+    {
+      "scenario": "R18",
+      "expected": "RELEASE-ELIGIBLE (NO PUSH)",
+      "observed": "RELEASE-ELIGIBLE (NO PUSH)",
+      "status": "RELEASE-ELIGIBLE (NO PUSH)",
+      "detail": "Verifier accepted the qualified set; this harness has no publication code path"
+    }
+  ],
+  "noPushReason": "Publication side effects exist only in publish.yml:publish, which requires the successful verify job and the protected nuget environment approval; this harness and the rehearsal workflow contain no push steps."
+}

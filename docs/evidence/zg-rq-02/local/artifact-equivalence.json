@@ -1,0 +1,1025 @@
+{
+  "executedAtUtc": "2026-10-26T10:52:15.1257695+00:00",
+  "baseline": {
+    "commit": "f0edf1714013106bdbce090179342ccb029eaf83",
+    "directory": "C:\\Users\\Laszlos\\source\\repos\\Penghou.Zhinu\\artifacts",
+    "source": "recorded ZG-RQ-01 candidate artifact set"
+  },
+  "candidate": {
+    "commit": "908555d15b7091b4846c5f81040f4b15b31b3925",
+    "runId": 40303504133,
+    "artifact": "release-qualification-ubuntu-latest",
+    "directory": "C:\\Windows\\TEMP\\opencode\\zgrq02\\stage-a-908555d",
+    "source": "GitHub-hosted Stage-A qualification artifact set"
+  },
+  "sourceEquivalence": "git diff f0edf17 908555d -- src tests is empty; see scope-check.json",
+  "summary": {
+    "archives": 14,
+    "archivesByteIdentical": 0,
+    "nuspecDependenciesIdentical": 14,
+    "nuspecOnlyCommitAndBranchDiffer": 14,
+    "nupkgXmlDocsNormalizedIdentical": "7 / 7",
+    "assembliesCompared": 14,
+    "assembliesIlIdentical": 14,
+    "assembliesTypesIdentical": 14,
+    "assembliesReferencesIdentical": 14,
+    "category": "semantically equivalent: identical types, references and method IL; archive bytes, MVID, PDB checksums and XML line endings differ by build environment; nuspec differs only in repository branch/commit binding"
+  },
+  "packages": [
+    {
+      "archive": "Penghou.Zhinu.0.2.0-preview.10.nupkg",
+      "baselineLength": 706264,
+      "candidateLength": 705944,
+      "baselineSha256": "b7b8d7eac1d8d9519700a887adf01079f94de1dbd91b4c9c2bc9ea37410059a3",
+      "candidateSha256": "c47b8a1497fa352599997369d5309f6d31d92602df2f3b947a056c9e67b7fb4b",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.dll",
+        "lib/net10.0/Penghou.Zhinu.xml",
+        "lib/net8.0/Penghou.Zhinu.dll",
+        "lib/net8.0/Penghou.Zhinu.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.Logging.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Workflow.Abstractions",
+            "version": "[0.1.0-preview.2]"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.Logging.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Workflow.Abstractions",
+            "version": "[0.1.0-preview.2]"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.dll": {
+          "baselineMvid": "c97b5fe7-3b83-49cd-b2b1-e30ba7029899",
+          "candidateMvid": "ab30a0e9-9ee9-4f11-97c6-4a9239d99dc4",
+          "typeCount": 588,
+          "methodCount": 4608,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.dll": {
+          "baselineMvid": "0c3a5385-7ef3-4081-9b38-1c662b5c61f6",
+          "candidateMvid": "9c476dde-3c30-4b9e-a130-0211c89e0529",
+          "typeCount": 588,
+          "methodCount": 4608,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.0.2.0-preview.10.snupkg",
+      "baselineLength": 143471,
+      "candidateLength": 143221,
+      "baselineSha256": "c496efc3a92e20bd46de4b86c9880c597cd53130e240246c01180f9282f45506",
+      "candidateSha256": "60c1f6a89d6bf6d871e636279d1eec312b660c12f6242beef5f89b50f3346d85",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.pdb",
+        "lib/net8.0/Penghou.Zhinu.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.Logging.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Workflow.Abstractions",
+            "version": "[0.1.0-preview.2]"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.Logging.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Workflow.Abstractions",
+            "version": "[0.1.0-preview.2]"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    },
+    {
+      "archive": "Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+      "baselineLength": 44918,
+      "candidateLength": 44846,
+      "baselineSha256": "f7e079ab39278bed2f68d9e9036a1f5402de047214426fbf662939967ee05a05",
+      "candidateSha256": "26cefe0dba83f7a77c9ed677c51f46cfa705a3b16943aec1b3b72fc9a2d273f2",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Agents.dll",
+        "lib/net10.0/Penghou.Zhinu.Agents.xml",
+        "lib/net8.0/Penghou.Zhinu.Agents.dll",
+        "lib/net8.0/Penghou.Zhinu.Agents.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Agents.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Agents",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Agents.AI.Workflows",
+            "version": "1.17.0"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Agents.AI.Workflows",
+            "version": "1.17.0"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.Agents.dll": {
+          "baselineMvid": "f7eb6f49-9a91-4d36-91bd-440c736314e5",
+          "candidateMvid": "0c0c265f-9b31-4337-a371-29351ad34b62",
+          "typeCount": 15,
+          "methodCount": 47,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.Agents.dll": {
+          "baselineMvid": "01f21c85-499e-4787-830e-8369925b31ec",
+          "candidateMvid": "7203e34a-80b3-46f5-aa96-7e15c6d2911c",
+          "typeCount": 15,
+          "methodCount": 47,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.Agents.0.2.0-preview.10.snupkg",
+      "baselineLength": 22705,
+      "candidateLength": 22568,
+      "baselineSha256": "f61522e95d182f8405458051967f40bc9489210a2974672c7474c5dcd56f98f7",
+      "candidateSha256": "8e706594836af29ec93311c4ac0e3b9470c9e74710e92be75c4479873257ffdb",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Agents.pdb",
+        "lib/net8.0/Penghou.Zhinu.Agents.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Agents.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Agents",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Agents.AI.Workflows",
+            "version": "1.17.0"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Agents.AI.Workflows",
+            "version": "1.17.0"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    },
+    {
+      "archive": "Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+      "baselineLength": 41134,
+      "candidateLength": 41070,
+      "baselineSha256": "c11250db536e860f4659c0ad3af5868c42714fab0147f013aa11ad6d51e8432e",
+      "candidateSha256": "cabc75e04e5964b640e8c41f98f05bcd4d3e785986b7ca542a201d0443afc060",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Hosting.dll",
+        "lib/net10.0/Penghou.Zhinu.Hosting.xml",
+        "lib/net8.0/Penghou.Zhinu.Hosting.dll",
+        "lib/net8.0/Penghou.Zhinu.Hosting.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Hosting.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Hosting",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.Hosting.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.Options",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.Hosting.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.Options",
+            "version": "10.0.9"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.Hosting.dll": {
+          "baselineMvid": "5e72e00a-52e7-4615-9332-f883d747caf3",
+          "candidateMvid": "be0c80dd-5851-4193-a01c-26d16d026815",
+          "typeCount": 16,
+          "methodCount": 78,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.Hosting.dll": {
+          "baselineMvid": "722da15b-f0c1-4a7f-a407-7f336725cb11",
+          "candidateMvid": "30e1bb7b-dab9-4458-ad10-87786b7e0936",
+          "typeCount": 16,
+          "methodCount": 78,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.Hosting.0.2.0-preview.10.snupkg",
+      "baselineLength": 21410,
+      "candidateLength": 21288,
+      "baselineSha256": "db2675af28437be948c82132ee13b9c48b654f0aef45a98c61c8297f3b59e361",
+      "candidateSha256": "88b5626f453f919b3b6b758512d974a9bb7f8cf43ac6effdb36934631ffab62a",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Hosting.pdb",
+        "lib/net8.0/Penghou.Zhinu.Hosting.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Hosting.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Hosting",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.Hosting.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.Options",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.Hosting.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.Options",
+            "version": "10.0.9"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    },
+    {
+      "archive": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+      "baselineLength": 26135,
+      "candidateLength": 26087,
+      "baselineSha256": "87fa753da8955a964f1a65af454dde71f8c284f9fa342868e5b533f32a5d8dd9",
+      "candidateSha256": "fd73a0d03bffde8c7d9978a99db90d7cd1f1013e699da896bcf53388673088f8",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+        "lib/net10.0/Penghou.Zhinu.Hosting.AspNetCore.xml",
+        "lib/net8.0/Penghou.Zhinu.Hosting.AspNetCore.dll",
+        "lib/net8.0/Penghou.Zhinu.Hosting.AspNetCore.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Hosting.AspNetCore.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Hosting.AspNetCore",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.Hosting.AspNetCore.dll": {
+          "baselineMvid": "e17d6868-2147-4d77-9e23-0e6295cba48b",
+          "candidateMvid": "33cc3d3a-d6d1-4252-aae6-c1fd7e2c79d4",
+          "typeCount": 8,
+          "methodCount": 30,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.Hosting.AspNetCore.dll": {
+          "baselineMvid": "4c01d701-b765-45a9-aa36-6f4cc3a2f7eb",
+          "candidateMvid": "508ad192-b397-498f-9288-c003bbe71f36",
+          "typeCount": 8,
+          "methodCount": 30,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.snupkg",
+      "baselineLength": 26250,
+      "candidateLength": 26146,
+      "baselineSha256": "6be5867a793c9f3c3daf4b3a5124e238463205db12920c0d21cb849634784a1f",
+      "candidateSha256": "7b11d5c4767b73ca0352aa44d95bbd236fb6151872abf8b75c797caca488ca7e",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Hosting.AspNetCore.pdb",
+        "lib/net8.0/Penghou.Zhinu.Hosting.AspNetCore.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Hosting.AspNetCore.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Hosting.AspNetCore",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    },
+    {
+      "archive": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+      "baselineLength": 19092,
+      "candidateLength": 19052,
+      "baselineSha256": "9a8f929d2081b52116581c53f314ddc107aebce6e95b19a4317b754cee51cf3c",
+      "candidateSha256": "e7246ca87aadca23049d34acaf020ae0df5415d10d5c31b98d3b035360787e23",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.OpenTelemetry.dll",
+        "lib/net10.0/Penghou.Zhinu.OpenTelemetry.xml",
+        "lib/net8.0/Penghou.Zhinu.OpenTelemetry.dll",
+        "lib/net8.0/Penghou.Zhinu.OpenTelemetry.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.OpenTelemetry.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.OpenTelemetry",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "OpenTelemetry.Extensions.Hosting",
+            "version": "1.17.0"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "OpenTelemetry.Extensions.Hosting",
+            "version": "1.17.0"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.OpenTelemetry.dll": {
+          "baselineMvid": "4f3581b9-7b5f-4889-ab14-a981b1e81435",
+          "candidateMvid": "02133835-2360-4786-9748-95039b62f6b0",
+          "typeCount": 3,
+          "methodCount": 5,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.OpenTelemetry.dll": {
+          "baselineMvid": "b9262fc8-9a43-478f-8322-6b3e32e63d3d",
+          "candidateMvid": "53b0fbfb-0d06-47f0-9c5b-cf7364b5e1e0",
+          "typeCount": 3,
+          "methodCount": 5,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.snupkg",
+      "baselineLength": 18678,
+      "candidateLength": 18554,
+      "baselineSha256": "8f77d1b4d70c182b722863785701cd0ff84a3989a5911a5629e97b8d41760cd0",
+      "candidateSha256": "8430a7d4795b0bf59edbd1258d3ad462f32b14356b0610fffa731ecbc8d3a563",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.OpenTelemetry.pdb",
+        "lib/net8.0/Penghou.Zhinu.OpenTelemetry.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.OpenTelemetry.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.OpenTelemetry",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "OpenTelemetry.Extensions.Hosting",
+            "version": "1.17.0"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "OpenTelemetry.Extensions.Hosting",
+            "version": "1.17.0"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    },
+    {
+      "archive": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+      "baselineLength": 606052,
+      "candidateLength": 605982,
+      "baselineSha256": "6e6c55e868ff3362458b1f8bfd8b6b8ae80d40b73930727a26612fee87e38f3b",
+      "candidateSha256": "cb1e66ff33cb3c915d0c5e474af8be18c7fa7a91d5fee78a883ca4017261188d",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Sqlite.dll",
+        "lib/net10.0/Penghou.Zhinu.Sqlite.xml",
+        "lib/net8.0/Penghou.Zhinu.Sqlite.dll",
+        "lib/net8.0/Penghou.Zhinu.Sqlite.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Sqlite.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Sqlite",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Data.Sqlite",
+            "version": "10.0.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "version": "2.1.12"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Data.Sqlite",
+            "version": "10.0.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "version": "2.1.12"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.Sqlite.dll": {
+          "baselineMvid": "825c595b-0a96-4596-8dc5-489bfb513561",
+          "candidateMvid": "de5a7242-89e3-4cfa-9f66-32a4169537c7",
+          "typeCount": 533,
+          "methodCount": 1770,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.Sqlite.dll": {
+          "baselineMvid": "0249e0be-b050-46b0-a5bf-2b643b73d6c2",
+          "candidateMvid": "467036db-a765-4f9d-98d3-db0e63f879f3",
+          "typeCount": 533,
+          "methodCount": 1770,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.snupkg",
+      "baselineLength": 123359,
+      "candidateLength": 123172,
+      "baselineSha256": "5c9a07eafe123cab9a9c7d801fbd8715f575e62272cb2b898ba0276d442f7bd5",
+      "candidateSha256": "f302151c8ce336eb84da05888eed5f0058643e13f512d7569cd02c98631be06b",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Sqlite.pdb",
+        "lib/net8.0/Penghou.Zhinu.Sqlite.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Sqlite.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Sqlite",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Data.Sqlite",
+            "version": "10.0.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "version": "2.1.12"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Data.Sqlite",
+            "version": "10.0.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+            "version": "10.0.9"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "SQLitePCLRaw.bundle_e_sqlite3",
+            "version": "2.1.12"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    },
+    {
+      "archive": "Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+      "baselineLength": 77250,
+      "candidateLength": 77191,
+      "baselineSha256": "34f2e5dec48c559553bf5cc7057877e1ae453ed05d80648b0d122259335d3840",
+      "candidateSha256": "0e6599a2f8789b7318ae20e25df0d2d9fec715e37dbe1fd986746d2742c19e70",
+      "entryCountBaseline": 9,
+      "entryCountCandidate": 9,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Testing.dll",
+        "lib/net10.0/Penghou.Zhinu.Testing.xml",
+        "lib/net8.0/Penghou.Zhinu.Testing.dll",
+        "lib/net8.0/Penghou.Zhinu.Testing.xml",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Testing.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Testing",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": true,
+      "assemblies": {
+        "lib\\net10.0\\Penghou.Zhinu.Testing.dll": {
+          "baselineMvid": "09857713-9ca4-4476-9161-e6f274bf1a52",
+          "candidateMvid": "1e3fca05-acfc-4cfe-bfdc-779ab758284f",
+          "typeCount": 54,
+          "methodCount": 181,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        },
+        "lib\\net8.0\\Penghou.Zhinu.Testing.dll": {
+          "baselineMvid": "9b20ebd1-8f00-400f-aa99-d65fe2db9872",
+          "candidateMvid": "58051108-18bc-46cb-a420-0f0e1dea11c8",
+          "typeCount": 53,
+          "methodCount": 179,
+          "typesIdentical": true,
+          "referencesIdentical": true,
+          "ilIdentical": true,
+          "differingMethods": []
+        }
+      }
+    },
+    {
+      "archive": "Penghou.Zhinu.Testing.0.2.0-preview.10.snupkg",
+      "baselineLength": 27918,
+      "candidateLength": 27793,
+      "baselineSha256": "c9fe5c63a6ae36fc5901082dd147632e7ef87a5aae425275bb28028767152322",
+      "candidateSha256": "3d4d503359eb8df78a094cd4311e4c2e4225ad8775a74b9cc5e0428596cefaf8",
+      "entryCountBaseline": 6,
+      "entryCountCandidate": 6,
+      "differingEntries": [
+        "_rels/.rels",
+        "[Content_Types].xml",
+        "lib/net10.0/Penghou.Zhinu.Testing.pdb",
+        "lib/net8.0/Penghou.Zhinu.Testing.pdb",
+        "package/services/metadata/core-properties/nuget.psmdcp",
+        "Penghou.Zhinu.Testing.nuspec"
+      ],
+      "payloadByteIdentical": false,
+      "nuspec": {
+        "id": "Penghou.Zhinu.Testing",
+        "version": "0.2.0-preview.10",
+        "dependencies": [
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net10.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu.Sqlite",
+            "version": "0.2.0-preview.10"
+          },
+          {
+            "targetFramework": "net8.0",
+            "id": "Penghou.Zhinu",
+            "version": "0.2.0-preview.10"
+          }
+        ],
+        "dependenciesIdentical": true,
+        "differences": [
+          "repositoryCommit (f0edf1714013106bdbce090179342ccb029eaf83 -> 908555d15b7091b4846c5f81040f4b15b31b3925)",
+          "repositoryBranch (refs/heads/main -> refs/heads/codex/zg-rq-02-zhinu)"
+        ]
+      },
+      "xmlDocsNormalizedIdentical": null,
+      "assemblies": {}
+    }
+  ]
+}

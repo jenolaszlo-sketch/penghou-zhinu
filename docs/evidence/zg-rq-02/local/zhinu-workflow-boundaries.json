@@ -1,0 +1,38 @@
+[
+  {
+    "scenario": "valid",
+    "result": "PASS",
+    "reason": "",
+    "kind": "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT"
+  },
+  {
+    "scenario": "environment-bypass-attempt",
+    "result": "PASS",
+    "reason": "'environment'",
+    "kind": "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT"
+  },
+  {
+    "scenario": "qualification-bypass-attempt",
+    "result": "PASS",
+    "reason": "Missing qualification dependency",
+    "kind": "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT"
+  },
+  {
+    "scenario": "unauthorized-branch-trigger",
+    "result": "PASS",
+    "reason": "Branch publication trigger",
+    "kind": "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT"
+  },
+  {
+    "scenario": "ambient-credential",
+    "result": "PASS",
+    "reason": "Ambient OIDC",
+    "kind": "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT"
+  },
+  {
+    "scenario": "publisher-rebuild",
+    "result": "PASS",
+    "reason": "Publisher rebuild",
+    "kind": "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT"
+  }
+]

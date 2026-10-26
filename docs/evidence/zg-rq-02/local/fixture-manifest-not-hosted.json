@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "profileId": "zhinu-release-qualification-v1",
+  "repository": "jenolaszlo-sketch/penghou-zhinu",
+  "commitSha": "bf33c05cf2390af6924bbe3761e09f9e377c7a97",
+  "workflowPath": ".github/workflows/ci.yml",
+  "runAttempt": 1,
+  "evidence": [
+    "build (ubuntu-latest)",
+    "build (windows-latest)"
+  ],
+  "runId": 1,
+  "runUrl": "",
+  "conclusion": "success",
+  "qualifiedAtUtc": "2026-10-26T09:43:37.0948906+00:00",
+  "packageVersion": "0.2.0-preview.10",
+  "packages": [
+    {
+      "id": "Penghou.Zhinu",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "dd46e50664e1f803523e7de8b6025c8a6077008634ca2c96c9155456e45f1baf",
+      "snupkg": "Penghou.Zhinu.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "a3a5fc81c4970880d2759ca8ebb9c265396132d318318b8fc1299407f3825263"
+    },
+    {
+      "id": "Penghou.Zhinu.Agents",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.Agents.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "d3d6ed7419f50a2f670b2f71aaa188f9a575375c5189ae88cb65924e668249e9",
+      "snupkg": "Penghou.Zhinu.Agents.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "ac2be54a1aca7aa04ab4438a38cd5c8712ef545acdbe41fdd054c95a51b8cc8a"
+    },
+    {
+      "id": "Penghou.Zhinu.Hosting",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.Hosting.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "6b316e2b3082b2e9aed958c693203614843ddabd23bdb9525bc7972d1fe0f5cd",
+      "snupkg": "Penghou.Zhinu.Hosting.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "81f923bf350f107c9b8908bf3e7eb76e4c29fad72c5535bb65fbfc322b8a8e7a"
+    },
+    {
+      "id": "Penghou.Zhinu.Hosting.AspNetCore",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "432782a14aa55d7318f3b46d68ecda14d11f7f938911bb37ef8a92cac383b353",
+      "snupkg": "Penghou.Zhinu.Hosting.AspNetCore.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "a354f15b284da9d2332305ead243f2f6a11cb2a78ba8cf5114197d922299e6a0"
+    },
+    {
+      "id": "Penghou.Zhinu.OpenTelemetry",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "64417c35e7a5a7b306e08a50d03b3db8ec7f4da09ae1c6ec788e35c727116971",
+      "snupkg": "Penghou.Zhinu.OpenTelemetry.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "456af0d62023dd3f4957c9d20b5c717b2011f62e65bf8cc089d8582a7569927d"
+    },
+    {
+      "id": "Penghou.Zhinu.Sqlite",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "cd2fa504a62c4615bd2991ae06a184ab7a01ce17b703ef95b241ee25a0a638b4",
+      "snupkg": "Penghou.Zhinu.Sqlite.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "7ed9340253920d900c6d6acccc9416199f89308f739d6f1e0134c1702d3a5af5"
+    },
+    {
+      "id": "Penghou.Zhinu.Testing",
+      "version": "0.2.0-preview.10",
+      "nupkg": "Penghou.Zhinu.Testing.0.2.0-preview.10.nupkg",
+      "nupkgSha256": "08e1401364166bfdfc98e37ee8a911e48af1d8b96e88d6cdc01fe46fc553ff6b",
+      "snupkg": "Penghou.Zhinu.Testing.0.2.0-preview.10.snupkg",
+      "snupkgSha256": "e6898069d3040022256bb6357d09f7300dffe4dc5de5698feeb3faa620dbbafc"
+    }
+  ],
+  "targetFrameworks": [
+    "net10.0",
+    "net8.0"
+  ],
+  "dependencyConstraints": {
+    "Penghou.Workflow.Abstractions": "[0.1.0-preview.2]",
+    "Microsoft.Extensions.Logging.Abstractions": "10.0.9"
+  }
+}
