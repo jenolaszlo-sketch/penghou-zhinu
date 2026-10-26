@@ -59,5 +59,15 @@
    builds/verifies its own feed in the runner. Do not use the current worktree
    feed as if it were the 09:43 matrix input without re-pairing the manifest.
 
+9. Some raw API captures in `local/` were initially written in UTF-16LE by the
+   capture shell. They were normalized to UTF-8 (content unchanged) so reviewers
+   and tooling can read them; no recorded values were edited.
+10. The independent adversarial review (see `independent-review.md`) corrected
+    one provenance overclaim: `eng/test_workflow_boundaries.py` is executed
+    locally, not in the hosted rehearsals. The affected sentences in
+    `rg-01-zhinu.md` and `rehearsal-matrix.md` were corrected; the test's own
+    output files already stated "STATIC WORKFLOW MUTATION; NOT HOSTED
+    ENFORCEMENT".
+
 All corrected attempts have distinct commits/run IDs or fresh fixture output
 directories. None overwrites a failure, creates a tag, or publishes a package.

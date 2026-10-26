@@ -72,10 +72,11 @@ evidence:
   release-rehearsal}.yml`, `eng/{Verify-NativeFeed,ReleasePackageSet,
   Invoke-ReleaseRehearsal}.ps1`, `eng/{sqlite_stress.py,
   test_workflow_boundaries.py}`,
-  `tests/Penghou.Fuwen.Compiler.Tests/ReleaseWorkflowContractTests.cs`,
+  `tests/Penghou.Fuwen.Compiler.Tests/ReleaseWorkflowContractTests.cs`
+  (assertions updated for the reusable-qualification workflow architecture),
   `tests/Penghou.Fuwen.Zhinu.Tests/FuwenZhinuSelectionTests.cs` (env-gated
-  diagnostic capture only; no assertion changes), `docs/release-checklist.md`,
-  `docs/evidence/**`.
+  diagnostic capture only; no assertion changes in that file),
+  `docs/release-checklist.md`, `docs/evidence/**`.
 
 ## Remote state
 

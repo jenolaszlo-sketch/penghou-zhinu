@@ -58,7 +58,11 @@ evidence.
   after verification/validation, after `needs`, and behind `environment: nuget`.
 - `eng/test_workflow_boundaries.py` (both repositories) asserts the absence of
   unauthorized triggers, ambient OIDC, and push steps outside the protected
-  job; it ran in the hosted rehearsals.
+  job. It is executed **locally** (raw outputs
+  `local/zhinu-workflow-boundaries.json`,
+  `local/fuwen-workflow-boundaries.json`, classified "STATIC WORKFLOW
+  MUTATION; NOT HOSTED ENFORCEMENT"); the hosted no-push/no-OIDC properties
+  rest on workflow inspection and the hosted run records, not on this test.
 - No tag was created and no package was published at any point.
 
 ## Preserved failures

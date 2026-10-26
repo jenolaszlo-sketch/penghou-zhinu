@@ -46,7 +46,7 @@ authority: Stage B re-derives authority from GitHub's run records.
 | --- | --- | --- |
 | R02 absent, R03 pending, R04 failed, R05 cancelled/skipped, R13 untrusted/other workflow, R06 wrong commit, R07 hash, R08 missing package, R09 extra package, R10 identity/version, R11 dependency pin, R12 malformed manifest, R14 other run, plus pull-request, wrong-repository, stale-attempt and missing-matrix variants | [LOCAL] | `local/api-offline-03.json` — 19 passing fixtures against the production downloader via an offline API surface; `local/artifact-matrix.json` — R01/R06-R12/R14/R18 |
 | Real historical runs: R02 (no runs; old-format success without a Stage-A artifact), R04 (failed run), R05 (cancelled run), R13 (no canonical-workflow run) | [LIVE-API, read-only] | `local/live-api-negatives.json` — the production verifier was executed locally against the authenticated GitHub API for each historical case; every case exited 1 with the intended refusal. The hosted rehearsal's API step is a separate **offline** fixture suite (`local/api-offline-03.json`); it does not claim live-API coverage |
-| Workflow mutation / static policy regressions (removed gates, unauthorized triggers, ambient OIDC) | [LOCAL] | `eng/test_workflow_boundaries.py`, executed in both hosted rehearsals |
+| Workflow mutation / static policy regressions (removed gates, unauthorized triggers, ambient OIDC) | [LOCAL] | `eng/test_workflow_boundaries.py`, executed **locally** in both repositories; raw outputs `local/zhinu-workflow-boundaries.json` and `local/fuwen-workflow-boundaries.json`, classified "STATIC WORKFLOW MUTATION; NOT HOSTED ENFORCEMENT". Hosted no-push/no-OIDC properties are evidenced by workflow inspection and the hosted run records, not by this test |
 | Credential ordering: verification precedes `NuGet/login`; publish job re-verifies after download | [INSPECT + LOCAL] | `release-rehearsal.yml` handoff job reproduces the publisher's final verification without credentials; structural guard step |
 
 Invalid first attempts are preserved, not erased: the initial offline
@@ -61,7 +61,9 @@ Final run `40314794489` on `codex/zg-rq-02-rehearsal` at implementation commit
 - "Verify qualified release path (no push)": SUCCESS — resolved the real CI
   qualification run of `009c7f5` (run `40311550947`), downloaded its artifact
   set, ran the offline matrix (R01/R06-R12/R14/R18), the offline API/tag
-  boundary fixtures, and the static workflow-boundary checks.
+  boundary fixtures, and uploaded the verified handoff set. (The static
+  workflow-boundary test is executed locally, not in this hosted job; see the
+  negative-coverage table.)
 - "Reverify publication handoff without credentials": SUCCESS — re-executed the
   publisher's exact final artifact verification against the uploaded/downloaded
   handoff set (the same script/arguments the publisher uses), with no
