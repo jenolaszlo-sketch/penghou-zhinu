@@ -10,10 +10,16 @@ name: Release rehearsal
 #      verifier scripts;
 #   4. runs the offline fault-injection matrix (R01, R06-R12, R14, R18)
 #      over the real qualified artifacts;
-#   5. exercises live-API negative cases against real historical runs
-#      (R02, R04, R05, R13);
+#   5. runs offline API-shape and tag-boundary fault fixtures (R02-R05,
+#      R10, R12-R14, R18) through the production downloader;
 #   6. proves structurally that push steps exist only behind verification
 #      and the protected environment.
+#
+# Live-API negatives against real historical runs (R02 no-runs and
+# old-format artifact-absent, R04 failed, R05 cancelled, R13 wrong-workflow)
+# are read-only local evidence recorded in
+# docs/evidence/zg-rq-02/local/live-api-negatives.json. They are not repeated
+# here because they depend on mutable repository history.
 
 on:
   workflow_dispatch:
