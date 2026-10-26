@@ -1759,6 +1759,21 @@ occurrence identities and all original native archive pins remain unchanged.
 The earlier v5 and ZG-7 records remain immutable. Broader rejected DSL forms,
 publication and downstream application adoption remain separate activities.
 
+### ZG-RQ-01 paired release readiness qualification -- 2026-10-26
+
+Executed per the paired-readiness specification against Zhinu
+`0.2.0-preview.10` (schema 10, candidate `f0edf17`, src/tests-identical to the
+qualified native baseline `bf33c05`) and Fuwen `0.1.0-preview.20` (`8c7da4c`).
+Verdict: **REMEDIATION REQUIRED, scoped to release automation only** — gates
+Q1-Q5 (schema/persistence compatibility, group durability, legacy/API
+compatibility, package closure, local paired qualification) pass; gate Q6
+found the Zhinu publish workflow's missing exact-commit CI enforcement
+(RG-01), the unconfigured Fuwen `nuget` environment protection (RG-02) and
+the Fuwen native-feed prerequisite defect (RG-03). REL-SQLITE-01 recurrence
+confirmed and its recorded response is now due. Evidence packet:
+[docs/evidence/zg-rq-01](evidence/zg-rq-01/README.md). Publication remains a
+separate owner decision; no package or tag was published.
+
 ### Release preparation before new features -- 2026-10-20
 
 Release preparation now precedes additional activity-group features. The
