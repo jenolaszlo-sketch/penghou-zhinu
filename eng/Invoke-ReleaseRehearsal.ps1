@@ -19,8 +19,11 @@
 #   R12  manifest malformed or incomplete                     -> REFUSE
 #   R14  manifest run id differs from the verified run        -> REFUSE
 #   R18  qualified artifact set valid                        -> RELEASE-ELIGIBLE, NO PUSH
-# R02-R05 and R13 are exercised against the live GitHub API by the hosted
-# rehearsal workflow; R15-R17 belong to the Fuwen and environment evidence.
+# R02-R05 and R13 are exercised offline through the production downloader by
+# the hosted rehearsal workflow. Live-API negatives against real historical
+# runs are recorded separately in
+# docs/evidence/zg-rq-02/local/live-api-negatives.json. R15-R17 belong to the
+# Fuwen and environment evidence.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string] $QualifiedArtifactsDirectory,
