@@ -30,6 +30,9 @@ jobs:
     permissions:
       contents: read
       actions: read
+    outputs:
+      run-id: ${{ steps.qualification.outputs.run-id }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout rehearsal commit
         uses: actions/checkout@v6
@@ -86,6 +89,16 @@ jobs:
         shell: pwsh
         run: ./eng/Test-QualificationBoundary.ps1 -QualifiedArtifactsDirectory qualified-artifacts -OutputDirectory artifacts/api-boundaries
 
+      - name: Upload verified handoff set
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-release-packages
+          path: |
+            qualified-artifacts/release-qualification-manifest.json
+            qualified-artifacts/*.nupkg
+            qualified-artifacts/*.snupkg
+          if-no-files-found: error
+
       - name: Retain rehearsal evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -97,9 +110,37 @@ jobs:
             qualified-artifacts/release-qualification-manifest.json
           if-no-files-found: warn
 
+  handoff:
+    name: Reverify publication handoff without credentials
+    needs: rehearse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-release-packages
+          path: verified-artifacts
+      - uses: actions/checkout@v6
+        with:
+          path: verifier-source
+          persist-credentials: false
+      - name: Verify the same final artifact contract as the publisher
+        shell: pwsh
+        env:
+          QUALIFICATION_RUN: ${{ needs.rehearse.outputs.run-id }}
+          PACKAGE_VERSION: ${{ needs.rehearse.outputs.version }}
+        run: |
+          ./verifier-source/eng/Verify-ReleaseArtifacts.ps1 `
+            -ManifestPath verified-artifacts/release-qualification-manifest.json `
+            -ArtifactsDirectory verified-artifacts `
+            -ExpectedRepository "$env:GITHUB_REPOSITORY" `
+            -ExpectedCommitSha "$env:GITHUB_SHA" `
+            -ExpectedWorkflowPath '.github/workflows/ci.yml' `
+            -ExpectedRunId ([long]$env:QUALIFICATION_RUN) `
+            -ExpectedVersion "$env:PACKAGE_VERSION"
+
   authorization-probe:
     name: Nonpublishing environment checkpoint
-    needs: rehearse
+    needs: handoff
     runs-on: ubuntu-latest
     environment: nuget
     permissions:
