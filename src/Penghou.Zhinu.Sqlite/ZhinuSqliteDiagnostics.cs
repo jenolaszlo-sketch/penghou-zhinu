@@ -18,6 +18,7 @@ public static class ZhinuSqliteDiagnostics
     public const string StoreOperationActivity = "zhinu.sqlite.store.operation";
     public const string StoreOperationDuration = "zhinu.sqlite.store.operation.duration";
     public const string StoreOperationName = "zhinu.sqlite.operation";
+    internal const string RecoveryAttemptCount = "zhinu.sqlite.recovery.attempts";
 
     internal static readonly ActivitySource ActivitySource = new(ActivitySourceName);
     internal static readonly Meter Meter = new(MeterName);
@@ -31,4 +32,6 @@ public static class ZhinuSqliteDiagnostics
         Meter.CreateCounter<long>(ConnectionFailureCount);
     internal static readonly Counter<long> ConnectionBusy =
         Meter.CreateCounter<long>(ConnectionBusyCount);
+    internal static readonly Counter<long> RecoveryAttempts =
+        Meter.CreateCounter<long>(RecoveryAttemptCount);
 }

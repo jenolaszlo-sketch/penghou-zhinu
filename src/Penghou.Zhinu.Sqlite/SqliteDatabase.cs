@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 using Penghou.Zhinu.Sqlite.Persistence;
+using Penghou.Zhinu.Sqlite.Recovery;
 
 namespace Penghou.Zhinu.Sqlite;
 
@@ -11,9 +12,10 @@ namespace Penghou.Zhinu.Sqlite;
 /// path (such as the Agent checkpoint store) so initialization state and
 /// pragmas stay consistent.
 /// </summary>
-public sealed class SqliteDatabase : IZhinuSqliteDatabase
+public sealed class SqliteDatabase : IZhinuSqliteDatabase, IZhinuSqliteDatabaseRecovery
 {
     private readonly string connectionString;
+    private readonly string freshConnectionString;
     private readonly SemaphoreSlim initializationLock = new(1, 1);
     private volatile bool initialized;
 
@@ -27,18 +29,22 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
             Directory.CreateDirectory(directory);
-        connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = path,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Cache = SqliteCacheMode.Shared,
-            Pooling = options.Pooling
-        }.ToString();
+        connectionString = BuildConnectionString(path, options.Pooling);
+        freshConnectionString = BuildConnectionString(path, pooling: false);
     }
 
     public ZhinuSqliteOptions Options { get; }
 
     public TimeProvider TimeProvider { get; }
+
+    private static string BuildConnectionString(string path, bool pooling) =>
+        new SqliteConnectionStringBuilder
+        {
+            DataSource = path,
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Cache = SqliteCacheMode.Shared,
+            Pooling = pooling
+        }.ToString();
 
     public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -53,54 +59,57 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 ? ZhinuSqliteDiagnostics.ActivitySource.StartActivity(
                     ZhinuSqliteDiagnostics.InitializeActivity)
                 : null;
-            await using var connection = await OpenAsync(cancellationToken)
-                .ConfigureAwait(false);
-            var databaseVersion = await VerifySchemaCompatibilityAsync(connection, cancellationToken)
-                .ConfigureAwait(false);
-            if (Options.EnableWal)
+            var (connection, databaseVersion) = await SqliteTransientRecovery.ExecuteSchemaVerifyAsync(
+                this,
+                static (candidate, token) => VerifySchemaCompatibilityAsync(candidate, token),
+                cancellationToken).ConfigureAwait(false);
+            await using (connection)
             {
-                await SqliteStoreSupport.ExecuteAsync(
-                    connection,
-                    null,
-                    "PRAGMA journal_mode = WAL;",
-                    cancellationToken).ConfigureAwait(false);
+                if (Options.EnableWal)
+                {
+                    await SqliteStoreSupport.ExecuteAsync(
+                        connection,
+                        null,
+                        "PRAGMA journal_mode = WAL;",
+                        cancellationToken).ConfigureAwait(false);
+                }
+                using var schemaTransaction = connection.BeginTransaction(deferred: false);
+                try
+                {
+                    // Schema creation and additive migrations are one durable step.
+                    await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction, Schema, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (databaseVersion == 5)
+                        await MigrateAuthorizationColumnsAsync(connection, schemaTransaction, cancellationToken)
+                            .ConfigureAwait(false);
+                    if (databaseVersion is 5 or 6)
+                        await MigrateAuthorityBindingColumnAsync(connection, schemaTransaction, cancellationToken)
+                            .ConfigureAwait(false);
+                    if (databaseVersion is 5 or 6 or 7)
+                        await MigrateActivityGroupsAsync(connection, schemaTransaction, cancellationToken)
+                            .ConfigureAwait(false);
+                    if (databaseVersion is 5 or 6 or 7 or 8)
+                        await MigrateGroupFanOutAsync(connection, schemaTransaction, cancellationToken)
+                            .ConfigureAwait(false);
+                    await EnsureGroupFanOutMarkerTriggerAsync(connection, schemaTransaction, cancellationToken)
+                        .ConfigureAwait(false);
+                    await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
+                        "UPDATE zhinu_schema SET version = 10 WHERE id = 1;", cancellationToken).ConfigureAwait(false);
+                    await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
+                        "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
+                        cancellationToken).ConfigureAwait(false);
+                    await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
+                        "CREATE INDEX IF NOT EXISTS ix_workflow_runs_name_version ON workflow_runs(workflow_name, workflow_version);",
+                        cancellationToken).ConfigureAwait(false);
+                    await schemaTransaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await schemaTransaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+                    throw;
+                }
+                initialized = true;
             }
-            using var schemaTransaction = connection.BeginTransaction(deferred: false);
-            try
-            {
-                // Schema creation and additive migrations are one durable step.
-                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction, Schema, cancellationToken)
-                    .ConfigureAwait(false);
-                if (databaseVersion == 5)
-                    await MigrateAuthorizationColumnsAsync(connection, schemaTransaction, cancellationToken)
-                        .ConfigureAwait(false);
-                if (databaseVersion is 5 or 6)
-                    await MigrateAuthorityBindingColumnAsync(connection, schemaTransaction, cancellationToken)
-                        .ConfigureAwait(false);
-                if (databaseVersion is 5 or 6 or 7)
-                    await MigrateActivityGroupsAsync(connection, schemaTransaction, cancellationToken)
-                        .ConfigureAwait(false);
-                if (databaseVersion is 5 or 6 or 7 or 8)
-                    await MigrateGroupFanOutAsync(connection, schemaTransaction, cancellationToken)
-                        .ConfigureAwait(false);
-                await EnsureGroupFanOutMarkerTriggerAsync(connection, schemaTransaction, cancellationToken)
-                    .ConfigureAwait(false);
-                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
-                    "UPDATE zhinu_schema SET version = 10 WHERE id = 1;", cancellationToken).ConfigureAwait(false);
-                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
-                    "CREATE INDEX IF NOT EXISTS ix_workflow_runs_parent ON workflow_runs(parent_run_id);",
-                    cancellationToken).ConfigureAwait(false);
-                await SqliteStoreSupport.ExecuteAsync(connection, schemaTransaction,
-                    "CREATE INDEX IF NOT EXISTS ix_workflow_runs_name_version ON workflow_runs(workflow_name, workflow_version);",
-                    cancellationToken).ConfigureAwait(false);
-                await schemaTransaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                await schemaTransaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
-                throw;
-            }
-            initialized = true;
         }
         finally
         {
@@ -131,7 +140,16 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
             connection, null, "VACUUM;", cancellationToken).ConfigureAwait(false);
     }
 
-    public async ValueTask<SqliteConnection> OpenAsync(CancellationToken cancellationToken)
+    public ValueTask<SqliteConnection> OpenAsync(CancellationToken cancellationToken) =>
+        OpenCoreAsync(connectionString, cancellationToken);
+
+    ValueTask<SqliteConnection> IZhinuSqliteDatabaseRecovery.OpenFreshAsync(
+        CancellationToken cancellationToken) =>
+        OpenCoreAsync(freshConnectionString, cancellationToken);
+
+    private async ValueTask<SqliteConnection> OpenCoreAsync(
+        string connectionStringToUse,
+        CancellationToken cancellationToken)
     {
         using var activity = Options.EnableDetailedDiagnostics
             ? ZhinuSqliteDiagnostics.ActivitySource.StartActivity(
@@ -139,7 +157,7 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
                 ActivityKind.Client)
             : null;
         var started = Stopwatch.GetTimestamp();
-        var connection = new SqliteConnection(connectionString);
+        var connection = new SqliteConnection(connectionStringToUse);
         try
         {
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
