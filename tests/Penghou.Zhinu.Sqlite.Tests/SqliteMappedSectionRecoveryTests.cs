@@ -80,6 +80,8 @@ public sealed class SqliteMappedSectionRecoveryTests : IDisposable
 
         public bool ThrowOnFresh { get; set; }
 
+        private int freshOpens;
+
         public ZhinuSqliteOptions Options { get; }
 
         public TimeProvider TimeProvider => TimeProvider.System;
@@ -102,7 +104,9 @@ public sealed class SqliteMappedSectionRecoveryTests : IDisposable
         {
             Opens++;
             Fresh.Add(fresh);
-            if (fresh && ThrowOnFresh)
+            // The first recovery-owned attempt is also a fresh open on Windows;
+            // ThrowOnFresh models a retry reopen failure, not the initial open.
+            if (fresh && ++freshOpens > 1 && ThrowOnFresh)
                 throw new IOException("reopen failed");
 
             var connection = new SqliteConnection(new SqliteConnectionStringBuilder
@@ -285,7 +289,7 @@ public sealed class SqliteMappedSectionRecoveryTests : IDisposable
 
         attempts.Should().Equal(1, 2);
         delays.Should().Equal(TimeSpan.FromMilliseconds(25));
-        opened.Select(item => item.Pooling).Should().Equal(true, false);
+        opened.Select(item => item.Pooling).Should().Equal(false, false);
         opened.Should().OnlyContain(item =>
             item.ForeignKeys == 1 && item.BusyTimeout == 5000);
         connections.Should().HaveCount(2);

@@ -86,9 +86,20 @@ internal static class SqliteTransientRecovery
             SqliteConnection connection;
             try
             {
-                connection = attemptNumber == 1 || recovery is null
-                    ? await factory.OpenAsync(cancellationToken).ConfigureAwait(false)
-                    : await recovery.OpenFreshAsync(cancellationToken).ConfigureAwait(false);
+                // On Windows the recovery-owned operations must own the physical
+                // connection from the first attempt. A pooled first attempt would
+                // return the failed physical connection to the pool when disposed,
+                // and a later ordinary open could silently reacquire it. A
+                // non-pooled connection is closed physically on disposal, so it
+                // cannot be reacquired by a retry or by any later operation.
+                //
+                // Non-Windows and custom owners keep their existing connection
+                // ownership: they cannot classify an eligible failure, and this
+                // correction must not change their behaviour.
+                if (recovery is not null && runtime.IsWindows)
+                    connection = await recovery.OpenFreshAsync(cancellationToken).ConfigureAwait(false);
+                else
+                    connection = await factory.OpenAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
