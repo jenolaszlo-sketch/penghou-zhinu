@@ -685,6 +685,27 @@ public sealed class SqliteMappedSectionRecoveryTests : IDisposable
     }
 
     [Fact]
+    public void Native_reader_reads_the_loaded_sqlite_handle()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT 1;";
+        _ = command.ExecuteScalar();
+
+        var reader = new SqliteNativeErrorStateReader();
+        var available = reader.TryRead(connection, out var state);
+
+        available.Should().Be(OperatingSystem.IsWindows());
+        if (OperatingSystem.IsWindows())
+        {
+            state.PrimaryCode.Should().Be(0);
+            state.ExtendedCode.Should().Be(0);
+            state.SystemErrno.Should().Be(0);
+        }
+    }
+
+    [Fact]
     public async Task Lease_recovery_retries_without_losing_ownership_or_duplicating_events()
     {
         var path = Path.Combine(root, "lease-fencing.db");
