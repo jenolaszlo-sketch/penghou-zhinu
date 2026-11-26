@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using System.Diagnostics;
+using Penghou.Zhinu.Sqlite.Diagnostics;
 using Penghou.Zhinu.Sqlite.Persistence;
 
 namespace Penghou.Zhinu.Sqlite;
@@ -173,40 +174,48 @@ public sealed class SqliteDatabase : IZhinuSqliteDatabase
         SqliteConnection connection,
         CancellationToken cancellationToken)
     {
-        await using var countCommand = SqliteStoreSupport.CreateCommand(connection, null, """
-            SELECT COUNT(*) FROM sqlite_master
-            WHERE type = 'table' AND name NOT LIKE 'sqlite_%';
-            """);
-        var tableCount = Convert.ToInt32(
-            await countCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
-        if (tableCount == 0)
-            return ZhinuSqliteSchema.CurrentVersion;
-
-        await using var metadataCommand = SqliteStoreSupport.CreateCommand(connection, null, """
-            SELECT COUNT(*) FROM sqlite_master
-            WHERE type = 'table' AND name = 'zhinu_schema';
-            """);
-        var hasMetadata = Convert.ToInt32(
-            await metadataCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) == 1;
-        if (!hasMetadata)
+        try
         {
-            throw new ZhinuSchemaCompatibilityException(
-                ZhinuSqliteSchema.CurrentVersion,
-                databaseVersion: null);
-        }
+            await using var countCommand = SqliteStoreSupport.CreateCommand(connection, null, """
+                SELECT COUNT(*) FROM sqlite_master
+                WHERE type = 'table' AND name NOT LIKE 'sqlite_%';
+                """);
+            var tableCount = Convert.ToInt32(
+                await countCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
+            if (tableCount == 0)
+                return ZhinuSqliteSchema.CurrentVersion;
 
-        await using var versionCommand = SqliteStoreSupport.CreateCommand(
-            connection, null, "SELECT version FROM zhinu_schema WHERE id = 1;");
-        var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
-        if (version is not (5 or 6 or 7 or 8 or 9 or ZhinuSqliteSchema.CurrentVersion))
-        {
-            throw new ZhinuSchemaCompatibilityException(
-                ZhinuSqliteSchema.CurrentVersion,
-                version);
+            await using var metadataCommand = SqliteStoreSupport.CreateCommand(connection, null, """
+                SELECT COUNT(*) FROM sqlite_master
+                WHERE type = 'table' AND name = 'zhinu_schema';
+                """);
+            var hasMetadata = Convert.ToInt32(
+                await metadataCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false)) == 1;
+            if (!hasMetadata)
+            {
+                throw new ZhinuSchemaCompatibilityException(
+                    ZhinuSqliteSchema.CurrentVersion,
+                    databaseVersion: null);
+            }
+
+            await using var versionCommand = SqliteStoreSupport.CreateCommand(
+                connection, null, "SELECT version FROM zhinu_schema WHERE id = 1;");
+            var value = await versionCommand.ExecuteScalarAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var version = value is null or DBNull ? (int?)null : Convert.ToInt32(value);
+            if (version is not (5 or 6 or 7 or 8 or 9 or ZhinuSqliteSchema.CurrentVersion))
+            {
+                throw new ZhinuSchemaCompatibilityException(
+                    ZhinuSqliteSchema.CurrentVersion,
+                    version);
+            }
+            return version.Value;
         }
-        return version.Value;
+        catch (SqliteException exception)
+        {
+            RelSqlite01ErrorProbe.Capture(connection, "schema.verify", exception);
+            throw;
+        }
     }
 
     private static async ValueTask MigrateAuthorizationColumnsAsync(

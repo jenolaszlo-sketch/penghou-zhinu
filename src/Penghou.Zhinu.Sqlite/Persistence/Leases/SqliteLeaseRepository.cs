@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using Penghou.Zhinu.Sqlite.Diagnostics;
 using Penghou.Zhinu.Sqlite.Persistence.Workflows;
 
 namespace Penghou.Zhinu.Sqlite.Persistence.Leases;
@@ -121,42 +122,50 @@ internal sealed class SqliteLeaseRepository : IWorkflowLeaseRepository
         await factory.EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
         await using var connection = await factory.OpenAsync(cancellationToken)
             .ConfigureAwait(false);
-        using var transaction = connection.BeginTransaction(deferred: false);
-        var expired = await getExpiredSteps.ExecuteAsync(
-            connection,
-            transaction,
-            now,
-            cancellationToken).ConfigureAwait(false);
-        await recoverExpiredSteps.ExecuteAsync(
-            connection,
-            transaction,
-            now,
-            cancellationToken).ConfigureAwait(false);
-        await recoverExpiredRuns.ExecuteAsync(
-            connection,
-            transaction,
-            now,
-            cancellationToken).ConfigureAwait(false);
-        await recoverExpiredCompensations.ExecuteAsync(
-            connection,
-            transaction,
-            now,
-            cancellationToken).ConfigureAwait(false);
-        foreach (var step in expired)
+        try
         {
-            ZhinuDiagnostics.LeasesExpiredCounter.Add(1);
-            await insertEvent.ExecuteAsync(
+            using var transaction = connection.BeginTransaction(deferred: false);
+            var expired = await getExpiredSteps.ExecuteAsync(
                 connection,
                 transaction,
-                step.WorkflowRunId,
-                step.StepKey,
-                WorkflowEventTypes.LeaseRecovered,
                 now,
-                step.Attempt,
-                null,
                 cancellationToken).ConfigureAwait(false);
+            await recoverExpiredSteps.ExecuteAsync(
+                connection,
+                transaction,
+                now,
+                cancellationToken).ConfigureAwait(false);
+            await recoverExpiredRuns.ExecuteAsync(
+                connection,
+                transaction,
+                now,
+                cancellationToken).ConfigureAwait(false);
+            await recoverExpiredCompensations.ExecuteAsync(
+                connection,
+                transaction,
+                now,
+                cancellationToken).ConfigureAwait(false);
+            foreach (var step in expired)
+            {
+                ZhinuDiagnostics.LeasesExpiredCounter.Add(1);
+                await insertEvent.ExecuteAsync(
+                    connection,
+                    transaction,
+                    step.WorkflowRunId,
+                    step.StepKey,
+                    WorkflowEventTypes.LeaseRecovered,
+                    now,
+                    step.Attempt,
+                    null,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return expired.Count;
         }
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        return expired.Count;
+        catch (SqliteException exception)
+        {
+            RelSqlite01ErrorProbe.Capture(connection, "lease.recover", exception);
+            throw;
+        }
     }
 }
